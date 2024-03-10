@@ -3,7 +3,7 @@
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "pimSim.h"
-#include <iostream>
+#include <cstdio>
 
 
 //! @brief  Get or create the pimSim singleton
@@ -21,14 +21,14 @@ bool
 pimSim::createDevice(PimDeviceEnum deviceType, int numCores, int numRows, int numCols)
 {
   if (m_device) {
-    std::cout << "[PIM] Error: PIM device is already created" << std::endl;
+    std::printf("[PIM] Error: PIM device is already created\n");
     return false;
   }
   m_device = new pimDevice();
   m_device->init(deviceType, numCores, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
-    std::cout << "[PIM] Error: Failed to create PIM device of type " << static_cast<int>(deviceType) << std::endl;
+    std::printf("[PIM] Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
   return true;
@@ -39,14 +39,14 @@ bool
 pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName)
 {
   if (m_device) {
-    std::cout << "[PIM] Error: PIM Device is already created" << std::endl;
+    std::printf("[PIM] Error: PIM Device is already created\n");
     return false;
   }
   m_device = new pimDevice();
   m_device->init(deviceType, configFileName);
   if (!m_device->isValid()) {
     delete m_device;
-    std::cout << "[PIM] Error: Failed to create PIM device of type " << static_cast<int>(deviceType) << std::endl;
+    std::printf("[PIM] Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
   return true;
@@ -57,7 +57,7 @@ bool
 pimSim::deleteDevice()
 {
   if (!m_device) {
-    std::cout << "[PIM] Error: No PIM device to delete" << std::endl;
+    std::printf("[PIM] Error: No PIM device to delete\n");
     return false;
   }
   delete m_device;
@@ -71,7 +71,7 @@ pimSim::isValidDevice(bool showMsg) const
 {
   bool isValid = m_device && m_device->isValid();
   if (!isValid && showMsg) {
-    std::cout << "[PIM] Error: Invalid PIM device" << std::endl;
+    std::printf("[PIM] Error: Invalid PIM device\n");
   }
   return isValid;
 }

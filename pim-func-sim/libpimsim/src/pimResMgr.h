@@ -9,33 +9,109 @@
 #include <vector>
 #include <tuple>
 #include <unordered_map>
+#include <set>
 
-//! @class  pimObj
-//! @brief  Resource meta data of a PIM object
-class pimObj
+class pimDevice;
+
+
+//! @class  pimRegion
+//! @brief  Represent a rectangle regreion in a PIM core
+class pimRegion
 {
 public:
-  pimObj() {}
-  ~pimObj() {}
-private: 
+  pimRegion()
+    : m_coreId(-1), m_rowIdx(0), m_colIdx(0), m_numAllocRows(0), m_numAllocCols(0), m_isValid(false)
+  {}
+  ~pimRegion() {}
+
+  void setCoreId(PimCoreId coreId) { m_coreId = coreId; } 
+  void setRowIdx(unsigned rowIdx) { m_rowIdx = rowIdx; } 
+  void setColIdx(unsigned colIdx) { m_colIdx = colIdx; } 
+  void setNumAllocRows(unsigned numAllocRows) { m_numAllocRows = numAllocRows; } 
+  void setNumAllocCols(unsigned numAllocCols) { m_numAllocCols = numAllocCols; } 
+  void setIsValid(bool val) { m_isValid = val; }
+
+  PimCoreId getCoreId() const { return m_coreId; }
+  unsigned getRowIdx() const { return m_rowIdx; }
+  unsigned getColIdx() const { return m_colIdx; }
+  unsigned getNumAllocRows() const { return m_numAllocRows; }
+  unsigned getNumAllocCols() const { return m_numAllocCols; }
+
+  bool isValid() const { return m_isValid && m_coreId >= 0 && m_numAllocRows > 0 && m_numAllocCols > 0; }
+
+  void print() const;
+
+private:
+  PimCoreId m_coreId;
+  unsigned m_rowIdx;  // starting row index
+  unsigned m_colIdx;  // starting col index
+  unsigned m_numAllocRows;  // number of rows of this region
+  unsigned m_numAllocCols;  // number of cols of this region
+  bool m_isValid;
 };
+
+
+//! @class  pimObjInfo
+//! @brief  Meta data of a PIM object which includes
+//!         - PIM object ID
+//!         - One or more rectangle regions allocated in one or more PIM cores
+//!         - Allocation type which specifies how data is stored in a region
+class pimObjInfo
+{
+public:
+  pimObjInfo(PimObjId objId, PimAllocEnum allocType, int numElements, int bitsPerElement)
+    : m_objId(objId),
+      m_allocType(allocType),
+      m_numElements(numElements),
+      m_bitsPerElement(bitsPerElement)
+  {}
+  ~pimObjInfo() {}
+
+  void addRegion(PimCoreId coreId, pimRegion region);
+
+  PimObjId getObjId() const { return m_objId; }
+  PimAllocEnum getAllocType() const { return m_allocType; }
+  int getNumElements() const { return m_numElements; }
+  int getBitsPerElement() const { return m_bitsPerElement; }
+
+  const std::vector<pimRegion>& getRegions() const { return m_regions; }
+  std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
+
+  void print() const;
+
+private:
+  PimObjId m_objId;
+  PimAllocEnum m_allocType;
+  int m_numElements;
+  int m_bitsPerElement;
+  std::vector<pimRegion> m_regions;  // a list of core ID and regions
+};
+
 
 //! @class  pimResMgr
 //! @brief  PIM resource manager
 class pimResMgr
 {
 public:
-  pimResMgr() : m_availObjId(0) {}
+  pimResMgr(pimDevice* device)
+    : m_device(device),
+      m_availObjId(0)
+  {}
   ~pimResMgr() {}
 
   PimObjId pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId ref);
-  bool pimFree(PimObjId obj);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId refId);
+  bool pimFree(PimObjId objId);
 
 private:
-  PimObjId m_availObjId;
+  pimRegion findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsigned numAllocCols) const;
+  std::vector<PimCoreId> getCoreIdsSortedByLeastUsage() const;
+  unsigned getCoreUsage(PimCoreId coreId) const;
 
-  std::unordered_map<PimObjId, pimObj> m_res;
+  pimDevice* m_device;
+  PimObjId m_availObjId;
+  std::unordered_map<PimObjId, pimObjInfo> m_objMap;
+  std::unordered_map<PimCoreId, std::set<std::pair<unsigned, unsigned>>> m_coreUsage; // track row usage only for now
 };
 
 #endif

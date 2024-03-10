@@ -4,7 +4,7 @@
 
 #include "pimCmd.h"
 #include "pimCore.h"
-#include <iostream>
+#include <cstdio>
 
 
 //! @brief  PIM OP: Add int32 v-layout
@@ -12,7 +12,7 @@ bool
 pimAddInt32V::execute()
 {
   // TODO 
-  std::cout << "NYI" << std::endl;
+  std::printf("NYI\n");
   return false;
 }
 

@@ -4,7 +4,6 @@
 
 #include "pimCore.h"
 #include <random>
-#include <iostream>
 #include <cstdio>
 #include <iomanip>
 #include <sstream>
@@ -186,6 +185,6 @@ pimCore::print() const
     oss << m_senseAmpRow[col];
   }
   oss << std::endl;
-  std::cout << oss.str() << std::endl;
+  std::printf("%s\n", oss.str().c_str());
 }
 

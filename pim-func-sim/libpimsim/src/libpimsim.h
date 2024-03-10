@@ -9,26 +9,31 @@
 extern "C" {
 #endif
 
+  //! @brief  PIM API return status
   enum PimStatus {
     PIM_ERROR = 0,
     PIM_OK,
   };
 
+  //! @brief  PIM device types
   enum PimDeviceEnum {
     PIM_DEVICE_NONE = 0,
     PIM_FUNCTIONAL,
   };
 
+  //! @brief  PIM allocation types
   enum PimAllocEnum {
-    PIM_ALLOC_V = 0,
-    PIM_ALLOC_H,
+    PIM_ALLOC_V1 = 0,  // vertical layout, at most one region per core
+    PIM_ALLOC_H1,      // horizontal layout, at most one region per core
   };
 
+  //! @brief  PIM data copy types
   enum PimCopyEnum {
     PIM_COPY_V = 0,
     PIM_COPY_H,
   };
 
+  typedef int PimCoreId;
   typedef int PimObjId;
 
   // Device creation and deletion

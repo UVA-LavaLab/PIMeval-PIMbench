@@ -5,6 +5,7 @@
 #ifndef LAVA_PIM_CORE_H
 #define LAVA_PIM_CORE_H
 
+#include "libpimsim.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -19,8 +20,8 @@ public:
   ~pimCore();
 
   // ID
-  void setId(int id) { m_id = id; }
-  int getId() const { return m_id; }
+  void setCoreId(int id) { m_coreId = id; }
+  PimCoreId getCoreId() const { return m_coreId; }
 
   // Row-based operations
   bool readRow(unsigned rowIndex);
@@ -42,7 +43,7 @@ public:
   void print() const;
 
 private:
-  int m_id;
+  PimCoreId m_coreId;
   unsigned m_numRows;
   unsigned m_numCols;
 
