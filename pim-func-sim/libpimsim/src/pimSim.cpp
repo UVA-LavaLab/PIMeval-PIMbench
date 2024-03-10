@@ -3,7 +3,9 @@
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "pimSim.h"
+#include "pimCmd.h"
 #include <cstdio>
+#include <memory>
 
 
 // The pimSim singleton
@@ -120,10 +122,12 @@ pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
   return m_device->pimCopyDeviceToMain(copyType, src, dest);
 }
 
-// @brief  PIM OP: add
+// @brief  PIM OP: add int32 v-layout
 bool
-pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  return false;
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAddInt32V>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
 }
 

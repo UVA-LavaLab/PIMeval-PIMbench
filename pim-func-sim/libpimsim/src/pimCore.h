@@ -54,8 +54,8 @@ private:
   std::vector<bool> m_senseAmpRow;
   std::vector<bool> m_senseAmpCol;
 
-  std::map<std::string, std::vector<bool>> m_rowRegs; 
-  std::map<std::string, std::vector<bool>> m_colRegs; 
+  std::map<std::string, std::vector<bool>> m_rowRegs;
+  std::map<std::string, std::vector<bool>> m_colRegs;
 };
 
 #endif

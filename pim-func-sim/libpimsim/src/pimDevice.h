@@ -7,6 +7,7 @@
 
 #include "libpimsim.h"
 #include "pimCore.h"
+#include "pimCmd.h"
 
 class pimResMgr;
 
@@ -35,8 +36,13 @@ public:
   bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
   bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
 
+  pimResMgr* getResMgr() { return m_resMgr; }
+  pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
+  bool executeCmd(std::unique_ptr<pimCmd> cmd);
+
 private:
   std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
+  bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
 
   PimDeviceEnum m_deviceType;
   unsigned m_numCores;

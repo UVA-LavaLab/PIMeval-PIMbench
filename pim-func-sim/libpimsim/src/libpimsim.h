@@ -51,7 +51,7 @@ extern "C" {
   PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // Computation
-  PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimRedSum(PimObjId a, PimObjId b, PimObjId c);
 
 

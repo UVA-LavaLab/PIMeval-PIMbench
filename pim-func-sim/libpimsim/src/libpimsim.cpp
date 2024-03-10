@@ -68,11 +68,11 @@ pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector add
+//! @brief  PIM vector add int32 v-layout
 PimStatus
-pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
+pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimAdd(src1, src2, dest);
+  bool ok = pimSim::get()->pimAddInt32V(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

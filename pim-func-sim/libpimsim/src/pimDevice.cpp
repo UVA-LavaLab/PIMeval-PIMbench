@@ -6,6 +6,7 @@
 #include "pimResMgr.h"
 #include <cstdio>
 #include <deque>
+#include <memory>
 
 
 //! @brief  pimDevice ctor
@@ -160,15 +161,58 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
 bool
 pimDevice::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
 {
+  if (!m_resMgr->isValidObjId(src)) {
+    std::printf("PIM-Error: Invalid PIM object ID %d as copy source\n", src);
+    return false;
+  }
+
+  const pimObjInfo& pimObj = m_resMgr->getObjInfo(src);
+  unsigned numElements = pimObj.getNumElements();
+  unsigned bitsPerElement = pimObj.getBitsPerElement();
+
+  std::printf("PIM-Info: Copying %u elements of %u bits from PIM obj %d to host\n", numElements, bitsPerElement, src);
+
+  // read in all bits from src
+  std::vector<bool> bits;
+
   if (copyType == PIM_COPY_V) {
-    
+    for (const auto& region : pimObj.getRegions()) {
+      PimCoreId coreId = region.getCoreId();
+      unsigned rowIdx = region.getRowIdx();
+      unsigned colIdx = region.getColIdx();
+      unsigned numAllocRows = region.getNumAllocRows();
+      unsigned numAllocCols = region.getNumAllocCols();
+      for (unsigned c = 0; c < numAllocCols; ++c) {
+        for (unsigned r = 0; r < numAllocRows; ++r) {
+          unsigned row = rowIdx + r;
+          unsigned col = colIdx + c;
+          bool val = m_cores[coreId].getBit(row, col);
+          bits.push_back(val);
+        }
+      }
+    }
   } else if (copyType == PIM_COPY_H) {
-    
+     for (const auto& region : pimObj.getRegions()) {
+      PimCoreId coreId = region.getCoreId();
+      unsigned rowIdx = region.getRowIdx();
+      unsigned colIdx = region.getColIdx();
+      unsigned numAllocRows = region.getNumAllocRows();
+      unsigned numAllocCols = region.getNumAllocCols();
+      for (unsigned r = 0; r < numAllocRows; ++r) {
+        for (unsigned c = 0; c < numAllocCols; ++c) {
+          unsigned row = rowIdx + r;
+          unsigned col = colIdx + c;
+          bool val = m_cores[coreId].getBit(row, col);
+          bits.push_back(val);
+        }
+      }
+    }
   } else {
     std::printf("PIM-Error: Unknown PIM copy type %d\n", static_cast<int>(copyType));
     return false;
   }
-  return false;
+
+  return writeBitsToHost(dest, bits);
 }
 
 //! @brief  Read bits from host
@@ -187,7 +231,35 @@ pimDevice::readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerEle
       byteVal = byteVal >> 1;
     }
   }
- 
+
   return bits;
 }
 
+//! @brief  Write bits to host
+bool
+pimDevice::writeBitsToHost(void* dest, const std::vector<bool>& bits)
+{
+  unsigned char* bytePtr = static_cast<unsigned char*>(dest);
+  unsigned byteIdx = 0;
+
+  for (size_t i = 0; i < bits.size(); i += 8) {
+    unsigned char byteVal = 0;
+    for (int j = 7; j >= 0; --j) {
+      byteVal = byteVal << 1;
+      byteVal |= bits[i + j];
+    }
+    *(bytePtr + byteIdx) = byteVal;
+    byteIdx++;
+  }
+
+  return true;
+}
+
+//! @brief  Execute a PIM command
+bool
+pimDevice::executeCmd(std::unique_ptr<pimCmd> cmd)
+{
+  bool ok = cmd->execute(this);
+
+  return ok;
+}

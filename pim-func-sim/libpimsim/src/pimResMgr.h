@@ -29,11 +29,11 @@ public:
   {}
   ~pimRegion() {}
 
-  void setCoreId(PimCoreId coreId) { m_coreId = coreId; } 
-  void setRowIdx(unsigned rowIdx) { m_rowIdx = rowIdx; } 
-  void setColIdx(unsigned colIdx) { m_colIdx = colIdx; } 
-  void setNumAllocRows(unsigned numAllocRows) { m_numAllocRows = numAllocRows; } 
-  void setNumAllocCols(unsigned numAllocCols) { m_numAllocCols = numAllocCols; } 
+  void setCoreId(PimCoreId coreId) { m_coreId = coreId; }
+  void setRowIdx(unsigned rowIdx) { m_rowIdx = rowIdx; }
+  void setColIdx(unsigned colIdx) { m_colIdx = colIdx; }
+  void setNumAllocRows(unsigned numAllocRows) { m_numAllocRows = numAllocRows; }
+  void setNumAllocCols(unsigned numAllocCols) { m_numAllocCols = numAllocCols; }
   void setIsValid(bool val) { m_isValid = val; }
 
   PimCoreId getCoreId() const { return m_coreId; }

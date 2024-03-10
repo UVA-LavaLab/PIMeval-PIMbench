@@ -2,12 +2,12 @@
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
-#include <cstdio>
+#include <iostream>
 #include <vector>
 
 int main()
 {
-  std::printf("PIM test: Vector add\n");
+  std::cout << "PIM test: Vector add" << std::endl;
 
   unsigned numCores = 4;
   unsigned numRows = 128;
@@ -15,7 +15,7 @@ int main()
 
   PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
   if (status != PIM_OK) {
-    std::printf("Abort\n");
+    std::cout << "Abort" << std::endl;
     return 1;
   }
 
@@ -24,15 +24,20 @@ int main()
 
   PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement);
   if (obj1 == -1) {
-    std::printf("Abort\n");
+    std::cout << "Abort" << std::endl;
     return 1;
   }
   PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
   if (obj2 == -1) {
-    std::printf("Abort\n");
+    std::cout << "Abort" << std::endl;
     return 1;
   }
-  
+  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
+  if (obj3 == -1) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+
   std::vector<int> src1(numElements);
   std::vector<int> src2(numElements);
   std::vector<int> dest(numElements);
@@ -45,14 +50,40 @@ int main()
 
   status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
   if (status != PIM_OK) {
-    std::printf("Abort\n");
+    std::cout << "Abort" << std::endl;
     return 1;
   }
 
   status = pimCopyHostToDevice(PIM_COPY_V, (void*)src2.data(), obj2);
   if (status != PIM_OK) {
-    std::printf("Abort\n");
+    std::cout << "Abort" << std::endl;
     return 1;
+  }
+
+  status = pimAddInt32V(obj1, obj2, obj3);
+  if (status != PIM_OK) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+
+  status = pimCopyDeviceToHost(PIM_COPY_V, obj3, (void*)dest.data());
+  if (status != PIM_OK) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+
+  // check results
+  bool ok = true;
+  for (unsigned i = 0; i < numElements; ++i) {
+    int result = src1[i] + src2[i];
+    if (dest[i] != result) {
+      std::cout << "Wrong ansert: " << src1[i] << " + " << src2[i] << " = " << dest[i] << " (expected " << result << ")" << std::endl;
+      ok = false;
+    }
+  }
+
+  if (ok) {
+    std::cout << "All correct!" << std::endl;
   }
 
   return 0;

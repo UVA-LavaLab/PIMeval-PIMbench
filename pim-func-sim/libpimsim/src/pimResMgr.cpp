@@ -245,7 +245,7 @@ pimResMgr::getCoreUsage(PimCoreId coreId) const
   return usage;
 }
 
-//! @brief  Get a list of core IDs sorted by least usage 
+//! @brief  Get a list of core IDs sorted by least usage
 std::vector<PimCoreId>
 pimResMgr::getCoreIdsSortedByLeastUsage() const
 {

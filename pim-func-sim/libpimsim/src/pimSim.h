@@ -33,7 +33,7 @@ public:
   bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // Computation
-  bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest);
 
 private:
   pimSim() {}

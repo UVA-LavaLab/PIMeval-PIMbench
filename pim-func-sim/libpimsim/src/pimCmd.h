@@ -8,7 +8,8 @@
 #include "libpimsim.h"
 #include <vector>
 
-class pimCore;
+class pimDevice;
+class pimResMgr;
 
 enum class PimCmdEnum {
   NOOP = 0,
@@ -22,23 +23,26 @@ class pimCmd
 {
 public:
   pimCmd() {}
-  ~pimCmd() {}
+  virtual ~pimCmd() {}
 
-  virtual bool execute() = 0;
+  virtual bool execute(pimDevice* device) = 0;
 
 protected:
+  bool isCoreAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
+  bool isVAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
+  bool isHAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
 };
 
 //! @class  pimAddInt32V
 //! @brief  Pim OP: V add int32 --> need to avoid confusion from vec add
-class pimAddInt32V : public pimCmd
+class pimCmdAddInt32V : public pimCmd
 {
 public:
-  pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  ~pimAddInt32V() {}
+  virtual ~pimCmdAddInt32V() {}
 
-  virtual bool execute();
+  virtual bool execute(pimDevice* device) override;
 
 protected:
   PimObjId m_src1;
