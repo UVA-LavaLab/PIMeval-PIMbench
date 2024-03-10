@@ -42,6 +42,9 @@ public:
   bool declareColReg(const std::string& name);
   void print() const;
 
+  void setBit(unsigned rowIdx, unsigned colIdx, bool val) { m_array[rowIdx][colIdx] = val; }
+  bool getBit(unsigned rowIdx, unsigned colIdx) const { return m_array[rowIdx][colIdx]; }
+
 private:
   PimCoreId m_coreId;
   unsigned m_numRows;

@@ -18,14 +18,14 @@ public:
   static pimSim* get();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, int numCores, int numRows, int numCols);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId ref);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
   bool pimFree(PimObjId obj);
 
   // Data transfer

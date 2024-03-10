@@ -37,13 +37,13 @@ extern "C" {
   typedef int PimObjId;
 
   // Device creation and deletion
-  PimStatus pimCreateDevice(PimDeviceEnum deviceType, int numCores, int numRows, int numCols);
+  PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
   PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   PimStatus pimDeleteDevice();
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId ref);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
   PimStatus pimFree(PimObjId obj);
 
   // Data transfer

@@ -38,7 +38,7 @@ bool
 pimCore::readRow(unsigned rowIndex)
 {
   if (rowIndex >= m_numRows) {
-    std::printf("Error: Out-of-boundary subarray row read: index = %u, numRows = %u\n", rowIndex, m_numRows);
+    std::printf("PIM-Error: Out-of-boundary subarray row read: index = %u, numRows = %u\n", rowIndex, m_numRows);
     return false;
   }
   m_senseAmpRow = m_array[rowIndex];
@@ -50,7 +50,7 @@ bool
 pimCore::readCol(unsigned colIndex)
 {
   if (colIndex >= m_numCols) {
-    std::printf("Error: Out-of-boundary subarray column read: index = %u, numCols = %u\n", colIndex, m_numCols);
+    std::printf("PIM-Error: Out-of-boundary subarray column read: index = %u, numCols = %u\n", colIndex, m_numCols);
     return false;
   }
   for (unsigned row = 0; row < m_numRows; ++row) {
@@ -64,7 +64,7 @@ bool
 pimCore::readTripleRows(unsigned rowIndex1, unsigned rowIndex2, unsigned rowIndex3)
 {
   if (rowIndex1 >= m_numRows || rowIndex2 >= m_numRows || rowIndex3 >= m_numRows) {
-    std::printf("Error: Out-of-boundary subarray triple-row read: indices = (%u, %u, %u), numRows = %u\n", rowIndex1, rowIndex2, rowIndex3, m_numRows);
+    std::printf("PIM-Error: Out-of-boundary subarray triple-row read: indices = (%u, %u, %u), numRows = %u\n", rowIndex1, rowIndex2, rowIndex3, m_numRows);
     return false;
   }
   for (unsigned col = 0; col < m_numCols; ++col) {
@@ -85,7 +85,7 @@ bool
 pimCore::readTripleCols(unsigned colIndex1, unsigned colIndex2, unsigned colIndex3)
 {
   if (colIndex1 >= m_numCols || colIndex2 >= m_numCols || colIndex3 >= m_numCols) {
-    std::printf("Error: Out-of-boundary subarray triple-col read: indices = (%u, %u, %u), numCols = %u\n", colIndex1, colIndex2, colIndex3, m_numCols);
+    std::printf("PIM-Error: Out-of-boundary subarray triple-col read: indices = (%u, %u, %u), numCols = %u\n", colIndex1, colIndex2, colIndex3, m_numCols);
     return false;
   }
   for (unsigned row = 0; row < m_numRows; ++row) {
@@ -106,7 +106,7 @@ bool
 pimCore::writeRow(unsigned rowIndex)
 {
   if (rowIndex >= m_numRows) {
-    std::printf("Error: Out-of-boundary subarray row write: index = %u, numRows = %u\n", rowIndex, m_numRows);
+    std::printf("PIM-Error: Out-of-boundary subarray row write: index = %u, numRows = %u\n", rowIndex, m_numRows);
     return false;
   }
   m_array[rowIndex] = m_senseAmpRow;
@@ -118,7 +118,7 @@ bool
 pimCore::writeCol(unsigned colIndex)
 {
   if (colIndex >= m_numCols) {
-    std::printf("Error: Out-of-boundary subarray column write: index = %u, numCols = %u\n", colIndex, m_numCols);
+    std::printf("PIM-Error: Out-of-boundary subarray column write: index = %u, numCols = %u\n", colIndex, m_numCols);
     return false;
   }
   for (unsigned row = 0; row < m_numRows; ++row) {
@@ -132,7 +132,7 @@ bool
 pimCore::setSenseAmpRow(const std::vector<bool>& vals)
 {
   if (vals.size() != m_numCols) {
-    std::printf("Error: Incorrect data size write to row SAs: size = %lu, numCols = %u\n", vals.size(), m_numCols);
+    std::printf("PIM-Error: Incorrect data size write to row SAs: size = %lu, numCols = %u\n", vals.size(), m_numCols);
     return false;
   }
   m_senseAmpRow = vals;
@@ -144,7 +144,7 @@ bool
 pimCore::setSenseAmpCol(const std::vector<bool>& vals)
 {
   if (vals.size() != m_numRows) {
-    std::printf("Error: Incorrect data size write to col SAs: size = %lu, numRows = %u\n", vals.size(), m_numRows);
+    std::printf("PIM-Error: Incorrect data size write to col SAs: size = %lu, numRows = %u\n", vals.size(), m_numRows);
     return false;
   }
   m_senseAmpCol = vals;

@@ -22,17 +22,17 @@ pimSim::get()
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, int numCores, int numRows, int numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
 {
   if (m_device) {
-    std::printf("[PIM] Error: PIM device is already created\n");
+    std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
   m_device = new pimDevice();
   m_device->init(deviceType, numCores, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
-    std::printf("[PIM] Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
+    std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
   return true;
@@ -43,14 +43,14 @@ bool
 pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName)
 {
   if (m_device) {
-    std::printf("[PIM] Error: PIM Device is already created\n");
+    std::printf("PIM-Error: PIM Device is already created\n");
     return false;
   }
   m_device = new pimDevice();
   m_device->init(deviceType, configFileName);
   if (!m_device->isValid()) {
     delete m_device;
-    std::printf("[PIM] Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
+    std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
   return true;
@@ -61,7 +61,7 @@ bool
 pimSim::deleteDevice()
 {
   if (!m_device) {
-    std::printf("[PIM] Error: No PIM device to delete\n");
+    std::printf("PIM-Error: No PIM device to delete\n");
     return false;
   }
   delete m_device;
@@ -75,14 +75,14 @@ pimSim::isValidDevice(bool showMsg) const
 {
   bool isValid = m_device && m_device->isValid();
   if (!isValid && showMsg) {
-    std::printf("[PIM] Error: Invalid PIM device\n");
+    std::printf("PIM-Error: Invalid PIM device\n");
   }
   return isValid;
 }
 
 //! @brief  Allocate a PIM object
 PimObjId
-pimSim::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
+pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
 {
   if (!isValidDevice()) { return -1; }
   return m_device->pimAlloc(allocType, numElements, bitsPerElement);
@@ -90,7 +90,7 @@ pimSim::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
 
 //! @brief  Allocate a PIM object that is associated with a reference ojbect
 PimObjId
-pimSim::pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId ref)
+pimSim::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref)
 {
   if (!isValidDevice()) { return -1; }
   return m_device->pimAllocAssociated(allocType, numElements, bitsPerElement, ref);
@@ -109,8 +109,7 @@ bool
 pimSim::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  
-  return true;
+  return m_device->pimCopyMainToDevice(copyType, src, dest);
 }
 
 // @brief  Copy data from PIM device to main memory
@@ -118,15 +117,13 @@ bool
 pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
 {
   if (!isValidDevice()) { return false; }
-  
-  return true;
+  return m_device->pimCopyDeviceToMain(copyType, src, dest);
 }
 
 // @brief  PIM OP: add
 bool
 pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  
-  return true;
+  return false;
 }
 

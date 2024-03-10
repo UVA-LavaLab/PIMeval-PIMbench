@@ -64,7 +64,7 @@ private:
 class pimObjInfo
 {
 public:
-  pimObjInfo(PimObjId objId, PimAllocEnum allocType, int numElements, int bitsPerElement)
+  pimObjInfo(PimObjId objId, PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
     : m_objId(objId),
       m_allocType(allocType),
       m_numElements(numElements),
@@ -76,8 +76,9 @@ public:
 
   PimObjId getObjId() const { return m_objId; }
   PimAllocEnum getAllocType() const { return m_allocType; }
-  int getNumElements() const { return m_numElements; }
-  int getBitsPerElement() const { return m_bitsPerElement; }
+  unsigned getNumElements() const { return m_numElements; }
+  unsigned getBitsPerElement() const { return m_bitsPerElement; }
+  bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
 
   const std::vector<pimRegion>& getRegions() const { return m_regions; }
   std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
@@ -87,8 +88,8 @@ public:
 private:
   PimObjId m_objId;
   PimAllocEnum m_allocType;
-  int m_numElements;
-  int m_bitsPerElement;
+  unsigned m_numElements;
+  unsigned m_bitsPerElement;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
 };
 
@@ -104,9 +105,12 @@ public:
   {}
   ~pimResMgr() {}
 
-  PimObjId pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId refId);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId);
   bool pimFree(PimObjId objId);
+
+  bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }
+  const pimObjInfo& getObjInfo(PimObjId objId) const { return m_objMap.at(objId); }
 
 private:
   pimRegion findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsigned numAllocCols) const;

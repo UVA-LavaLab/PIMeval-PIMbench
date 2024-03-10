@@ -8,7 +8,7 @@
 
 //! @brief  Create a PIM device
 PimStatus
-pimCreateDevice(PimDeviceEnum deviceType, int numCores, int numRows, int numCols)
+pimCreateDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
 {
   bool ok = pimSim::get()->createDevice(deviceType, numCores, numRows, numCols);
   return ok ? PIM_OK : PIM_ERROR;
@@ -32,14 +32,14 @@ pimDeleteDevice()
 
 //! @brief  Allocate a PIM resource
 PimObjId
-pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElements)
+pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements)
 {
   return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElements);
 }
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElements, PimObjId ref)
+pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref)
 {
   return pimSim::get()->pimAllocAssociated(allocType, numElements, bitsPerElements, ref);
 }

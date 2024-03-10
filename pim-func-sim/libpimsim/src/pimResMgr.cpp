@@ -44,10 +44,10 @@ pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
+pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
 {
   if (numElements <= 0 || bitsPerElement <= 0) {
-    std::printf("[PIM] Error: Invalid parameters to allocate %d elements of %d bits\n", numElements, bitsPerElement);
+    std::printf("PIM-Error: Invalid parameters to allocate %u elements of %u bits\n", numElements, bitsPerElement);
     return -1;
   }
 
@@ -63,7 +63,6 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
   if (allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
-    numCols = m_device->getNumCols();
     numRegions = (numElements - 1) / numCols + 1;
     numCoresReqd = numRegions;
     numColsToAllocLast = numElements % numCols;
@@ -73,7 +72,6 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
   } else if (allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
-    numCols = m_device->getNumCols();
     numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
     numCoresReqd = numRegions;
     numColsToAllocLast = (numElements * bitsPerElement) % numCols;
@@ -81,23 +79,23 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
       numColsToAllocLast = numCols;
     }
   } else {
-    std::printf("[PIM] Error: Unsupported PIM allocation type %d\n", static_cast<int>(allocType));
+    std::printf("PIM-Error: Unsupported PIM allocation type %d\n", static_cast<int>(allocType));
     return -1;
   }
 
   if (numCoresReqd > m_device->getNumCores()) {
-    std::printf("[PIM] Error: Failed to allocate as obj requires %d cores more than available\n", numCoresReqd);
+    std::printf("PIM-Error: Failed to allocate as obj requires %u cores more than available\n", numCoresReqd);
     return -1;
   }
 
   // create regions
   if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
     for (unsigned i = 0; i < numRegions; ++i) {
-      unsigned coreId = sortedCoreId[i];
+      PimCoreId coreId = sortedCoreId[i];
       unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
       pimRegion newRegion = findAvailRegionOnCore(coreId, numRowsToAlloc, numColsToAlloc);
       if (!newRegion.isValid()) {
-        std::printf("[PIM] Error: Failed to allocate object with %d rows on core %d\n", numRowsToAlloc, coreId);
+        std::printf("PIM-Error: Failed to allocate object with %u rows on core %d\n", numRowsToAlloc, coreId);
         return -1;
       }
       newObj.addRegion(newRegion);
@@ -122,11 +120,11 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
 //!         For V layout, expect same number of elements, while bits per element may be different
 //!         For H layout, expect exact same number of elements and bits per elements
 PimObjId
-pimResMgr::pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId refId)
+pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId)
 {
   // check if ref obj is valid
   if (m_objMap.find(refId) == m_objMap.end()) {
-    std::printf("[PIM] Error: Invalid ref object ID %d for PIM allocation\n", refId);
+    std::printf("PIM-Error: Invalid ref object ID %d for PIM allocation\n", refId);
     return -1;
   }
 
@@ -135,13 +133,13 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsP
 
   // check if the request can be associated with ref
   if (numElements != refObj.getNumElements()) {
-    std::printf("[PIM] Error: Cannot allocate %d elements associated with ref object ID %d which has %d elements\n",
+    std::printf("PIM-Error: Cannot allocate %u elements associated with ref object ID %d which has %u elements\n",
                 numElements, refId, refObj.getNumElements());
     return -1;
   }
   if (allocType == PIM_ALLOC_H1) {
     if (bitsPerElement != refObj.getBitsPerElement()) {
-      std::printf("[PIM] Error: Cannot allocate elements of %d bits associated with ref object ID %d with %d bits in H1 style\n",
+      std::printf("PIM-Error: Cannot allocate elements of %u bits associated with ref object ID %d with %u bits in H1 style\n",
                   bitsPerElement, refId, refObj.getBitsPerElement());
       return -1;
     }
@@ -160,7 +158,7 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsP
     }
     pimRegion newRegion = findAvailRegionOnCore(coreId, numAllocRows, numAllocCols);
     if (!newRegion.isValid()) {
-      std::printf("[PIM] Error: Failed to allocate associated object with %d rows on core %d\n", numAllocRows, coreId);
+      std::printf("PIM-Error: Failed to allocate associated object with %u rows on core %d\n", numAllocRows, coreId);
       return -1;
     }
     newObj.addRegion(newRegion);
@@ -185,7 +183,7 @@ bool
 pimResMgr::pimFree(PimObjId objId)
 {
   if (m_objMap.find(objId) == m_objMap.end()) {
-    std::printf("[PIM] Error: Cannot free non-exist object ID %d\n", objId);
+    std::printf("PIM-Error: Cannot free non-exist object ID %d\n", objId);
     return false;
   }
   const pimObjInfo& obj = m_objMap.at(objId);

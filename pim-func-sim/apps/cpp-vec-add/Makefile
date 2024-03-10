@@ -9,11 +9,11 @@ LIBS := -lpimsim
 EXEC := vec-add
 SRC := vec-add.cpp
 
-.PHONY: all clean
+.PHONY: all clean $(INCLUDE_DIRS)/libpimsim.h $(LIB_DIRS)/libpimsim.a
 
 all: $(EXEC)
 
-$(EXEC): $(SRC)
+$(EXEC): $(SRC) $(INCLUDE_DIRS)/libpimsim.h $(LIB_DIRS)/libpimsim.a
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $< -o $@
 
 clean:

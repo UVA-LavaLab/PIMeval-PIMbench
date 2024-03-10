@@ -28,11 +28,16 @@ public:
   unsigned getNumCols() const { return m_numCols; }
   bool isValid() const { return m_isValid; }
 
-  PimObjId pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsPerElement, PimObjId ref);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
   bool pimFree(PimObjId obj);
 
+  bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
+  bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
+
 private:
+  std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
+
   PimDeviceEnum m_deviceType;
   unsigned m_numCores;
   unsigned m_numRows;
