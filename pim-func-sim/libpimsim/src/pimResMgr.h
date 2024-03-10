@@ -20,7 +20,12 @@ class pimRegion
 {
 public:
   pimRegion()
-    : m_coreId(-1), m_rowIdx(0), m_colIdx(0), m_numAllocRows(0), m_numAllocCols(0), m_isValid(false)
+    : m_coreId(-1),
+      m_rowIdx(0),
+      m_colIdx(0),
+      m_numAllocRows(0),
+      m_numAllocCols(0),
+      m_isValid(false)
   {}
   ~pimRegion() {}
 
@@ -67,7 +72,7 @@ public:
   {}
   ~pimObjInfo() {}
 
-  void addRegion(PimCoreId coreId, pimRegion region);
+  void addRegion(pimRegion region) { m_regions.push_back(region); }
 
   PimObjId getObjId() const { return m_objId; }
   PimAllocEnum getAllocType() const { return m_allocType; }

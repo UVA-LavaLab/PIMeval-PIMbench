@@ -55,23 +55,31 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
   pimObjInfo newObj(m_availObjId, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
-
   unsigned numCols = m_device->getNumCols();
   unsigned numRowsToAlloc = 0;
   unsigned numRegions = 0;
   unsigned numCoresReqd = 0;
+  unsigned numColsToAllocLast = 0;
   if (allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
     numCols = m_device->getNumCols();
-    numRegions = numElements / numCols + 1;
+    numRegions = (numElements - 1) / numCols + 1;
     numCoresReqd = numRegions;
+    numColsToAllocLast = numElements % numCols;
+    if (numColsToAllocLast == 0) {
+      numColsToAllocLast = numCols;
+    }
   } else if (allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
     numCols = m_device->getNumCols();
-    numRegions = (numElements * bitsPerElement) / numCols + 1;
+    numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
     numCoresReqd = numRegions;
+    numColsToAllocLast = (numElements * bitsPerElement) % numCols;
+    if (numColsToAllocLast == 0) {
+      numColsToAllocLast = numCols;
+    }
   } else {
     std::printf("[PIM] Error: Unsupported PIM allocation type %d\n", static_cast<int>(allocType));
     return -1;
@@ -86,13 +94,13 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, int numElements, int bitsPerElement)
   if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
     for (unsigned i = 0; i < numRegions; ++i) {
       unsigned coreId = sortedCoreId[i];
-      unsigned numColsToAlloc = (i == numRegions - 1 ? numElements % numCols : numCols);
+      unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
       pimRegion newRegion = findAvailRegionOnCore(coreId, numRowsToAlloc, numColsToAlloc);
       if (!newRegion.isValid()) {
-        std::printf("[PIM] Error: Failed to allocation object with %d rows on core %d\n", numRowsToAlloc, coreId);
+        std::printf("[PIM] Error: Failed to allocate object with %d rows on core %d\n", numRowsToAlloc, coreId);
         return -1;
       }
-      newObj.addRegion(coreId, newRegion);
+      newObj.addRegion(newRegion);
     }
   }
 
@@ -152,10 +160,10 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, int numElements, int bitsP
     }
     pimRegion newRegion = findAvailRegionOnCore(coreId, numAllocRows, numAllocCols);
     if (!newRegion.isValid()) {
-      std::printf("[PIM] Error: Failed to allocation object with %d rows on core %d\n", numAllocRows, coreId);
+      std::printf("[PIM] Error: Failed to allocate associated object with %d rows on core %d\n", numAllocRows, coreId);
       return -1;
     }
-    newObj.addRegion(coreId, newRegion);
+    newObj.addRegion(newRegion);
   }
 
   // update new object to resource mgr
@@ -204,15 +212,17 @@ pimResMgr::findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsign
 
   // try to find an available slot
   unsigned prevAvail = 0;
-  for (const auto& it : m_coreUsage.at(coreId)) {
-    unsigned rowIdx = it.first;
-    unsigned numRows = it.second;
-    if (rowIdx - prevAvail >= numAllocRows) {
-      region.setRowIdx(prevAvail);
-      region.setIsValid(true);
-      return region;
+  if (m_coreUsage.find(coreId) != m_coreUsage.end()) {
+    for (const auto& it : m_coreUsage.at(coreId)) {
+      unsigned rowIdx = it.first;
+      unsigned numRows = it.second;
+      if (rowIdx - prevAvail >= numAllocRows) {
+        region.setRowIdx(prevAvail);
+        region.setIsValid(true);
+        return region;
+      }
+      prevAvail = rowIdx + numRows;
     }
-    prevAvail = rowIdx + numRows;
   }
   if (m_device->getNumRows() - prevAvail >= numAllocRows) {
     region.setRowIdx(prevAvail);

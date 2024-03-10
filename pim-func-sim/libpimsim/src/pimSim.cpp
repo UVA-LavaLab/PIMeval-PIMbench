@@ -6,6 +6,10 @@
 #include <cstdio>
 
 
+// The pimSim singleton
+pimSim* pimSim::s_instance = nullptr;
+
+
 //! @brief  Get or create the pimSim singleton
 pimSim*
 pimSim::get()
