@@ -14,7 +14,7 @@ SRC := vec-add.cpp
 all: $(EXEC)
 
 $(EXEC): $(SRC) $(INCLUDE_DIRS)/libpimsim.h $(LIB_DIRS)/libpimsim.a
-	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $< -o $@
+	$(CXX) $< $(CXXFLAGS) $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) -o $@
 
 clean:
 	rm -f $(EXEC)

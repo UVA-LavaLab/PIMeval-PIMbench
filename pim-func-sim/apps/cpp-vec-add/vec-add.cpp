@@ -43,7 +43,7 @@ int main()
   std::vector<int> dest(numElements);
 
   // assign some initial values
-  for (int i = 0; i < numElements; ++i) {
+  for (unsigned i = 0; i < numElements; ++i) {
     src1[i] = i;
     src2[i] = i * 2 - 10;
   }

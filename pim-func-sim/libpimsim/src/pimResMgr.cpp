@@ -5,6 +5,7 @@
 #include "pimResMgr.h"
 #include "pimDevice.h"
 #include <cstdio>
+#include <algorithm>
 
 
 //! @brief  Print info of a PIM region

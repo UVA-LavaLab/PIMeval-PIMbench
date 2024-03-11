@@ -16,24 +16,26 @@ SRC := $(wildcard $(SRCDIR)/*.cpp)
 OBJ := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRC))
 
 TARGET := $(LIBDIR)/libpimsim.a
-HEADER := $(INCDIR)/libpimsim.h
 
-.PHONY: all clean
+.PHONY: all clean create_link
 
-all: $(TARGET) $(HEADER)
+all: $(TARGET)
 
 $(TARGET): $(OBJ) | $(LIBDIR)
 	$(AR) $(ARFLAGS) $@ $^
 
-$(HEADER): $(INCDIR)
-	cp $(SRCDIR)/libpimsim.h $(INCDIR)/libpimsim.h
-
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-$(BUILDDIR) $(INCDIR) $(LIBDIR):
+$(BUILDDIR) $(LIBDIR):
 	mkdir -p $@
 
 clean:
-	$(RM) -rv $(BUILDDIR) $(INCDIR) $(LIBDIR)
+	$(RM) -rv $(BUILDDIR) $(LIBDIR)
+
+create_link:
+	mkdir -p $(INCDIR)
+	if [ ! -e $(INCDIR)/libpimsim.h ] ; then \
+		ln -s ../$(SRCDIR)/libpimsim.h $(INCDIR)/libpimsim.h ; \
+	fi
 

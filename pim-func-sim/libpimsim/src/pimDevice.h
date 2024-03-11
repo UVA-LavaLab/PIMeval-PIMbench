@@ -8,6 +8,7 @@
 #include "libpimsim.h"
 #include "pimCore.h"
 #include "pimCmd.h"
+#include <memory>
 
 class pimResMgr;
 
