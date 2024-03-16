@@ -122,12 +122,171 @@ pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
   return m_device->pimCopyDeviceToMain(copyType, src, dest);
 }
 
-// @brief  PIM OP: add int32 v-layout
+// @brief  PIM OP: int32 add
 bool
-pimSim::pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAddInt32V>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32AddV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @BRIEFu  PIM OP: int32 abs v-layout
+bool
+pimSim::pimInt32Abs(PimObjId src, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32AbsV>(src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+int
+pimSim::pimInt32RedSum(PimObjId src)
+{
+  return 0;
+}
+
+int
+pimSim::pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
+{
+  return 0;
+}
+
+bool
+pimSim::pimRotateR(PimObjId src)
+{
+  return false;
+}
+
+bool
+pimSim::pimRotateL(PimObjId src)
+{
+  return false;
+}
+
+bool
+pimSim::pimOpReadRowToSa(PimObjId objId, unsigned ofst)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReadRowToSa>(objId, ofst);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpWriteSaToRow(PimObjId objId, unsigned ofst)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdWriteSaToRow>(objId, ofst);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpTRA(PimObjId src1, unsigned ofst1, PimObjId src2, unsigned ofst2, PimObjId src3, unsigned ofst3)
+{
+  return false;
+}
+
+bool
+pimSim::pimOpMove(PimObjId objId, PimRowReg src, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegMove>(objId, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpSet(PimObjId objId, PimRowReg src, bool val)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegSet>(objId, src, val);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpNot(PimObjId objId, PimRowReg src, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegNot>(objId, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpAnd(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegAnd>(objId, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpOr(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegOr>(objId, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpNand(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegNand>(objId, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpNor(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegNor>(objId, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpXor(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegXor>(objId, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpXnor(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegXnor>(objId, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpMaj(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg src3, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegMaj>(objId, src1, src2, src3, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpSel(PimObjId objId, PimRowReg cond, PimRowReg src1, PimRowReg src2, PimRowReg dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegSel>(objId, cond, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpRotateRH(PimObjId objId, PimRowReg src)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegRotateR>(objId, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpRotateLH(PimObjId objId, PimRowReg src)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegRotateL>(objId, src);
   return m_device->executeCmd(std::move(cmd));
 }
 

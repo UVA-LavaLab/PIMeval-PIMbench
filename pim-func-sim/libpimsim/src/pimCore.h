@@ -27,23 +27,31 @@ public:
   bool readRow(unsigned rowIndex);
   bool readTripleRows(unsigned rowIndex1, unsigned rowIndex2, unsigned rowIndex3);
   bool writeRow(unsigned rowIndex);
-  const std::vector<bool>& getSenseAmpRow() const { return m_senseAmpRow; }
+  std::vector<bool>& getSenseAmpRow() { return m_rowRegs[PIM_RREG_SA]; }
   bool setSenseAmpRow(const std::vector<bool>& vals);
 
   // Column-based operations
   bool readCol(unsigned colIndex);
   bool readTripleCols(unsigned colIndex1, unsigned colIndex2, unsigned colIndex3);
   bool writeCol(unsigned colIndex);
-  const std::vector<bool>& getSenseAmpCol() const { return m_senseAmpCol; }
+  std::vector<bool>& getSenseAmpCol() { return m_senseAmpCol; }
   bool setSenseAmpCol(const std::vector<bool>& vals);
 
+  // Reg access
+  std::vector<bool>& getRowReg(PimRowReg reg) { return m_rowRegs[reg]; }
+
   // Utilities
-  bool declareRowReg(const std::string& name);
+  bool declareRowReg(PimRowReg reg);
   bool declareColReg(const std::string& name);
   void print() const;
 
-  void setBit(unsigned rowIdx, unsigned colIdx, bool val) { m_array[rowIdx][colIdx] = val; }
-  bool getBit(unsigned rowIdx, unsigned colIdx) const { return m_array[rowIdx][colIdx]; }
+  // Directly manipulate bits for functional implementation
+  void setBit(unsigned rowIdx, unsigned colIdx, bool val);
+  bool getBit(unsigned rowIdx, unsigned colIdx) const;
+  void setB32V(unsigned rowIdx, unsigned colIdx, unsigned val);
+  unsigned getB32V(unsigned rowIdx, unsigned colIdx) const;
+  void setB32H(unsigned rowIdx, unsigned colIdx, unsigned val);
+  unsigned getB32H(unsigned rowIdx, unsigned colIdx) const;
 
 private:
   PimCoreId m_coreId;
@@ -51,10 +59,9 @@ private:
   unsigned m_numCols;
 
   std::vector<std::vector<bool>> m_array;
-  std::vector<bool> m_senseAmpRow;
   std::vector<bool> m_senseAmpCol;
 
-  std::map<std::string, std::vector<bool>> m_rowRegs;
+  std::map<PimRowReg, std::vector<bool>> m_rowRegs;
   std::map<std::string, std::vector<bool>> m_colRegs;
 };
 
