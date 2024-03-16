@@ -19,6 +19,7 @@ extern "C" {
   enum PimDeviceEnum {
     PIM_DEVICE_NONE = 0,
     PIM_FUNCTIONAL,
+    PIM_DEVICE_BITSIMD_V,
   };
 
   //! @brief  PIM allocation types
@@ -45,15 +46,47 @@ extern "C" {
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
   PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
   PimStatus pimFree(PimObjId obj);
+  PimObjId pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd);
 
   // Data transfer
   PimStatus pimCopyHostToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
   PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
 
-  // Computation
-  PimStatus pimAddInt32V(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimRedSum(PimObjId a, PimObjId b, PimObjId c);
+  // High level computation
+  PimStatus pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimInt32Abs(PimObjId src, PimObjId dest);
+  int pimInt32RedSum(PimObjId src);
+  int pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
+  PimStatus pimRotateR(PimObjId src);
+  PimStatus pimRotateL(PimObjId src);
 
+  // BitSIMD-V: Row-wide bit registers per subarray
+  enum PimRowReg {
+    PIM_RREG_SA = 0,
+    PIM_RREG_R1,
+    PIM_RREG_R2,
+    PIM_RREG_R3,
+    PIM_RREG_R4,
+    PIM_RREG_R5,
+  };
+
+  // BitSIMD-V micro ops
+  PimStatus pimOpReadRowToSa(PimObjId src, unsigned ofst);
+  PimStatus pimOpWriteSaToRow(PimObjId src, unsigned ofst);
+  PimStatus pimOpTRA(PimObjId src1, unsigned ofst1, PimObjId src2, unsigned ofst2, PimObjId src3, unsigned ofst3);
+  PimStatus pimOpMove(PimObjId objId, PimRowReg src, PimRowReg dest);
+  PimStatus pimOpSet(PimObjId objId, PimRowReg src, bool val);
+  PimStatus pimOpNot(PimObjId objId, PimRowReg src, PimRowReg dest);
+  PimStatus pimOpAnd(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpOr(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpNand(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpNor(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpXor(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpXnor(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpMaj(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg src3, PimRowReg dest);
+  PimStatus pimOpSel(PimObjId objId, PimRowReg cond, PimRowReg src1, PimRowReg src2, PimRowReg dest);
+  PimStatus pimOpRotateRH(PimObjId objId, PimRowReg src);
+  PimStatus pimOpRotateLH(PimObjId objId, PimRowReg src);
 
 #ifdef __cplusplus
 }

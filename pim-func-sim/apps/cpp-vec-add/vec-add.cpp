@@ -60,7 +60,7 @@ int main()
     return 1;
   }
 
-  status = pimAddInt32V(obj1, obj2, obj3);
+  status = pimInt32Add(obj1, obj2, obj3);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
