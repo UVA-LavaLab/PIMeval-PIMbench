@@ -218,7 +218,9 @@ pimCmdRRegMove::execute(pimDevice* device)
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
     const pimRegion& srcRegion = objSrc.getRegions()[i];
     PimCoreId coreId = srcRegion.getCoreId();
-    device->getCore(coreId).getRowReg(m_dest) = device->getCore(coreId).getRowReg(m_src);
+    for (unsigned j = 0; j < device->getNumCols(); j++) {
+      device->getCore(coreId).getRowReg(m_dest)[j] = device->getCore(coreId).getRowReg(m_src)[j];
+    }
   }
   return true;
 }
@@ -272,7 +274,7 @@ pimCmdRRegAnd::execute(pimDevice* device)
     for (unsigned j = 0; j < device->getNumCols(); j++) {
       bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
       bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-      device->getCore(coreId).getRowReg(m_dest)[j] = src1 & src2;
+      device->getCore(coreId).getRowReg(m_dest)[j] = (src1 & src2);
     }
   }
   return true;
@@ -393,7 +395,7 @@ pimCmdRRegMaj::execute(pimDevice* device)
       bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
       bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
       bool src3 = device->getCore(coreId).getRowReg(m_src3)[j];
-      device->getCore(coreId).getRowReg(m_dest)[j] = (src1 & src2) || (src1 & src3) || (src2 & src3);
+      device->getCore(coreId).getRowReg(m_dest)[j] = ((src1 & src2) || (src1 & src3) || (src2 & src3));
     }
   }
   return true;
@@ -432,7 +434,7 @@ pimCmdRRegRotateR::execute(pimDevice* device)
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
     const pimRegion& srcRegion = objSrc.getRegions()[i];
     PimCoreId coreId = srcRegion.getCoreId();
-    for (unsigned j = 0; j < srcRegion.getNumAllocCols(); --j) {
+    for (unsigned j = 0; j < srcRegion.getNumAllocCols(); ++j) {
       unsigned colIdx = srcRegion.getColIdx() + j;
       bool tmp = device->getCore(coreId).getRowReg(m_dest)[colIdx];
       device->getCore(coreId).getRowReg(m_dest)[colIdx] = prevVal;
@@ -440,7 +442,7 @@ pimCmdRRegRotateR::execute(pimDevice* device)
     }
   }
   // write the last val to the first place
-  const pimRegion& firstRegion = objSrc.getRegions()[0];
+  const pimRegion& firstRegion = objSrc.getRegions().front();
   PimCoreId firstCoreId = firstRegion.getCoreId();
   unsigned firstColIdx = firstRegion.getColIdx();
   device->getCore(firstCoreId).getRowReg(m_dest)[firstColIdx] = prevVal;
@@ -469,7 +471,7 @@ pimCmdRRegRotateL::execute(pimDevice* device)
   // write the first val to the last place
   const pimRegion& lastRegion = objSrc.getRegions().back();
   PimCoreId lastCoreId = lastRegion.getCoreId();
-  unsigned lastColIdx = lastRegion.getColIdx();
+  unsigned lastColIdx = lastRegion.getColIdx() + lastRegion.getNumAllocCols() - 1;
   device->getCore(lastCoreId).getRowReg(m_dest)[lastColIdx] = prevVal;
   return true;
 }

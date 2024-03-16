@@ -238,7 +238,7 @@ pimOpSel(PimObjId objId, PimRowReg cond, PimRowReg src1, PimRowReg src2, PimRowR
 PimStatus
 pimOpRotateRH(PimObjId objId, PimRowReg src)
 {
-  bool ok = false;
+  bool ok = pimSim::get()->pimOpRotateRH(objId, src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -246,7 +246,7 @@ pimOpRotateRH(PimObjId objId, PimRowReg src)
 PimStatus
 pimOpRotateLH(PimObjId objId, PimRowReg src)
 {
-  bool ok = false;
+  bool ok = pimSim::get()->pimOpRotateLH(objId, src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
