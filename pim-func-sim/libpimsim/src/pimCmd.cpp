@@ -203,7 +203,7 @@ pimCmdInt32MulV::execute(pimDevice* device)
       int operand1 = static_cast<int>(device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j));
       int operand2 = static_cast<int>(device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j));
       int result = operand1 * operand2;
-      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, static_cast<unsigned>(result));
+      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
     }
   }
 
