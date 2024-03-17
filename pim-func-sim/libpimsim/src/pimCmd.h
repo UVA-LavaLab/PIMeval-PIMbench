@@ -66,6 +66,23 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdInt32MulV
+//! @brief  Pim CMD: int32 add v-layout
+class pimCmdInt32MulV : public pimCmd
+{
+public:
+  pimCmdInt32MulV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32MulV() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
 //! @class  pimCmdReadRowToSa
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 class pimCmdReadRowToSa : public pimCmd

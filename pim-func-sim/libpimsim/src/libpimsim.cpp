@@ -92,6 +92,15 @@ pimInt32Abs(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM int32 vector multiplication
+PimStatus
+pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimInt32Mul(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+
 //! @brief  PIM int32 reduction sum. Result returned to a host variable
 int
 pimInt32RedSum(PimObjId src)

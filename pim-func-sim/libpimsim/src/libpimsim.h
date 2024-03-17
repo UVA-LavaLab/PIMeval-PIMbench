@@ -55,6 +55,7 @@ extern "C" {
   // High level computation
   PimStatus pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimInt32Abs(PimObjId src, PimObjId dest);
+  PimStatus pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest);
   int pimInt32RedSum(PimObjId src);
   int pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
   PimStatus pimRotateR(PimObjId src);

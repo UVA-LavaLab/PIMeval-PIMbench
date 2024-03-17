@@ -140,6 +140,15 @@ pimSim::pimInt32Abs(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: int32 mul
+bool
+pimSim::pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32MulV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 int
 pimSim::pimInt32RedSum(PimObjId src)
 {
