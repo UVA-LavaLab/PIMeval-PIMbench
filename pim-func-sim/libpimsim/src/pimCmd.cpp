@@ -121,10 +121,12 @@ pimCmdInt32AddV::execute(pimDevice* device)
     unsigned colIdx = src1Region.getColIdx();
     unsigned numAllocCols = src1Region.getNumAllocCols();
     for (unsigned j = 0; j < numAllocCols; ++j) {
-      int operand1 = static_cast<int>(device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j));
-      int operand2 = static_cast<int>(device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j));
+      auto operandVal1 = device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j);
+      auto operandVal2 = device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j);
+      int operand1 = *reinterpret_cast<unsigned*>(&operandVal1);
+      int operand2 = *reinterpret_cast<unsigned*>(&operandVal2);
       int result = operand1 + operand2;
-      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, static_cast<unsigned>(result));
+      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
     }
   }
 
@@ -200,8 +202,10 @@ pimCmdInt32MulV::execute(pimDevice* device)
     unsigned colIdx = src1Region.getColIdx();
     unsigned numAllocCols = src1Region.getNumAllocCols();
     for (unsigned j = 0; j < numAllocCols; ++j) {
-      int operand1 = static_cast<int>(device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j));
-      int operand2 = static_cast<int>(device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j));
+      auto operandVal1 = device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j);
+      auto operandVal2 = device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j);
+      int operand1 = *reinterpret_cast<unsigned*>(&operandVal1);
+      int operand2 = *reinterpret_cast<unsigned*>(&operandVal2);
       int result = operand1 * operand2;
       device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
     }
