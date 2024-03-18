@@ -171,6 +171,38 @@ pimCmdInt32AbsV::execute(pimDevice* device)
   return true;
 }
 
+//! @brief  PIM CMD: int32 redsum v-layout
+bool
+pimCmdInt32RedSum::execute(pimDevice* device)
+{
+  std::printf("PIM-Info: Int32RedSum (obj id %d)\n", m_src);
+
+  pimResMgr* resMgr = device->getResMgr();
+
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+
+  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+    const pimRegion& srcRegion = objSrc.getRegions()[i];
+
+    if (srcRegion.getNumAllocRows() != 32) {
+      std::printf("PIM-Error: Operands %d are not all 32-bit v-layout\n", m_src);
+      return false;
+    }
+
+    PimCoreId coreId = srcRegion.getCoreId();
+
+    // perform the computation
+    unsigned colIdx = srcRegion.getColIdx();
+    unsigned numAllocCols = srcRegion.getNumAllocCols();
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      int operand = static_cast<int>(device->getCore(coreId).getB32V(srcRegion.getRowIdx(), colIdx + j));
+      m_result += operand;
+    }
+  }
+
+  return true;
+}
+
 //! @brief  PIM CMD: int32 mul v-layout
 bool
 pimCmdInt32MulV::execute(pimDevice* device)
