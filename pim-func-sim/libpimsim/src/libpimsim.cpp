@@ -105,14 +105,14 @@ pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
 int
 pimInt32RedSum(PimObjId src)
 {
-  return 0;
+  return pimSim::get()->pimInt32RedSum(src);
 }
 
 //! @brief  PIM int32 reduction sum for a range of an obj. Result returned to a host variable
 int
 pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 {
-  return 0;
+  return pimSim::get()->pimInt32RedSumRanged(src, idxBegin, idxEnd);
 }
 
 //! @brief  Rotate all elements of an obj by one step to the right

@@ -66,6 +66,22 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdInt32RedSum
+//! @brief  Pim CMD: int32 RedSum v-layout
+class pimCmdInt32RedSum : public pimCmd
+{
+public:
+  pimCmdInt32RedSum(PimObjId src, int& result)
+    : m_src(src), m_result(result) {}
+  virtual ~pimCmdInt32RedSum() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src;
+  int& m_result;
+};
+
 //! @class  pimCmdInt32MulV
 //! @brief  Pim CMD: int32 add v-layout
 class pimCmdInt32MulV : public pimCmd

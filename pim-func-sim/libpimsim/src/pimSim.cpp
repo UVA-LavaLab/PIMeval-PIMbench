@@ -152,13 +152,17 @@ pimSim::pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
 int
 pimSim::pimInt32RedSum(PimObjId src)
 {
-  return 0;
+  if (!isValidDevice()) { return false; }
+  int result = 0;
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32RedSum>(src, result);
+  m_device->executeCmd(std::move(cmd));
+  return result;
 }
 
 int
 pimSim::pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 {
-  return 0;
+  return false;
 }
 
 bool
