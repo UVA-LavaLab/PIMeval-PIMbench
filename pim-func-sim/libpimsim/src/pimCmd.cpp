@@ -203,7 +203,7 @@ pimCmdInt32RedSum::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 redsum v-layout
+//! @brief  PIM CMD: int32 redsum range v-layout
 bool
 pimCmdInt32RedSumRanged::execute(pimDevice* device)
 {
