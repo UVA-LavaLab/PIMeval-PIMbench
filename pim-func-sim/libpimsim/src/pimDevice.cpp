@@ -259,7 +259,23 @@ pimDevice::writeBitsToHost(void* dest, const std::vector<bool>& bits)
 bool
 pimDevice::executeCmd(std::unique_ptr<pimCmd> cmd)
 {
+  m_cmdCnt[cmd->getName()]++;
+
   bool ok = cmd->execute(this);
 
   return ok;
 }
+
+//! @brief  Show PIM command stats
+void
+pimDevice::showStats() const
+{
+  std::printf("----------------------------------------\n");
+  std::printf("PIM-CMD Stats:\n");
+  std::printf(" %30s : %s\n", "PIM-CMD", "CNT");
+  for (const auto& it : m_cmdCnt) {
+    std::printf(" %30s : %d\n", it.first.c_str(), it.second);
+  }
+  std::printf("----------------------------------------\n");
+}
+

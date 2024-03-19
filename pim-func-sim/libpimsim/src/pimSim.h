@@ -22,6 +22,7 @@ public:
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
+  void showStats() const;
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);

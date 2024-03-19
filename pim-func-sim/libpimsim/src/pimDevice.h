@@ -41,6 +41,8 @@ public:
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
 
+  void showStats() const;
+
 private:
   std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
@@ -52,6 +54,8 @@ private:
   bool m_isValid;
   pimResMgr* m_resMgr;
   std::vector<pimCore> m_cores;
+
+  std::map<std::string, int> m_cmdCnt;
 };
 
 #endif
