@@ -203,10 +203,45 @@ pimCmdInt32RedSum::execute(pimDevice* device)
   return true;
 }
 
+//! @brief  PIM CMD: int32 redsum v-layout
+bool
+pimCmdInt32RedSumRanged::execute(pimDevice* device)
+{
+  std::printf("PIM-Info: Int32RedSumRanged (obj id %d)\n", m_src);
+
+  pimResMgr* resMgr = device->getResMgr();
+  //first get the start region; then get the column number you have to access for that region. Then keep increasing the idx count.
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  unsigned currIDX = 0;
+  for (unsigned i = 0; i < objSrc.getRegions().size() && currIDX < m_idxEnd; ++i) {
+    const pimRegion& srcRegion = objSrc.getRegions()[i];
+
+    if (srcRegion.getNumAllocRows() != 32) {
+      std::printf("PIM-Error: Operands %d are not all 32-bit v-layout\n", m_src);
+      return false;
+    }
+
+    PimCoreId coreId = srcRegion.getCoreId();
+
+    // perform the computation
+    unsigned colIdx = srcRegion.getColIdx();
+    unsigned numAllocCols = srcRegion.getNumAllocCols();
+    for (unsigned j = 0; j < numAllocCols && currIDX < m_idxEnd; ++j) {
+      if (currIDX >= m_idxBegin) {
+        int operand = static_cast<int>(device->getCore(coreId).getB32V(srcRegion.getRowIdx(), colIdx + j));
+        m_result += operand;
+      } 
+      currIDX += 1;      
+    }
+  }
+
+  return true;
+}
+
 //! @brief  PIM CMD: int32 mul v-layout
 bool
 pimCmdInt32MulV::execute(pimDevice* device)
-{
+{ 
   std::printf("PIM-Info: Int32MulV (obj id %d * %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();

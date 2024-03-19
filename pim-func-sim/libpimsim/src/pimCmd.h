@@ -82,6 +82,24 @@ protected:
   int& m_result;
 };
 
+//! @class  pimCmdInt32RedSumRanged
+//! @brief  Pim CMD: int32 RedSumRanged v-layout
+class pimCmdInt32RedSumRanged : public pimCmd
+{
+public:
+  pimCmdInt32RedSumRanged(PimObjId src, int& result, unsigned idxBegin, unsigned idxEnd)
+    : m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
+  virtual ~pimCmdInt32RedSumRanged() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src;
+  int& m_result;
+  unsigned m_idxBegin; 
+  unsigned m_idxEnd;
+};
+
 //! @class  pimCmdInt32MulV
 //! @brief  Pim CMD: int32 add v-layout
 class pimCmdInt32MulV : public pimCmd
