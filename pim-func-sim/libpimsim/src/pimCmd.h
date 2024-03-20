@@ -52,6 +52,40 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdInt32SubV
+//! @brief  Pim CMD: int32 sub v-layout
+class pimCmdInt32SubV : public pimCmd
+{
+public:
+  pimCmdInt32SubV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32SubV() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdInt32DivV
+//! @brief  Pim CMD: int32 div v-layout
+class pimCmdInt32DivV : public pimCmd
+{
+public:
+  pimCmdInt32DivV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32DivV() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
 //! @class  pimCmdInt32AbsV
 //! @brief  Pim CMD: int32 abs v-layout
 class pimCmdInt32AbsV : public pimCmd
@@ -84,6 +118,24 @@ public:
 protected:
   PimObjId m_src;
   int& m_result;
+};
+
+//! @class  pimCmdInt32RedSumRanged
+//! @brief  Pim CMD: int32 RedSumRanged v-layout
+class pimCmdInt32RedSumRanged : public pimCmd
+{
+public:
+  pimCmdInt32RedSumRanged(PimObjId src, int& result, unsigned idxBegin, unsigned idxEnd)
+    : m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
+  virtual ~pimCmdInt32RedSumRanged() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src;
+  int& m_result;
+  unsigned m_idxBegin; 
+  unsigned m_idxEnd;
 };
 
 //! @class  pimCmdInt32MulV

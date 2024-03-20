@@ -140,7 +140,25 @@ pimSim::pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @BRIEFu  PIM OP: int32 abs v-layout
+// @brief  PIM OP: int32 sub
+bool
+pimSim::pimInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32SubV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief PIM OP: int32 div
+bool
+pimSim::pimInt32Div(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32DivV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: int32 abs v-layout
 bool
 pimSim::pimInt32Abs(PimObjId src, PimObjId dest)
 {
@@ -171,7 +189,11 @@ pimSim::pimInt32RedSum(PimObjId src)
 int
 pimSim::pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 {
-  return false;
+  if (!isValidDevice()) { return false; }
+  int result = 0;
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32RedSumRanged>(src, result, idxBegin, idxEnd);
+  m_device->executeCmd(std::move(cmd));
+  return result;
 }
 
 bool
