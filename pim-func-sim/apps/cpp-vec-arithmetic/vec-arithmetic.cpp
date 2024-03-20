@@ -7,7 +7,7 @@
 
 int main()
 {
-  std::cout << "PIM test: Vector add" << std::endl;
+  std::cout << "PIM test: Vector arithmetic" << std::endl;
 
   unsigned numCores = 4;
   unsigned numRows = 128;
