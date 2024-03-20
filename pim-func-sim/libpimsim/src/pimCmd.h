@@ -7,6 +7,7 @@
 
 #include "libpimsim.h"
 #include <vector>
+#include <string>
 
 class pimDevice;
 class pimResMgr;
@@ -26,7 +27,7 @@ public:
   virtual ~pimCmd() {}
 
   virtual bool execute(pimDevice* device) = 0;
-  virtual const char* getName() const = 0;
+  virtual std::string getName() const = 0;
 
 protected:
   bool isCoreAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
@@ -44,7 +45,7 @@ public:
   virtual ~pimCmdInt32AddV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "int32.add.v"; }
+  virtual std::string getName() const override { return "int32.add.v"; }
 
 protected:
   PimObjId m_src1;
@@ -62,6 +63,7 @@ public:
   virtual ~pimCmdInt32SubV() {}
 
   virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "int32.sub.v"; }
 
 protected:
   PimObjId m_src1;
@@ -79,6 +81,7 @@ public:
   virtual ~pimCmdInt32DivV() {}
 
   virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "int32.div.v"; }
 
 protected:
   PimObjId m_src1;
@@ -96,7 +99,7 @@ public:
   virtual ~pimCmdInt32AbsV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "int32.abs.v"; }
+  virtual std::string getName() const override { return "int32.abs.v"; }
 
 protected:
   PimObjId m_src;
@@ -113,7 +116,7 @@ public:
   virtual ~pimCmdInt32RedSum() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "int32.redsum.v"; }
+  virtual std::string getName() const override { return "int32.redsum.v"; }
 
 protected:
   PimObjId m_src;
@@ -130,6 +133,7 @@ public:
   virtual ~pimCmdInt32RedSumRanged() {}
 
   virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "int32.redsum_range.v"; }
 
 protected:
   PimObjId m_src;
@@ -148,7 +152,7 @@ public:
   virtual ~pimCmdInt32MulV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "int32.mul.v"; }
+  virtual std::string getName() const override { return "int32.mul.v"; }
 
 protected:
   PimObjId m_src1;
@@ -165,7 +169,7 @@ public:
     : m_objId(objId), m_ofst(ofst) {}
   virtual ~pimCmdReadRowToSa() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.read_row.v"; }
+  virtual std::string getName() const override { return "bitsimd.read_row.v"; }
 protected:
   PimObjId m_objId;
   unsigned m_ofst;
@@ -180,7 +184,7 @@ public:
     : m_objId(objId), m_ofst(ofst) {}
   virtual ~pimCmdWriteSaToRow() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.write_row.v"; }
+  virtual std::string getName() const override { return "bitsimd.write_row.v"; }
 protected:
   PimObjId m_objId;
   unsigned m_ofst;
@@ -195,7 +199,7 @@ public:
     : m_objId(objId), m_src(src), m_dest(dest) {}
   virtual ~pimCmdRRegMove() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.mov.v"; }
+  virtual std::string getName() const override { return "bitsimd.mov.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src;
@@ -211,7 +215,7 @@ public:
     : m_objId(objId), m_dest(dest), m_val(val) {}
   virtual ~pimCmdRRegSet() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.set.v"; }
+  virtual std::string getName() const override { return "bitsimd.set.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_dest;
@@ -227,7 +231,7 @@ public:
     : m_objId(objId), m_src(src), m_dest(dest) {}
   virtual ~pimCmdRRegNot() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.not.v"; }
+  virtual std::string getName() const override { return "bitsimd.not.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src;
@@ -243,7 +247,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegAnd() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.and.v"; }
+  virtual std::string getName() const override { return "bitsimd.and.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -260,7 +264,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegOr() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.or.v"; }
+  virtual std::string getName() const override { return "bitsimd.or.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -277,7 +281,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegNand() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.nand.v"; }
+  virtual std::string getName() const override { return "bitsimd.nand.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -294,7 +298,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegNor() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.nor.v"; }
+  virtual std::string getName() const override { return "bitsimd.nor.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -311,7 +315,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegXor() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.xor.v"; }
+  virtual std::string getName() const override { return "bitsimd.xor.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -328,7 +332,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegXnor() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.xnor.v"; }
+  virtual std::string getName() const override { return "bitsimd.xnor.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -345,7 +349,7 @@ public:
     : m_objId(objId), m_src1(src1), m_src2(src2), m_src3(src3), m_dest(dest) {}
   virtual ~pimCmdRRegMaj() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.maj.v"; }
+  virtual std::string getName() const override { return "bitsimd.maj.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_src1;
@@ -363,7 +367,7 @@ public:
     : m_objId(objId), m_cond(cond), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdRRegSel() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.sel.v"; }
+  virtual std::string getName() const override { return "bitsimd.sel.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_cond;
@@ -380,7 +384,7 @@ public:
   pimCmdRRegRotateR(PimObjId objId, PimRowReg dest) : m_objId(objId), m_dest(dest) {}
   virtual ~pimCmdRRegRotateR() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.rotate_r.v"; }
+  virtual std::string getName() const override { return "bitsimd.rotate_r.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_dest;
@@ -394,7 +398,7 @@ public:
   pimCmdRRegRotateL(PimObjId objId, PimRowReg dest) : m_objId(objId), m_dest(dest) {}
   virtual ~pimCmdRRegRotateL() {}
   virtual bool execute(pimDevice* device) override;
-  virtual const char* getName() const override { return "bitsimd.rotate_l.v"; }
+  virtual std::string getName() const override { return "bitsimd.rotate_l.v"; }
 protected:
   PimObjId m_objId;
   PimRowReg m_dest;

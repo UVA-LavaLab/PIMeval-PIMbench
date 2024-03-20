@@ -94,6 +94,7 @@ int main()
     result = 0;
   }
 
+  pimShowStats();
   if (ok) {
     std::cout << "All correct!" << std::endl;
   }
