@@ -41,6 +41,7 @@ extern "C" {
   PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
   PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   PimStatus pimDeleteDevice();
+  void pimShowStats();
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);

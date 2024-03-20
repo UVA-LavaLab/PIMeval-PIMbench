@@ -30,6 +30,13 @@ pimDeleteDevice()
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Show PIM command stats
+void
+pimShowStats()
+{
+  pimSim::get()->showStats();
+}
+
 //! @brief  Allocate a PIM resource
 PimObjId
 pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements)

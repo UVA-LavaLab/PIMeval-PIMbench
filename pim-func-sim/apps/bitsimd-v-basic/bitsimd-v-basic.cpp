@@ -281,6 +281,7 @@ int main()
     return 1;
   }
 
+  pimShowStats();
   std::cout << "All correct!" << std::endl;
   return 0;
 }

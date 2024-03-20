@@ -82,6 +82,15 @@ pimSim::isValidDevice(bool showMsg) const
   return isValid;
 }
 
+//! @brief  Show PIM command stats
+void
+pimSim::showStats() const
+{
+  if (m_device && m_device->isValid()) {
+    m_device->showStats();
+  }
+}
+
 //! @brief  Allocate a PIM object
 PimObjId
 pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
