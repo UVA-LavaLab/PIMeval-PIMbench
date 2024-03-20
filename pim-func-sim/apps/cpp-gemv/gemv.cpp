@@ -1,4 +1,4 @@
-// Test: C++ version of vector add
+// Test: C++ version of matrix vector multiplication
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
@@ -7,11 +7,11 @@
 
 int main()
 {
-  std::cout << "PIM test: Vector multiplication" << std::endl;
+  std::cout << "PIM test: Matrix vector multiplication" << std::endl;
 
   unsigned numCores = 4;
-  unsigned numRows = 128;
-  unsigned numCols = 256;
+  unsigned numRows = 512;
+  unsigned numCols = 512;
 
   PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
   if (status != PIM_OK) {
@@ -19,8 +19,8 @@ int main()
     return 1;
   }
 
-  unsigned numMatRows = 1;
-  unsigned numMatCols = 1024;
+  unsigned numMatRows = 64;
+  unsigned numMatCols = 8;
   unsigned bitsPerElement = 32;
   unsigned totalElementCount = numMatCols*numMatRows;
 
@@ -42,7 +42,7 @@ int main()
 
   std::vector<int> src1(totalElementCount);
   std::vector<int> src2(totalElementCount);
-  int dest = 0;
+  std::vector<int> dest(numMatRows);
 
   // assign some initial values
   for (unsigned i = 0; i < totalElementCount; ++i) {
@@ -74,7 +74,10 @@ int main()
     return 1;
   }
 
-  dest = pimInt32RedSum(obj3);
+  for (unsigned i = 0; i < numMatRows; i++) {
+    int stIDX = numMatCols*i;
+    dest[i] = pimInt32RedSumRanged(obj3, stIDX, stIDX+numMatCols );
+  }
   
   // check results
   bool ok = true;
@@ -83,10 +86,12 @@ int main()
     for (unsigned j = 0; j < numMatCols; j++) {
       result += src1[i*numMatCols + j] * src2[j];
     }
-    if (dest != result) {
-      std::cout << "Wrong answer: " << dest << " (expected " << result << ")" << std::endl;
+    if (dest[i] != result) {
+      std::cout << "IDX: " << i << " Wrong answer: " << dest[i] << " (expected " << result << ")" << std::endl;
       ok = false;
+      break;
     }
+    result = 0;
   }
 
   if (ok) {
