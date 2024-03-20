@@ -50,6 +50,40 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdInt32SubV
+//! @brief  Pim CMD: int32 sub v-layout
+class pimCmdInt32SubV : public pimCmd
+{
+public:
+  pimCmdInt32SubV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32SubV() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdInt32DivV
+//! @brief  Pim CMD: int32 div v-layout
+class pimCmdInt32DivV : public pimCmd
+{
+public:
+  pimCmdInt32DivV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32DivV() {}
+
+  virtual bool execute(pimDevice* device) override;
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
 //! @class  pimCmdInt32AbsV
 //! @brief  Pim CMD: int32 abs v-layout
 class pimCmdInt32AbsV : public pimCmd
