@@ -176,6 +176,33 @@ pimSim::pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: int32 and
+bool
+pimSim::pimInt32And(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32AndV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: int32 or
+bool
+pimSim::pimInt32Or(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32OrV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: int32 xor
+bool
+pimSim::pimInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32XorV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 int
 pimSim::pimInt32RedSum(PimObjId src)
 {

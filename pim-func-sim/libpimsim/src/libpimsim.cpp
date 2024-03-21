@@ -107,6 +107,30 @@ pimInt32Div(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM int32 vector or
+PimStatus
+pimInt32Or(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimInt32Or(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM int32 vector and
+PimStatus
+pimInt32And(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimInt32And(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM int32 vector xor
+PimStatus
+pimInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimInt32Xor(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM int32 vector abs
 PimStatus
 pimInt32Abs(PimObjId src, PimObjId dest)
