@@ -106,6 +106,60 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdInt32AndV
+//! @brief  Pim CMD: int32 and v-layout
+class pimCmdInt32AndV : public pimCmd
+{
+public:
+  pimCmdInt32AndV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32AndV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "int32.and.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdInt32OrV
+//! @brief  Pim CMD: int32 or v-layout
+class pimCmdInt32OrV : public pimCmd
+{
+public:
+  pimCmdInt32OrV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32OrV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "int32.or.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdInt32XorV
+//! @brief  Pim CMD: int32 xor v-layout
+class pimCmdInt32XorV : public pimCmd
+{
+public:
+  pimCmdInt32XorV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdInt32XorV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "int32.xor.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
 //! @class  pimCmdInt32RedSum
 //! @brief  Pim CMD: int32 RedSum v-layout
 class pimCmdInt32RedSum : public pimCmd

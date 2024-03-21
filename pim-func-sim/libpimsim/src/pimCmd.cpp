@@ -371,6 +371,135 @@ pimCmdInt32MulV::execute(pimDevice* device)
   return true;
 }
 
+//! @brief  PIM CMD: int32 or v-layout
+bool
+pimCmdInt32OrV::execute(pimDevice* device)
+{ 
+  std::printf("PIM-Info: Int32OrV (obj id %d | %d -> %d)\n", m_src1, m_src2, m_dest);
+
+  pimResMgr* resMgr = device->getResMgr();
+  if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
+  const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+
+  for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
+    const pimRegion& src1Region = objSrc1.getRegions()[i];
+    const pimRegion& src2Region = objSrc2.getRegions()[i];
+    const pimRegion& destRegion = objDest.getRegions()[i];
+
+    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
+      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+      return false;
+    }
+
+    PimCoreId coreId = src1Region.getCoreId();
+
+    // perform the computation
+    unsigned colIdx = src1Region.getColIdx();
+    unsigned numAllocCols = src1Region.getNumAllocCols();
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      auto operandVal1 = device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j);
+      auto operandVal2 = device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j);
+      int operand1 = *reinterpret_cast<unsigned*>(&operandVal1);
+      int operand2 = *reinterpret_cast<unsigned*>(&operandVal2);
+      int result = operand1 | operand2;
+      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
+    }
+  }
+
+  return true;
+}
+
+//! @brief  PIM CMD: int32 and v-layout
+bool
+pimCmdInt32AndV::execute(pimDevice* device)
+{ 
+  std::printf("PIM-Info: Int32OrV (obj id %d & %d -> %d)\n", m_src1, m_src2, m_dest);
+
+  pimResMgr* resMgr = device->getResMgr();
+  if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
+  const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+
+  for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
+    const pimRegion& src1Region = objSrc1.getRegions()[i];
+    const pimRegion& src2Region = objSrc2.getRegions()[i];
+    const pimRegion& destRegion = objDest.getRegions()[i];
+
+    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
+      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+      return false;
+    }
+
+    PimCoreId coreId = src1Region.getCoreId();
+
+    // perform the computation
+    unsigned colIdx = src1Region.getColIdx();
+    unsigned numAllocCols = src1Region.getNumAllocCols();
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      auto operandVal1 = device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j);
+      auto operandVal2 = device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j);
+      int operand1 = *reinterpret_cast<unsigned*>(&operandVal1);
+      int operand2 = *reinterpret_cast<unsigned*>(&operandVal2);
+      int result = operand1 & operand2;
+      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
+    }
+  }
+
+  return true;
+}
+
+//! @brief  PIM CMD: int32 xor v-layout
+bool
+pimCmdInt32XorV::execute(pimDevice* device)
+{ 
+  std::printf("PIM-Info: Int32XorV (obj id %d ^ %d -> %d)\n", m_src1, m_src2, m_dest);
+
+  pimResMgr* resMgr = device->getResMgr();
+  if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
+  const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+
+  for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
+    const pimRegion& src1Region = objSrc1.getRegions()[i];
+    const pimRegion& src2Region = objSrc2.getRegions()[i];
+    const pimRegion& destRegion = objDest.getRegions()[i];
+
+    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
+      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+      return false;
+    }
+
+    PimCoreId coreId = src1Region.getCoreId();
+
+    // perform the computation
+    unsigned colIdx = src1Region.getColIdx();
+    unsigned numAllocCols = src1Region.getNumAllocCols();
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      auto operandVal1 = device->getCore(coreId).getB32V(src1Region.getRowIdx(), colIdx + j);
+      auto operandVal2 = device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j);
+      int operand1 = *reinterpret_cast<unsigned*>(&operandVal1);
+      int operand2 = *reinterpret_cast<unsigned*>(&operandVal2);
+      int result = operand1 ^ operand2;
+      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
+    }
+  }
+
+  return true;
+}
+
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 bool
 pimCmdReadRowToSa::execute(pimDevice* device)
