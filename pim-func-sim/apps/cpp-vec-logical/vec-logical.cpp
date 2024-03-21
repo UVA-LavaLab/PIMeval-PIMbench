@@ -1,4 +1,4 @@
-// Test: C++ version of vector arithmetic
+// Test: C++ version of vector logical
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
@@ -7,7 +7,7 @@
 
 int main()
 {
-  std::cout << "PIM test: Vector arithmetic" << std::endl;
+  std::cout << "PIM test: Vector logical" << std::endl;
 
   unsigned numCores = 4;
   unsigned numRows = 128;
