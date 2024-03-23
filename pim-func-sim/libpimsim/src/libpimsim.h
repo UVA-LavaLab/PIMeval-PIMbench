@@ -34,6 +34,13 @@ extern "C" {
     PIM_COPY_H,
   };
 
+  //! @brief  PIM datatypes
+  enum PimDataType {
+    PIM_INT32 = 0,
+    PIM_INT64,
+    PIM_INT128,
+  };
+
   typedef int PimCoreId;
   typedef int PimObjId;
 
@@ -44,8 +51,8 @@ extern "C" {
   void pimShowStats();
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   PimStatus pimFree(PimObjId obj);
   PimObjId pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd);
 
@@ -54,16 +61,16 @@ extern "C" {
   PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // High level computation
-  PimStatus pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimInt32Abs(PimObjId src, PimObjId dest);
-  PimStatus pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimInt32Div(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimInt32And(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimInt32Or(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest);
-  int pimInt32RedSum(PimObjId src);
-  int pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
+  PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimAbs(PimObjId src, PimObjId dest);
+  PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  int pimRedSum(PimObjId src);
+  int pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
   PimStatus pimRotateR(PimObjId src);
   PimStatus pimRotateL(PimObjId src);
 

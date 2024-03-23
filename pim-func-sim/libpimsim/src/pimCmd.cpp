@@ -90,11 +90,11 @@ pimCmd::isHAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr)
   return true;
 }
 
-//! @brief  PIM CMD: int32 add v-layout
+//! @brief  PIM CMD: add v-layout
 bool
-pimCmdInt32AddV::execute(pimDevice* device)
+pimCmdAddV::execute(pimDevice* device)
 {
-  std::printf("PIM-Info: Int32AddV (obj id %d + %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: AddV (obj id %d + %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -105,13 +105,23 @@ pimCmdInt32AddV::execute(pimDevice* device)
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
 
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
+
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src1, m_src2, m_dest);
       return false;
     }
 
@@ -133,11 +143,11 @@ pimCmdInt32AddV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 abs v-layout
+//! @brief  PIM CMD: abs v-layout
 bool
-pimCmdInt32AbsV::execute(pimDevice* device)
+pimCmdAbsV::execute(pimDevice* device)
 {
-  std::printf("PIM-Info: Int32AbsV (obj id %d -> %d)\n", m_src, m_dest);
+  std::printf("PIM-Info: AbsV (obj id %d -> %d)\n", m_src, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src, m_dest, resMgr)) {
@@ -151,8 +161,8 @@ pimCmdInt32AbsV::execute(pimDevice* device)
     const pimRegion& srcRegion = objSrc.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (srcRegion.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d and %d are not all 32-bit v-layout\n", m_src, m_dest);
+    if (srcRegion.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d and %d do not have equal bit length for v-layout\n", m_src, m_dest);
       return false;
     }
 
@@ -171,11 +181,11 @@ pimCmdInt32AbsV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 redsum v-layout
+//! @brief  PIM CMD: redsum v-layout
 bool
-pimCmdInt32RedSum::execute(pimDevice* device)
+pimCmdRedSum::execute(pimDevice* device)
 {
-  std::printf("PIM-Info: Int32RedSum (obj id %d)\n", m_src);
+  std::printf("PIM-Info: RedSum (obj id %d)\n", m_src);
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -183,11 +193,6 @@ pimCmdInt32RedSum::execute(pimDevice* device)
 
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
     const pimRegion& srcRegion = objSrc.getRegions()[i];
-
-    if (srcRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d are not all 32-bit v-layout\n", m_src);
-      return false;
-    }
 
     PimCoreId coreId = srcRegion.getCoreId();
 
@@ -203,11 +208,11 @@ pimCmdInt32RedSum::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 redsum range v-layout
+//! @brief  PIM CMD: redsum range v-layout
 bool
-pimCmdInt32RedSumRanged::execute(pimDevice* device)
+pimCmdRedSumRanged::execute(pimDevice* device)
 {
-  std::printf("PIM-Info: Int32RedSumRanged (obj id %d)\n", m_src);
+  std::printf("PIM-Info: RedSumRanged (obj id %d)\n", m_src);
 
   pimResMgr* resMgr = device->getResMgr();
   //first get the start region; then get the column number you have to access for that region. Then keep increasing the idx count.
@@ -215,11 +220,6 @@ pimCmdInt32RedSumRanged::execute(pimDevice* device)
   unsigned currIDX = 0;
   for (unsigned i = 0; i < objSrc.getRegions().size() && currIDX < m_idxEnd; ++i) {
     const pimRegion& srcRegion = objSrc.getRegions()[i];
-
-    if (srcRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d are not all 32-bit v-layout\n", m_src);
-      return false;
-    }
 
     PimCoreId coreId = srcRegion.getCoreId();
 
@@ -238,11 +238,11 @@ pimCmdInt32RedSumRanged::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 sub v-layout
+//! @brief  PIM CMD: sub v-layout
 bool
-pimCmdInt32SubV::execute(pimDevice* device)
+pimCmdSubV::execute(pimDevice* device)
 { 
-  std::printf("PIM-Info: Int32SubV (obj id %d - %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: SubV (obj id %d - %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -252,14 +252,24 @@ pimCmdInt32SubV::execute(pimDevice* device)
   const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
 
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+  
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout \n", m_src1, m_src2, m_dest);
       return false;
     }
 
@@ -281,11 +291,11 @@ pimCmdInt32SubV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 division v-layout
+//! @brief  PIM CMD: division v-layout
 bool
-pimCmdInt32DivV::execute(pimDevice* device)
+pimCmdDivV::execute(pimDevice* device)
 { 
-  std::printf("PIM-Info: Int32DivV (obj id %d / %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: DivV (obj id %d / %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -296,13 +306,23 @@ pimCmdInt32DivV::execute(pimDevice* device)
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
 
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
+
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src1, m_src2, m_dest);
       return false;
     }
 
@@ -328,11 +348,11 @@ pimCmdInt32DivV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 mul v-layout
+//! @brief  PIM CMD: mul v-layout
 bool
-pimCmdInt32MulV::execute(pimDevice* device)
+pimCmdMulV::execute(pimDevice* device)
 { 
-  std::printf("PIM-Info: Int32MulV (obj id %d * %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: MulV (obj id %d * %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -343,13 +363,23 @@ pimCmdInt32MulV::execute(pimDevice* device)
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
 
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
+
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src1, m_src2, m_dest);
       return false;
     }
 
@@ -371,11 +401,11 @@ pimCmdInt32MulV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 or v-layout
+//! @brief  PIM CMD: or v-layout
 bool
-pimCmdInt32OrV::execute(pimDevice* device)
+pimCmdOrV::execute(pimDevice* device)
 { 
-  std::printf("PIM-Info: Int32OrV (obj id %d | %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: OrV (obj id %d | %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -386,13 +416,23 @@ pimCmdInt32OrV::execute(pimDevice* device)
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
 
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
+
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src1, m_src2, m_dest);
       return false;
     }
 
@@ -414,11 +454,11 @@ pimCmdInt32OrV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 and v-layout
+//! @brief  PIM CMD: and v-layout
 bool
-pimCmdInt32AndV::execute(pimDevice* device)
+pimCmdAndV::execute(pimDevice* device)
 { 
-  std::printf("PIM-Info: Int32OrV (obj id %d & %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: AndV (obj id %d & %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -429,13 +469,23 @@ pimCmdInt32AndV::execute(pimDevice* device)
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
 
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
+
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src1, m_src2, m_dest);
       return false;
     }
 
@@ -457,11 +507,11 @@ pimCmdInt32AndV::execute(pimDevice* device)
   return true;
 }
 
-//! @brief  PIM CMD: int32 xor v-layout
+//! @brief  PIM CMD: xor v-layout
 bool
-pimCmdInt32XorV::execute(pimDevice* device)
+pimCmdXorV::execute(pimDevice* device)
 { 
-  std::printf("PIM-Info: Int32XorV (obj id %d ^ %d -> %d)\n", m_src1, m_src2, m_dest);
+  std::printf("PIM-Info: XorV (obj id %d ^ %d -> %d)\n", m_src1, m_src2, m_dest);
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -472,13 +522,23 @@ pimCmdInt32XorV::execute(pimDevice* device)
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
 
+  if (objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
+    return false;
+  }
+
+  if (objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
     const pimRegion& destRegion = objDest.getRegions()[i];
 
-    if (src1Region.getNumAllocRows() != 32 || src2Region.getNumAllocRows() != 32 || destRegion.getNumAllocRows() != 32) {
-      std::printf("PIM-Error: Operands %d, %d and %d are not all 32-bit v-layout\n", m_src1, m_src2, m_dest);
+    if (src1Region.getNumAllocRows() != src2Region.getNumAllocRows() || src1Region.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src1, m_src2, m_dest);
       return false;
     }
 

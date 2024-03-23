@@ -35,17 +35,17 @@ protected:
   bool isHAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
 };
 
-//! @class  pimCmdInt32AddV
-//! @brief  Pim CMD: int32 add v-layout
-class pimCmdInt32AddV : public pimCmd
+//! @class  pimCmdAddV
+//! @brief  Pim CMD: add v-layout
+class pimCmdAddV : public pimCmd
 {
 public:
-  pimCmdInt32AddV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdAddV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32AddV() {}
+  virtual ~pimCmdAddV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.add.v"; }
+  virtual std::string getName() const override { return "add.v"; }
 
 protected:
   PimObjId m_src1;
@@ -53,17 +53,17 @@ protected:
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32SubV
-//! @brief  Pim CMD: int32 sub v-layout
-class pimCmdInt32SubV : public pimCmd
+//! @class  pimCmdSubV
+//! @brief  Pim CMD: sub v-layout
+class pimCmdSubV : public pimCmd
 {
 public:
-  pimCmdInt32SubV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdSubV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32SubV() {}
+  virtual ~pimCmdSubV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.sub.v"; }
+  virtual std::string getName() const override { return "sub.v"; }
 
 protected:
   PimObjId m_src1;
@@ -71,17 +71,17 @@ protected:
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32DivV
-//! @brief  Pim CMD: int32 div v-layout
-class pimCmdInt32DivV : public pimCmd
+//! @class  pimCmdDivV
+//! @brief  Pim CMD: div v-layout
+class pimCmdDivV : public pimCmd
 {
 public:
-  pimCmdInt32DivV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdDivV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32DivV() {}
+  virtual ~pimCmdDivV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.div.v"; }
+  virtual std::string getName() const override { return "div.v"; }
 
 protected:
   PimObjId m_src1;
@@ -89,34 +89,34 @@ protected:
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32AbsV
-//! @brief  Pim CMD: int32 abs v-layout
-class pimCmdInt32AbsV : public pimCmd
+//! @class  pimCmdAbsV
+//! @brief  Pim CMD: abs v-layout
+class pimCmdAbsV : public pimCmd
 {
 public:
-  pimCmdInt32AbsV(PimObjId src, PimObjId dest)
+  pimCmdAbsV(PimObjId src, PimObjId dest)
     : m_src(src), m_dest(dest) {}
-  virtual ~pimCmdInt32AbsV() {}
+  virtual ~pimCmdAbsV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.abs.v"; }
+  virtual std::string getName() const override { return "abs.v"; }
 
 protected:
   PimObjId m_src;
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32AndV
-//! @brief  Pim CMD: int32 and v-layout
-class pimCmdInt32AndV : public pimCmd
+//! @class  pimCmdAndV
+//! @brief  Pim CMD: and v-layout
+class pimCmdAndV : public pimCmd
 {
 public:
-  pimCmdInt32AndV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdAndV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32AndV() {}
+  virtual ~pimCmdAndV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.and.v"; }
+  virtual std::string getName() const override { return "and.v"; }
 
 protected:
   PimObjId m_src1;
@@ -124,17 +124,17 @@ protected:
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32OrV
-//! @brief  Pim CMD: int32 or v-layout
-class pimCmdInt32OrV : public pimCmd
+//! @class  pimCmdOrV
+//! @brief  Pim CMD: or v-layout
+class pimCmdOrV : public pimCmd
 {
 public:
-  pimCmdInt32OrV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdOrV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32OrV() {}
+  virtual ~pimCmdOrV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.or.v"; }
+  virtual std::string getName() const override { return "or.v"; }
 
 protected:
   PimObjId m_src1;
@@ -142,17 +142,17 @@ protected:
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32XorV
-//! @brief  Pim CMD: int32 xor v-layout
-class pimCmdInt32XorV : public pimCmd
+//! @class  pimCmdXorV
+//! @brief  Pim CMD: xor v-layout
+class pimCmdXorV : public pimCmd
 {
 public:
-  pimCmdInt32XorV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdXorV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32XorV() {}
+  virtual ~pimCmdXorV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.xor.v"; }
+  virtual std::string getName() const override { return "xor.v"; }
 
 protected:
   PimObjId m_src1;
@@ -160,34 +160,34 @@ protected:
   PimObjId m_dest;
 };
 
-//! @class  pimCmdInt32RedSum
-//! @brief  Pim CMD: int32 RedSum v-layout
-class pimCmdInt32RedSum : public pimCmd
+//! @class  pimCmdRedSum
+//! @brief  Pim CMD: RedSum v-layout
+class pimCmdRedSum : public pimCmd
 {
 public:
-  pimCmdInt32RedSum(PimObjId src, int& result)
+  pimCmdRedSum(PimObjId src, int& result)
     : m_src(src), m_result(result) {}
-  virtual ~pimCmdInt32RedSum() {}
+  virtual ~pimCmdRedSum() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.redsum.v"; }
+  virtual std::string getName() const override { return "redsum.v"; }
 
 protected:
   PimObjId m_src;
   int& m_result;
 };
 
-//! @class  pimCmdInt32RedSumRanged
-//! @brief  Pim CMD: int32 RedSumRanged v-layout
-class pimCmdInt32RedSumRanged : public pimCmd
+//! @class  pimCmdRedSumRanged
+//! @brief  Pim CMD: RedSumRanged v-layout
+class pimCmdRedSumRanged : public pimCmd
 {
 public:
-  pimCmdInt32RedSumRanged(PimObjId src, int& result, unsigned idxBegin, unsigned idxEnd)
+  pimCmdRedSumRanged(PimObjId src, int& result, unsigned idxBegin, unsigned idxEnd)
     : m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
-  virtual ~pimCmdInt32RedSumRanged() {}
+  virtual ~pimCmdRedSumRanged() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.redsum_range.v"; }
+  virtual std::string getName() const override { return "redsum_range.v"; }
 
 protected:
   PimObjId m_src;
@@ -196,17 +196,17 @@ protected:
   unsigned m_idxEnd;
 };
 
-//! @class  pimCmdInt32MulV
-//! @brief  Pim CMD: int32 add v-layout
-class pimCmdInt32MulV : public pimCmd
+//! @class  pimCmdMulV
+//! @brief  Pim CMD: mul v-layout
+class pimCmdMulV : public pimCmd
 {
 public:
-  pimCmdInt32MulV(PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdMulV(PimObjId src1, PimObjId src2, PimObjId dest)
     : m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdInt32MulV() {}
+  virtual ~pimCmdMulV() {}
 
   virtual bool execute(pimDevice* device) override;
-  virtual std::string getName() const override { return "int32.mul.v"; }
+  virtual std::string getName() const override { return "mul.v"; }
 
 protected:
   PimObjId m_src1;

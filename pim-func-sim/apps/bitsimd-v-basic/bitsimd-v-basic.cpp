@@ -28,13 +28,13 @@ bool testMicroOps()
   std::vector<int> src3(numElements);
   std::vector<int> dest(numElements);
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
+  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
   assert(obj2 != -1);
-  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
+  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
   assert(obj3 != -1);
-  PimObjId obj4 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
+  PimObjId obj4 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
   assert(obj4 != -1);
 
   // assign some initial values

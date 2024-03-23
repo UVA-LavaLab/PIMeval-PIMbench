@@ -25,8 +25,8 @@ public:
   void showStats() const;
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   bool pimFree(PimObjId obj);
 
   // Data transfer
@@ -34,16 +34,16 @@ public:
   bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // Computation
-  bool pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest);
-  bool pimInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest);
-  bool pimInt32Div(PimObjId src1, PimObjId src2, PimObjId dest);
-  bool pimInt32Abs(PimObjId src, PimObjId dest);
-  bool pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest);
-  bool pimInt32Or(PimObjId src1, PimObjId src2, PimObjId dest);
-  bool pimInt32And(PimObjId src1, PimObjId src2, PimObjId dest);
-  bool pimInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest);
-  int pimInt32RedSum(PimObjId src);
-  int pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
+  bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimAbs(PimObjId src, PimObjId dest);
+  bool pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  int pimRedSum(PimObjId src);
+  int pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
   bool pimRotateR(PimObjId src);
   bool pimRotateL(PimObjId src);
 

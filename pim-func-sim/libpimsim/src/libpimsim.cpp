@@ -39,16 +39,16 @@ pimShowStats()
 
 //! @brief  Allocate a PIM resource
 PimObjId
-pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements)
+pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType)
 {
-  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElements);
+  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElements, dataType);
 }
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref)
+pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
 {
-  return pimSim::get()->pimAllocAssociated(allocType, numElements, bitsPerElements, ref);
+  return pimSim::get()->pimAllocAssociated(allocType, numElements, bitsPerElements, ref, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -83,83 +83,82 @@ pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector add
+//! @brief  PIM vector add
 PimStatus
-pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest)
+pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32Add(src1, src2, dest);
+  bool ok = pimSim::get()->pimAdd(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector sub
+//! @brief  PIM vector sub
 PimStatus
-pimInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32Sub(src1, src2, dest);
+  bool ok = pimSim::get()->pimSub(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector div
+//! @brief  PIM vector div
 PimStatus
-pimInt32Div(PimObjId src1, PimObjId src2, PimObjId dest)
+pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32Div(src1, src2, dest);
+  bool ok = pimSim::get()->pimDiv(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector or
+//! @brief  PIM vector or
 PimStatus
-pimInt32Or(PimObjId src1, PimObjId src2, PimObjId dest)
+pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32Or(src1, src2, dest);
+  bool ok = pimSim::get()->pimOr(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector and
+//! @brief  PIM vector and
 PimStatus
-pimInt32And(PimObjId src1, PimObjId src2, PimObjId dest)
+pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32And(src1, src2, dest);
+  bool ok = pimSim::get()->pimAnd(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector xor
+//! @brief  PIM vector xor
 PimStatus
-pimInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest)
+pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32Xor(src1, src2, dest);
+  bool ok = pimSim::get()->pimXor(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector abs
+//! @brief  PIM vector abs
 PimStatus
-pimInt32Abs(PimObjId src, PimObjId dest)
+pimAbs(PimObjId src, PimObjId dest)
 {
   bool ok = false;
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM int32 vector multiplication
+//! @brief  PIM vector multiplication
 PimStatus
-pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
+pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimInt32Mul(src1, src2, dest);
+  bool ok = pimSim::get()->pimMul(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-
-//! @brief  PIM int32 reduction sum. Result returned to a host variable
+//! @brief  PIM reduction sum. Result returned to a host variable
 int
-pimInt32RedSum(PimObjId src)
+pimRedSum(PimObjId src)
 {
-  return pimSim::get()->pimInt32RedSum(src);
+  return pimSim::get()->pimRedSum(src);
 }
 
-//! @brief  PIM int32 reduction sum for a range of an obj. Result returned to a host variable
+//! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
 int
-pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
+pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 {
-  return pimSim::get()->pimInt32RedSumRanged(src, idxBegin, idxEnd);
+  return pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd);
 }
 
 //! @brief  Rotate all elements of an obj by one step to the right
