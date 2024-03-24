@@ -1,4 +1,4 @@
-# Makefile: C++ version of vector add
+# Makefile: C++ version of vector arithmetic
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 CXX := g++
@@ -6,8 +6,8 @@ CXXFLAGS := -std=c++17 -Wall -g
 INCLUDE_DIRS := -I../../libpimsim/include
 LIB_DIRS := -L../../libpimsim/lib
 LIBS := -lpimsim
-EXEC := vec-mul
-SRC := vec-mul.cpp
+EXEC := vec-cmp
+SRC := vec-comparator.cpp
 
 .PHONY: all clean $(INCLUDE_DIRS)/libpimsim.h $(LIB_DIRS)/libpimsim.a
 

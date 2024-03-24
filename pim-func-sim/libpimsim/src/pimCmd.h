@@ -214,6 +214,96 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdGTV
+//! @brief  Pim CMD: gt v-layout
+class pimCmdGTV : public pimCmd
+{
+public:
+  pimCmdGTV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdGTV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "gt.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdLTV
+//! @brief  Pim CMD: lt v-layout
+class pimCmdLTV : public pimCmd
+{
+public:
+  pimCmdLTV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdLTV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "lt.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdEQV
+//! @brief  Pim CMD: eq v-layout
+class pimCmdEQV : public pimCmd
+{
+public:
+  pimCmdEQV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdEQV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "eq.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdMinV
+//! @brief  Pim CMD: eq v-layout
+class pimCmdMinV : public pimCmd
+{
+public:
+  pimCmdMinV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdMinV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "min.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdMaxV
+//! @brief  Pim CMD: max v-layout
+class pimCmdMaxV : public pimCmd
+{
+public:
+  pimCmdMaxV(PimObjId src1, PimObjId src2, PimObjId dest)
+    : m_src1(src1), m_src2(src2), m_dest(dest) {}
+  virtual ~pimCmdMaxV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "max.v"; }
+
+protected:
+  PimObjId m_src1;
+  PimObjId m_src2;
+  PimObjId m_dest;
+};
+
 //! @class  pimCmdReadRowToSa
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 class pimCmdReadRowToSa : public pimCmd

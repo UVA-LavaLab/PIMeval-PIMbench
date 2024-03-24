@@ -83,7 +83,7 @@ pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector add
+//! @brief  PIM add
 PimStatus
 pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
@@ -91,7 +91,7 @@ pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector sub
+//! @brief  PIM sub
 PimStatus
 pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
 {
@@ -99,7 +99,7 @@ pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector div
+//! @brief  PIM div
 PimStatus
 pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
@@ -107,7 +107,7 @@ pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector or
+//! @brief  PIM or
 PimStatus
 pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
 {
@@ -115,7 +115,7 @@ pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector and
+//! @brief  PIM and
 PimStatus
 pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
@@ -123,7 +123,7 @@ pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector xor
+//! @brief  PIM xor
 PimStatus
 pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
@@ -131,7 +131,7 @@ pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector abs
+//! @brief  PIM abs
 PimStatus
 pimAbs(PimObjId src, PimObjId dest)
 {
@@ -139,11 +139,51 @@ pimAbs(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM vector multiplication
+//! @brief  PIM multiplication
 PimStatus
 pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   bool ok = pimSim::get()->pimMul(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM GT
+PimStatus
+pimGT(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimGT(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM LT
+PimStatus
+pimLT(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimLT(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM EQ
+PimStatus
+pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimEQ(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM Min
+PimStatus
+pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimMin(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM Max
+PimStatus
+pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimMax(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -160,6 +200,8 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 {
   return pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd);
 }
+
+
 
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus

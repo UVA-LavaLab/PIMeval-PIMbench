@@ -203,6 +203,51 @@ pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: gt
+bool
+pimSim::pimGT(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdGTV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: lt
+bool
+pimSim::pimLT(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdLTV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: eq
+bool
+pimSim::pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdEQV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: min
+bool
+pimSim::pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdMinV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: max
+bool
+pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdMaxV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 int
 pimSim::pimRedSum(PimObjId src)
 {
