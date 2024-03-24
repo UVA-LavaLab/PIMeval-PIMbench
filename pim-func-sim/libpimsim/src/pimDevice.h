@@ -30,8 +30,8 @@ public:
   unsigned getNumCols() const { return m_numCols; }
   bool isValid() const { return m_isValid; }
 
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   bool pimFree(PimObjId obj);
 
   bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);

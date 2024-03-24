@@ -76,16 +76,16 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
+pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
-  return m_resMgr->pimAlloc(allocType, numElements, bitsPerElement);
+  return m_resMgr->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 PimObjId
-pimDevice::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref)
+pimDevice::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
-  return m_resMgr->pimAllocAssociated(allocType, numElements, bitsPerElement, ref);
+  return m_resMgr->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
 }
 
 //! @brief  Free a PIM object

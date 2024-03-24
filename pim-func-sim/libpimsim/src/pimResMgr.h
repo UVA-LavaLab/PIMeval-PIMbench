@@ -10,6 +10,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <set>
+#include <string>
 
 class pimDevice;
 
@@ -64,8 +65,9 @@ private:
 class pimObjInfo
 {
 public:
-  pimObjInfo(PimObjId objId, PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
+  pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
     : m_objId(objId),
+      m_dataType(dataType),
       m_allocType(allocType),
       m_numElements(numElements),
       m_bitsPerElement(bitsPerElement)
@@ -76,6 +78,7 @@ public:
 
   PimObjId getObjId() const { return m_objId; }
   PimAllocEnum getAllocType() const { return m_allocType; }
+  PimDataType getDataType() const { return m_dataType; }
   unsigned getNumElements() const { return m_numElements; }
   unsigned getBitsPerElement() const { return m_bitsPerElement; }
   bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
@@ -83,10 +86,12 @@ public:
   const std::vector<pimRegion>& getRegions() const { return m_regions; }
   std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
 
+  std::string getDataTypeName() const;
   void print() const;
 
 private:
   PimObjId m_objId;
+  PimDataType m_dataType;
   PimAllocEnum m_allocType;
   unsigned m_numElements;
   unsigned m_bitsPerElement;
@@ -105,8 +110,8 @@ public:
   {}
   ~pimResMgr() {}
 
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId);
+  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId, PimDataType dataType);
   bool pimFree(PimObjId objId);
 
   bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }

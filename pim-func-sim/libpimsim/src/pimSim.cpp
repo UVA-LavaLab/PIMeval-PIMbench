@@ -93,18 +93,18 @@ pimSim::showStats() const
 
 //! @brief  Allocate a PIM object
 PimObjId
-pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
+pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAlloc(allocType, numElements, bitsPerElement);
+  return m_device->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
 //! @brief  Allocate a PIM object that is associated with a reference ojbect
 PimObjId
-pimSim::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref)
+pimSim::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(allocType, numElements, bitsPerElement, ref);
+  return m_device->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
 }
 
 // @brief  Free a PIM object
@@ -131,94 +131,94 @@ pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
   return m_device->pimCopyDeviceToMain(copyType, src, dest);
 }
 
-// @brief  PIM OP: int32 add
+// @brief  PIM OP: add
 bool
-pimSim::pimInt32Add(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32AddV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAddV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: int32 sub
+// @brief  PIM OP: sub
 bool
-pimSim::pimInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32SubV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdSubV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief PIM OP: int32 div
+// @brief PIM OP: div
 bool
-pimSim::pimInt32Div(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32DivV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdDivV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: int32 abs v-layout
+// @brief  PIM OP: abs v-layout
 bool
-pimSim::pimInt32Abs(PimObjId src, PimObjId dest)
+pimSim::pimAbs(PimObjId src, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32AbsV>(src, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAbsV>(src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: int32 mul
+// @brief  PIM OP: mul
 bool
-pimSim::pimInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32MulV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdMulV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: int32 and
+// @brief  PIM OP: and
 bool
-pimSim::pimInt32And(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32AndV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAndV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: int32 or
+// @brief  PIM OP: or
 bool
-pimSim::pimInt32Or(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32OrV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdOrV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: int32 xor
+// @brief  PIM OP: xor
 bool
-pimSim::pimInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32XorV>(src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdXorV>(src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
 int
-pimSim::pimInt32RedSum(PimObjId src)
+pimSim::pimRedSum(PimObjId src)
 {
   if (!isValidDevice()) { return false; }
   int result = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32RedSum>(src, result);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(src, result);
   m_device->executeCmd(std::move(cmd));
   return result;
 }
 
 int
-pimSim::pimInt32RedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
+pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 {
   if (!isValidDevice()) { return false; }
   int result = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdInt32RedSumRanged>(src, result, idxBegin, idxEnd);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSumRanged>(src, result, idxBegin, idxEnd);
   m_device->executeCmd(std::move(cmd));
   return result;
 }

@@ -6,6 +6,7 @@
 #include "pimDevice.h"
 #include <cstdio>
 #include <algorithm>
+#include <stdexcept>
 
 
 //! @brief  Print info of a PIM region
@@ -29,6 +30,22 @@ pimObjInfo::print() const
   std::printf("----------------------------------------\n");
 }
 
+std::string 
+pimObjInfo::getDataTypeName() const 
+{
+  switch (m_dataType)
+  {
+  case PimDataType::PIM_INT32:
+    return "int32";
+  case PimDataType::PIM_INT64:
+    return "int64";
+  case PimDataType::PIM_INT128:
+    return "int64";
+  default:
+    throw std::invalid_argument("Unsupported Type.");
+  }
+}
+
 //! @brief  Get all regions on a specific PIM core for current PIM object
 std::vector<pimRegion>
 pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
@@ -45,7 +62,7 @@ pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
+pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   if (numElements <= 0 || bitsPerElement <= 0) {
     std::printf("PIM-Error: Invalid parameters to allocate %u elements of %u bits\n", numElements, bitsPerElement);
@@ -53,7 +70,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   }
 
   std::vector<PimCoreId> sortedCoreId = getCoreIdsSortedByLeastUsage();
-  pimObjInfo newObj(m_availObjId, allocType, numElements, bitsPerElement);
+  pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
   unsigned numCols = m_device->getNumCols();
@@ -121,7 +138,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
 //!         For V layout, expect same number of elements, while bits per element may be different
 //!         For H layout, expect exact same number of elements and bits per elements
 PimObjId
-pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId)
+pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId, PimDataType dataType)
 {
   // check if ref obj is valid
   if (m_objMap.find(refId) == m_objMap.end()) {
@@ -147,7 +164,7 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsi
   }
 
   // allocate regions
-  pimObjInfo newObj(m_availObjId, allocType, numElements, bitsPerElement);
+  pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
   for ( const pimRegion& region : refObj.getRegions()) {

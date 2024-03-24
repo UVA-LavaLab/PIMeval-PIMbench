@@ -24,17 +24,17 @@ int main()
   unsigned bitsPerElement = 32;
   unsigned totalElementCount = numMatCols*numMatRows;
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, totalElementCount, bitsPerElement);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
   if (obj1 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, totalElementCount, bitsPerElement, obj1);
+  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, totalElementCount, bitsPerElement, obj1, PIM_INT32);
   if (obj2 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, totalElementCount, bitsPerElement, obj1);
+  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, totalElementCount, bitsPerElement, obj1, PIM_INT32);
   if (obj3 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -68,7 +68,7 @@ int main()
     return 1;
   }
 
-  status = pimInt32Mul(obj1, obj2, obj3);
+  status = pimMul(obj1, obj2, obj3);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -76,7 +76,7 @@ int main()
 
   for (unsigned i = 0; i < numMatRows; i++) {
     int stIDX = numMatCols*i;
-    dest[i] = pimInt32RedSumRanged(obj3, stIDX, stIDX+numMatCols );
+    dest[i] = pimRedSumRanged(obj3, stIDX, stIDX+numMatCols );
   }
   
   // check results

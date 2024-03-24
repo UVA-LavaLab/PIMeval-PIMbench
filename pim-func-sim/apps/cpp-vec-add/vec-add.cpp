@@ -22,17 +22,17 @@ int main()
   unsigned numElements = 512;
   unsigned bitsPerElement = 32;
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
   if (obj1 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
+  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
   if (obj2 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1);
+  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
   if (obj3 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -60,7 +60,7 @@ int main()
     return 1;
   }
 
-  status = pimInt32Add(obj1, obj2, obj3);
+  status = pimAdd(obj1, obj2, obj3);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
