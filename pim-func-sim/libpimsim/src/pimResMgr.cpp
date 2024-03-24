@@ -39,8 +39,6 @@ pimObjInfo::getDataTypeName() const
     return "int32";
   case PimDataType::PIM_INT64:
     return "int64";
-  case PimDataType::PIM_INT128:
-    return "int64";
   default:
     throw std::invalid_argument("Unsupported Type.");
   }

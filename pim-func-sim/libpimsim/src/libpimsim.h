@@ -38,7 +38,6 @@ extern "C" {
   enum PimDataType {
     PIM_INT32 = 0,
     PIM_INT64,
-    PIM_INT128,
   };
 
   typedef int PimCoreId;
@@ -69,6 +68,11 @@ extern "C" {
   PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   int pimRedSum(PimObjId src);
   int pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
   PimStatus pimRotateR(PimObjId src);

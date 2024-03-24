@@ -42,6 +42,11 @@ public:
   bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   int pimRedSum(PimObjId src);
   int pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
   bool pimRotateR(PimObjId src);
