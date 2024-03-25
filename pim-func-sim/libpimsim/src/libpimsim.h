@@ -58,6 +58,7 @@ extern "C" {
   // Data transfer
   PimStatus pimCopyHostToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
   PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
+  PimStatus pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value);
 
   // High level computation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -73,6 +74,7 @@ extern "C" {
   PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimPopCount(PimObjId src, PimObjId dest);
   int pimRedSum(PimObjId src);
   int pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
   PimStatus pimRotateR(PimObjId src);

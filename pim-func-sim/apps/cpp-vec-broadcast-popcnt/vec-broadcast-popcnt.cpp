@@ -1,4 +1,4 @@
-// Test: C++ version of vector add
+// Test: C++ version of vector broadcast and popcount
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
@@ -7,7 +7,7 @@
 
 int main()
 {
-  std::cout << "PIM test: Vector add" << std::endl;
+  std::cout << "PIM test: Vector boradcast and popcount" << std::endl;
 
   unsigned numCores = 4;
   unsigned numRows = 128;
@@ -39,13 +39,11 @@ int main()
   }
 
   std::vector<int> src1(numElements);
-  std::vector<int> src2(numElements);
   std::vector<int> dest(numElements);
 
   // assign some initial values
   for (unsigned i = 0; i < numElements; ++i) {
     src1[i] = i;
-    src2[i] = i * 2 - 10;
   }
 
   status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
@@ -54,13 +52,19 @@ int main()
     return 1;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src2.data(), obj2);
+  status = pimBroadCast(PIM_COPY_V, obj2, 10);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
 
   status = pimAdd(obj1, obj2, obj3);
+  if (status != PIM_OK) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+
+  status = pimPopCount(obj3, obj3);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -75,10 +79,16 @@ int main()
   // check results
   bool ok = true;
   for (unsigned i = 0; i < numElements; ++i) {
-    int result = src1[i] + src2[i];
-    if (dest[i] != result) {
-      std::cout << "Wrong ansert: " << src1[i] << " + " << src2[i] << " = " << dest[i] << " (expected " << result << ")" << std::endl;
+    int result = src1[i] + 10;
+    int count = 0;
+    while (result) {
+      result &= (result - 1);
+      count++;
+    }
+    if (dest[i] != count) {
+      std::cout << "Wrong answer: " << dest[i] << " (expected " << count << ")" << std::endl;
       ok = false;
+      break;
     }
   }
 
