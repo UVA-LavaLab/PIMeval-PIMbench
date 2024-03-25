@@ -131,6 +131,14 @@ pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
   return m_device->pimCopyDeviceToMain(copyType, src, dest);
 }
 
+// @brief  Load vector with a scalar value
+bool
+pimSim::pimBroadCast(PimCopyEnum copyType, PimObjId src, unsigned value)
+{
+  if (!isValidDevice()) { return false; }
+  return m_device->pimBroadCast(copyType, src, value);
+}
+
 // @brief  PIM OP: add
 bool
 pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
@@ -245,6 +253,15 @@ pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdMaxV>(src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: popcount
+bool
+pimSim::pimPopCount(PimObjId src, PimObjId dest)
+{
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdPopCountV>(src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 

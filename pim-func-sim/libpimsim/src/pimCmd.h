@@ -8,6 +8,7 @@
 #include "libpimsim.h"
 #include <vector>
 #include <string>
+#include <bit>
 
 class pimDevice;
 class pimResMgr;
@@ -301,6 +302,23 @@ public:
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdPopCountV
+//! @brief  Pim CMD: pop count v-layout
+class pimCmdPopCountV : public pimCmd
+{
+public:
+  pimCmdPopCountV(PimObjId src, PimObjId dest)
+    : m_src(src), m_dest(dest) {}
+  virtual ~pimCmdPopCountV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "popcount.v"; }
+
+protected:
+  PimObjId m_src;
   PimObjId m_dest;
 };
 

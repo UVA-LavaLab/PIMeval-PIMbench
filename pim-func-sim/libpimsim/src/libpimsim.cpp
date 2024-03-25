@@ -83,6 +83,14 @@ pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Load vector with a scalar value
+PimStatus
+pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value)
+{
+  bool ok = pimSim::get()->pimBroadCast(copyType, dest, value);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM add
 PimStatus
 pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
@@ -184,6 +192,14 @@ PimStatus
 pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   bool ok = pimSim::get()->pimMax(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM Pop Count
+PimStatus
+pimPopCount(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimPopCount(src, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

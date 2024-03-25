@@ -810,6 +810,54 @@ pimCmdMaxV::execute(pimDevice* device)
   return true;
 }
 
+//! @brief  PIM CMD: popcount v-layout
+bool
+pimCmdPopCountV::execute(pimDevice* device)
+{ 
+  std::printf("PIM-Info: PopCountV (obj id popcount(%d) -> %d)\n", m_src, m_dest);
+
+  pimResMgr* resMgr = device->getResMgr();
+  if (!isVAligned(m_src, m_dest, resMgr)) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+
+  if (objSrc.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+    return false;
+  }
+  
+  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+    const pimRegion& srcRegion = objSrc.getRegions()[i];
+    const pimRegion& destRegion = objDest.getRegions()[i];
+
+    if (srcRegion.getNumAllocRows() != destRegion.getNumAllocRows()) {
+      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src, m_dest);
+      return false;
+    }
+
+    PimCoreId coreId = srcRegion.getCoreId();
+
+    // perform the computation
+    unsigned colIdx = srcRegion.getColIdx();
+    unsigned numAllocCols = srcRegion.getNumAllocCols();
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      auto operandVal = device->getCore(coreId).getB32V(srcRegion.getRowIdx(), colIdx + j);
+      int operand = *reinterpret_cast<unsigned*>(&operandVal);
+      int result = 0;
+      while (operand) {
+        operand &= (operand - 1);
+        result++;
+      }
+      device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
+    }
+  }
+
+  return true;
+}
+
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 bool
 pimCmdReadRowToSa::execute(pimDevice* device)
