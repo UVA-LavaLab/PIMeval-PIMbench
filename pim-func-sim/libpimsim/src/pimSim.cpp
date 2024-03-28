@@ -288,13 +288,17 @@ pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 bool
 pimSim::pimRotateR(PimObjId src)
 {
-  return false;
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotateRightV>(src);
+  return m_device->executeCmd(std::move(cmd));
 }
 
 bool
 pimSim::pimRotateL(PimObjId src)
 {
-  return false;
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotateLeftV>(src);
+  return m_device->executeCmd(std::move(cmd));
 }
 
 bool

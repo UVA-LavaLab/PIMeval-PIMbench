@@ -223,7 +223,7 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
 PimStatus
 pimRotateR(PimObjId src)
 {
-  bool ok = false;
+  bool ok = pimSim::get()->pimRotateR(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -231,7 +231,7 @@ pimRotateR(PimObjId src)
 PimStatus
 pimRotateL(PimObjId src)
 {
-  bool ok = false;
+  bool ok = pimSim::get()->pimRotateL(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

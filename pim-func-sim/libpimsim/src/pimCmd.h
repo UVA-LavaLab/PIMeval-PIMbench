@@ -322,6 +322,38 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdRotateRightV
+//! @brief  Pim CMD: rotate right v-layout
+class pimCmdRotateRightV : public pimCmd
+{
+public:
+  pimCmdRotateRightV(PimObjId src)
+    : m_src(src) {}
+  virtual ~pimCmdRotateRightV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "rotate.right.v"; }
+
+protected:
+  PimObjId m_src;
+};
+
+//! @class  pimCmdRotateLeftV
+//! @brief  Pim CMD: rotate left v-layout
+class pimCmdRotateLeftV : public pimCmd
+{
+public:
+  pimCmdRotateLeftV(PimObjId src)
+    : m_src(src) {}
+  virtual ~pimCmdRotateLeftV() {}
+
+  virtual bool execute(pimDevice* device) override;
+  virtual std::string getName() const override { return "rotate.left.v"; }
+
+protected:
+  PimObjId m_src;
+};
+
 //! @class  pimCmdReadRowToSa
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 class pimCmdReadRowToSa : public pimCmd
