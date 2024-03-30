@@ -1,4 +1,4 @@
-// Test: C++ version of matrix vector multiplication
+// Test: C++ version of SAD
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
@@ -9,11 +9,11 @@
 
 int main()
 {
-  std::cout << "PIM test: Matrix vector multiplication" << std::endl;
+  std::cout << "PIM test: SAD" << std::endl;
 
-  unsigned numCores = 8;
+  unsigned numCores = 3;
   unsigned numRows = 1024;
-  unsigned numCols = 8096;
+  unsigned numCols = 8192;
 
   PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
   if (status != PIM_OK) {
@@ -22,8 +22,8 @@ int main()
   }
 
   int bitsPerElement = 32;
-  int vectorLength = 16384;
-  int subvectorLength = 1024;
+  int vectorLength = 512;
+  int subvectorLength = 64;
 
   PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
   if (obj1 == -1) {
@@ -41,19 +41,19 @@ int main()
     return 1;
   }
 
-  std::vector<int> src1(vectorLength);
-  std::vector<int> src2(subvectorLength);
-  std::vector<int> replicateSrc2(subvectorLength);
+  std::vector<unsigned> src1(vectorLength);
+  std::vector<unsigned> src2(subvectorLength);
+  std::vector<unsigned> replicateSrc2(vectorLength);
   int correct_idx = rand() % (vectorLength - subvectorLength);
-  //std::vector<int> dest(numMatRows);
 
   // assign some initial values
   for (int i = 0; i < vectorLength; ++i) {
     src1[i] = i;
   }
 
-  for(int i = 0; i < subvectorLength; i++)
+  for(int i = 0; i < subvectorLength; i++){
     src2[i] = src1[i + correct_idx];
+  }
   
   for(int i = 0; i < vectorLength; i += subvectorLength){
     for(int j = 0; j < subvectorLength; j++){
@@ -61,12 +61,12 @@ int main()
     }
   }
 
-  // status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
-  // if (status != PIM_OK) {
-  //   std::cout << "Abort" << std::endl;
-  //   return 1;
-  // }
-  // return 0;
+  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
+  if (status != PIM_OK) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+
   status = pimCopyHostToDevice(PIM_COPY_V, (void*)replicateSrc2.data(), obj2);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
@@ -92,7 +92,8 @@ int main()
 
     for(int i = 0; i < vectorLength; i += subvectorLength){
       sum_abs_diff = pimRedSumRanged(obj3, ((idx+i) % vectorLength), ((idx+i+subvectorLength-1) % vectorLength));
-      // Update minimum
+      // Update minimum 
+      // TODO: put the reduction sum ranged value in a vector object and calculate the minimum in PIM. Currently it executes the comparison on CPU
       if(sum_abs_diff < min_diff){
         min_idx = idx + i;
         min_diff = sum_abs_diff;
@@ -115,9 +116,6 @@ int main()
   }
 
   pimShowStats();
-  // if (ok) {
-  //   std::cout << "All correct!" << std::endl;
-  // }
 
   return 0;
 }

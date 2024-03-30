@@ -143,7 +143,7 @@ pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
 PimStatus
 pimAbs(PimObjId src, PimObjId dest)
 {
-  bool ok = false;
+  bool ok = pimSim::get()->pimAbs(src, dest);;
   return ok ? PIM_OK : PIM_ERROR;
 }
 

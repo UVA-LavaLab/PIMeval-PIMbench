@@ -262,7 +262,7 @@ pimCmdSubV::execute(pimDevice* device)
     std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
     return false;
   }
-  
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
