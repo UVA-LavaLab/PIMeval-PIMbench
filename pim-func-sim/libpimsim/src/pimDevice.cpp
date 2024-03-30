@@ -119,7 +119,6 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
     // also assume little endian
     // directly copy without row read/write for now
     size_t bitIdx = 0;
-    std::printf("started copying\n");
     for (const auto& region : pimObj.getRegions()) {
       PimCoreId coreId = region.getCoreId();
       unsigned rowIdx = region.getRowIdx();
@@ -290,8 +289,7 @@ pimDevice::readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerEle
     unsigned byteIdx = i / 8;
     unsigned char byteVal = *(bytePtr + byteIdx);
     for (int j = 0; j < 8; ++j) {
-      bool temp = byteVal & 1;
-      bits.push_back(temp);
+      bits.push_back(byteVal & 1);
       byteVal = byteVal >> 1;
     }
   }
