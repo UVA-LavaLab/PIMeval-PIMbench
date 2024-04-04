@@ -131,7 +131,7 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
         unsigned col = colIdx + i / numAllocRows;
         m_cores[coreId].setBit(row, col, val);
       }
-      //m_cores[coreId].print();
+      // m_cores[coreId].print();
     }
   } else if (copyType == PIM_COPY_H) {
     // read bits from src and store horizontally into dest
@@ -281,10 +281,10 @@ pimDevice::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
 std::vector<bool>
 pimDevice::readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement)
 {
+
   std::vector<bool> bits;
-
   unsigned char* bytePtr = static_cast<unsigned char*>(src);
-
+ 
   for (size_t i = 0; i < (size_t)numElements * bitsPerElement; i += 8) {
     unsigned byteIdx = i / 8;
     unsigned char byteVal = *(bytePtr + byteIdx);

@@ -262,7 +262,7 @@ pimCmdSubV::execute(pimDevice* device)
     std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
     return false;
   }
-  
+
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
@@ -855,6 +855,85 @@ pimCmdPopCountV::execute(pimDevice* device)
     }
   }
 
+  return true;
+}
+
+//! @brief  PIM CMD: rotate right v-layout
+bool
+pimCmdRotateRightV::execute(pimDevice* device)
+{ 
+  std::printf("PIM-Info: RotateRightV (obj id %d)\n", m_src);
+
+  pimResMgr* resMgr = device->getResMgr();
+
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  unsigned carry = 0;
+
+  for (const auto& srcRegion : objSrc.getRegions()) {
+
+    pimCore& core = device->getCore(srcRegion.getCoreId());
+
+    // retrieve the values
+    unsigned colIdx = srcRegion.getColIdx();
+    unsigned numAllocCols = srcRegion.getNumAllocCols();
+    unsigned rowIdx = srcRegion.getRowIdx();
+    std::vector<unsigned> regionVector(numAllocCols);
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      regionVector[j] = core.getB32V(rowIdx, colIdx + j);
+    }
+    // Perform the rotation
+    for (unsigned j = 0; j < numAllocCols ; ++j) {
+        int temp = regionVector[j];
+        regionVector[j] = carry;
+        carry = temp;
+    }
+    for (unsigned j = 0; j < numAllocCols; ++j) {
+      core.setB32V(srcRegion.getRowIdx(), colIdx + j, regionVector[j]);
+    }
+  }
+  if (!objSrc.getRegions().empty()) {
+    const pimRegion& srcRegion = objSrc.getRegions().front();
+    device->getCore(srcRegion.getCoreId()).setB32V(srcRegion.getRowIdx(), srcRegion.getColIdx(), *reinterpret_cast<unsigned*>(&carry));
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: rotate left v-layout
+bool
+pimCmdRotateLeftV::execute(pimDevice* device)
+{ 
+  std::printf("PIM-Info: RotateLeftV (obj id %d)\n", m_src);
+
+  pimResMgr* resMgr = device->getResMgr();
+
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  unsigned carry = 0;
+  for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
+    const pimRegion& srcRegion = objSrc.getRegions()[i-1];
+    pimCore& core = device->getCore(srcRegion.getCoreId());
+
+    // retrieve the values
+    unsigned colIdx = srcRegion.getColIdx();
+    unsigned numAllocCols = srcRegion.getNumAllocCols();
+    unsigned rowIdx = srcRegion.getRowIdx();
+    std::vector<unsigned> regionVector(numAllocCols);
+    for (int j = 0; j < numAllocCols; ++j) {
+      regionVector[j] = core.getB32V(rowIdx, colIdx + j);
+    }
+    //Perform the rotation
+    for (int j = numAllocCols-1; j >= 0; --j) {
+      unsigned temp = regionVector[j];
+      regionVector[j] = carry;
+      carry = temp;
+    }
+    for (int j = 0; j < numAllocCols; ++j) {
+      core.setB32V(srcRegion.getRowIdx(), colIdx + j, regionVector[j]);
+    }
+  }
+  if (!objSrc.getRegions().empty()) {
+    const pimRegion& srcRegion = objSrc.getRegions().back();
+    device->getCore(srcRegion.getCoreId()).setB32V(srcRegion.getRowIdx(), srcRegion.getColIdx()+srcRegion.getNumAllocCols()-1, *reinterpret_cast<unsigned*>(&carry));
+  }
   return true;
 }
 
