@@ -908,8 +908,8 @@ pimCmdRotateLeftV::execute(pimDevice* device)
 
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
   unsigned carry = 0;
-  for (int i = objSrc.getRegions().size()-1; i >= 0; --i) {
-    const pimRegion& srcRegion = objSrc.getRegions()[i];
+  for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
+    const pimRegion& srcRegion = objSrc.getRegions()[i-1];
     pimCore& core = device->getCore(srcRegion.getCoreId());
 
     // retrieve the values
