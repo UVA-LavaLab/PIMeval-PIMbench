@@ -5,7 +5,6 @@
 #include <inttypes.h>
 
 #define AES_BLOCK_SIZE 16
-#define THREADS_PER_BLOCK 256
 
 // Function-like macros to avoid repetitive code.
 #define F(x)   (((x) << 1) ^ ((((x) >> 7) & 1) * 0x1B))
@@ -103,6 +102,7 @@ void aes256_encrypt_ecb(uint8_t *buf, unsigned long offset);
 void aes256_decrypt_ecb(uint8_t *buf, unsigned long offset);
 void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
+
 
 // The main function: Demonstrates encryption and decryption.
 int main() {
@@ -224,8 +224,9 @@ void aes_addRoundKey(uint8_t *buf, uint8_t *key){
 void aes_addRoundKey_cpy(uint8_t *buf, uint8_t *key, uint8_t *cpk){
   register uint8_t i = 16;
   while (i--){
-    buf[i] ^= (cpk[i] = key[i]);
-    cpk[16+i] = key[16 + i];
+    cpk[i] = key[i];
+    buf[i] ^= cpk[i];
+    cpk[16 + i] = key[16 + i];
   }
 } 
 
@@ -276,20 +277,54 @@ void aes_shiftRows_inv(uint8_t *buf){
 
 // mix column operation
 void aes_mixColumns(uint8_t *buf){
-  register uint8_t i, a, b, c, d, e;
-  for (i = 0; i < 16; i += 4){
-    a = buf[i];
-    b = buf[i + 1];
-    c = buf[i + 2];
-    d = buf[i + 3];
-    e = a ^ b ^ c ^ d;
-    buf[i] ^= e ^ rj_xtime(a^b);
-    buf[i+1] ^= e ^ rj_xtime(b^c);
-    buf[i+2] ^= e ^ rj_xtime(c^d);
-    buf[i+3] ^= e ^ rj_xtime(d^a);
-  }
-} 
+    uint8_t a, b, c, d, e, f;
+    int j;
+    for (j = 0; j < 16; j += 4){
+        a = buf[j];
+        b = buf[j + 1];
+        c = buf[j + 2];
+        d = buf[j + 3];
+        e = a ^ b;
+        e ^= c;
+        e ^= d;
 
+        f = a ^ b;
+        f = rj_xtime(f);
+        f ^= e;
+        buf[j] ^= f;
+
+        b ^= c; 
+        b = rj_xtime(b);
+        b ^= e; 
+        buf[j+1] ^= b;
+
+        c ^= d; 
+        c = rj_xtime(c);
+        c ^= e; 
+        buf[j+2] ^= c;
+
+        
+        d ^= a; 
+        d = rj_xtime(d);
+        d ^= e; 
+        buf[j+3] ^= d;
+    }
+} 
+// // mix column operation
+// void aes_mixColumns(uint8_t *buf){
+//   register uint8_t i, a, b, c, d, e;
+//   for (i = 0; i < 16; i += 4){
+//     a = buf[i];
+//     b = buf[i + 1];
+//     c = buf[i + 2];
+//     d = buf[i + 3];
+//     e = a ^ b ^ c ^ d;
+//     buf[i] ^= e ^ rj_xtime(a^b);
+//     buf[i+1] ^= e ^ rj_xtime(b^c);
+//     buf[i+2] ^= e ^ rj_xtime(c^d);
+//     buf[i+3] ^= e ^ rj_xtime(d^a);
+//   }
+// } 
 
 // inv mix column operation
 void aes_mixColumns_inv(uint8_t *buf){
