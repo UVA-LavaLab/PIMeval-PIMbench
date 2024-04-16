@@ -116,6 +116,8 @@ void aesExpandEncKey(uint8_t *k, uint8_t *rc, const uint8_t *sb);
 void aesExpandDecKey(uint8_t *k, uint8_t *rc);
 void aes256Init(uint8_t *k);
 void aes256EncryptEcb(uint8_t *buf, unsigned long offset);
+void aes256DecryptEcb(uint8_t *buf, unsigned long offset);
+
 
 
 
@@ -131,6 +133,8 @@ int testAesShiftRowsInv(void);
 int testAesMixColumns(void);
 int testAesMixColumnsInv(void);
 int testAes256EncryptEcb(void);
+int testAes256DecryptEcb(void);
+
 
 // PIM Function declarations.
 void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj);
@@ -143,12 +147,13 @@ void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesMixColumnsInv(std::vector<PIMAuxilary*>* inputObjBuf);
 void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset);
+void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset);
 
 
 
 int main(){
     srand(time(NULL));
-    if (int return_status = testAes256EncryptEcb())
+    if (int return_status = testAes256DecryptEcb())
     {
         std::cout << "Error in function test_rj_xtime" << std::endl;
         return return_status;
@@ -409,6 +414,33 @@ void aes256EncryptEcb(uint8_t *buf, unsigned long offset){
     aesAddRoundKey(bufT, ctx_key);
     memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
 }
+
+
+// aes decrypt algorithm
+void aes256DecryptEcb(uint8_t *buf, unsigned long offset){
+    uint8_t l, rcon;
+    uint8_t bufT[AES_BLOCK_SIZE];
+    memcpy(bufT, &buf[offset], AES_BLOCK_SIZE);
+    aesAddRoundKeyCpy(bufT, ctx_deckey, ctx_key);
+    aesShiftRowsInv(bufT);
+    aesSubBytesInv(bufT);
+    for (l = 14, rcon = 0x80; --l;){
+        if((l & 1)){
+        aesExpandDecKey(ctx_key, &rcon);
+        // aes_addRoundKey(bufT, &ctx_key[16]);
+        aesAddRoundKey(bufT, ctx_key);
+
+        }
+        else{
+        aesAddRoundKey(bufT, ctx_key);
+        }
+        aesMixColumnsInv(bufT);
+        aesShiftRowsInv(bufT);
+        aesSubBytesInv(bufT);
+        }
+    aesAddRoundKey( bufT, ctx_key);
+    memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
+} 
 
 
 int testRjXtime(void){
@@ -975,6 +1007,58 @@ int testAes256EncryptEcb(void) {
     return 0;
 
 }
+
+int testAes256DecryptEcb(void) {
+    std::cout << "PIM test: AES.aes256DecryptEcb" << std::endl;
+
+    unsigned numCores = 1;
+    unsigned numRows = 65536;
+    unsigned numCols = 1024;
+
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    assert(status == PIM_OK);
+
+
+    unsigned bitsPerElement = 8;
+    unsigned totalElementCount = numCores * numCols;
+
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
+    }
+
+    
+    
+    // Initialize buffer 
+    uint8_t buf[16]; 
+    for (unsigned j = 0; j < 16; ++j) {
+        buf[j] = 0x01; // rand() % 256;
+    }
+
+    for (unsigned j = 0; j < 16; ++j) {
+        for (unsigned i = 0; i < totalElementCount; ++i) {
+            (*inputObjBuf)[j]->array[i] = buf[j];
+        }    
+    }
+    unsigned long offset = 0;
+    aes256DecryptEcb(inputObjBuf, offset);
+    aes256DecryptEcb(buf, offset);
+
+    pimShowStats();
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
+    }
+    std::cout << "All correct!" << std::endl;
+    return 0;
+
+}
+
 
 void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
     int status; 
@@ -1876,4 +1960,88 @@ void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
         assert(status == PIM_OK);
     }
     
+}
+
+
+void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset) {
+    int status;
+    uint8_t l, rcon;
+    // uint8_t bufT[AES_BLOCK_SIZE];
+    // memcpy(bufT, &buf[offset], AES_BLOCK_SIZE);
+    std::vector<PIMAuxilary*> *bufTObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
+    for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
+        (*bufTObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*bufTObjBuf)[j]->pimObjId);
+        assert(status == PIM_OK);
+    }
+
+
+    
+    // aesAddRoundKeyCpy(bufT, ctx_deckey, ctx_key);    
+    std::vector<PIMAuxilary*>* keyObjBuf = new std::vector<PIMAuxilary*>(32);
+    for (unsigned j = 0; j < 32; ++j) {
+        (*keyObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
+    }
+
+    std::vector<PIMAuxilary*>* cpkObjBuf = new std::vector<PIMAuxilary*>(32);
+    for (unsigned j = 0; j < 32; ++j) {
+        (*cpkObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
+    }
+
+    for (unsigned j = 0; j < 16; ++j) {
+        for (unsigned i = 0; i < (*inputObjBuf)[0]->numElements; ++i) {
+            (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
+            (*cpkObjBuf)[j]->array[i] = ctx_key[j];
+        }    
+    }
+    
+
+    aesAddRoundKeyCpy(bufTObjBuf, keyObjBuf, cpkObjBuf);
+
+
+    // aesShiftRowsInv(bufT);
+    aesShiftRowsInv(bufTObjBuf);
+
+    // aesSubBytesInv(bufT);
+    aesSubBytesInv(bufTObjBuf);
+
+    for (l = 14, rcon = 0x80; --l;){
+        if((l & 1)){
+            aesExpandDecKey(ctx_key, &rcon);
+            for (unsigned j = 0; j < 16; ++j) {
+                for (unsigned i = 0; i < (*inputObjBuf)[0]->numElements; ++i) {
+                    (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
+                    (*cpkObjBuf)[j]->array[i] = ctx_key[j];
+                }    
+            }
+            // aesAddRoundKey(bufT, ctx_key);
+            aesAddRoundKey(bufTObjBuf, cpkObjBuf);
+
+
+        }
+        else{
+            // aesAddRoundKey(bufT, ctx_key);
+            aesAddRoundKey(bufTObjBuf, cpkObjBuf);
+
+        }
+
+        // aesMixColumnsInv(bufT);
+        aesMixColumnsInv(bufTObjBuf);
+
+        // aesShiftRowsInv(bufT);
+        aesShiftRowsInv(bufTObjBuf);
+        
+        // aesSubBytesInv(bufT);
+        aesSubBytesInv(bufTObjBuf);
+
+    }
+        
+    // aesAddRoundKey( bufT, ctx_key);
+    aesAddRoundKey(bufTObjBuf, cpkObjBuf);
+
+    // memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
+    for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
+        status = pimCopyDeviceToHost(PIM_COPY_V, (*bufTObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        assert(status == PIM_OK);
+    }
 }
