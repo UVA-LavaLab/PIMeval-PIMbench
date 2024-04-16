@@ -7,6 +7,19 @@
 #include <vector>
 #include <inttypes.h>
 #include <cstdlib>
+#include <cassert>
+#include <string.h>
+#include <ctime>
+
+
+
+/* 
+buggy functions: 
+void rjXtime(PIMAuxilary* x, PIMAuxilary* returnValueObj);
+
+
+*/
+
 
 #define AES_BLOCK_SIZE 16
 
@@ -98,6 +111,11 @@ void aesAddRoundKeyCpy(uint8_t *buf, uint8_t *key, uint8_t *cpk);
 void aesShiftRows(uint8_t *buf);
 void aesShiftRowsInv(uint8_t *buf);
 void aesMixColumns(uint8_t *buf);
+void aesMixColumnsInv(uint8_t *buf);
+void aesExpandEncKey(uint8_t *k, uint8_t *rc, const uint8_t *sb);
+void aesExpandDecKey(uint8_t *k, uint8_t *rc);
+void aes256Init(uint8_t *k);
+void aes256EncryptEcb(uint8_t *buf, unsigned long offset);
 
 
 
@@ -111,9 +129,11 @@ int testAesAddRoundKeyCpy(void);
 int testAesShiftRows(void);
 int testAesShiftRowsInv(void);
 int testAesMixColumns(void);
+int testAesMixColumnsInv(void);
+int testAes256EncryptEcb(void);
 
 // PIM Function declarations.
-PIMAuxilary* rjXtime(PIMAuxilary* x);
+void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj);
 void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf);
@@ -121,10 +141,14 @@ void aesAddRoundKeyCpy(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAux
 void aesShiftRows(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf);
+void aesMixColumnsInv(std::vector<PIMAuxilary*>* inputObjBuf);
+void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset);
+
 
 
 int main(){
-    if (int return_status = testAesShiftRowsInv())
+    srand(time(NULL));
+    if (int return_status = testAes256EncryptEcb())
     {
         std::cout << "Error in function test_rj_xtime" << std::endl;
         return return_status;
@@ -133,10 +157,6 @@ int main(){
 }
 
 uint8_t rjXtime(uint8_t x){
-    return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x << 1);
-} 
-
-uint8_t rjXtimeV2(uint8_t x){
     uint8_t shifted = x << 1;
     uint8_t mask = x;
     uint8_t returnValue = 0x1b;
@@ -145,7 +165,11 @@ uint8_t rjXtimeV2(uint8_t x){
     mask = mask >> 7;  
     returnValue = returnValue * mask;
     returnValue = shifted ^ returnValue;
+    
     // std::cout << "[DEBUG] returnValue: " << (int) returnValue << std::endl; 
+    // std::cout << "[DEBUG] mask: " << (int) mask << std::endl; 
+    // std::cout << "[DEBUG] shifted: " << (int) shifted << std::endl; 
+
     return returnValue;
 } 
 
@@ -169,7 +193,6 @@ void aesSubBytesInv(uint8_t *buf){
     }
 }
 
-
 // shift row operation
 void aesShiftRows(uint8_t *buf){
     uint8_t i, j;
@@ -190,7 +213,6 @@ void aesShiftRows(uint8_t *buf){
     buf[14] = buf[6];
     buf[6]  = j;
 }
-
 
 // shift row operation
 void aesShiftRowsInv(uint8_t *buf){
@@ -230,8 +252,50 @@ void aesAddRoundKeyCpy(uint8_t *buf, uint8_t *key, uint8_t *cpk){
 
 }
 
+
 void aesMixColumns(uint8_t *buf) {
     uint8_t j, a, b, c, d, e, f;
+    for (j = 0; j < 16; j += 4){
+        a = buf[j];
+        b = buf[j + 1];
+        c = buf[j + 2];
+        d = buf[j + 3];
+
+        e = a ^ b;
+        e ^= c;
+        e ^= d;
+
+        f = a ^ b;  
+        f = rjXtime(f);
+        f ^= e;
+        buf[j] ^= f;
+ 
+      
+
+        b ^= c; 
+        b = rjXtime(b);
+
+        b ^= e; 
+        buf[j+1] ^= b;    
+
+
+        c ^= d;
+        c = rjXtime(c);
+        c ^= e; 
+        buf[j+2] ^= c;
+
+       
+        d ^= a;
+        d = rjXtime(d);
+        d ^= e; 
+        buf[j+3] ^= d;    
+    }
+}
+
+
+void aesMixColumnsInv(uint8_t *buf) {
+    uint8_t j, a, b, c, d, e, x, y, z;
+    uint8_t t0;
     for (j = 0; j < 16; j += 4){
         a = buf[j];
         b = buf[j + 1];
@@ -241,28 +305,111 @@ void aesMixColumns(uint8_t *buf) {
         e ^= c;
         e ^= d;
 
-        f = a ^ b;
-        f = rjXtime(f);
-        f ^= e;
-        buf[j] ^= f;
+        z = rjXtime(e);
 
-        b ^= c; 
-        b = rjXtime(b);
-        b ^= e; 
-        buf[j+1] ^= b;
-
-        c ^= d; 
-        c = rjXtime(c);
-        c ^= e; 
-        buf[j+2] ^= c;
+        t0 = a ^ c;
+        t0 ^= z;
+        t0 = rjXtime(t0);
+        t0 = rjXtime(t0);
+        x = e ^ t0;
 
         
-        d ^= a; 
-        d = rjXtime(d);
-        d ^= e; 
-        buf[j+3] ^= d;
+        t0 = b ^ d;
+        t0 ^= z;
+        t0 = rjXtime(t0);
+        t0 = rjXtime(t0);
+        y = e ^ t0;
+
+        t0 = a ^ b;
+        t0 = rjXtime(t0);
+        t0 ^= x;
+        buf[j] ^= t0;
+
+        t0 = b ^ c;
+        t0 = rjXtime(t0);
+        t0 ^= y;
+        buf[j + 1] ^= t0;
+
+
+        
+
+        t0 = c ^ d;
+        t0 = rjXtime(t0);
+        t0 ^= x;
+        buf[j + 2] ^= t0;
+
+
+
+        t0 = d ^ a;
+        t0 = rjXtime(t0);
+        t0 ^= y;
+        buf[j + 3] ^= t0;
+        // if (j == 0) { 
+        //     std::cout << "buf[j]: " << (int)buf[j] << std::endl;
+        //     std::cout << "buf[j + 1]: " << (int)buf[j + 1] << std::endl;
+        //     std::cout << "buf[j + 2]: " << (int)buf[j + 2] << std::endl;
+        //     std::cout << "buf[j + 3]: " << (int)buf[j + 3] << std::endl;
+        //     std::cout << "a: " << (int)a << std::endl;
+        //     std::cout << "b: " << (int)b << std::endl;
+        //     std::cout << "c: " << (int)c << std::endl;
+        //     std::cout << "d: " << (int)d << std::endl;
+        //     std::cout << "e: " << (int)e << std::endl;
+        //     std::cout << "x: " << (int)x << std::endl;
+        //     int mame; std::cin >> mame;
+        // }   
+
     }
 }
+
+// aes encrypt algorithm
+void aes256EncryptEcb(uint8_t *buf, unsigned long offset){
+    uint8_t l, rcon;
+    uint8_t bufT[AES_BLOCK_SIZE];
+    memcpy(bufT, &buf[offset], AES_BLOCK_SIZE);
+    aesAddRoundKeyCpy(bufT, ctx_enckey, ctx_key);
+    
+    
+    
+
+    for(l = 1, rcon = l; l < 14; ++l){
+        aesSubBytes(bufT);
+        aesShiftRows(bufT);
+        aesMixColumns(bufT);
+        
+
+        if( l & 1 ){
+            // aesAddRoundKey( bufT, &ctx_key[16]);
+            aesAddRoundKey(bufT, ctx_key);
+            
+        }
+        else{
+            aesAddRoundKey(bufT, ctx_key);
+            aesExpandEncKey(ctx_key, &rcon, sbox);
+        }
+
+
+        // if (l == 13) {
+        //     std::cout << "bufT[0]: "<< (int) bufT[0] << std::endl;
+
+        //     for (unsigned l = 0; l < 16; ++l) {
+        //         std::cout << "buf["<< l << "] = " << (int)bufT[l] << ";" << std::endl;
+        //     }
+        //     for (unsigned l = 0; l < 16; ++l) {
+        //         std::cout << "ctx_key["<< l << "] = " << (int)ctx_key[l] << ";" << std::endl;
+        //     }
+        //     int mame; std::cin >> mame;
+        // }
+
+
+        
+    }
+    aesSubBytes(bufT);
+    aesShiftRows(bufT);
+    aesExpandEncKey(ctx_key, &rcon, sbox);
+    aesAddRoundKey(bufT, ctx_key);
+    memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
+}
+
 
 int testRjXtime(void){
 
@@ -273,54 +420,44 @@ int testRjXtime(void){
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
     unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
     
     PIMAuxilary* xObj = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
-    PIMAuxilary* zObj = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, xObj->pimObjId, PIM_INT32);
+    PIMAuxilary* zObj = new PIMAuxilary(xObj);
 
 
     // Initialize x 
     for (unsigned i = 0; i < totalElementCount; ++i) {
-        // xObj->array[i] = i % 256;
-        xObj->array[i] = 0x55;
+        xObj->array[i] = rand() % 256;
+        // xObj->array[i] = 128;
         
     }
 
     // Copy x to the device 
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)xObj->array.data(), xObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
-    
-    zObj = rjXtime(xObj);
-
-
-    uint8_t x = 0x55;
-    uint8_t z2 = rjXtimeV2(x);
-
-
+    rjXtime(xObj, zObj);
     pimShowStats();
 
-    if (zObj->array[0] == z2) {
-        std::cout << "zObj->array[0]" << zObj->array[0] << std::endl;
-        std::cout << "All correct!" << std::endl;
-
-        return 0;
-    }
-    else {
-        std::cout << "Abort" << std::endl;
+    for (unsigned i = 0; i < totalElementCount; ++i) {
+        uint8_t x = xObj->array[i];
+        uint8_t z = rjXtime(x);
+        if (zObj->array[i] != z) {
+            std::cout << "x: " << (int)x << std::endl;
+            std::cout << "zObj->array[" << i << "]: " << (int)zObj->array[0] << std::endl;
+            std::cout << "z: " << (int)z << std::endl;
+            std::cout << "Abort" << std::endl;
         abort();
+        }
+    
     }
     
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
@@ -332,17 +469,15 @@ int testAesSubBytes(void) {
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
-    unsigned bitsPerElement = 32;
+    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
-    for (unsigned j = 0; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
@@ -350,33 +485,33 @@ int testAesSubBytes(void) {
     // Initialize buffer 
     uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
+        buf[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
         }    
     }
 
 
 
     
-    aesSubBytes(&inputObjBuf);
+    aesSubBytes(inputObjBuf);
     aesSubBytes(buf);
 
 
 
     pimShowStats();
-    std::cout << "inputObjBuf[0]->array[0]: " << inputObjBuf[0]->array[0] << std::endl;
-    if (inputObjBuf[0]->array[0] == buf[0]) {
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
@@ -388,17 +523,15 @@ int testAesSubBytesInv(void) {
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
-
+    assert(status == PIM_OK);
+    
     unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
-    for (unsigned j = 0; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
@@ -406,33 +539,33 @@ int testAesSubBytesInv(void) {
     // Initialize buffer 
     uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
+        buf[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
         }    
     }
 
 
 
     
-    aesSubBytesInv(&inputObjBuf);
+    aesSubBytesInv(inputObjBuf);
     aesSubBytesInv(buf);
 
 
 
     pimShowStats();
-    std::cout << "inputObjBuf[0]->array[0]: " << inputObjBuf[0]->array[0] << std::endl;
-    if (inputObjBuf[0]->array[0] == buf[0]) {
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
@@ -444,23 +577,21 @@ int testAesAddRoundKey(void) {
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
     unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
-    inputObjBuf[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(inputObjBuf[0]);
+        (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
 
-    std::vector<PIMAuxilary*> keyObjBuf(16);
+    std::vector<PIMAuxilary*> *keyObjBuf = new std::vector<PIMAuxilary*>(16);
+
     for (unsigned j = 0; j < 16; ++j) {
-        keyObjBuf[j] = new PIMAuxilary(inputObjBuf[0]);
+        (*keyObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
@@ -468,32 +599,30 @@ int testAesAddRoundKey(void) {
     uint8_t buf[16]; 
     uint8_t key[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
-        key[j] = 0xaa;
+        buf[j] = 202; // rand() % 256;
+        key[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
-            keyObjBuf[j]->array[i] = key[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
+            (*keyObjBuf)[j]->array[i] = key[j];
         }    
     }
     
-    aesAddRoundKey(&inputObjBuf, &keyObjBuf);
+    aesAddRoundKey(inputObjBuf, keyObjBuf);
     aesAddRoundKey(buf, key);
 
     pimShowStats();
-    std::cout << "inputObjBuf[0]->array[0]: " << (int)inputObjBuf[0]->array[0] << std::endl;
-    std::cout << "buf[0]: " << (int)buf[0] << std::endl;
-    if (inputObjBuf[0]->array[0] == buf[0]) {
-        
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
@@ -505,40 +634,37 @@ int testAesAddRoundKeyCpy(void) {
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
     unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
-    inputObjBuf[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(inputObjBuf[0]);
+        (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
 
-    std::vector<PIMAuxilary*> keyObjBuf(32);
+    std::vector<PIMAuxilary*> *keyObjBuf = new std::vector<PIMAuxilary*>(32);
     for (unsigned j = 0; j < 32; ++j) {
-        keyObjBuf[j] = new PIMAuxilary(inputObjBuf[0]);
+        (*keyObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
 
-    std::vector<PIMAuxilary*> cpkObjBuf(32);
+    std::vector<PIMAuxilary*> *cpkObjBuf = new std::vector<PIMAuxilary*>(32);
     for (unsigned j = 0; j < 32; ++j) {
-        cpkObjBuf[j] = new PIMAuxilary(inputObjBuf[0]);
+        (*cpkObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
     // Initialize input buffer 
     uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
+        buf[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
         }    
     }
 
@@ -553,20 +679,20 @@ int testAesAddRoundKeyCpy(void) {
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            keyObjBuf[j]->array[i] = key[j];
-            cpkObjBuf[j]->array[i] = cpk[j];
+            (*keyObjBuf)[j]->array[i] = key[j];
+            (*cpkObjBuf)[j]->array[i] = cpk[j];
         }    
     }
 
 
     
-    aesAddRoundKeyCpy(&inputObjBuf, &keyObjBuf, &cpkObjBuf);
+    aesAddRoundKeyCpy(inputObjBuf, keyObjBuf, cpkObjBuf);
     aesAddRoundKeyCpy(buf, key, cpk);
 
     pimShowStats();
-    std::cout << "cpkObjBuf[0]->array[0]: " << (int)cpkObjBuf[0]->array[0] << std::endl;
+    std::cout << "cpkObjBuf[0]->array[0]: " << (int)(*cpkObjBuf)[0]->array[0] << std::endl;
     std::cout << "cpk[0]: " << (int)cpk[0] << std::endl;
-    if (cpkObjBuf[0]->array[0] == cpk[0]) {
+    if ((*cpkObjBuf)[0]->array[0] == cpk[0]) {
         
         std::cout << "All correct!" << std::endl;
         return 0;
@@ -586,17 +712,15 @@ int testAesShiftRows(void) {
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
-    unsigned bitsPerElement = 32;
+    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
-    for (unsigned j = 0; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
@@ -604,33 +728,33 @@ int testAesShiftRows(void) {
     // Initialize buffer 
     uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
+        buf[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
         }    
     }
 
 
 
     
-    aesShiftRows(&inputObjBuf);
+    aesShiftRows(inputObjBuf);
     aesShiftRows(buf);
 
 
 
     pimShowStats();
-    std::cout << "inputObjBuf[0]->array[0]: " << inputObjBuf[0]->array[0] << std::endl;
-    if (inputObjBuf[0]->array[0] == buf[0]) {
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
@@ -642,17 +766,15 @@ int testAesShiftRowsInv(void) {
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
-    unsigned bitsPerElement = 32;
+    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
-    for (unsigned j = 0; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
@@ -660,55 +782,167 @@ int testAesShiftRowsInv(void) {
     // Initialize buffer 
     uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
+        buf[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
         }    
     }
 
 
 
     
-    aesShiftRowsInv(&inputObjBuf);
+    aesShiftRowsInv(inputObjBuf);
     aesShiftRowsInv(buf);
 
 
 
     pimShowStats();
-    std::cout << "inputObjBuf[0]->array[0]: " << inputObjBuf[0]->array[0] << std::endl;
-    if (inputObjBuf[0]->array[0] == buf[0]) {
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
 int testAesMixColumns(void) {
     std::cout << "PIM test: AES.aesMixColumns" << std::endl;
 
-    unsigned numCores = 4;
+    unsigned numCores = 1;
     unsigned numRows = 65536;
     unsigned numCols = 1024;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
-    unsigned bitsPerElement = 32;
+
+    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
-    std::vector<PIMAuxilary*> inputObjBuf(16);
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
+    }
+
+    
+    // Initialize buffer 
+    uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        inputObjBuf[j] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+        buf[j] = 16; // rand() % 256;
+    }
+
+    for (unsigned j = 0; j < 16; ++j) {
+        for (unsigned i = 0; i < totalElementCount; ++i) {
+            (*inputObjBuf)[j]->array[i] = buf[j];
+        }    
+        // status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        // assert (status == PIM_OK);
+    }
+
+
+
+    
+    aesMixColumns(inputObjBuf);
+    aesMixColumns(buf);
+
+    pimShowStats();
+    
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
+    }
+    std::cout << "All correct!" << std::endl;
+    return 0;
+}
+
+int testAesMixColumnsInv(void) {
+    std::cout << "PIM test: AES.AesMixColumnsInv" << std::endl;
+
+    unsigned numCores = 1;
+    unsigned numRows = 65536;
+    unsigned numCols = 1024;
+
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    assert(status == PIM_OK);
+
+
+    unsigned bitsPerElement = 8;
+    unsigned totalElementCount = numCores * numCols;
+
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
+    }
+    
+    
+    // Initialize buffer 
+    uint8_t inBuf[16]; 
+    uint8_t outBuf[16]; 
+    for (unsigned j = 0; j < 16; ++j) {
+        inBuf[j] = rand() % 256;
+        outBuf[j] = inBuf[j];
+    }
+
+    for (unsigned j = 0; j < 16; ++j) {
+        for (unsigned i = 0; i < totalElementCount; ++i) {
+            (*inputObjBuf)[j]->array[i] = outBuf[j];
+        }    
+    }
+
+    aesMixColumnsInv(inputObjBuf);
+    aesMixColumnsInv(outBuf);
+
+    pimShowStats();
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != outBuf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)inBuf[j] << std::endl;
+            for (unsigned l = 0; l < 16; ++l) {
+                std::cout << "inBuf["<< l << "] = " << (int)inBuf[l] << ";" << std::endl;
+            }
+
+            
+            std::cout << "Abort" << std::endl;
+
+            abort();
+        }
+    }
+    std::cout << "All correct!" << std::endl;
+    return 0;
+}
+
+int testAes256EncryptEcb(void) {
+    std::cout << "PIM test: AES.aes256EncryptEcb" << std::endl;
+
+    unsigned numCores = 1;
+    unsigned numRows = 65536;
+    unsigned numCols = 1024;
+
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    assert(status == PIM_OK);
+
+
+    unsigned bitsPerElement = 8;
+    unsigned totalElementCount = numCores * numCols;
+
+    std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    for (unsigned j = 1; j < 16; ++j) {
+        (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
 
     
@@ -716,69 +950,59 @@ int testAesMixColumns(void) {
     // Initialize buffer 
     uint8_t buf[16]; 
     for (unsigned j = 0; j < 16; ++j) {
-        buf[j] = 0x55;
+        buf[j] = 0x01; // rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
         for (unsigned i = 0; i < totalElementCount; ++i) {
-            inputObjBuf[j]->array[i] = buf[j];
+            (*inputObjBuf)[j]->array[i] = buf[j];
         }    
     }
-
-
-
-    
-    aesMixColumns(&inputObjBuf);
-    aesMixColumns(buf);
-
-
+    unsigned long offset = 0;
+    aes256EncryptEcb(inputObjBuf, offset);
+    aes256EncryptEcb(buf, offset);
 
     pimShowStats();
-    std::cout << "inputObjBuf[0]->array[0]: " << inputObjBuf[0]->array[0] << std::endl;
-    if (inputObjBuf[0]->array[0] == buf[0]) {
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    for (unsigned j = 0; j < 16; ++j) { 
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+            std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)buf[j] << std::endl;
+            std::cout << "Abort" << std::endl;
+            abort();
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
+
 }
 
-PIMAuxilary* rjXtime(PIMAuxilary* xObj){
+void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
     int status; 
 
     /* TODO: Change with the real PIM API */
     // uint8_t shifted = x << 1;
+    status = pimCopyDeviceToHost(PIM_COPY_V, xObj->pimObjId, (void*)xObj->array.data());
+    assert(status == PIM_OK);
     PIMAuxilary* shiftedObj = new PIMAuxilary(xObj);
     pimShiftLeft(shiftedObj, 1); 
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)shiftedObj->array.data(), shiftedObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
+
     /* END */
 
     
     // uint8_t mask = x;
     PIMAuxilary* maskObj = new PIMAuxilary(xObj);
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)xObj->array.data(), maskObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
+
     
     // uint8_t returnValue = 0x1b;
-    PIMAuxilary* returnValueObj = new PIMAuxilary(xObj);
     for (unsigned i = 0; i < returnValueObj->numElements; ++i) {
         returnValueObj->array[i] =  0x1b;
     }
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)returnValueObj->array.data(), returnValueObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
     // uint8_t const1 = 0x80;
     PIMAuxilary* const1Obj = new PIMAuxilary(xObj);
@@ -786,67 +1010,43 @@ PIMAuxilary* rjXtime(PIMAuxilary* xObj){
         const1Obj->array[i] =  0x80;
     }
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)const1Obj->array.data(), const1Obj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
 
 
     // mask = mask & const1;
     status = pimAnd(maskObj->pimObjId, const1Obj->pimObjId, maskObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
-    pimFree(const1Obj->pimObjId);
+    assert(status == PIM_OK);
+    // pimFree(const1Obj->pimObjId);
 
     
 
     /* TODO: Change with the real PIM API */
     // mask = mask >> 7;  
-    status = pimCopyDeviceToHost(PIM_COPY_V, maskObj->pimObjId, (void*)const1Obj->array.data());
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    status = pimCopyDeviceToHost(PIM_COPY_V, maskObj->pimObjId, (void*)maskObj->array.data());
+    assert(status == PIM_OK);
     pimShiftRight(maskObj, 7); 
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)maskObj->array.data(), maskObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    assert(status == PIM_OK);
     /* END */
-
 
     /* TODO: Change with the real PIM API */
     /* Can be replaced by row replicate function*/
     // returnValue = returnValue * mask;
-    status = pimMul(returnValueObj->pimObjId, maskObj->pimObjId, returnValueObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
-    /* END */
-    pimFree(maskObj->pimObjId);
+    // status = pimMul(returnValueObj->pimObjId, maskObj->pimObjId, returnValueObj->pimObjId);
+    // assert (status == PIM_OK);
+    pimMul_(returnValueObj, maskObj, returnValueObj);
+   
 
-    // returnValue = shifted ^ returnValue;
-    status = pimXor(returnValueObj->pimObjId, shiftedObj->pimObjId, returnValueObj->pimObjId);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
-    status = pimCopyDeviceToHost(PIM_COPY_V, returnValueObj->pimObjId, (void*)returnValueObj->array.data());
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        abort();
-    }
+    pimXor_(returnValueObj, shiftedObj, returnValueObj);
+
+
+    // std::cout << "[DEBUG] returnValueObj->array[0]: " << (int) returnValueObj->array[0] << std::endl; 
+    // std::cout << "[DEBUG] maskObj->array[0]: " << (int) maskObj->array[0] << std::endl; 
+    // std::cout << "[DEBUG] shiftedObj->array[0]: " << (int) shiftedObj->array[0] << std::endl; 
+
     pimFree(shiftedObj->pimObjId);
 
-    // std::cout << "[DEBUG] returnValueObj: " << (int) returnValueObj->array[0] << std::endl; 
-    return returnValueObj;
 
-
-    
 }
 
 void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
@@ -855,9 +1055,7 @@ void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
     // Copy input buffer to the device 
     // for (unsigned j = 0; j < 16; ++j) {
     //     status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
-    //     if (status != PIM_OK) {
-    //         std::cout << "Abort" << std::endl;
-    //         abort();
+    // assert(status == PIM_OK);
     //     }
     // }
 
@@ -865,9 +1063,7 @@ void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
     // // Copy input buffer back to the host 
     // for (unsigned j = 0; j < 16; ++j) {
     //     status = pimCopyDeviceToHost(PIM_COPY_V,(*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
-    //     if (status != PIM_OK) {
-    //         std::cout << "Abort" << std::endl;
-    //         abort();
+    //      assert(status == PIM_OK);
     //     }
     // }
 
@@ -892,20 +1088,14 @@ void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf) {
     // Copy input buffer to the device 
     // for (unsigned j = 0; j < 16; ++j) {
     //     status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
-    //     if (status != PIM_OK) {
-    //         std::cout << "Abort" << std::endl;
-    //         abort();
-    //     }
+    //      assert(status == PIM_OK);       
     // }
 
     // /* TODO: Implementation based on bit-serial look-up table */
     // // Copy input buffer back to the host 
     // for (unsigned j = 0; j < 16; ++j) {
     //     status = pimCopyDeviceToHost(PIM_COPY_V,(*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
-    //     if (status != PIM_OK) {
-    //         std::cout << "Abort" << std::endl;
-    //         abort();
-    //     }
+    //     assert(status == PIM_OK);
     // }
 
     uint8_t b;
@@ -929,19 +1119,13 @@ void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxila
     // Copy input buffer to the device 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
     // Copy key buffer to the device 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
 
@@ -949,11 +1133,10 @@ void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxila
         buf[j] ^= key[j];
     } */
     for (int j = 0; j < 16; j++){ 
-        status = pimXor((*inputObjBuf)[j]->pimObjId, (*keyObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->pimObjId); 
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        // status = pimXor((*inputObjBuf)[j]->pimObjId, (*keyObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_((*inputObjBuf)[j], (*keyObjBuf)[j], (*inputObjBuf)[j]); 
+
     }   
 
 
@@ -962,11 +1145,7 @@ void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxila
     for (unsigned j = 0; j < 16; ++j) {
         std::cout << j << std::endl;
         status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
-        if (status != PIM_OK) {
-
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 }
 
@@ -976,19 +1155,13 @@ int status;
     // Copy input buffer to the device 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
     // Copy key buffer to the device 
     for (unsigned j = 0; j < 32; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
 
@@ -998,10 +1171,7 @@ int status;
     } */
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*keyObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
     /* END */
 
@@ -1011,10 +1181,7 @@ int status;
     } */
     for (int j = 0; j < 16; j++){ 
         status = pimXor((*inputObjBuf)[j]->pimObjId, (*cpkObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->pimObjId); 
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }   
 
     /* TODO: Copy from keyObjBuf in the device instead of host*/
@@ -1023,16 +1190,10 @@ int status;
     } */
     for (int j = 0; j < 16; j++){ 
         status = pimCopyDeviceToHost(PIM_COPY_V, (*keyObjBuf)[16 + j]->pimObjId, (void*)(*keyObjBuf)[16 + j]->array.data());
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
         status = pimCopyHostToDevice(PIM_COPY_V, (*keyObjBuf)[16 + j]->array.data(), (*cpkObjBuf)[16 + j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
     } 
     /* TODO: Copy from keyObjBuf in the device instead of host*/  
@@ -1043,22 +1204,14 @@ int status;
     for (unsigned j = 0; j < 16; ++j) {
         std::cout << j << std::endl;
         status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
-        if (status != PIM_OK) {
-
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
     // Copy cpk buffer back to the host 
     for (unsigned j = 0; j < 32; ++j) {
         std::cout << j << std::endl;
         status = pimCopyDeviceToHost(PIM_COPY_V, (*keyObjBuf)[j]->pimObjId, (void*)(*keyObjBuf)[j]->array.data());
-        if (status != PIM_OK) {
-
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
     
 }
@@ -1070,10 +1223,7 @@ void aesShiftRows(std::vector<PIMAuxilary*>* inputObjBuf) {
     // Copy input buffer to the device 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
     i = (*inputObjBuf)[1]->pimObjId;
@@ -1096,10 +1246,7 @@ void aesShiftRows(std::vector<PIMAuxilary*>* inputObjBuf) {
     // Copy input buffer back to the host 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyDeviceToHost(PIM_COPY_V,(*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 }
 
@@ -1110,10 +1257,7 @@ void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
     // Copy input buffer to the device 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 
     i = (*inputObjBuf)[1]->pimObjId;
@@ -1136,16 +1280,13 @@ void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
     // Copy input buffer back to the host 
     for (unsigned j = 0; j < 16; ++j) {
         status = pimCopyDeviceToHost(PIM_COPY_V,(*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
     }
 }
 
 void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf) {
     int status; 
-    
+   
 
     // uint8_t a, b, c, d, e, f;
     PIMAuxilary* aObj = new PIMAuxilary((*inputObjBuf)[0]);
@@ -1158,65 +1299,581 @@ void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf) {
 
     for (int j = 0; j < 16; j += 4){
         //  a = buf[j];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), aObj->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
         // b = buf[j + 1];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 1]->array.data(), (*inputObjBuf)[j + 1]->pimObjId);
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 1]->array.data(), bObj->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
         // c = buf[j + 2];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 2]->array.data(), (*inputObjBuf)[j + 2]->pimObjId);
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 2]->array.data(), cObj->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
-        // d = buf[j + 2];
+
+        // d = buf[j + 3];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 3]->array.data(), (*inputObjBuf)[j + 3]->pimObjId);
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 3]->array.data(), dObj->pimObjId);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
+        
+        
         // e = a ^ b;
-        status = pimXor(aObj->pimObjId, dObj->pimObjId, eObj->pimObjId); 
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        status = pimXor(aObj->pimObjId, bObj->pimObjId, eObj->pimObjId); 
+        assert(status == PIM_OK);
 
         // e ^= c;
         status = pimXor(eObj->pimObjId, cObj->pimObjId, eObj->pimObjId); 
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
         
         // e ^= d;
         status = pimXor(eObj->pimObjId, dObj->pimObjId, eObj->pimObjId); 
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
-
+        assert(status == PIM_OK);
+     
         // f = a ^ b;
         status = pimXor(aObj->pimObjId, bObj->pimObjId, fObj->pimObjId); 
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            abort();
-        }
+        assert(status == PIM_OK);
 
-        // f = rjXtime(f);
-        /* TODO finish this function*/
+        // f = rj_xtime(f);
+        rjXtime(fObj, fObj);
+
+        // f ^= e; 
+        status = pimXor(fObj->pimObjId, eObj->pimObjId, fObj->pimObjId); 
+        assert(status == PIM_OK);
+
+        // buf[j] ^= f;
+        // status = pimXor((*inputObjBuf)[j]->pimObjId, fObj->pimObjId, (*inputObjBuf)[j]->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_((*inputObjBuf)[j], fObj, (*inputObjBuf)[j]);
 
 
+           
+
+
+        // b ^= c; 
+        // status = pimXor(bObj->pimObjId, cObj->pimObjId, bObj->pimObjId);
+        // assert(status == PIM_OK);
+
+        pimXor_(bObj, cObj, bObj);
+        
+
+
+        // b = rj_xtime(b);
+        rjXtime(bObj, bObj);
+
+        // b ^= e; 
+        // status = pimXor(bObj->pimObjId, eObj->pimObjId, bObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(bObj, eObj, bObj);
+
+
+        // buf[j+1] ^= b;
+        // status = pimXor((*inputObjBuf)[j + 1]->pimObjId, bObj->pimObjId, (*inputObjBuf)[j + 1]->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_((*inputObjBuf)[j + 1], bObj, (*inputObjBuf)[j + 1]);   
+    
+        
+
+
+        // c ^= d; 
+        // status = pimXor(cObj->pimObjId, dObj->pimObjId, cObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(cObj, dObj, cObj);
+
+        
+        // c = rj_xtime(c);
+        rjXtime(cObj, cObj);
+
+
+
+        // c ^= e; 
+        // status = pimXor(cObj->pimObjId, eObj->pimObjId, cObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(cObj, eObj, cObj);
+
+
+        
+
+        // buf[j+2] ^= c;
+        // status = pimXor((*inputObjBuf)[j + 2]->pimObjId, cObj->pimObjId, (*inputObjBuf)[j + 2]->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_((*inputObjBuf)[j + 2], cObj, (*inputObjBuf)[j + 2]);
+
+  
+
+  
+
+
+       
+        // d ^= a; 
+        // status = pimXor(dObj->pimObjId, aObj->pimObjId, dObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(dObj, aObj, dObj);
+
+
+
+        // d = rj_xtime(d);
+        rjXtime(dObj, dObj);
+
+       
+
+        // d ^= e; 
+        // status = pimXor(dObj->pimObjId, eObj->pimObjId, dObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(dObj, eObj, dObj);
+
+        // buf[j+3] ^= d;
+        // status = pimXor((*inputObjBuf)[j + 3]->pimObjId, dObj->pimObjId, (*inputObjBuf)[j + 3]->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_((*inputObjBuf)[j + 3], dObj, (*inputObjBuf)[j + 3]);
+        
     }
 
+    for (int j = 0; j < 16; ++j){
+        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
+        assert(status == PIM_OK);
+    }
+
+    pimFree(aObj->pimObjId);
+    pimFree(bObj->pimObjId);
+    pimFree(cObj->pimObjId);
+    pimFree(dObj->pimObjId);
+    pimFree(eObj->pimObjId);
+    pimFree(fObj->pimObjId);
+
 }       
+
+
+void aesMixColumnsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
+    int status; 
+    
+    // uint8_t a, b, c, d, e, x, y, z, t0;
+    PIMAuxilary* aObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* bObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* cObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* dObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* eObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* xObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* yObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* zObj = new PIMAuxilary((*inputObjBuf)[0]);
+    PIMAuxilary* t0Obj = new PIMAuxilary((*inputObjBuf)[0]);
+
+
+    for (int j = 0; j < 16; j += 4){
+        //  a = buf[j];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), aObj->pimObjId);
+        assert(status == PIM_OK);
+
+        // b = buf[j + 1];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 1]->array.data(), (*inputObjBuf)[j + 1]->pimObjId);
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 1]->array.data(), bObj->pimObjId);
+        assert(status == PIM_OK);
+
+        // c = buf[j + 2];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 2]->array.data(), (*inputObjBuf)[j + 2]->pimObjId);
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 2]->array.data(), cObj->pimObjId);
+        assert(status == PIM_OK);
+
+        // d = buf[j + 3];
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 3]->array.data(), (*inputObjBuf)[j + 3]->pimObjId);
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + 3]->array.data(), dObj->pimObjId);
+        assert(status == PIM_OK);
+        
+        // e = a ^ b;
+        // status = pimXor(aObj->pimObjId, bObj->pimObjId, eObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(aObj, bObj, eObj);
+
+        // e ^= c;
+        // status = pimXor(eObj->pimObjId, cObj->pimObjId, eObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(eObj, cObj, eObj);
+
+        
+        // e ^= d;
+        // status = pimXor(eObj->pimObjId, dObj->pimObjId, eObj->pimObjId); 
+        // assert(status == PIM_OK);       
+        pimXor_(eObj, dObj, eObj);
+        
+        // z = rj_xtime(e);
+        status = pimCopyDeviceToHost(PIM_COPY_V, eObj->pimObjId, eObj->array.data());
+        rjXtime(eObj, zObj);
+
+        // t0 = a ^ c;
+        // status = pimXor(aObj->pimObjId, cObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(aObj, cObj, t0Obj);
+
+
+        // t0 ^= z;
+        // status = pimXor(t0Obj->pimObjId, zObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK); 
+        pimXor_(t0Obj, zObj, t0Obj);
+
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+    
+        // x = e ^ t0;
+        // status = pimXor(eObj->pimObjId, t0Obj->pimObjId, xObj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(t0Obj, eObj, xObj);
+
+        
+       
+
+
+
+        
+        // t0 = b ^ d;
+        // status = pimXor(bObj->pimObjId, dObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(bObj, dObj, t0Obj);
+
+
+        // t0 ^= z;
+        // status = pimXor(t0Obj->pimObjId, zObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(t0Obj, zObj, t0Obj);
+
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // y = e ^ t0;
+        // status = pimXor(t0Obj->pimObjId, eObj->pimObjId, yObj->pimObjId); 
+        // assert(status == PIM_OK);
+        pimXor_(t0Obj, eObj, yObj);
+
+
+        // t0 = a ^ b;
+        // status = pimXor(aObj->pimObjId, bObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(aObj, bObj, t0Obj);
+        
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // t0 ^= x;
+        // status = pimXor(t0Obj->pimObjId, xObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(t0Obj, xObj, t0Obj);
+
+
+        // buf[j] ^= t0;
+        // status = pimXor((*inputObjBuf)[j]->pimObjId, t0Obj->pimObjId, (*inputObjBuf)[j]->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_((*inputObjBuf)[j], t0Obj, (*inputObjBuf)[j]);
+
+
+        // t0 = b ^ c;
+        // status = pimXor(bObj->pimObjId, cObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(bObj, cObj, t0Obj);
+
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // t0 ^= y;
+        // status = pimXor(t0Obj->pimObjId, yObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(t0Obj, yObj, t0Obj);
+
+
+        // buf[j + 1] ^= t0;
+        // status = pimXor((*inputObjBuf)[j + 1]->pimObjId, t0Obj->pimObjId, (*inputObjBuf)[j + 1]->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_((*inputObjBuf)[j + 1], t0Obj, (*inputObjBuf)[j + 1]);
+
+        // t0 = c ^ d;
+        // status = pimXor(dObj->pimObjId, cObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(cObj, dObj, t0Obj);
+
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // t0 ^= x;
+        // status = pimXor(t0Obj->pimObjId, xObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK); 
+        pimXor_(t0Obj, xObj, t0Obj);
+
+
+        // buf[j + 2] ^= t0;
+        // status = pimXor((*inputObjBuf)[j + 2]->pimObjId, t0Obj->pimObjId, (*inputObjBuf)[j + 2]->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_((*inputObjBuf)[j + 2], t0Obj, (*inputObjBuf)[j + 2]);
+
+
+         
+
+
+        // t0 = d ^ a;
+        // status = pimXor(dObj->pimObjId, aObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK);  
+        pimXor_(dObj, aObj, t0Obj);
+
+
+        // t0 = rj_xtime(t0);
+        status = pimCopyDeviceToHost(PIM_COPY_V, t0Obj->pimObjId,    t0Obj->array.data());
+        rjXtime(t0Obj, t0Obj);
+
+        // t0 ^= y;
+        // status = pimXor(t0Obj->pimObjId, yObj->pimObjId, t0Obj->pimObjId); 
+        // assert(status == PIM_OK); 
+        pimXor_(t0Obj, yObj, t0Obj);
+
+
+        // buf[j + 3] ^= t0;
+        // status = pimXor((*inputObjBuf)[j + 3]->pimObjId, t0Obj->pimObjId, (*inputObjBuf)[j + 3]->pimObjId); 
+        // assert(status == PIM_OK); 
+        pimXor_((*inputObjBuf)[j + 3], t0Obj, (*inputObjBuf)[j + 3]);
+
+
+        
+        // if (j == 0) { 
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j + 1]->pimObjId, (*inputObjBuf)[j + 1]->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j + 2]->pimObjId, (*inputObjBuf)[j + 2]->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j + 3]->pimObjId, (*inputObjBuf)[j + 3]->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, aObj->pimObjId, aObj->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, bObj->pimObjId, bObj->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, cObj->pimObjId, cObj->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, dObj->pimObjId, dObj->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, eObj->pimObjId, eObj->array.data());
+        //     status = pimCopyDeviceToHost(PIM_COPY_V, xObj->pimObjId, xObj->array.data());
+
+        //     std::cout << "(*inputObjBuf)[j]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+        //     std::cout << "(*inputObjBuf)[j + 1]->array[0]: " << (int)(*inputObjBuf)[j + 1]->array[0] << std::endl;
+        //     std::cout << "(*inputObjBuf)[j + 2]->array[0]: " << (int)(*inputObjBuf)[j + 2]->array[0] << std::endl;
+        //     std::cout << "(*inputObjBuf)[j + 3]->array[0]: " << (int)(*inputObjBuf)[j + 3]->array[0] << std::endl;
+           
+        //     std::cout << "aObj->array[0]: " << (int)aObj->array[0] << std::endl;
+        //     std::cout << "bObj->array[0]: " << (int)bObj->array[0] << std::endl;
+        //     std::cout << "cObj->array[0]: " << (int)cObj->array[0] << std::endl;
+        //     std::cout << "dObj->array[0]: " << (int)dObj->array[0] << std::endl;
+        //     std::cout << "eObj->array[0]: " << (int)eObj->array[0] << std::endl;
+        //     std::cout << "xObj->array[0]: " << (int)xObj->array[0] << std::endl;
+
+        //     int mame; std::cin >> mame;
+        // }   
+
+        
+    }
+
+    for (int j = 0; j < 16; ++j){
+        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
+        assert(status == PIM_OK);
+    }
+
+    pimFree(aObj->pimObjId);
+    pimFree(bObj->pimObjId);
+    pimFree(cObj->pimObjId);
+    pimFree(dObj->pimObjId);
+    pimFree(eObj->pimObjId);
+    pimFree(xObj->pimObjId);
+    pimFree(yObj->pimObjId);
+    pimFree(zObj->pimObjId);
+    pimFree(t0Obj->pimObjId);
+
+}       
+
+// add expand key operation
+void aesExpandEncKey(uint8_t *k, uint8_t *rc, const uint8_t *sb){
+    uint8_t i;
+
+    k[0] ^= sb[k[29]] ^ (*rc);
+    k[1] ^= sb[k[30]];
+    k[2] ^= sb[k[31]];
+    k[3] ^= sb[k[28]];
+    *rc = F( *rc);
+
+    for(i = 4; i < 16; i += 4){
+        k[i] ^= k[i-4];
+        k[i+1] ^= k[i-3];
+        k[i+2] ^= k[i-2];
+        k[i+3] ^= k[i-1];
+    }
+
+    k[16] ^= sb[k[12]];
+    k[17] ^= sb[k[13]];
+    k[18] ^= sb[k[14]];
+    k[19] ^= sb[k[15]];
+
+    for(i = 20; i < 32; i += 4){
+        k[i] ^= k[i-4];
+        k[i+1] ^= k[i-3];
+        k[i+2] ^= k[i-2];
+        k[i+3] ^= k[i-1];
+    }
+
+}
+
+// inv add expand key operation
+void aesExpandDecKey(uint8_t *k, uint8_t *rc){
+    uint8_t i;
+
+    for(i = 28; i > 16; i -= 4){
+        k[i+0] ^= k[i-4];
+        k[i+1] ^= k[i-3];
+        k[i+2] ^= k[i-2];
+        k[i+3] ^= k[i-1];
+    }
+
+    k[16] ^= sbox[k[12]];
+    k[17] ^= sbox[k[13]];
+    k[18] ^= sbox[k[14]];
+    k[19] ^= sbox[k[15]];
+
+    for(i = 12; i > 0; i -= 4){
+        k[i+0] ^= k[i-4];
+        k[i+1] ^= k[i-3];
+        k[i+2] ^= k[i-2];
+        k[i+3] ^= k[i-1];
+    }
+
+    *rc = FD(*rc);
+    k[0] ^= sbox[k[29]] ^ (*rc);
+    k[1] ^= sbox[k[30]];
+    k[2] ^= sbox[k[31]];
+    k[3] ^= sbox[k[28]];
+} 
+
+// key initition
+void aes256Init(uint8_t *k){
+  uint8_t rcon = 1;
+  uint8_t i;
+
+  for (i = 0; i < sizeof(ctx_key); i++){
+    ctx_enckey[i] = ctx_deckey[i] = k[i];
+  }
+
+  for (i = 8; --i; ){
+    aesExpandEncKey(ctx_deckey, &rcon, sbox);
+  }
+} 
+
+void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset) {
+    int status;
+    uint8_t l, rcon;
+    // uint8_t bufT[AES_BLOCK_SIZE];
+    std::vector<PIMAuxilary*> *bufTObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
+    for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
+        (*bufTObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
+        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*bufTObjBuf)[j]->pimObjId);
+        assert(status == PIM_OK);
+    }
+    
+    // aesAddRoundKeyCpy(bufT, ctx_enckey, ctx_key);
+    
+    std::vector<PIMAuxilary*>* keyObjBuf = new std::vector<PIMAuxilary*>(32);
+    for (unsigned j = 0; j < 32; ++j) {
+        (*keyObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
+    }
+
+    std::vector<PIMAuxilary*>* cpkObjBuf = new std::vector<PIMAuxilary*>(32);
+    for (unsigned j = 0; j < 32; ++j) {
+        (*cpkObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
+    }
+
+    for (unsigned j = 0; j < 16; ++j) {
+        for (unsigned i = 0; i < (*inputObjBuf)[0]->numElements; ++i) {
+            (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
+            (*cpkObjBuf)[j]->array[i] = ctx_key[j];
+        }    
+    }
+    
+
+    aesAddRoundKeyCpy(bufTObjBuf, keyObjBuf, cpkObjBuf);
+    
+
+    
+    for(l = 1, rcon = l; l < 14; ++l){
+        // aesSubBytes(bufT);
+        aesSubBytes(bufTObjBuf);
+
+        // aesShiftRows(bufT);
+        aesShiftRows(bufTObjBuf);
+  
+     
+        // aesMixColumns(bufT);
+        aesMixColumns(bufTObjBuf);
+
+
+
+
+        if( l & 1 ){
+            // aesAddRoundKey( bufT, &ctx_key[16]);
+            aesAddRoundKey(bufTObjBuf, cpkObjBuf);
+        }
+        else{
+            aesAddRoundKey(bufTObjBuf, cpkObjBuf);
+            aesExpandEncKey(ctx_key, &rcon, sbox);
+            for (unsigned j = 0; j < 16; ++j) {
+                for (unsigned i = 0; i < (*inputObjBuf)[0]->numElements; ++i) {
+                    (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
+                    (*cpkObjBuf)[j]->array[i] = ctx_key[j];
+                }    
+            }
+    
+        }
+
+
+        // if (l == 13) {
+        //     std::cout << "(*bufTObjBuf)[0]->array[0]: "<< (*bufTObjBuf)[0]->array[0] << std::endl;
+        //     for (unsigned l = 0; l < 16; ++l) {
+        //         std::cout << "buf["<< l << "] = " << (*bufTObjBuf)[l]->array[0] << ";" << std::endl;
+        //     }
+
+        //     for (unsigned l = 0; l < 16; ++l) {
+        //         std::cout << "ctx_key["<< l << "] = " << (*cpkObjBuf)[l]->array[0] << ";" << std::endl;
+        //     }
+        //     int mame; std::cin >> mame;
+        // }        
+        
+    }
+    // aesSubBytes(bufT);
+    aesSubBytes(bufTObjBuf);
+
+    // aesShiftRows(bufT);
+    aesShiftRows(bufTObjBuf);
+
+    // aesExpandEncKey(ctx_key, &rcon, sbox);
+    aesExpandEncKey(ctx_key, &rcon, sbox);
+    for (unsigned j = 0; j < 16; ++j) {
+        for (unsigned i = 0; i < (*inputObjBuf)[0]->numElements; ++i) {
+            (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
+            (*cpkObjBuf)[j]->array[i] = ctx_key[j];
+        }    
+    }
+
+    // aesAddRoundKey(bufT, ctx_key);
+    aesAddRoundKey(bufTObjBuf, cpkObjBuf);
+    
+    // memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
+    for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
+        status = pimCopyDeviceToHost(PIM_COPY_V, (*bufTObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        assert(status == PIM_OK);
+    }
+    
+}

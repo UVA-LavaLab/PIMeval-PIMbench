@@ -1,6 +1,7 @@
 #include "PIMAuxilary.h"
 #include <cstdlib>
 #include <iostream>
+#include <cassert>
 
 
 PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_V1), numElements(0), bitsPerElements(0), dataType(PIM_INT32) {
@@ -72,18 +73,44 @@ int PIMAuxilary::verifyArrayEquality(const std::vector<int>& otherArray) const {
     return array == otherArray ? 1 : 0;
 }
 
-void pimShiftLeft(PIMAuxilary* x, int shiftAmount) // TODO: Add this function to the PIM API
-{
+void pimShiftLeft(PIMAuxilary* x, int shiftAmount) { // TODO: Add this function to the PIM API
     for (size_t i = 0; i < x->array.size(); ++i)
     {
         x->array[i] = x->array[i] << shiftAmount;
     }
 }
 
-void pimShiftRight(PIMAuxilary* x, int shiftAmount) // TODO: Add this function to the PIM API 
-{
+void pimShiftRight(PIMAuxilary* x, int shiftAmount) { // TODO: Add this function to the PIM API 
     for (size_t i = 0; i < x->array.size(); ++i)
     {
         x->array[i] = x->array[i] >> shiftAmount;
     }
+}
+
+void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
+    int status; 
+    status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
+    status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
+    for (size_t i = 0; i < dst->array.size(); ++i)
+    {
+        dst->array[i] = (src1->array[i] * src2->array[i]) % 256;
+    }
+    status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
+    assert(status == PIM_OK);
+}
+
+void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
+    int status; 
+    status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
+    status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
+    for (size_t i = 0; i < dst->array.size(); i++)
+    {
+        dst->array[i] = (src1->array[i] ^ src2->array[i]) % 256;
+    }
+    status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
+    assert(status == PIM_OK);
+}
+
+void pimCopyDeviceToDevice(PIMAuxilary* src, PIMAuxilary* dst) { 
+
 }

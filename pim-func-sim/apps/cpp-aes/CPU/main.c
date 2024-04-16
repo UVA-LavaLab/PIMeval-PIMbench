@@ -328,21 +328,67 @@ void aes_mixColumns(uint8_t *buf){
 
 // inv mix column operation
 void aes_mixColumns_inv(uint8_t *buf){
-  register uint8_t i, a, b, c, d, e, x, y, z;
-  for (i = 0; i < 16; i += 4){
-    a = buf[i];
-    b = buf[i + 1];
-    c = buf[i + 2];
-    d = buf[i + 3];
-    e = a ^ b ^ c ^ d;
-    z = rj_xtime(e);
-    x = e ^ rj_xtime(rj_xtime(z^a^c));
-    y = e ^ rj_xtime(rj_xtime(z^b^d));
-    buf[i] ^= x ^ rj_xtime(a^b);
-    buf[i+1] ^= y ^ rj_xtime(b^c);
-    buf[i+2] ^= x ^ rj_xtime(c^d);
-    buf[i+3] ^= y ^ rj_xtime(d^a);
-  }
+    // register uint8_t i, a, b, c, d, e, x, y, z;
+    // for (i = 0; i < 16; i += 4){
+    //   a = buf[i];
+    //   b = buf[i + 1];
+    //   c = buf[i + 2];
+    //   d = buf[i + 3];
+    //   e = a ^ b ^ c ^ d;
+    //   z = rj_xtime(e);
+    //   x = e ^ rj_xtime(rj_xtime(z^a^c));
+    //   y = e ^ rj_xtime(rj_xtime(z^b^d));
+    //   buf[i] ^= x ^ rj_xtime(a^b);
+    //   buf[i+1] ^= y ^ rj_xtime(b^c);
+    //   buf[i+2] ^= x ^ rj_xtime(c^d);
+    //   buf[i+3] ^= y ^ rj_xtime(d^a);
+    // }
+      uint8_t j, a, b, c, d, e, x, y, z;
+      uint8_t t0;
+      for (j = 0; j < 16; j += 4){
+          a = buf[j];
+          b = buf[j + 1];
+          c = buf[j + 2];
+          d = buf[j + 3];
+          e = a ^ b;
+          e ^= c;
+          e ^= d;
+
+          z = rj_xtime(e);
+
+          t0 = a ^ c;
+          t0 ^= z;
+          t0 = rj_xtime(t0);
+          t0 = rj_xtime(t0);
+          x = e ^ t0;
+
+          
+          t0 = b ^ d;
+          t0 ^= z;
+          t0 = rj_xtime(t0);
+          t0 = rj_xtime(t0);
+          y = e ^ t0;
+
+          t0 = a ^ b;
+          t0 = rj_xtime(t0);
+          t0 ^= x;
+          buf[j] ^= t0;
+
+          t0 = b ^ c;
+          t0 = rj_xtime(t0);
+          t0 ^= y;
+          buf[j + 1] ^= t0;
+
+          t0 = c ^ d;
+          t0 = rj_xtime(t0);
+          t0 ^= x;
+          buf[j + 2] ^= t0;
+
+          t0 = d ^ a;
+          t0 = rj_xtime(t0);
+          t0 ^= y;
+          buf[j + 3] ^= t0;
+      }
 } 
 
 
@@ -437,7 +483,8 @@ void aes256_encrypt_ecb(uint8_t *buf, unsigned long offset){
     aes_mixColumns(buf_t);
 
     if( i & 1 ){
-      aes_addRoundKey( buf_t, &ctx_key[16]);
+      // aes_addRoundKey( buf_t, &ctx_key[16]);
+      aes_addRoundKey(buf_t, ctx_key);
     }
     else{
       aes_expandEncKey(ctx_key, &rcon, sbox), aes_addRoundKey(buf_t, ctx_key);
@@ -462,7 +509,9 @@ void aes256_decrypt_ecb(uint8_t *buf, unsigned long offset){
   for (i = 14, rcon = 0x80; --i;){
     if((i & 1)){
       aes_expandDecKey(ctx_key, &rcon);
-      aes_addRoundKey(buf_t, &ctx_key[16]);
+      // aes_addRoundKey(buf_t, &ctx_key[16]);
+      aes_addRoundKey(buf_t, ctx_key);
+
     }
     else{
       aes_addRoundKey(buf_t, ctx_key);

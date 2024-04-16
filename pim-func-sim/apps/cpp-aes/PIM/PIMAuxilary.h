@@ -31,6 +31,9 @@ public:
 // PIM functions to be added 
 void pimShiftLeft(PIMAuxilary* x, int shiftAmount);
 void pimShiftRight(PIMAuxilary* x, int shiftAmount);
+void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst);
+void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst);
+void pimCopyDeviceToDevice(PIMAuxilary* src, PIMAuxilary* dst);
 
 
 
