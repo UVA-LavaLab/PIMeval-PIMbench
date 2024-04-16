@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <inttypes.h>
+#define MEASUREMENT_TIMES 10
 
 #define AES_BLOCK_SIZE 16
 
@@ -154,10 +155,13 @@ int main() {
 
     // start encrypt in CPU
     start = clock();
-    encryptdemo(key, buf, numbytes);
+    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+      encryptdemo(key, buf, numbytes);
+    }
+
     end = clock();
-    printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC);
-    printf("CPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC));
+    printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
+    printf("CPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC/ MEASUREMENT_TIMES));
 
 
     // write the ciphertext to file
@@ -168,10 +172,12 @@ int main() {
 
     // start decrypt in CPU
     start = clock();
-    decryptdemo(key, buf, numbytes);
+    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+      decryptdemo(key, buf, numbytes);
+    }
     end = clock();
-    printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC);
-    printf("CPU decryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC));
+    printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC/ MEASUREMENT_TIMES);
+    printf("CPU decryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC/ MEASUREMENT_TIMES));
 
     // write to file
     file = fopen("output.txt", "w");

@@ -117,6 +117,7 @@ void aesExpandDecKey(uint8_t *k, uint8_t *rc);
 void aes256Init(uint8_t *k);
 void aes256EncryptEcb(uint8_t *buf, unsigned long offset);
 void aes256DecryptEcb(uint8_t *buf, unsigned long offset);
+void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 
 
 
@@ -134,7 +135,8 @@ int testAesMixColumns(void);
 int testAesMixColumnsInv(void);
 int testAes256EncryptEcb(void);
 int testAes256DecryptEcb(void);
-
+int testEncryptdemo(void);
+int getBitSimdStats(void);
 
 // PIM Function declarations.
 void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj);
@@ -148,12 +150,14 @@ void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesMixColumnsInv(std::vector<PIMAuxilary*>* inputObjBuf);
 void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset);
 void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offset);
+void encryptdemo(uint8_t key[32], std::vector<PIMAuxilary*>* inputObjBuf, unsigned long numbytes);
+
 
 
 
 int main(){
     srand(time(NULL));
-    if (int return_status = testAes256DecryptEcb())
+    if (int return_status = getBitSimdStats())
     {
         std::cout << "Error in function test_rj_xtime" << std::endl;
         return return_status;
@@ -441,6 +445,17 @@ void aes256DecryptEcb(uint8_t *buf, unsigned long offset){
     aesAddRoundKey( bufT, ctx_key);
     memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
 } 
+
+// aes encrypt demo
+void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
+  printf("\nBeginning encryption\n");
+  aes256Init(key);
+  unsigned long offset;
+
+  //printf("Creating %d threads over %d blocks\n", dimBlock.x*dimGrid.x, dimBlock.x);
+  for (offset = 0; offset < numbytes; offset += AES_BLOCK_SIZE)
+    aes256EncryptEcb(buf, offset);
+}
 
 
 int testRjXtime(void){
@@ -982,23 +997,9 @@ int testAes256EncryptEcb(void) {
     // Initialize buffer 
     uint8_t bufIn[16]; 
     uint8_t bufOut[16];
-    bufIn[0] = 98;
-    bufIn[1] = 108;
-    bufIn[2] = 217;
-    bufIn[3] = 209;
-    bufIn[4] = 158;
-    bufIn[5] = 98;
-    bufIn[6] = 214;
-    bufIn[7] = 179;
-    bufIn[8] = 135;
-    bufIn[9] = 118;
-    bufIn[10] = 145;
-    bufIn[11] = 54;
-    bufIn[12] = 177;
-    bufIn[13] = 166;
-    bufIn[14] = 100;
-    bufIn[15] = 247;
+    
     for (unsigned j = 0; j < 16; ++j) {
+        bufIn[j] = rand() % 256; 
         bufOut[j] = bufIn[j];
         // std::cout << "buf[" << j << "] = " << (int) buf[j] << ";" << std::endl;
     }
@@ -1053,27 +1054,13 @@ int testAes256DecryptEcb(void) {
     }
 
     
-    
+     
     // Initialize buffer 
     uint8_t bufIn[16]; 
     uint8_t bufOut[16];
-    bufIn[0] = 98;
-    bufIn[1] = 108;
-    bufIn[2] = 217;
-    bufIn[3] = 209;
-    bufIn[4] = 158;
-    bufIn[5] = 98;
-    bufIn[6] = 214;
-    bufIn[7] = 179;
-    bufIn[8] = 135;
-    bufIn[9] = 118;
-    bufIn[10] = 145;
-    bufIn[11] = 54;
-    bufIn[12] = 177;
-    bufIn[13] = 166;
-    bufIn[14] = 100;
-    bufIn[15] = 247;
+    
     for (unsigned j = 0; j < 16; ++j) {
+        bufIn[j] = rand() % 256; 
         bufOut[j] = bufIn[j];
         // std::cout << "buf[" << j << "] = " << (int) buf[j] << ";" << std::endl;
     }
@@ -1106,6 +1093,64 @@ int testAes256DecryptEcb(void) {
 
 }
 
+int testEncryptdemo(void) {
+    // std::cout << "PIM test: AES.aes256DecryptEcb" << std::endl;
+
+    // unsigned numCores = 1;
+    // unsigned numRows = 65536;
+    // unsigned numCols = 1024;
+    // unsigned numBytes = 128;
+
+    // PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    // assert(status == PIM_OK);
+
+
+    // unsigned bitsPerElement = 8;
+    // unsigned totalElementCount = numCores * numCols;
+
+    // std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(numBytes);
+    // (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    // for (unsigned j = 1; j < numBytes; ++j) {
+    //     (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
+    // }
+
+    
+    
+    // // Initialize buffer 
+    // uint8_t bufIn[numBytes]; 
+    // uint8_t bufOut[numBytes];
+   
+    // for (unsigned j = 0; j < 16; ++j) {
+    //     bufOut[j] = bufIn[j];
+    //     // std::cout << "buf[" << j << "] = " << (int) buf[j] << ";" << std::endl;
+    // }
+    // // int meme; std::cin >> meme;
+
+
+    // for (unsigned j = 0; j < 16; ++j) {
+    //     for (unsigned i = 0; i < totalElementCount; ++i) {
+    //         (*inputObjBuf)[j]->array[i] = bufIn[j];
+    //     }    
+    //     status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+    //     assert(status == PIM_OK);
+    // }
+
+    // unsigned long offset = 0;
+    // aes256DecryptEcb(bufOut, offset);
+    // aes256DecryptEcb(inputObjBuf, offset);
+
+    // pimShowStats();
+    // for (unsigned j = 0; j < 16; ++j) { 
+    //     if ((*inputObjBuf)[j]->array[0] != bufOut[j]) {
+    //         std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+    //         std::cout << "buf[" << j << "]: " << (int)bufOut[j] << std::endl;
+    //         std::cout << "Abort" << std::endl;
+    //         abort();
+    //     }
+    // }
+    // std::cout << "All correct!" << std::endl;
+    return 0;
+}
 
 void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
     int status; 
@@ -2043,7 +2088,7 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
     }
 
     std::vector<PIMAuxilary*>* cpkObjBuf = new std::vector<PIMAuxilary*>(32);
-    for (unsigned j = 0; j < 32; ++j) {
+     for (unsigned j = 0; j < 32; ++j) {
         (*cpkObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
 

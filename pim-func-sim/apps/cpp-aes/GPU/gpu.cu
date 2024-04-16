@@ -4,6 +4,7 @@
 #include <time.h>
 #include <math.h>
 #include <inttypes.h>
+#define MEASUREMENT_TIMES 10
 
 
 uint8_t ctx_key[32]; 
@@ -492,10 +493,12 @@ int main(){
 
   // encryption
   start = clock();
-  encryptdemo(key, buf, numbytes);
+  for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+    encryptdemo(key, buf, numbytes);
+  }
   end = clock();
-  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC);
-  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC));
+  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC /MEASUREMENT_TIMES);
+  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
 
 
   // write into file
@@ -505,10 +508,12 @@ int main(){
 
   // decryption
   start = clock();
-  decryptdemo(key, buf, numbytes);
+  for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+    decryptdemo(key, buf, numbytes);
+  }
   end = clock();
-  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC);
-  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC));
+  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
+  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
 
 
   // write into file
