@@ -88,7 +88,7 @@ void pimShiftRight(PIMAuxilary* x, int shiftAmount) { // TODO: Add this function
 }
 
 void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
-    int status; 
+    PimStatus status; 
     status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
     status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
     for (size_t i = 0; i < dst->array.size(); ++i)
@@ -97,10 +97,12 @@ void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
     }
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
     assert(status == PIM_OK);
+    int PimObjId = -1;
+    status = pimMul(PimObjId, PimObjId, PimObjId); // TODO: Debug Xor
 }
 
 void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
-    int status; 
+    PimStatus status; 
     status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
     status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
     for (size_t i = 0; i < dst->array.size(); i++)
@@ -109,10 +111,13 @@ void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
     }
     status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
     assert(status == PIM_OK);
+    int PimObjId = -1;
+    status = pimXor(PimObjId, PimObjId, PimObjId); // TODO: Debug Xor
+    // assert (status == PIM_OK);
 }
 
 void pimCopyDeviceToDevice(PIMAuxilary* src, PIMAuxilary* dst) { 
-    int status; 
+    PimStatus status; 
     status = pimCopyDeviceToHost(PIM_COPY_V, src->pimObjId, src->array.data());
     for(int i = 0; i < dst->array.size(); i++) {
             dst->array[i] = src->array[i];
