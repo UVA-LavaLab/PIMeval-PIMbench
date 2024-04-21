@@ -95,6 +95,24 @@ const uint8_t sboxinv[256] = {
     0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 };
 
+// Util functions 
+void inline interrupt(int line) { 
+    std::cout << "[DEBUG] Interrupted at line " << line << ". \nPress any key to continue ..." << std::endl;
+    int dummy; std::cin >> dummy; 
+} 
+void bufferPadding(uint8_t* inBuf, uint8_t* outBuf, unsigned inNumBytes, unsigned outNumBytes) { 
+    // Copy the occupied part of the input buffer to the output buffer
+    memcpy(outBuf, inBuf, inNumBytes);
+
+
+    // Zero the second part of the output buffer. 
+    // void* memset(void* ptr, int value, size_t num);
+    unsigned numZeroBytes = outNumBytes - inNumBytes;
+    memset((void*) (outBuf + inNumBytes), 0, numZeroBytes * sizeof(uint8_t));
+
+
+}
+
 // CPU Function declarations.
 uint8_t rjXtime(uint8_t x);
 void aesSubBytes(uint8_t *buf);
@@ -113,7 +131,7 @@ void aes256DecryptEcb(uint8_t *buf, unsigned long offset);
 void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 
-#define FUNCTION_UNDER_TEST testEncryptdemo
+#define FUNCTION_UNDER_TEST testDemo
 
 // Test functions 
 int testRjXtime(void);
@@ -147,7 +165,7 @@ void encryptdemo(uint8_t key[32], std::vector<PIMAuxilary*>* inputObjBuf, unsign
 void decryptdemo(uint8_t key[32], std::vector<PIMAuxilary*>* inputObjBuf, unsigned long numbytes);
 
 int main(){
-    srand(time(NULL));
+    // srand(time(NULL));
     int returnStatus = FUNCTION_UNDER_TEST();
     assert(returnStatus == 0);
     
@@ -361,8 +379,36 @@ void aes256EncryptEcb(uint8_t *buf, unsigned long offset){
 void aes256DecryptEcb(uint8_t *buf, unsigned long offset){
     uint8_t l, rcon;
     uint8_t bufT[AES_BLOCK_SIZE];
+    // for (unsigned j = 0; j < 32; ++j) {
+    //     ctx_deckey[j] = 0;
+    //     ctx_key[j] = 0;
+    // }
     memcpy(bufT, &buf[offset], AES_BLOCK_SIZE);
+        // {
+        //     static bool first_call = true;
+        //     bool debug_condition = first_call;
+        //     if (debug_condition) { 
+        //         first_call = false;      
+        //         for (unsigned j = 0; j < 16; ++j) {                 
+        //             std::cout << "bufT[" << j << "]: " << (int)bufT[j] << std::endl;
+        //             std::cout << "key [" << j << "] = " << (int) ctx_key[j] << std::endl;
+        //         }
+        //         interrupt(__LINE__);
+        //     }
+        // }
     aesAddRoundKeyCpy(bufT, ctx_deckey, ctx_key);
+        // {
+        //     static bool first_call = true;
+        //     bool debug_condition = first_call;
+        //     if (debug_condition) { 
+        //         first_call = false;      
+        //         for (unsigned j = 0; j < 16; ++j) {                 
+        //             std::cout << "bufT[" << j << "]: " << (int)bufT[j] << std::endl;
+        //             std::cout << "key [" << j << "] = " << (int) ctx_key[j] << std::endl;
+        //         }
+        //         interrupt(__LINE__);
+        //     }
+        // }
     aesShiftRowsInv(bufT);
     aesSubBytesInv(bufT);
     for (l = 14, rcon = 0x80; --l;){
@@ -378,6 +424,9 @@ void aes256DecryptEcb(uint8_t *buf, unsigned long offset){
         aesMixColumnsInv(bufT);
         aesShiftRowsInv(bufT);
         aesSubBytesInv(bufT);
+
+        
+        
         }
     aesAddRoundKey( bufT, ctx_key);
     memcpy(&buf[offset], bufT, AES_BLOCK_SIZE);
@@ -394,11 +443,11 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
 // aes decrypt demo
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
-  printf("\nBeginning decryption\n");
-  unsigned long offset;
-
-  for (offset = 0; offset < numbytes; offset += AES_BLOCK_SIZE)
-    aes256DecryptEcb(buf, offset);
+    printf("\nBeginning decryption\n");
+    unsigned long offset;
+    
+    for (offset = 0; offset < numbytes; offset += AES_BLOCK_SIZE)
+        aes256DecryptEcb(buf, offset);
 }
 
 int testRjXtime(void){
@@ -784,8 +833,8 @@ int testAesAddRoundKeyCpy(void) {
     uint8_t key[32]; 
     uint8_t cpk[32]; 
     for (unsigned j = 0; j < 16; ++j) {
-        key[j] = 0xaa;
-        cpk[j] = 0xaa;
+        key[j] = rand() % 256;
+        cpk[j] = rand() % 256;
     }
 
     for (unsigned j = 0; j < 16; ++j) {
@@ -796,10 +845,9 @@ int testAesAddRoundKeyCpy(void) {
     }
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
-
 
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
@@ -821,17 +869,25 @@ int testAesAddRoundKeyCpy(void) {
     }
 
     pimShowStats();
-    std::cout << "cpkObjBuf[0]->array[0]: " << (int)(*cpkObjBuf)[0]->array[0] << std::endl;
-    std::cout << "cpk[0]: " << (int)cpk[0] << std::endl;
-    if ((*cpkObjBuf)[0]->array[0] == cpk[0]) {
-        
-        std::cout << "All correct!" << std::endl;
-        return 0;
+    
+    for (int j = 0; j < AES_BLOCK_SIZE; ++j)
+    {
+        if ((*cpkObjBuf)[j]->array[0] != cpk[j]) {
+                std::cout << "cpkObjBuf[" << j << "]->array[0]: " << (int)(*cpkObjBuf)[j]->array[0] << std::endl;
+                std::cout << "cpk[" << j <<"]: " << (int)cpk[j] << std::endl;
+                std::cout << "Abort" << std::endl;
+                return 1;
+                
+        }
+        if ((*inputObjBuf)[j]->array[0] != buf[j]) {
+                std::cout << "inputObjBuf[" << j << "]->array[0]: " << (int)(*inputObjBuf)[j]->array[0] << std::endl;
+                std::cout << "buf[" << j <<"]: " << (int)buf[j] << std::endl;
+                std::cout << "Abort" << std::endl;
+                return 1;
+                
+        }
     }
-    else {
-        std::cout << "Abort" << std::endl;
-        return 1;
-    }
+    std::cout << "All correct!" << std::endl;
     return 0;
 }
 
@@ -1309,19 +1365,20 @@ int testAes256DecryptEcb(void) {
 int testEncryptdemo(void) {
     std::cout << "PIM test: AES.encryptdemo" << std::endl;
     
-    unsigned long numBytes = 32 * AES_BLOCK_SIZE;
+    // unsigned long numBytes = 32 * AES_BLOCK_SIZE;
+    // unsigned long numBytes = 500; 
+    unsigned long numBytes = 1190406; 
 
     unsigned bitsPerElement = 8;
     unsigned numRows = 65536;
-    unsigned numCols = 32;
+    unsigned numCols = 1024;
     unsigned numCores = CEIL_DIV(numBytes, numCols * AES_BLOCK_SIZE);
     unsigned totalCols = numCores * numCols;
     unsigned numCalls = 1;
+    unsigned numPaddedBufBytes = totalCols * AES_BLOCK_SIZE;
     
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
     assert(status == PIM_OK);
-
-
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
     (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
@@ -1329,33 +1386,39 @@ int testEncryptdemo(void) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
     
-
-
-
     uint8_t key[32];
     for (unsigned j = 0; j < 32; ++j)
     {
         key[j] = 0; // rand() % 256;
     }
 
+    // Allocate the input buffer 
+    uint8_t* bufIn = (uint8_t*) malloc(numBytes * sizeof(uint8_t)); 
+    uint8_t* bufInPadded = (uint8_t*) malloc(numPaddedBufBytes * sizeof(uint8_t)); 
+
     // Initialize buffer 
-    uint8_t bufIn[numBytes]; 
-   
     for (unsigned j = 0; j < numBytes; ++j) {
         bufIn[j] = rand() % 256; 
     }
 
+    // Pad the buffer with zero and update the pointer.
+    bufferPadding(bufIn, bufInPadded, numBytes, numPaddedBufBytes);
+    free(bufIn);
+    bufIn = bufInPadded;
 
-    for (unsigned j = 0; j < numBytes; ++j) {
+    // Initialize inputObjBuf
+    for (unsigned j = 0; j < numPaddedBufBytes; ++j) {
         (*inputObjBuf)[j % (AES_BLOCK_SIZE)]->array[j / (AES_BLOCK_SIZE)] = bufIn[j];
+       
     }
 
+    // Copy inputObjBuf to the device 
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
-    encryptdemo(key, bufIn, numBytes);    
+    encryptdemo(key, bufIn, numPaddedBufBytes);    
     encryptdemo(key, inputObjBuf, numCalls);
 
    for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
@@ -1366,8 +1429,9 @@ int testEncryptdemo(void) {
 
    
     pimShowStats();
-    for (unsigned j = 0; j < numBytes; ++j) { 
-        if ((*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE ] != bufIn[j]) {
+    for (unsigned j = 0; j < numPaddedBufBytes; ++j) { 
+        if ((*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] != bufIn[j]) {
+           
             std::cout << "(int)(*inputObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
             std::cout << "buf[" << j << "]: " << (int)bufIn[j] << std::endl;
                     
@@ -1385,20 +1449,19 @@ int testEncryptdemo(void) {
 
 int testDecryptdemo(void) {
     std::cout << "PIM test: AES.decryptdemo" << std::endl;
-   
-    unsigned long numBytes = 1024 * 16;
 
+    // unsigned long numBytes = 32 * AES_BLOCK_SIZE;
+    unsigned long numBytes = 1200; 
     unsigned bitsPerElement = 8;
     unsigned numRows = 65536;
-    unsigned numCols = 1024;
+    unsigned numCols = 128;
     unsigned numCores = CEIL_DIV(numBytes, numCols * AES_BLOCK_SIZE);
     unsigned totalCols = numCores * numCols;
     unsigned numCalls = 1;
-    
+    unsigned numPaddedBufBytes = totalCols * AES_BLOCK_SIZE;
+
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
     assert(status == PIM_OK);
-
-
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
     (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
@@ -1406,33 +1469,39 @@ int testDecryptdemo(void) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
     
-
-
-
     uint8_t key[32];
     for (unsigned j = 0; j < 32; ++j)
     {
         key[j] = 0; // rand() % 256;
     }
 
+    // Allocate the input buffer 
+    uint8_t* bufIn = (uint8_t*) malloc(numBytes * sizeof(uint8_t)); 
+    uint8_t* bufInPadded = (uint8_t*) malloc(numPaddedBufBytes * sizeof(uint8_t)); 
+
     // Initialize buffer 
-    uint8_t bufIn[numBytes]; 
-   
     for (unsigned j = 0; j < numBytes; ++j) {
         bufIn[j] = rand() % 256; 
     }
 
+    // Pad the buffer with zero and update the pointer.
+    bufferPadding(bufIn, bufInPadded, numBytes, numPaddedBufBytes);
+    free(bufIn);
+    bufIn = bufInPadded;
 
-    for (unsigned j = 0; j < numBytes; ++j) {
+    // Initialize inputObjBuf
+    for (unsigned j = 0; j < numPaddedBufBytes; ++j) {
         (*inputObjBuf)[j % (AES_BLOCK_SIZE)]->array[j / (AES_BLOCK_SIZE)] = bufIn[j];
+       
     }
 
+    // Copy inputObjBuf to the device 
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
-    decryptdemo(key, bufIn, numBytes);    
+    decryptdemo(key, bufIn, numPaddedBufBytes);    
     decryptdemo(key, inputObjBuf, numCalls);
 
    for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
@@ -1443,8 +1512,9 @@ int testDecryptdemo(void) {
 
    
     pimShowStats();
-    for (unsigned j = 0; j < numBytes; ++j) { 
-        if ((*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE ] != bufIn[j]) {
+    for (unsigned j = 0; j < numPaddedBufBytes; ++j) { 
+        if ((*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] != bufIn[j]) {
+           
             std::cout << "(int)(*inputObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
             std::cout << "buf[" << j << "]: " << (int)bufIn[j] << std::endl;
                     
@@ -1467,7 +1537,7 @@ int testDemo(void) {
     char *fname = "../input.txt"; // Input file name.
     clock_t start, end;
     int padding;
-    // uint8_t key[32]; // Encryption/Decryption key.
+    uint8_t key[32]; // Encryption/Decryption key.
 
     // Open and read the input file.
     file = fopen(fname, "r");
@@ -1495,7 +1565,7 @@ int testDemo(void) {
         free(buf);
         return EXIT_FAILURE;
     }
-    fclose(file);
+
 
     // generate padding
     padding = numbytes % AES_BLOCK_SIZE;
@@ -1504,23 +1574,33 @@ int testDemo(void) {
 
 
     // randomly generate key
-    // for (int i = 0; i < sizeof(key);i++) key[i] = 0;
+    for (int i = 0; i < sizeof(key);i++) key[i] = 0;
 
 
+    // unsigned numBytes = 1190404; numbytes;
     unsigned numBytes = numbytes;
     
     unsigned bitsPerElement = 8;
     unsigned numRows = 65536;
-    unsigned numCols = 2048;
+    unsigned numCols = 128;
     unsigned numCores = CEIL_DIV(numBytes, numCols * AES_BLOCK_SIZE);
     unsigned totalCols = numCores * numCols;
     unsigned numCalls = 1;
-    
-    std::cout << "[DEBUG] numBytes = " << numBytes << std::endl;
-    std::cout << "[DEBUG] numCores = " << numCores << std::endl;
-    std::cout << "[DEBUG] totalCols = " << totalCols << std::endl;
+    unsigned numPaddedBufBytes = totalCols * AES_BLOCK_SIZE;
+    {
+        bool debug_condition = true;
+        if (debug_condition) {
+            std::cout << "[DEBUG] numBytes = " << numBytes << std::endl; 
+            std::cout << "[DEBUG] numPaddedBufBytes = " << numPaddedBufBytes << std::endl; 
+            std::cout << "[DEBUG] numCores = " << numCores << std::endl;
+            interrupt(__LINE__);
+        }
+    }
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
     assert(status == PIM_OK);
+
+    fclose(file);
+
 
 
 
@@ -1530,47 +1610,131 @@ int testDemo(void) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
     
-
-
-
-    uint8_t key[32];
-    for (unsigned j = 0; j < 32; ++j)
-    {
-        key[j] = 0; // rand() % 256;
-    }
+    // Allocate the input buffer 
+    uint8_t* bufIn = (uint8_t*) malloc(numBytes * sizeof(uint8_t)); 
+    uint8_t* bufInPadded = (uint8_t*) malloc(numPaddedBufBytes * sizeof(uint8_t)); 
 
     // Initialize buffer 
-    uint8_t* bufIn = buf;
-   
-    
-
     for (unsigned j = 0; j < numBytes; ++j) {
-        (*inputObjBuf)[j % (AES_BLOCK_SIZE)]->array[j / (AES_BLOCK_SIZE)] = bufIn[j];
+        bufIn[j] = buf[j];
     }
 
+    // Pad the buffer with zero and update the pointer.
+    bufferPadding(bufIn, bufInPadded, numBytes, numPaddedBufBytes);
+    free(bufIn);
+    bufIn = bufInPadded;
+
+    // Initialize inputObjBuf
+    for (unsigned j = 0; j < numPaddedBufBytes; ++j) {
+        (*inputObjBuf)[j % (AES_BLOCK_SIZE)]->array[j / (AES_BLOCK_SIZE)] = bufIn[j];
+     
+    }
+
+    // Copy inputObjBuf to the device 
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
-
     
+    for (int i = 0; i < sizeof(key);i++) key[i] = 0;
+
+    encryptdemo(key, bufIn, numPaddedBufBytes);    
+    for (int i = 0; i < sizeof(key);i++) key[i] = 0;
+
     encryptdemo(key, inputObjBuf, numCalls);
+        
+    for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
+            status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+            assert(status == PIM_OK);
+        }
+
+    pimShowStats();
+    
+    for (unsigned j = 0; j < numPaddedBufBytes; ++j) { 
+        if ((*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] != bufIn[j]) {
+           
+            std::cout << "(int)(*inputObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
+            std::cout << "buf[" << j << "]: " << (int)bufIn[j] << std::endl;
+            interrupt(__LINE__);
+            
+            std::cout << "Abort" << std::endl;
+            return 1; 
+        }
+    }
+
+
+    for (unsigned j = 0; j < numbytes; ++j) { 
+        buf[j] = (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE]; 
+        // buf[j] = bufIn[j];
+    }   
+
 
 
     // write the ciphertext to file
-    // file = fopen("cipher.txt", "w");
-    // fwrite(buf, 1, numbytes, file);
-    // fclose(file);
+    file = fopen("cipher.txt", "w");
+    fwrite(buf, 1, numbytes, file);
+    fclose(file);
+
+    // {
+    //     bool debug_condition = true;
+    //     if (debug_condition) {       
+    //         for (unsigned j = 0; j < numPaddedBufBytes; ++j) {                 
+    //             std::cout << "(int)(*inputObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
+    //             std::cout << "buf[" << j << "]: " << (int)bufIn[j] << std::endl;
+    //         }
+    //         interrupt(__LINE__);
+    //     }
+    // }
+
+    for (int i = 0; i < sizeof(key);i++) key[i] = 0;
+
+
+    decryptdemo(key, inputObjBuf, numCalls);
+    for (int i = 0; i < sizeof(key);i++) key[i] = 0;
+
+    decryptdemo(key, bufIn, numPaddedBufBytes);
+
+    pimShowStats();
+          
+    for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
+            status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+            assert(status == PIM_OK);
+    }
 
 
 
-    // decryptdemo(key, buf, numbytes);
-    
+    // {
+    //     bool debug_condition = true;
+    //     if (debug_condition) {       
+    //         for (unsigned j = 0; j < numPaddedBufBytes; ++j) {                 
+    //             std::cout << "(int)(*inputObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
+    //             std::cout << "buf[" << j << "]: " << (int)bufIn[j] << std::endl;
+    //         }
+    //         interrupt(__LINE__);
+    //     }
+    // }
+
+    // for (unsigned j = 0; j < numPaddedBufBytes; ++j) { 
+    //     if ((*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] != bufIn[j]) {
+           
+    //         std::cout << "(int)(*inputObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
+    //         std::cout << "buf[" << j << "]: " << (int)bufIn[j] << std::endl;
+    //         interrupt(__LINE__);
+    //         std::cout << "Abort" << std::endl;
+    //         return 1; 
+    //     }
+    // }
+
+    for (unsigned j = 0; j < numbytes; ++j) { 
+        buf[j] = (int)(*inputObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE]; 
+        // buf[j] = bufIn[j];
+    }   
+
    
-    // // write to file
-    // file = fopen("output.txt", "w");
-    // fwrite(buf, 1, numbytes - padding, file);
-    // fclose(file);
+    // write to file
+    file = fopen("output.txt", "w");
+    fwrite(buf, 1, numbytes - padding, file);
+    fclose(file);
 
     free(buf);
     return EXIT_SUCCESS;
@@ -1724,6 +1888,14 @@ void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxila
 
 void aesAddRoundKeyCpy(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* cpkObjBuf) {
 int status;
+
+    /* for (int j = 0; j < 16; j++){ 
+       cpk[j] = key[j];
+    } */
+    for (int j = 0; j < 16; j++){ 
+        pimCopyDeviceToDevice((*keyObjBuf)[j], (*cpkObjBuf)[j]);
+    } 
+
     /* for (int j = 0; j < 16; j++){ 
        buf[j] ^= cpk[j];
     } */
@@ -2201,10 +2373,10 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
     }
 
     for (unsigned j = 0; j < 32; ++j) {
+        // ctx_deckey[j] = 0;
+        // ctx_key[j] = 0;
         for (unsigned i = 0; i < (*inputObjBuf)[0]->numElements; ++i) {
-            ctx_enckey[j] = 0;
-            ctx_key[j] = 0;
-            (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
+            (*keyObjBuf)[j]->array[i] = ctx_deckey[j];
             (*cpkObjBuf)[j]->array[i] = ctx_key[j];
         }    
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
@@ -2212,7 +2384,28 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
+        // {
+        //     bool debug_condition = true;
+        //     if (debug_condition) {       
+        //         for (unsigned j = 0; j < 16; ++j) {                 
+        //             std::cout << "(int)(*bufTObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*bufTObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
+        //             std::cout << "key [" << j << "] = " << (int) ctx_key[j] << std::endl;
+        //         }
+        //         interrupt(__LINE__);
+        //     }
+        // }
     aesAddRoundKeyCpy(bufTObjBuf, keyObjBuf, cpkObjBuf);
+        // {
+        //     bool debug_condition = true;
+        //     if (debug_condition) {       
+        //         for (unsigned j = 0; j < 16; ++j) {                 
+        //             std::cout << "(int)(*bufTObjBuf)[" << j % AES_BLOCK_SIZE << "]->array[ " << j / AES_BLOCK_SIZE << " ]: " << (int)(*bufTObjBuf)[j % AES_BLOCK_SIZE]->array[j / AES_BLOCK_SIZE] << std::endl;
+        //             std::cout << "key [" << j << "] = " << (int) ctx_key[j] << std::endl;
+        //         }
+        //         interrupt(__LINE__);
+        //     }
+        // }
+            
     aesShiftRowsInv(bufTObjBuf);
     aesSubBytesInv(bufTObjBuf);
     for (l = 14, rcon = 0x80; --l;){
@@ -2247,6 +2440,7 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
         // aesSubBytesInv(bufT);
         aesSubBytesInv(bufTObjBuf);
 
+
     }
     aesAddRoundKey(bufTObjBuf, cpkObjBuf);
 
@@ -2273,6 +2467,7 @@ void decryptdemo(uint8_t key[32], std::vector<PIMAuxilary*>* inputObjBuf, unsign
     printf("\nBeginning decryption\n");
     aes256Init(key);
     unsigned long offset;
+
     for (offset = 0; offset < numbytes; offset += AES_BLOCK_SIZE)
         aes256DecryptEcb(inputObjBuf, offset);
 
