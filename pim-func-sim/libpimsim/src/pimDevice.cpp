@@ -59,10 +59,13 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
     std::printf("PIM-Error: Null PIM device config file name\n");
     return false;
   }
-  // TODO: check existence of the config file
-
-  // TODO: read parameters from config file
-  std::printf("PIM-NYI: Creating PIM device from config file is not implemented yet\n");
+  if (!std::filesystem::exists(configFileName)) {
+    std::printf("PIM-Error: Config file not found.\n");
+    return false;
+  }
+  std::string configFile(configFileName);
+  m_deviceMemory = new dramsim3::PIMCPU(configFile, "./");
+  m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
   m_deviceType = deviceType;
   m_numCores = 0;
   m_numRows = 0;
