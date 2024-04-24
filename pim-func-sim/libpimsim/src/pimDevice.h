@@ -43,7 +43,6 @@ public:
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
-
   void showStats() const;
 
 private:
@@ -60,7 +59,7 @@ private:
   std::map<std::string, int> m_cmdCnt;
   dramsim3::PIMCPU* m_hostMemory;
   dramsim3::PIMCPU* m_deviceMemory;
-  // dramsim3::Config* m_deviceMemoryConfig;
+  dramsim3::Config* m_deviceMemoryConfig;
 };
 
 #endif
