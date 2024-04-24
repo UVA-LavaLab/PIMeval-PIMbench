@@ -64,8 +64,8 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
     return false;
   }
   std::string configFile(configFileName);
-  m_deviceMemory = new dramsim3::PIMCPU(configFile, "./");
-  m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
+  m_deviceMemory = new dramsim3::PIMCPU("/home/farzana/research/DRAMsim3/configs/DDR4_8Gb_x16_2133_2.ini", "./");
+  // m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
   m_deviceType = deviceType;
   m_numCores = 0;
   m_numRows = 0;
