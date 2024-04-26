@@ -1,7 +1,6 @@
 # Makefile: C++ version of vector arithmetic
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -g
 INCLUDE_DIRS := -I../../libpimsim/include
