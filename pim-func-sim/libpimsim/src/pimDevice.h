@@ -8,7 +8,9 @@
 #include "libpimsim.h"
 #include "pimCore.h"
 #include "pimCmd.h"
+#include "cpu.h"
 #include <memory>
+#include <filesystem>
 
 class pimResMgr;
 
@@ -41,7 +43,6 @@ public:
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
-
   void showStats() const;
 
 private:
@@ -55,9 +56,10 @@ private:
   bool m_isValid;
   pimResMgr* m_resMgr;
   std::vector<pimCore> m_cores;
-
   std::map<std::string, int> m_cmdCnt;
+  dramsim3::PIMCPU* m_hostMemory;
+  dramsim3::PIMCPU* m_deviceMemory;
+  dramsim3::Config* m_deviceMemoryConfig;
 };
 
 #endif
-

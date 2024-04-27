@@ -59,17 +59,32 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
     std::printf("PIM-Error: Null PIM device config file name\n");
     return false;
   }
-  // TODO: check existence of the config file
-
-  // TODO: read parameters from config file
-  std::printf("PIM-NYI: Creating PIM device from config file is not implemented yet\n");
+  if (!std::filesystem::exists(configFileName)) {
+    std::printf("PIM-Error: Config file not found.\n");
+    return false;
+  }
+  std::string configFile(configFileName);
+  //TODO: DRAMSim3 requires an output directory but for our purpose we do not need it so sending empty string
+  m_deviceMemory = new dramsim3::PIMCPU(configFile, "");
+  m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
+  u_int64_t rowsPerBank = m_deviceMemoryConfig->rows, columnPerRow = m_deviceMemoryConfig->columns * m_deviceMemoryConfig->device_width;
   m_deviceType = deviceType;
-  m_numCores = 0;
-  m_numRows = 0;
-  m_numCols = 0;
-  m_isValid = false;
+  m_numCores = 16;
+  m_numRows = rowsPerBank/m_numCores;
+  m_numCols = columnPerRow;
+  m_isValid = (m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
+
+  if (!m_isValid) {
+    std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
+    return false;
+  }
 
   m_resMgr = new pimResMgr(this);
+
+  m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+
+  std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
+
 
   return m_isValid;
 }

@@ -5,15 +5,18 @@
 #include <iostream>
 #include <vector>
 
-int main()
+int main(int argc, char *argv[])
 {
+  if (argc != 2)
+  {
+        std::cout << "Config file is required.\n";
+        std::cout << "Syntax: " << argv[0] << " <path_to_DRAMSIM3_config_file>.\n";
+        exit(1);
+  }
+
   std::cout << "PIM test: Vector arithmetic" << std::endl;
 
-  unsigned numCores = 4;
-  unsigned numRows = 128;
-  unsigned numCols = 256;
-
-  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+  PimStatus status = pimCreateDeviceFromConfig(PIM_FUNCTIONAL, argv[1]);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
