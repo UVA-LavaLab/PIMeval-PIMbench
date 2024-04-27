@@ -19,7 +19,6 @@ make -j
 git clone <url_to_your_fork>
 cd dram-bitsimd-dev/pim-func-sim
 export DRAMSIM3_PATH=<path_to_DRAMSIM3>
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_DRAMSIM3>
 make -j
 ``` 
 
