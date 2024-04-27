@@ -10,7 +10,7 @@ CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17 -g
 INC := -I$(DRAMSIM3_SRC) -I$(DRAMSIM3_EXT)
 AR := ar
-ARFLAGS := rcs
+ARFLAGS := rcT
 
 SRCDIR := src
 BUILDDIR := build
@@ -27,7 +27,7 @@ TARGET := $(LIBDIR)/libpimsim.a
 all: $(TARGET)
 
 $(TARGET): $(OBJ) | $(LIBDIR)
-	$(AR) $(ARFLAGS) $@ $^ $(DRAMSIM3_PATH)/libdramsim3.so
+	$(AR) $(ARFLAGS) $@ $^ $(DRAMSIM3_PATH)/build/libdramsim3.a
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
