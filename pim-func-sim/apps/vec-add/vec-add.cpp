@@ -1,4 +1,4 @@
-// Test: C++ version of vector arithmetic
+// Test: C++ version of vector addition
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
@@ -138,7 +138,6 @@ void vectorAddition(uint64_t vectorLength, std::vector<int>& src1, std::vector<i
       std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
     }
   }
-
 }
 
 

@@ -81,7 +81,7 @@ private:
   static pimSim* s_instance;
 
   // support one device for now
-  pimDevice* m_device;
+  pimDevice* m_device = nullptr;
 };
 
 #endif
