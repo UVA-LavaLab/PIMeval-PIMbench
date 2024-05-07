@@ -5,8 +5,22 @@
 * This is a PIM functional simulator that can simulate various PIM devices, cores, resource allocation, and command execution
 * This provides a C/C++ compatible library for PIM application development
 
-### Usage
-* Run `make` to build the library and apps
+### How To Build
+```bash
+# Build dramsim3
+git clone https://github.com/fasiddique/DRAMsim3.git
+cd DRAMsim3/
+git checkout benchmark
+mkdir build
+cd build
+cmake ..
+make -j
+# Build PIM functional simulator
+git clone <url_to_your_fork>
+cd dram-bitsimd-dev/pim-func-sim
+export DRAMSIM3_PATH=<path_to_DRAMSIM3>
+make -j
+``` 
 
 ### Code Architecture
 * libpimsim

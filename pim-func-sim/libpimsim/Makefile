@@ -1,11 +1,16 @@
 # Makefile for PIM Functional Simulator - Library
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
+
+DRAMSIM3_SRC=$(DRAMSIM3_PATH)/src
+
+DRAMSIM3_EXT=$(DRAMSIM3_PATH)/ext/headers
+
 CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17 -g
-INC :=
+INC := -I$(DRAMSIM3_SRC) -I$(DRAMSIM3_EXT)
 AR := ar
-ARFLAGS := rcs
+ARFLAGS := rcT
 
 SRCDIR := src
 BUILDDIR := build
@@ -22,7 +27,7 @@ TARGET := $(LIBDIR)/libpimsim.a
 all: $(TARGET)
 
 $(TARGET): $(OBJ) | $(LIBDIR)
-	$(AR) $(ARFLAGS) $@ $^
+	$(AR) $(ARFLAGS) $@ $^ $(DRAMSIM3_PATH)/build/libdramsim3.a
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
