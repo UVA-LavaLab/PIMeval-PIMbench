@@ -4,14 +4,20 @@
 LIBDIR := libpimsim
 APPDIR := apps
 
-.PHONY: all clean $(LIBDIR) $(APPDIR)
+.PHONY: debug perf dramsim3_integ clean $(LIBDIR) $(APPDIR)
+.DEFAULT_GOAL := debug
 
-all: $(LIBDIR) $(APPDIR)
+debug: $(LIBDIR) $(APPDIR)
+	@echo "\nINFO: Built PIM Functional Simulator with target = debug\n"
+
+perf: $(LIBDIR) $(APPDIR)
+	@echo "\nINFO: Built PIM Functional Simulator with target = perf\n"
+
+dramsim3_integ: $(LIBDIR) $(APPDIR)
+	@echo "\nINFO: Built PIM Functional Simulator with target = dramsim3_integ\n"
+
+clean: $(LIBDIR) $(APPDIR)
 
 $(LIBDIR) $(APPDIR):
-	$(MAKE) -C $@
-
-clean:
-	$(MAKE) -C $(LIBDIR) clean
-	$(MAKE) -C $(APPDIR) clean
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
