@@ -5,7 +5,7 @@ CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17
 INC :=
 AR := ar
-ARFLAGS := rcT
+ARFLAGS := rcs
 THIRD_PARTY_LIB :=
 
 SRCDIR := src
