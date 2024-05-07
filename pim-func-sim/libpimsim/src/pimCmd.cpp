@@ -552,6 +552,7 @@ pimCmdXorV::execute(pimDevice* device)
       auto operandVal2 = device->getCore(coreId).getB32V(src2Region.getRowIdx(), colIdx + j);
       int operand1 = *reinterpret_cast<unsigned*>(&operandVal1);
       int operand2 = *reinterpret_cast<unsigned*>(&operandVal2);
+      
       int result = operand1 ^ operand2;
       device->getCore(coreId).setB32V(destRegion.getRowIdx(), colIdx + j, *reinterpret_cast<unsigned*>(&result));
     }
