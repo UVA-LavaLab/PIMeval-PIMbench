@@ -6,7 +6,10 @@
 * This provides a C/C++ compatible library for PIM application development
 
 ### How To Build
-* Run `make` to build the library and apps
+* Run `make` at `pim-func-sim` root directory or subdirectories. Support three targets:
+  * `make debug`: Build with `-g` and `-DDEBUG` for debugging and printing verbose messages
+  * `make perf`: Build with `-O3` for performance measurement
+  * `make dramsim3_integ`: Enable DRAMsim3 related code with `-DDRAMSIM3_INTEG`
 * Below is temporarily disabled
 ```bash
 # Build dramsim3
@@ -38,6 +41,8 @@ make -j
   * Oringal DRAMsim3 repo: https://github.com/umd-memsys/DRAMsim3
   * Clone date: 05/06/2024
   * Location: ./libpimsim/DRAMsim3/
+* DRAMsim3 related code are guarded with DRAMSIM3_INTEG flag
+  * Requires `make dramsim3_integ`
 
 ### Contributors
 * Deyuan Guo
