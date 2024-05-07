@@ -31,6 +31,13 @@ make -j
   * `c-vec-add`: Simple vector addition demo app in C language
   * `cpp-vec-add`: Simple vector addition demo app in C++ language
 
+### About DRAMsim3 Integration
+* This module contains a copy of DRAMsim3
+  * Oringal DRAMsim3 repo: https://github.com/umd-memsys/DRAMsim3
+  * Clone date: 05/06/2024
+  * Location: ./libpimsim/DRAMsim3/
+
 ### Contributors
 * Deyuan Guo
 * Farzana Siddique
+
