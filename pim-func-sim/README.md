@@ -6,6 +6,8 @@
 * This provides a C/C++ compatible library for PIM application development
 
 ### How To Build
+* Run `make` to build the library and apps
+* Below is temporarily disabled
 ```bash
 # Build dramsim3
 git clone https://github.com/fasiddique/DRAMsim3.git

@@ -7,6 +7,9 @@
 
 int main(int argc, char *argv[])
 {
+  std::cout << "PIM test: Vector arithmetic" << std::endl;
+
+#ifdef DRAMSIM3_INTEG
   if (argc != 2)
   {
         std::cout << "Config file is required.\n";
@@ -14,13 +17,22 @@ int main(int argc, char *argv[])
         exit(1);
   }
 
-  std::cout << "PIM test: Vector arithmetic" << std::endl;
-
   PimStatus status = pimCreateDeviceFromConfig(PIM_FUNCTIONAL, argv[1]);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
+#else
+  unsigned numCores = 4;
+  unsigned numRows = 128;
+  unsigned numCols = 256;
+
+  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+  if (status != PIM_OK) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+#endif
 
   unsigned numElements = 512;
   unsigned bitsPerElement = 32;

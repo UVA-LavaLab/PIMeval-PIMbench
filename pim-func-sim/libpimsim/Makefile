@@ -27,7 +27,8 @@ TARGET := $(LIBDIR)/libpimsim.a
 all: $(TARGET)
 
 $(TARGET): $(OBJ) | $(LIBDIR)
-	$(AR) $(ARFLAGS) $@ $^ $(DRAMSIM3_PATH)/build/libdramsim3.a
+	$(AR) $(ARFLAGS) $@ $^
+#	$(AR) $(ARFLAGS) $@ $^ $(DRAMSIM3_PATH)/build/libdramsim3.a
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
