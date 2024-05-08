@@ -1534,7 +1534,7 @@ int testDemo(void) {
     FILE *file;
     uint8_t *buf;
     unsigned long numbytes;
-    char *fname = "../input.txt"; // Input file name.
+    const char *fname = "../input.txt"; // Input file name.
     clock_t start, end;
     int padding;
     uint8_t key[32]; // Encryption/Decryption key.

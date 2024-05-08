@@ -1,16 +1,12 @@
 # Makefile for PIM Functional Simulator - Library
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-
-DRAMSIM3_SRC=$(DRAMSIM3_PATH)/src
-
-DRAMSIM3_EXT=$(DRAMSIM3_PATH)/ext/headers
-
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -g
-INC := -I$(DRAMSIM3_SRC) -I$(DRAMSIM3_EXT)
+CXXFLAGS := -Wall -Wextra -std=c++17
+INC :=
 AR := ar
-ARFLAGS := rcT
+ARFLAGS := rcs
+THIRD_PARTY_LIB :=
 
 SRCDIR := src
 BUILDDIR := build
@@ -22,12 +18,40 @@ OBJ := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRC))
 
 TARGET := $(LIBDIR)/libpimsim.a
 
-.PHONY: all clean create_link
+.PHONY: debug perf dramsim3_integ clean create_link
+.DEFAULT_GOAL := debug
 
-all: $(TARGET)
+ifeq ($(MAKECMDGOALS),)
+	MAKECMDGOALS := $(.DEFAULT_GOAL)
+endif
+
+ifeq ($(MAKECMDGOALS),debug)
+	CXXFLAGS += -g -DDEBUG
+endif
+
+ifeq ($(MAKECMDGOALS),perf)
+	CXXFLAGS += -O3
+endif
+
+ifeq ($(MAKECMDGOALS),dramsim3_integ)
+	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
+	DRAMSIM3_SRC=$(DRAMSIM3_PATH)/src
+	DRAMSIM3_EXT=$(DRAMSIM3_PATH)/ext/headers
+	INC += -I$(DRAMSIM3_SRC) -I$(DRAMSIM3_EXT)
+	THIRD_PARTY_LIB += $(DRAMSIM3_PATH)/build/libdramsim3.a
+endif
+
+debug: $(TARGET)
+	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
+
+perf: $(TARGET)
+	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
+
+dramsim3_integ: $(TARGET)
+	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
 
 $(TARGET): $(OBJ) | $(LIBDIR)
-	$(AR) $(ARFLAGS) $@ $^ $(DRAMSIM3_PATH)/build/libdramsim3.a
+	$(AR) $(ARFLAGS) $@ $^ $(THIRD_PARTY_LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@

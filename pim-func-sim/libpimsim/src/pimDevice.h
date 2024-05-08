@@ -8,7 +8,9 @@
 #include "libpimsim.h"
 #include "pimCore.h"
 #include "pimCmd.h"
+#ifdef DRAMSIM3_INTEG
 #include "cpu.h"
+#endif
 #include <memory>
 #include <filesystem>
 
@@ -57,9 +59,11 @@ private:
   pimResMgr* m_resMgr;
   std::vector<pimCore> m_cores;
   std::map<std::string, int> m_cmdCnt;
+#ifdef DRAMSIM3_INTEG
   dramsim3::PIMCPU* m_hostMemory;
   dramsim3::PIMCPU* m_deviceMemory;
   dramsim3::Config* m_deviceMemoryConfig;
+#endif
 };
 
 #endif

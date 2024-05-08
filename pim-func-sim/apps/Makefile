@@ -3,15 +3,20 @@
 
 SUBDIRS := $(wildcard */.)
 
-.PHONY: all clean $(SUBDIRS)
+.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
+.DEFAULT_GOAL := debug
 
-all: $(SUBDIRS)
+debug: $(SUBDIRS)
+	@echo "INFO: apps target = debug"
+
+perf: $(SUBDIRS)
+	@echo "INFO: apps target = perf"
+
+dramsim3_integ: $(SUBDIRS)
+	@echo "INFO: apps target = dramsim3_integ"
+
+clean: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
-
-clean:
-	@for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir clean; \
-	done
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
