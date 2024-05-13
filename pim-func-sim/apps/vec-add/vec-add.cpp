@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <iomanip>
 #include <omp.h>
+
 #include "../util.h"
 #include "libpimsim.h"
 
@@ -65,7 +66,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst, char *configFile)
+void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
     getVector(params.vectorLength, src2);
   }
   if (!createDevice(params.configFile)) return 1;
-  vectorAddition(params.vectorLength, src1, src2, dst, params.configFile);
+  vectorAddition(params.vectorLength, src1, src2, dst);
 
   pimShowStats();
 

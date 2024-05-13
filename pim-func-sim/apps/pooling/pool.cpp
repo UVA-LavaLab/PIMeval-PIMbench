@@ -117,7 +117,7 @@ void usage()
           "\n"
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"
-          "\n    -d    dimension (default=1)"
+          "\n    -d    dimension (default=64)"
           "\n    -s    stride (default=2)"
           "\n    -k    kernel size (default=2X2)"
           "\n    -v    should verify result with CPU"
@@ -129,9 +129,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.row = 112;
-  p.column = 112;
-  p.dim = 1;
+  p.row = 224;
+  p.column = 224;
+  p.dim = 64;
   p.stride = 2;
   p.kernelSize = 2;
   p.configFile = nullptr;
@@ -180,31 +180,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void createDevice(char *configFile)
-{
-  if (configFile == nullptr)
-  {
-    unsigned numCores = 16;
-    unsigned numRows = 8192;
-    unsigned numCols = 65536;
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-  }
-  else
-  {
-    PimStatus status = pimCreateDeviceFromConfig(PIM_FUNCTIONAL, configFile);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-  }
-}
-
 // Function to perform max pooling (VGG style)
 std::vector<std::vector<int>> maxPoolingVGG(const std::vector<std::vector<int>> &inputMatrix)
 {
@@ -249,12 +224,13 @@ int main(int argc, char *argv[])
     // TODO: read Matrix from file
   }
 
-  createDevice(params.configFile);
+  
+  if (!createDevice(params.configFile)) return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
   unsigned numCols = 65536;
 
-  // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input.
+  // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   int numOfPIMRow = params.kernelSize * params.kernelSize;
   int numOfPIMColumn = params.row * params.column / numOfPIMRow;
   int numOfMatPerRow = floor((1.0 * numCols) / numOfPIMColumn) < params.dim ? floor((1.0 * numCols) / (numOfPIMColumn)) : params.dim;
@@ -264,23 +240,24 @@ int main(int argc, char *argv[])
   // TODO: this won't work for all the cases but will work for vgg
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(params.dim, std::vector<std::vector<int>>(params.row / params.kernelSize, std::vector<int>(params.column / params.kernelSize)));
+  
   for (int i = 0; i < params.dim; i += numOfMatPerRow)
   {
     // This vector packs all the matrices that can be fit into one PIM iteration
-    std::vector<std::vector<int>> pimMat(numOfPIMRow);
+    std::vector<std::vector<int>> mergedMat(numOfPIMRow);
     int matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
     for (int j = i; j < matChunk; j++)
     {
       std::vector<std::vector<int>> tempMat;
       getDecomposedMatrix(params.row, params.column, params.kernelSize, params.stride, inputMatrix[j], tempMat);
-      for (int idx = 0; idx < pimMat.size(); idx++)
+      for (int idx = 0; idx < mergedMat.size(); idx++)
       {
-        pimMat[idx].reserve(pimMat[idx].size() + tempMat[idx].size());
-        pimMat[idx].insert(pimMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
       }
     }
     std::vector<int> outMatrix;
-    maxPool(pimMat, outMatrix);
+    maxPool(mergedMat, outMatrix);
     int idx = 0;
     for (int j = i; j < matChunk; ++j)
     {

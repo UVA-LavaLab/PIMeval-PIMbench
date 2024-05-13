@@ -1,6 +1,8 @@
 #include <iostream>
 #include <omp.h>
 #include <vector>
+
+#include "libpimsim.h"
 using namespace std;
 
 #ifndef _UTIL_H_
@@ -31,6 +33,32 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>>& 
             inputMatrix[i][j] = rand() % (i * j + 1);
         }
     }
+}
+
+bool createDevice(char *configFile)
+{
+  if (configFile == nullptr)
+  {
+    unsigned numCores = 16;
+    unsigned numRows = 8192;
+    unsigned numCols = 65536;
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return false;
+    }
+  }
+  else
+  {
+    PimStatus status = pimCreateDeviceFromConfig(PIM_FUNCTIONAL, configFile);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return false;
+    }
+  }
+  return true;
 }
 
 #endif
