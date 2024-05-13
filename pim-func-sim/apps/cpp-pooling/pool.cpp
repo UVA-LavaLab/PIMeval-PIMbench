@@ -118,6 +118,7 @@ void usage()
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"
           "\n    -d    dimension (default=64)"
+          "\n    -d    dimension (default=64)"
           "\n    -s    stride (default=2)"
           "\n    -k    kernel size (default=2X2)"
           "\n    -v    should verify result with CPU"
@@ -129,6 +130,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
+  p.row = 224;
+  p.column = 224;
+  p.dim = 64;
   p.row = 224;
   p.column = 224;
   p.dim = 64;
@@ -226,10 +230,13 @@ int main(int argc, char* argv[])
 
   
   if (!createDevice(params.configFile)) return 1;
+  
+  if (!createDevice(params.configFile)) return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
   unsigned numCols = 65536;
 
+  // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   int numOfPIMRow = params.kernelSize * params.kernelSize;
   int numOfPIMColumn = params.row * params.column / numOfPIMRow;
@@ -241,9 +248,10 @@ int main(int argc, char* argv[])
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(params.dim, std::vector<std::vector<int>>(params.row / params.kernelSize, std::vector<int>(params.column / params.kernelSize)));
   
+  
   for (int i = 0; i < params.dim; i += numOfMatPerRow)
   {
-    // This vector packs all the matrices that can fit into one PIM iteration
+    // This vector packs all the matrices that can be fit into one PIM iteration
     std::vector<std::vector<int>> mergedMat(numOfPIMRow);
     int matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
     for (int j = i; j < matChunk; j++)
@@ -251,12 +259,16 @@ int main(int argc, char* argv[])
       std::vector<std::vector<int>> tempMat;
       getDecomposedMatrix(params.row, params.column, params.kernelSize, params.stride, inputMatrix[j], tempMat);
       for (int idx = 0; idx < mergedMat.size(); idx++)
+      for (int idx = 0; idx < mergedMat.size(); idx++)
       {
+        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
         mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
         mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
       }
     }
     std::vector<int> outMatrix;
+    maxPool(mergedMat, outMatrix);
     maxPool(mergedMat, outMatrix);
     int idx = 0;
     for (int j = i; j < matChunk; ++j)

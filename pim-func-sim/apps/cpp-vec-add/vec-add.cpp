@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <omp.h>
 
+
 #include "../util.h"
 #include "libpimsim.h"
 
@@ -72,7 +73,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorAddition(uint64_t vectorLength, const std::vector<int> &src1, const std::vector<int> &src2, std::vector<int> &dst)
+void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
