@@ -19,6 +19,7 @@ typedef struct Params
   uint64_t vectorLength;
   char *configFile;
   char *inputFile;
+  bool shouldVerify;
 } Params;
 
 void usage()
@@ -29,6 +30,7 @@ void usage()
           "\n    -l    input size (default=8M elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
+          "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
 
@@ -38,9 +40,10 @@ struct Params getInputParams(int argc, char **argv)
   p.vectorLength = 65536;
   p.configFile = nullptr;
   p.inputFile = nullptr;
+  p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "l:c:i:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
   {
     switch (opt)
     {
@@ -57,6 +60,9 @@ struct Params getInputParams(int argc, char **argv)
     case 'i':
       p.inputFile = optarg;
       break;
+    case 'v':
+      p.shouldVerify = (*optarg == 't') ? true : false;
+      break;
     default:
       fprintf(stderr, "\nUnrecognized option!\n");
       usage();
@@ -66,7 +72,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
+void vectorAddition(uint64_t vectorLength, const std::vector<int> &src1, const std::vector<int> &src2, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
@@ -118,19 +124,9 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
   pimFree(srcObj1);
   pimFree(srcObj2);
   pimFree(dstObj);
-// verify result
-#pragma omp parallel for
-  for (unsigned i = 0; i < vectorLength; ++i)
-  {
-    int sum = src1[i] + src2[i];
-    if (dst[i] != sum)
-    {
-      std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
-    }
-  }
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Vector length: " << params.vectorLength << "\n";
@@ -139,9 +135,24 @@ int main(int argc, char *argv[])
   {
     getVector(params.vectorLength, src1);
     getVector(params.vectorLength, src2);
+  } else {
+    //TODO: Read from files
   }
   if (!createDevice(params.configFile)) return 1;
+  //TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
   vectorAddition(params.vectorLength, src1, src2, dst);
+  if (params.shouldVerify) {
+    // verify result
+    #pragma omp parallel for
+    for (unsigned i = 0; i < params.vectorLength; ++i)
+    {
+      int sum = src1[i] + src2[i];
+      if (dst[i] != sum)
+      {
+        std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
+      }
+    }
+  }
 
   pimShowStats();
 

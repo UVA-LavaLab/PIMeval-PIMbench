@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelSize, int stride, std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelSize, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
 {
 
   int numRows = kernelSize * kernelSize;
@@ -38,7 +38,7 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelSize, int st
 /*
   This should work for bitSIMD or any PIM that requires vertical data layout.
 */
-void maxPool(std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
+void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
 
   unsigned bitsPerElement = 32;
@@ -139,7 +139,7 @@ struct Params getInputParams(int argc, char **argv)
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "r:c:d:s:k:v:f:i")) >= 0)
+  while ((opt = getopt(argc, argv, "h:r:c:d:s:k:v:f:i")) >= 0)
   {
     switch (opt)
     {
@@ -205,7 +205,7 @@ std::vector<std::vector<int>> maxPoolingVGG(const std::vector<std::vector<int>> 
   return outputMatrix;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
 
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
   
   for (int i = 0; i < params.dim; i += numOfMatPerRow)
   {
-    // This vector packs all the matrices that can be fit into one PIM iteration
+    // This vector packs all the matrices that can fit into one PIM iteration
     std::vector<std::vector<int>> mergedMat(numOfPIMRow);
     int matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
     for (int j = i; j < matChunk; j++)
@@ -287,6 +287,7 @@ int main(int argc, char *argv[])
       }
     }
   }
+
   pimShowStats();
 
   return 0;

@@ -16,7 +16,7 @@ typedef DATA_TYPE data_t;
 
 void getVector(uint64_t vectorLength, std::vector<int>& srcVector) {
   srand((unsigned)time(NULL));
-  srcVector.reserve(vectorLength);
+  srcVector.resize(vectorLength);
   #pragma omp parallel for
   for (int i = 0; i < vectorLength; ++i)
   {
@@ -30,7 +30,7 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>>& 
     #pragma omp parallel for
     for (int i = padding; i < row + padding; ++i) {
         for (int j = padding; j < column + padding; ++j) {
-            inputMatrix[i][j] = rand() % (i * j + 1);
+            inputMatrix[i][j] = rand() % ((i * j) + 1);
         }
     }
 }
