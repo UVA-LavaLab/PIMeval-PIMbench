@@ -835,7 +835,7 @@ pimCmdPopCountV::execute(pimDevice* device)
     const pimRegion& destRegion = objDest.getRegions()[i];
 
     if (srcRegion.getNumAllocRows() != destRegion.getNumAllocRows()) {
-      std::printf("PIM-Error: Operands %d, %d and %d do not have equal bit length for v-layout\n", m_src, m_dest);
+      std::printf("PIM-Error: Operands %d and %d do not have equal bit length for v-layout\n", m_src, m_dest);
       return false;
     }
 
@@ -918,7 +918,7 @@ pimCmdRotateLeftV::execute(pimDevice* device)
     unsigned numAllocCols = srcRegion.getNumAllocCols();
     unsigned rowIdx = srcRegion.getRowIdx();
     std::vector<unsigned> regionVector(numAllocCols);
-    for (int j = 0; j < numAllocCols; ++j) {
+    for (unsigned j = 0; j < numAllocCols; ++j) {
       regionVector[j] = core.getB32V(rowIdx, colIdx + j);
     }
     //Perform the rotation
@@ -927,7 +927,7 @@ pimCmdRotateLeftV::execute(pimDevice* device)
       regionVector[j] = carry;
       carry = temp;
     }
-    for (int j = 0; j < numAllocCols; ++j) {
+    for (unsigned j = 0; j < numAllocCols; ++j) {
       core.setB32V(srcRegion.getRowIdx(), colIdx + j, regionVector[j]);
     }
   }
