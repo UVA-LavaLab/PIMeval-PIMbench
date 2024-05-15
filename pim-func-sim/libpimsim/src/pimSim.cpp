@@ -26,7 +26,7 @@ pimSim::get()
 bool
 pimSim::createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
 {
-  if (m_device) {
+  if (m_device != nullptr) {
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
