@@ -6,6 +6,9 @@
 #include <vector>
 #include <cmath>
 #include <getopt.h>
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 #include "../util.h"
 
 using namespace std;
@@ -128,7 +131,8 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
-#include <getopt.h>
+        return;
+      }
     }
   }
 

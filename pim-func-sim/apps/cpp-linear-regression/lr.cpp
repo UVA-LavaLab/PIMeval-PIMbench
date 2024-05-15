@@ -6,7 +6,9 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <iomanip>
+#if defined(_OPENMP)
 #include <omp.h>
+#endif
 
 #include "../util.h"
 #include "libpimsim.h"
