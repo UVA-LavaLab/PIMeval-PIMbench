@@ -69,7 +69,7 @@ int main()
     //array used to check result
     std::vector<unsigned> sorted_array(numElements);
     //counting table in host
-    std::vector<unsigned> count_table(radix);
+    std::vector<int> count_table(radix);
     
     srand((unsigned)time(NULL));
     //Assign random initial values to the input array
@@ -113,7 +113,11 @@ int main()
                 return 1;
             }
 
-            count_table[j] = pimRedSumRanged(compare_results_obj[i], 0, numElements);
+            status = pimRedSumRanged(compare_results_obj[i], 0, numElements, count_table[j]);
+            if (status != PIM_OK) {
+                std::cout << "Abort" << std::endl;
+                return 1;
+            }
         }
 
         //Assuming the BitSIMD support 8 bits EQ, so CPU doesn't need to creat slice

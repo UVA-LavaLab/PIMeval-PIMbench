@@ -60,7 +60,7 @@ extern "C" {
   PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
   PimStatus pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value);
 
-  // High level computation
+  // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimAbs(PimObjId src, PimObjId dest);
   PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -75,8 +75,8 @@ extern "C" {
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
-  int pimRedSum(PimObjId src);
-  int pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd);
+  PimStatus pimRedSum(PimObjId src, int& sum);
+  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int& sum);
   PimStatus pimRotateR(PimObjId src);
   PimStatus pimRotateL(PimObjId src);
 

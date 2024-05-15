@@ -117,7 +117,13 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     std::cout << "Abort" << std::endl;
     return;
   }
-  SXX = pimRedSum(dstObj);
+
+  status =pimRedSum(dstObj, SXX);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   status = pimCopyHostToDevice(PIM_COPY_V, (void *)Y.data(), srcObj2);
   if (status != PIM_OK)
@@ -133,8 +139,19 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  SX = pimRedSum(srcObj1);
-  SXX = pimRedSum(dstObj);
+  status = pimRedSum(srcObj1, SX);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  status = pimRedSum(dstObj, SXY);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   status = pimCopyHostToDevice(PIM_COPY_V, (void *)Y.data(), srcObj1);
   if (status != PIM_OK)
@@ -150,8 +167,19 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  SYY = pimRedSum(dstObj);
-  SY = pimRedSum(srcObj1);
+  status = pimRedSum(dstObj, SYY);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  status = pimRedSum(srcObj1, SY);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   pimFree(srcObj1);
   pimFree(srcObj2);
@@ -202,8 +230,11 @@ int main(int argc, char *argv[])
     auto slope = (params.dataSize * SXY - SX * SY) / (params.dataSize * SXX - SX * SX);
     auto intercept = (SY - slope * SX) / params.dataSize;
     if (intercept != intercept_device) {
-      cout << "Wrong answer. Expected: " << intercept << " . Calculated: " << intercept_device << "\n";
+      cout << "\nWrong answer. Expected: " << intercept << " . Calculated: " << intercept_device << "\n";
+    } else {
+      cout << "\n\nCorrect Answer!\n\n";
     }
+
   }
 
   pimShowStats();

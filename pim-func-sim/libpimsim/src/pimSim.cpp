@@ -308,26 +308,24 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
-int
-pimSim::pimRedSum(PimObjId src)
+bool
+pimSim::pimRedSum(PimObjId src, int& sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
-  int result = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(src, result);
-  m_device->executeCmd(std::move(cmd));
-  return result;
+  sum = 0;
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(src, sum);
+  return m_device->executeCmd(std::move(cmd));
 }
 
-int
-pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
+bool
+pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int& sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
-  int result = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSumRanged>(src, result, idxBegin, idxEnd);
-  m_device->executeCmd(std::move(cmd));
-  return result;
+  sum = 0;
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSumRanged>(src, sum, idxBegin, idxEnd);
+  return m_device->executeCmd(std::move(cmd));
 }
 
 bool
