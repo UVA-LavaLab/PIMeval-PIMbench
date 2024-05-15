@@ -2,7 +2,7 @@
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17
+CXXFLAGS := -Wall -Wextra -std=c++17 -Wno-unused-parameter
 INC :=
 AR := ar
 ARFLAGS := rcs
