@@ -231,8 +231,6 @@ int main(int argc, char* argv[])
   
   if (!createDevice(params.configFile)) return 1;
   
-  if (!createDevice(params.configFile)) return 1;
-
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
   unsigned numCols = 65536;
 
