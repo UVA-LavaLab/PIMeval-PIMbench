@@ -45,7 +45,6 @@ public:
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
-  void showStats() const;
 
 private:
   std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
@@ -58,7 +57,7 @@ private:
   bool m_isValid;
   pimResMgr* m_resMgr;
   std::vector<pimCore> m_cores;
-  std::map<std::string, int> m_cmdCnt;
+
 #ifdef DRAMSIM3_INTEG
   dramsim3::PIMCPU* m_hostMemory;
   dramsim3::PIMCPU* m_deviceMemory;
