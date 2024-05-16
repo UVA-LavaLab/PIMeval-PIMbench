@@ -4,7 +4,7 @@
 SUBDIRS := $(wildcard */.)
 
 .PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
-.DEFAULT_GOAL := debug
+.DEFAULT_GOAL := perf
 
 debug: $(SUBDIRS)
 	@echo "INFO: apps target = debug"

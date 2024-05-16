@@ -5,7 +5,7 @@ LIBDIR := libpimsim
 APPDIR := apps
 
 .PHONY: debug perf dramsim3_integ clean $(LIBDIR) $(APPDIR)
-.DEFAULT_GOAL := debug
+.DEFAULT_GOAL := perf
 
 debug: $(LIBDIR) $(APPDIR)
 	@echo "\nINFO: Built PIM Functional Simulator with target = debug\n"
