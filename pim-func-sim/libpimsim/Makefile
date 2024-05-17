@@ -19,7 +19,7 @@ OBJ := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRC))
 TARGET := $(LIBDIR)/libpimsim.a
 
 .PHONY: debug perf dramsim3_integ clean create_link
-.DEFAULT_GOAL := debug
+.DEFAULT_GOAL := perf
 
 ifeq ($(MAKECMDGOALS),)
 	MAKECMDGOALS := $(.DEFAULT_GOAL)

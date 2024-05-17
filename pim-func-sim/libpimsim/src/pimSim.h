@@ -7,6 +7,7 @@
 
 #include "libpimsim.h"
 #include "pimDevice.h"
+#include "pimStats.h"
 #include <vector>
 
 
@@ -16,13 +17,16 @@ class pimSim
 {
 public:
   static pimSim* get();
+  static void destroy();
 
   // Device creation and deletion
   bool createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
+
   void showStats() const;
+  pimStatsMgr* getStatsMgr() { return m_statsMgr; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -73,8 +77,8 @@ public:
   bool pimOpRotateLH(PimObjId objId, PimRowReg src);
 
 private:
-  pimSim() {}
-  ~pimSim() {}
+  pimSim();
+  ~pimSim();
   pimSim(const pimSim&) = delete;
   pimSim operator=(const pimSim&) = delete;
 
@@ -82,6 +86,7 @@ private:
 
   // support one device for now
   pimDevice* m_device = nullptr;
+  pimStatsMgr* m_statsMgr;
 };
 
 #endif

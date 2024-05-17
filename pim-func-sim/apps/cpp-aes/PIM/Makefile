@@ -15,7 +15,7 @@ SRCS := PIMAuxilary.cpp main.cpp
 OBJS := $(SRCS:.cpp=.o)
 
 .PHONY: debug perf dramsim3_integ clean
-.DEFAULT_GOAL := debug
+.DEFAULT_GOAL := perf
 
 # Setup build targets
 ifeq ($(MAKECMDGOALS),)
