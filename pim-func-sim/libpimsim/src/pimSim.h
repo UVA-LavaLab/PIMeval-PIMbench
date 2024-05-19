@@ -53,8 +53,8 @@ public:
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  bool pimRedSum(PimObjId src, int& sum);
-  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int& sum);
+  bool pimRedSum(PimObjId src, int* sum);
+  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
   bool pimRotateR(PimObjId src);
   bool pimRotateL(PimObjId src);
 

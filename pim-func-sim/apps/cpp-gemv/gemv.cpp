@@ -76,7 +76,7 @@ int main()
 
   for (unsigned i = 0; i < numMatRows; i++) {
     int stIDX = numMatCols*i;
-    status =pimRedSumRanged(obj3, stIDX, stIDX+numMatCols, dest[i]);
+    status = pimRedSumRanged(obj3, stIDX, stIDX+numMatCols, &dest[i]);
     if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;

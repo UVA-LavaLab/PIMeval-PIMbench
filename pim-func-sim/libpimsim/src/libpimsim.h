@@ -75,8 +75,8 @@ extern "C" {
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
-  PimStatus pimRedSum(PimObjId src, int& sum);
-  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int& sum);
+  PimStatus pimRedSum(PimObjId src, int* sum);
+  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
   PimStatus pimRotateR(PimObjId src);
   PimStatus pimRotateL(PimObjId src);
 

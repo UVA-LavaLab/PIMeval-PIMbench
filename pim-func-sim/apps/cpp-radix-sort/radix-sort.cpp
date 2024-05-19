@@ -113,7 +113,7 @@ int main()
                 return 1;
             }
 
-            status = pimRedSumRanged(compare_results_obj[i], 0, numElements, count_table[j]);
+            status = pimRedSumRanged(compare_results_obj[i], 0, numElements, &count_table[j]);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return 1;

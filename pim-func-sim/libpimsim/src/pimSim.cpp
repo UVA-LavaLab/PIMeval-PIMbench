@@ -309,21 +309,21 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 }
 
 bool
-pimSim::pimRedSum(PimObjId src, int& sum)
+pimSim::pimRedSum(PimObjId src, int* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
-  sum = 0;
+  *sum = 0;
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(src, sum);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int& sum)
+pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
-  sum = 0;
+  *sum = 0;
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSumRanged>(src, sum, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
