@@ -12,6 +12,12 @@ pimStatsMgr::showStats() const
 {
   std::printf("----------------------------------------\n");
 
+  std::printf("DRAM Params:\n");
+  std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
+  std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());
+  std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD());
+  std::printf(" %30s : %f\n", "AAP (ns)", m_paramsDram->getNsAAP());
+
   std::printf("PIM API Stats:\n");
   std::printf(" %30s : %10s %12s\n", "PIM-API", "CNT", "Elapsed(ms)");
   int totCalls = 0;
