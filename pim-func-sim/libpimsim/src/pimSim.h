@@ -7,6 +7,7 @@
 
 #include "libpimsim.h"
 #include "pimDevice.h"
+#include "pimParamsDram.h"
 #include "pimStats.h"
 #include <vector>
 
@@ -86,7 +87,8 @@ private:
 
   // support one device for now
   pimDevice* m_device = nullptr;
-  pimStatsMgr* m_statsMgr;
+  pimParamsDram* m_paramsDram = nullptr;
+  pimStatsMgr* m_statsMgr = nullptr;
 };
 
 #endif

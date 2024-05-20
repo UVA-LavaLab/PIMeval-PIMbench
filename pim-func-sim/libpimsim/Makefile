@@ -2,7 +2,9 @@
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -Wno-unused-parameter
+CXXFLAGS := -Wall -Wextra -std=c++17
+CXXFLAGS_DEBUG := -g
+CXXFLAGS_PERF := -O3 -Wno-unused-parameter -Wno-unused-private-field
 INC :=
 AR := ar
 ARFLAGS := rcs
@@ -26,15 +28,15 @@ ifeq ($(MAKECMDGOALS),)
 endif
 
 ifeq ($(MAKECMDGOALS),debug)
-	CXXFLAGS += -g -DDEBUG
+	CXXFLAGS += $(CXXFLAGS_DEBUG) -DDEBUG
 endif
 
 ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -O3
+	CXXFLAGS += $(CXXFLAGS_PERF)
 endif
 
 ifeq ($(MAKECMDGOALS),dramsim3_integ)
-	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
+	CXXFLAGS += $(CXX_FLAGS_PERF) -DDRAMSIM3_INTEG
 	DRAMSIM3_SRC=$(DRAMSIM3_PATH)/src
 	DRAMSIM3_EXT=$(DRAMSIM3_PATH)/ext/headers
 	INC += -I$(DRAMSIM3_SRC) -I$(DRAMSIM3_EXT)

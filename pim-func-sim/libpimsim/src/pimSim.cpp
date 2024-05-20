@@ -4,6 +4,7 @@
 
 #include "pimSim.h"
 #include "pimCmd.h"
+#include "pimParamsDram.h"
 #include "pimStats.h"
 #include <cstdio>
 #include <memory>
@@ -36,13 +37,15 @@ pimSim::destroy()
 //! @brief  pimSim ctor
 pimSim::pimSim()
 {
-  m_statsMgr = new pimStatsMgr();
+  m_paramsDram = new pimParamsDram();
+  m_statsMgr = new pimStatsMgr(m_paramsDram);
 }
 
 //! @brief  pimSim dtor
 pimSim::~pimSim()
 {
   delete m_statsMgr;
+  delete m_paramsDram;
 }
 
 //! @brief  Create a PIM device

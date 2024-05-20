@@ -5,6 +5,7 @@
 #ifndef LAVA_PIM_STATS_H
 #define LAVA_PIM_STATS_H
 
+#include "pimParamsDram.h"
 #include <string>
 #include <map>
 #include <chrono>
@@ -28,7 +29,9 @@ private:
 class pimStatsMgr
 {
 public:
-  pimStatsMgr() {}
+  pimStatsMgr(pimParamsDram* paramsDram)
+    : m_paramsDram(paramsDram)
+  {}
   ~pimStatsMgr() {}
 
   void showStats() const;
@@ -48,6 +51,8 @@ public:
   void resetStats();
 
 private:
+  const pimParamsDram* m_paramsDram;
+
   std::map<std::string, int> m_cmdCnt;
   std::map<std::string, std::pair<int, double>> m_msElapsed;
   double m_msTotalElapsed = 0.0;
