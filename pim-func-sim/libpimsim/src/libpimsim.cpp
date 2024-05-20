@@ -204,17 +204,19 @@ pimPopCount(PimObjId src, PimObjId dest)
 }
 
 //! @brief  PIM reduction sum. Result returned to a host variable
-int
-pimRedSum(PimObjId src)
+PimStatus
+pimRedSum(PimObjId src, int* sum)
 {
-  return pimSim::get()->pimRedSum(src);
+  bool ok = pimSim::get()->pimRedSum(src, sum);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
-int
-pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd)
+PimStatus
+pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
 {
-  return pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd);
+  bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
 

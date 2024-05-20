@@ -201,7 +201,7 @@ pimCmdRedSum::execute(pimDevice* device)
     unsigned numAllocCols = srcRegion.getNumAllocCols();
     for (unsigned j = 0; j < numAllocCols; ++j) {
       int operand = static_cast<int>(device->getCore(coreId).getB32V(srcRegion.getRowIdx(), colIdx + j));
-      m_result += operand;
+      *m_result += operand;
     }
   }
 
@@ -229,7 +229,7 @@ pimCmdRedSumRanged::execute(pimDevice* device)
     for (unsigned j = 0; j < numAllocCols && currIDX < m_idxEnd; ++j) {
       if (currIDX >= m_idxBegin) {
         int operand = static_cast<int>(device->getCore(coreId).getB32V(srcRegion.getRowIdx(), colIdx + j));
-        m_result += operand;
+        *m_result += operand;
       } 
       currIDX += 1;      
     }
