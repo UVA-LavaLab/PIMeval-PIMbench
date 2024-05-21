@@ -278,6 +278,18 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
     }
   }
+  pimFree(tempObj);
+  for (int i = 0; i < resultObjectList.size(); ++i) {
+    pimFree(resultObjectList[i]);
+  }
+
+  for (int i = 0; i < dataPointObjectList.size(); ++i) {
+    pimFree(dataPointObjectList[i]);
+  }
+
+  for (int i = 0; i < centroidObjectList.size(); ++i) {
+    pimFree(centroidObjectList[i]);
+  }
 }
 
 void initCentroids(int k, int dimension, int numOfPoints, std::vector<std::vector<int>> &centroids, const std::vector<std::vector<int>> &dataPoints)
