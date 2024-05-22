@@ -27,7 +27,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./axpy [options]"
           "\n"
           "\n    -l    input size (default=8M elements)"
           "\n    -c    dramsim config file"
@@ -149,7 +149,9 @@ int main(int argc, char* argv[])
   } else {
     //TODO: Read from files
   }
+  
   if (!createDevice(params.configFile)) return 1;
+
   //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   int A = rand() % 50;
   axpy(params.vectorLength, X, Y, A, Y_device);
