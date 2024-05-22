@@ -26,8 +26,14 @@ public:
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
 
+  PimDeviceEnum getDeviceType() const;
+  unsigned getNumCores() const;
+  unsigned getNumRows() const;
+  unsigned getNumCols() const;
+
   void showStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
+  pimParamsDram* getParamsDram() { return m_paramsDram; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -64,7 +70,7 @@ public:
   bool pimOpWriteSaToRow(PimObjId src, unsigned ofst);
   bool pimOpTRA(PimObjId src1, unsigned ofst1, PimObjId src2, unsigned ofst2, PimObjId src3, unsigned ofst3);
   bool pimOpMove(PimObjId objId, PimRowReg src, PimRowReg dest);
-  bool pimOpSet(PimObjId objId, PimRowReg src, bool val);
+  bool pimOpSet(PimObjId objId, PimRowReg dest, bool val);
   bool pimOpNot(PimObjId objId, PimRowReg src, PimRowReg dest);
   bool pimOpAnd(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);
   bool pimOpOr(PimObjId objId, PimRowReg src1, PimRowReg src2, PimRowReg dest);

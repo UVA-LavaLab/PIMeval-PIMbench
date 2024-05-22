@@ -82,7 +82,8 @@ extern "C" {
 
   // BitSIMD-V: Row-wide bit registers per subarray
   enum PimRowReg {
-    PIM_RREG_SA = 0,
+    PIM_RREG_NONE = 0,
+    PIM_RREG_SA,
     PIM_RREG_R1,
     PIM_RREG_R2,
     PIM_RREG_R3,

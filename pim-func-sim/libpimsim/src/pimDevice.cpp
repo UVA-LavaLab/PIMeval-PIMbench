@@ -129,6 +129,7 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
   unsigned bitsPerElement = pimObj.getBitsPerElement();
 
   std::printf("PIM-Info: Copying %u elements of %u bits from host to PIM obj %d\n", numElements, bitsPerElement, dest);
+  pimSim::get()->getStatsMgr()->recordCopyMainToDevice((uint64_t)numElements * bitsPerElement);
 
   // read in all bits from src
   std::vector<bool> bits = readBitsFromHost(src, numElements, bitsPerElement);
@@ -253,6 +254,7 @@ pimDevice::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
   unsigned bitsPerElement = pimObj.getBitsPerElement();
 
   std::printf("PIM-Info: Copying %u elements of %u bits from PIM obj %d to host\n", numElements, bitsPerElement, src);
+  pimSim::get()->getStatsMgr()->recordCopyDeviceToMain((uint64_t)numElements * bitsPerElement);
 
   // read in all bits from src
   std::vector<bool> bits;
@@ -341,8 +343,6 @@ pimDevice::writeBitsToHost(void* dest, const std::vector<bool>& bits)
 bool
 pimDevice::executeCmd(std::unique_ptr<pimCmd> cmd)
 {
-  pimSim::get()->getStatsMgr()->recordCmd(cmd->getName());
-
   bool ok = cmd->execute(this);
 
   return ok;
