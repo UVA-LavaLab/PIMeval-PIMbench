@@ -10,6 +10,7 @@
 #include <string>
 #include <bit>
 #include <limits>
+#include <cassert>
 
 class pimDevice;
 class pimResMgr;
