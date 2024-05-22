@@ -6,6 +6,7 @@
 #define LAVA_PIM_STATS_H
 
 #include "pimParamsDram.h"
+#include <cstdint>
 #include <string>
 #include <map>
 #include <chrono>
@@ -19,7 +20,7 @@ public:
   ~pimPerfMon();
 
 private:
-  std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime; 
+  std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
   std::string m_tag;
 };
 
@@ -36,26 +37,36 @@ public:
 
   void showStats() const;
 
-  void recordCmd(const std::string& cmdName) {
-    m_cmdCnt[cmdName]++;
+  void recordCmd(const std::string& cmdName, double msRuntime) {
+    auto& item = m_cmdPerf[cmdName];
+    item.first++;
+    item.second += msRuntime;
   }
 
   void recordMsElapsed(const std::string& tag, double elapsed) {
     auto& item = m_msElapsed[tag];
     item.first++;
     item.second += elapsed;
-    m_msTotalElapsed += elapsed;
   }
-  double getMsTotalElapsed() const { return m_msTotalElapsed; }
+
+  void recordCopyMainToDevice(uint64_t numBits) { m_bitsCopiedMainToDevice += numBits; }
+  void recordCopyDeviceToMain(uint64_t numBits) { m_bitsCopiedDeviceToMain += numBits; }
 
   void resetStats();
 
 private:
+  void showApiStats() const;
+  void showDeviceParams() const;
+  void showCopyStats() const;
+  void showCmdStats() const;
+
   const pimParamsDram* m_paramsDram;
 
-  std::map<std::string, int> m_cmdCnt;
+  std::map<std::string, std::pair<int, double>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;
-  double m_msTotalElapsed = 0.0;
+
+  uint64_t m_bitsCopiedMainToDevice = 0;
+  uint64_t m_bitsCopiedDeviceToMain = 0;
 };
 
 #endif

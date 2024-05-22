@@ -4,6 +4,7 @@
 
 #include "pimStats.h"
 #include "pimSim.h"
+#include "pimUtils.h"
 
 
 //! @brief  Show PIM stats
@@ -11,39 +12,103 @@ void
 pimStatsMgr::showStats() const
 {
   std::printf("----------------------------------------\n");
+  showApiStats();
+  showDeviceParams();
+  showCopyStats();
+  showCmdStats();
+  std::printf("----------------------------------------\n");
+}
 
-  std::printf("DRAM Params:\n");
+//! @brief  Show API stats
+void
+pimStatsMgr::showApiStats() const
+{
+  std::printf("Simulator API Stats:\n");
+  std::printf(" %30s : %10s %14s\n", "PIM-API", "CNT", "Elapsed(ms)");
+  int totCalls = 0;
+  int totCallsDevice = 0;
+  int totCallsAlloc = 0;
+  int totCallsCopy = 0;
+  int totCallsCompute = 0;
+  double msTotalElapsed = 0.0;
+  double msTotalElapsedDevice = 0.0;
+  double msTotalElapsedAlloc = 0.0;
+  double msTotalElapsedCopy = 0.0;
+  double msTotalElapsedCompute = 0.0;
+  for (const auto& it : m_msElapsed) {
+    std::printf(" %30s : %10d %14f\n", it.first.c_str(), it.second.first, it.second.second);
+    totCalls += it.second.first;
+    msTotalElapsed += it.second.second;
+    if (it.first.find("createDevice") == 0) {
+      totCallsDevice += it.second.first;
+      msTotalElapsedDevice += it.second.second;
+    } else if (it.first.find("pimAlloc") == 0 || it.first.find("pimFree") == 0) {
+      totCallsAlloc += it.second.first;
+      msTotalElapsedAlloc += it.second.second;
+    } else if (it.first.find("pimCopy") == 0) {
+      totCallsCopy += it.second.first;
+      msTotalElapsedCopy += it.second.second;
+    } else {
+      totCallsCompute += it.second.first;
+      msTotalElapsedCompute += it.second.second;
+    }
+  }
+  std::printf(" %30s : %10d %14f\n", "TOTAL ---------", totCalls, msTotalElapsed);
+  std::printf(" %30s : %10d %14f\n", "TOTAL (Device )", totCallsDevice, msTotalElapsedDevice);
+  std::printf(" %30s : %10d %14f\n", "TOTAL ( Alloc )", totCallsAlloc, msTotalElapsedAlloc);
+  std::printf(" %30s : %10d %14f\n", "TOTAL (  Copy )", totCallsCopy, msTotalElapsedCopy);
+  std::printf(" %30s : %10d %14f\n", "TOTAL (Compute)", totCallsCompute, msTotalElapsedCompute);
+}
+
+//! @brief  Show PIM device params
+void
+pimStatsMgr::showDeviceParams() const
+{
+  std::printf("PIM Params:\n");
+  std::printf(" %30s : %s\n", "PIM Device Type Enum",
+              pimUtils::pimDeviceEnumToStr(pimSim::get()->getDeviceType()).c_str());
+  std::printf(" %30s : %u\n", "Number of PIM Cores", pimSim::get()->getNumCores());
+  std::printf(" %30s : %u\n", "Number of Rows per Core", pimSim::get()->getNumRows());
+  std::printf(" %30s : %u\n", "Number of Columns per Core", pimSim::get()->getNumCols());
   std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
   std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());
   std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD());
   std::printf(" %30s : %f\n", "AAP (ns)", m_paramsDram->getNsAAP());
-
-  std::printf("PIM API Stats:\n");
-  std::printf(" %30s : %10s %12s\n", "PIM-API", "CNT", "Elapsed(ms)");
-  int totCalls = 0;
-  for (const auto& it : m_msElapsed) {
-    std::printf(" %30s : %10d %12f\n", it.first.c_str(), it.second.first, it.second.second);
-    totCalls += it.second.first;
-  }
-  std::printf(" %30s : %10d %12f\n", "TOTAL", totCalls, m_msTotalElapsed);
-
-  std::printf("PIM Command Stats:\n");
-  std::printf(" %30s : %s\n", "PIM-CMD", "CNT");
-  for (const auto& it : m_cmdCnt) {
-    std::printf(" %30s : %d\n", it.first.c_str(), it.second);
-  }
-
-  std::printf("----------------------------------------\n");
 }
 
+//! @brief  Show data copy stats
+void
+pimStatsMgr::showCopyStats() const
+{
+  std::printf("Data Copy Stats:\n");
+  std::printf(" %30s : %llu bytes\n", "Host to Device", m_bitsCopiedMainToDevice / 8);
+  std::printf(" %30s : %llu bytes\n", "Device to Host", m_bitsCopiedDeviceToMain / 8);
+}
+
+//! @brief  Show PIM cmd and perf stats
+void
+pimStatsMgr::showCmdStats() const
+{
+  std::printf("PIM Command Stats:\n");
+  std::printf(" %30s : %10s %14s\n", "PIM-CMD", "CNT", "EstimatedRuntime(ms)");
+  int totalCmd = 0;
+  double totalMsRuntime = 0.0;
+  for (const auto& it : m_cmdPerf) {
+    std::printf(" %30s : %10d %14f\n", it.first.c_str(), it.second.first, it.second.second);
+    totalCmd += it.second.first;
+    totalMsRuntime += it.second.second;
+  }
+  std::printf(" %30s : %10d %14f\n", "TOTAL ---------", totalCmd, totalMsRuntime);
+}
 
 //! @brief  Reset PIM stats
 void
 pimStatsMgr::resetStats()
 {
-  m_cmdCnt.clear();
+  m_cmdPerf.clear();
   m_msElapsed.clear();
-  m_msTotalElapsed = 0.0;
+  m_bitsCopiedMainToDevice = 0;
+  m_bitsCopiedDeviceToMain = 0;
 }
 
 //! @brief pimPerfMon ctor
