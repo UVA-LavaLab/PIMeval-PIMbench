@@ -16,7 +16,7 @@
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  uint64_t row, column;
+  uint64_t row, columnA, columnB;
   char *configFile;
   char *inputFile;
   bool shouldVerify;
@@ -25,10 +25,11 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./gemv [options]"
+          "\nUsage:  ./gemm [options]"
           "\n"
-          "\n    -r    matrix row (default=8M elements)"
-          "\n    -d    matrix column (default=8M elements)"
+          "\n    -r    matrix1 row (default=8M elements)"
+          "\n    -d    matrix1 column (default=8M elements)"
+          "\n    -z    matrix2 column (default=8M elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -39,13 +40,14 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.row = 65536;
-  p.column = 65536;
+  p.columnA = 65536;
+  p.columnB = 65536;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:r:d:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:r:d:z:c:i:v:")) >= 0)
   {
     switch (opt)
     {
@@ -57,7 +59,10 @@ struct Params getInputParams(int argc, char **argv)
       p.row = strtoull(optarg, NULL, 0);
       break;
     case 'd':
-      p.column = strtoull(optarg, NULL, 0);
+      p.columnA = strtoull(optarg, NULL, 0);
+      break;
+    case 'z':
+      p.columnB = strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -152,14 +157,14 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Row: " << params.row << " Column: " << params.column << "\n";
+  std::cout << "Row: " << params.row << " Column: " << params.columnA << "\n";
 
   std::vector<int> srcVector, resultVector;
   std::vector<std::vector<int>> srcMatrix; // matrix should lay out in colXrow format for bitserial PIM
   if (params.inputFile == nullptr)
   {
     getVector(params.column, srcVector);
-    getMatrix(params.column, params.row, 0, srcMatrix);
+    getMatrix(params.columnA, params.row, 0, srcMatrix);
   }
   else
   {
