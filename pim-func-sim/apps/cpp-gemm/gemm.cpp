@@ -154,17 +154,27 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   pimFree(dstObj);
 }
 
+void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<int>> &srcMatrixA, std::vector<std::vector<int>> &srcMatrixB, std::vector<std::vector<int>> &dstMatrix, bool shouldVerify)
+{
+  //the result matrix is saved in transformed way
+  dstMatrix.resize(colB, std::vector<int>(row, 0));
+  for (int i = 0; i < colA; ++i)
+  {
+    gemv(row, colA, srcMatrixB[i], srcMatrixA, dstMatrix[i]);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Row: " << params.row << " Column: " << params.columnA << "\n";
 
   std::vector<int> srcVector, resultVector;
-  std::vector<std::vector<int>> srcMatrix; // matrix should lay out in colXrow format for bitserial PIM
+  std::vector<std::vector<int>> srcMatrixA, srcMatrixB, dstMatrix; // matrix should lay out in colXrow format for bitserial PIM
   if (params.inputFile == nullptr)
   {
-    getVector(params.column, srcVector);
-    getMatrix(params.columnA, params.row, 0, srcMatrix);
+    getMatrix(params.columnA, params.row, 0, srcMatrixA);
+    getMatrix(params.columnB, params.columnA, 0, srcMatrixB);
   }
   else
   {
@@ -175,37 +185,7 @@ int main(int argc, char *argv[])
     return 1;
 
   // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  gemv(params.row, params.column, srcVector, srcMatrix, resultVector);
-
-  if (params.shouldVerify)
-  {
-    bool shouldBreak = false; // shared flag variable
-// verify result
-#pragma omp parallel for
-    for (size_t i = 0; i < params.row; ++i)
-    {
-      if (shouldBreak) continue;
-      int result = 0;
-      for (size_t j = 0; j < params.column; ++j)
-      {
-        result += srcMatrix[j][i] * srcVector[j];
-      }
-      if (result != resultVector[i])
-      {
-#pragma omp critical
-        {
-          if (!shouldBreak)
-          { // check the flag again in a critical section
-            std::cout << "Wrong answer: " << resultVector[i] << " (expected " << result << ")" << std::endl;
-            shouldBreak = true; // set the flag to true
-          }
-        }
-      }
-    }
-    if (!shouldBreak) {
-      std::cout << "\n\nCorrect Answer!!\n\n";
-    }
-  }
+  gemm(params.row, params.columnA, params.columnB, srcMatrixA, srcMatrixB, dstMatrix, params.shouldVerify);
 
   pimShowStats();
 
