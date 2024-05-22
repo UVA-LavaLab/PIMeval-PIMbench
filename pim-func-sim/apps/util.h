@@ -44,7 +44,7 @@ bool createDevice(char *configFile)
 {
   if (configFile == nullptr)
   {
-    unsigned numCores = 16;
+    unsigned numCores = 32;
     unsigned numRows = 8192;
     unsigned numCols = 65536;
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
