@@ -241,6 +241,7 @@ pimCmdFunc1V::updateStats(int numPass)
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -372,6 +373,7 @@ pimCmdFunc2V::updateStats(int numPass)
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -420,6 +422,7 @@ pimCmdRedSumV::updateStats(int numPass)
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -514,6 +517,7 @@ pimCmdRotateV::updateStats(int numPass)
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
