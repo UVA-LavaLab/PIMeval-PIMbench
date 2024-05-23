@@ -414,13 +414,13 @@ void getDecomposedMatrixPool(int matrixRow, int matrixColumn, int kernelSize, in
 
 void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelSize, int stride, int imageSize, std::vector<std::vector<std::vector<int>>> &resultMatrix)
 {
-  unsigned numCols = 65536;
+  unsigned numCols = 8192, numOfCore = 512;
 
   // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   int numOfPIMRow = kernelSize * kernelSize;
   int numOfPIMColumn = imageSize * imageSize / numOfPIMRow;
   int dim = inputMatrix.size();
-  int numOfMatPerRow = floor((1.0 * numCols) / numOfPIMColumn) < dim ? floor((1.0 * numCols) / (numOfPIMColumn)) : dim;
+  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < dim ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : dim;
 
   cout << "Input Dim: " << dim << endl;
 

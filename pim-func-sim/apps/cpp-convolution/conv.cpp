@@ -77,9 +77,10 @@ void vectorAddition(uint64_t vectorLength, const std::vector<int> &src1, const s
   }
 }
 
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int filterColumn, int stride, std::vector<std::vector<int>>& inputMatrix, std::vector<std::vector<int>>& decompMatrix) {
+void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int filterColumn, int stride, std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+{
 
-  decompMatrix.resize(filterRow*filterColumn, std::vector<int>(matrixRow*matrixColumn, 0));
+  decompMatrix.resize(filterRow * filterColumn, std::vector<int>(matrixRow * matrixColumn, 0));
   int colIdx = 0;
   for (int i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
   {
@@ -98,17 +99,17 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
   }
 }
 
-void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::vector<int>>& inputMatrix, std::vector<int>& outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol) {
-
+void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol)
+{
 
   unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
-
+  cout << "Starting allocation\n";
   PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numRequiredPIMCol, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
-    return ;
+    return;
   }
   filterObjects.push_back(obj1);
   for (int i = 1; i < numRequiredPIMRows; i++)
@@ -117,11 +118,12 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
-      return ;
+      return;
     }
     filterObjects.push_back(obj);
   }
 
+  cout << "Allocation done\n";
   int idx = 0;
   for (int i = 0; i < filterMatrix.size(); ++i)
   {
@@ -135,6 +137,7 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
       }
     }
   }
+  cout << "Broadcast done\n";
 
   std::vector<PimObjId> matrixObjects;
   for (int i = 0; i < numRequiredPIMRows; i++)
@@ -143,20 +146,22 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
-      return ;
+      return;
     }
     matrixObjects.push_back(obj);
   }
 
+  cout << "Copying data from host to device\n";
   for (int i = 0; i < inputMatrix.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
-      return ;
+      return;
     }
   }
+  cout << "Finished data copy\n";
 
   for (int i = 0; i < inputMatrix.size(); i++)
   {
@@ -164,7 +169,7 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
-      return ;
+      return;
     }
   }
 
@@ -174,7 +179,7 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
-      return ;
+      return;
     }
   }
   outputMatrix.resize(numRequiredPIMCol);
@@ -183,16 +188,19 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
-    return ;
+    return;
   }
 
-  for (auto elem : filterObjects) {
+  for (auto elem : filterObjects)
+  {
     pimFree(elem);
   }
 
-  for (auto elem : matrixObjects) {
+  for (auto elem : matrixObjects)
+  {
     pimFree(elem);
   }
+  cout << "Convolution done\n";
 }
 
 // Params ---------------------------------------------------------------------
@@ -284,7 +292,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::vector<std::vector<std::vector<int>>> inputMatrix;
@@ -308,56 +316,76 @@ int main(int argc, char* argv[])
     // TODO: read Matrix from file
   }
 
-  if (!createDevice(params.configFile)) return 1;
+  if (!createDevice(params.configFile))
+    return 1;
 
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
-  unsigned numCols = 65536;
+  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
+  unsigned numCols = 8192, numOfCore = 512;
 
   int outMatDim = params.kernelDim;
   // TODO: this will not work if padding is not equal to 1
   int outMatRow = params.row;
   int outMatCol = params.column;
-  int numOfMatPerRow = floor((1.0*numCols)/(outMatRow*outMatCol)) < params.dim ? floor((1.0*numCols)/(outMatRow*outMatCol)) : params.dim;
+  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) < params.dim ? floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) : params.dim;
   int numOfPIMRow = params.kernelSize * params.kernelSize;
+
+  cout << "num mat per row: " << numOfMatPerRow << "\n";
 
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
-  for (int i = 0; i < params.kernelDim; i++) {
+  for (int i = 0; i < params.kernelDim; i++)
+  {
     int tempcol = 0;
     std::vector<int> srcVec, dstVec;
-    for (int j = 0; j < params.dim; j+=numOfMatPerRow) {
+    for (int j = 0; j < params.dim; j += numOfMatPerRow)
+    {
       int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
+      cout << "Matrix chunk: " << matChunk << "\n";
+
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-      for (int k = j; k < matChunk; k++) {
+      for (int k = j; k < matChunk; k++)
+      {
         std::vector<std::vector<int>> decompMat;
+        cout << "Getting decomposed matrix\n";
         getDecomposedMatrix(params.row, params.column, kernelMatrix[i].size(), kernelMatrix[i][0].size(), params.stride, inputMatrix[k], decompMat);
-        for (int idx = 0; idx < mergedMat.size(); idx++) {
+        cout << "finished decomposed matrix\n";
+        for (int idx = 0; idx < mergedMat.size(); idx++)
+        {
           mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
           mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
           tempcol = mergedMat[idx].size();
         }
       }
+      cout << "starting convolution\n";
       std::vector<int> outVector;
-      //performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, outMatCol*outMatRow);
       performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol);
 
-      //For architectures that don't support reduction, either perform reduction in host or a mix of host and device.
-      if (!srcVec.empty()) {
+      // For architectures that don't support reduction, either perform reduction in host or a mix of host and device.
+      if (!srcVec.empty())
+      {
         vectorAddition(outVector.size(), outVector, srcVec, dstVec);
         srcVec = dstVec;
-      } else {
+      }
+      else
+      {
         srcVec = outVector;
       }
     }
+      cout << "starting reduction on host\n";
     // performing the reduction on host
-    for (int rdx = 0; rdx < outMatRow*outMatCol; ++rdx) {
-      for (int cdx = outMatRow*outMatCol; cdx < dstVec.size(); cdx+=(outMatRow*outMatCol)-1){
-        dstVec[rdx] += dstVec[cdx+rdx]; 
+    for (int rdx = 0; rdx < outMatRow * outMatCol; ++rdx)
+    {
+      for (int cdx = outMatRow * outMatCol; cdx < dstVec.size(); cdx += (outMatRow * outMatCol) - 1)
+      {
+        dstVec[rdx] += dstVec[cdx + rdx];
       }
-    } 
+    }
+      cout << "finished reduction on host: " << dstVec.size() << "\n";
     int ddx = 0;
-    for (int rdx = 0; rdx < outMatRow; ++rdx) {
-      for (int cdx = 0; cdx < outMatCol; ++cdx) {
+    for (int rdx = 0; rdx < outMatRow; ++rdx)
+    {
+      for (int cdx = 0; cdx < outMatCol; ++cdx)
+      {
         resultMatrix[i][rdx][cdx] = dstVec[ddx++];
       }
     }
@@ -367,4 +395,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-

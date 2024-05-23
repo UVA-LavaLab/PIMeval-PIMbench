@@ -75,9 +75,11 @@ bool createDevice(char *configFile)
 {
   if (configFile == nullptr)
   {
-    unsigned numCores = 32;
+    // Total Bank = 16; Each Bank contains 32 subarrays
+    unsigned numCores = 512;
     unsigned numRows = 8192;
-    unsigned numCols = 65536;
+    unsigned numCols = 8192;
+    
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
     if (status != PIM_OK)
     {
