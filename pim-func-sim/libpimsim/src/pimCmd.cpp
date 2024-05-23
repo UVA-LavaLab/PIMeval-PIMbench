@@ -148,7 +148,9 @@ pimCmd::updateStats(int numPass)
 bool
 pimCmdFunc1V::execute(pimDevice* device)
 {
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src, m_dest, resMgr)) {
@@ -220,9 +222,9 @@ void
 pimCmdFunc1V::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000.0;
-  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000.0;
-  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
@@ -241,6 +243,7 @@ pimCmdFunc1V::updateStats(int numPass)
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -248,7 +251,10 @@ pimCmdFunc1V::updateStats(int numPass)
 bool
 pimCmdFunc2V::execute(pimDevice* device)
 { 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -340,9 +346,9 @@ void
 pimCmdFunc2V::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000.0;
-  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000.0;
-  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
@@ -372,6 +378,7 @@ pimCmdFunc2V::updateStats(int numPass)
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -380,7 +387,10 @@ pimCmdFunc2V::updateStats(int numPass)
 bool
 pimCmdRedSumV::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -402,6 +412,9 @@ pimCmdRedSumV::execute(pimDevice* device)
     }
   }
 
+  unsigned numElements = objSrc.getNumElements();
+  unsigned bitsPerElement = objSrc.getBitsPerElement();
+  m_totalBytes = static_cast<uint64_t>(numElements) * bitsPerElement / 8;
   updateStats(1);
   return true;
 }
@@ -415,11 +428,12 @@ pimCmdRedSumV::updateStats(int numPass)
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = 100000; // todo
+    msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
     break;
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -428,7 +442,10 @@ pimCmdRedSumV::updateStats(int numPass)
 bool
 pimCmdRotateV::execute(pimDevice* device)
 { 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -496,6 +513,7 @@ pimCmdRotateV::execute(pimDevice* device)
     }
   }
 
+  m_numRegions = objSrc.getRegions().size();
   updateStats(1);
   return true;
 }
@@ -505,15 +523,23 @@ void
 pimCmdRotateV::updateStats(int numPass)
 {
   double msRuntime = 0.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
+
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = 100000; // todo
+    // rotate within subarray
+    msRuntime = tR + tW + 3 * tL;
+    // boundary handling
+    msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
     break;
   default:
     ;
   }
+  msRuntime *= numPass;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
 }
 
@@ -522,7 +548,11 @@ pimCmdRotateV::updateStats(int numPass)
 bool
 pimCmdReadRowToSa::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V ReadRowToSa (obj id %d ofst %u)\n", m_objId, m_ofst);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
@@ -542,7 +572,11 @@ pimCmdReadRowToSa::execute(pimDevice* device)
 bool
 pimCmdWriteSaToRow::execute(pimDevice* device)
 {
+  
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V WriteSaToRow (obj id %d ofst %u)\n", m_objId, m_ofst);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
@@ -562,8 +596,12 @@ pimCmdWriteSaToRow::execute(pimDevice* device)
 bool
 pimCmdRRegOp::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d dest-reg %d src-reg %d %d %d val %d)\n",
               getName().c_str(), m_objId, m_dest, m_src1, m_src2, m_src3, m_val);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& refObj = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < refObj.getRegions().size(); ++i) {
@@ -661,7 +699,11 @@ pimCmdRRegOp::execute(pimDevice* device)
 bool
 pimCmdRRegRotate::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
+  #endif
+  
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   if (m_cmdType == PimCmdEnum::RREG_ROTATE_R) {  // Right Rotate

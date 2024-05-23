@@ -13,14 +13,18 @@
 void
 pimRegion::print() const
 {
+  #if defined(DEBUG)
   std::printf("{ PIM-Region: CoreId = %d, Loc = (%u, %u), Size = (%u, %u) }\n",
               m_coreId, m_rowIdx, m_colIdx, m_numAllocRows, m_numAllocCols);
+  #endif
 }
 
 //! @brief  Print info of a PIM object
 void
 pimObjInfo::print() const
 {
+
+  #if defined(DEBUG)
   std::printf("----------------------------------------\n");
   std::printf("PIM-Object: ObjId = %d, AllocType = %d, Regions =\n",
               m_objId, static_cast<int>(m_allocType));
@@ -28,6 +32,7 @@ pimObjInfo::print() const
     region.print();
   }
   std::printf("----------------------------------------\n");
+  #endif
 }
 
 std::string 
@@ -71,16 +76,15 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
+  unsigned numCores = m_device->getNumCores();
   unsigned numCols = m_device->getNumCols();
   unsigned numRowsToAlloc = 0;
   unsigned numRegions = 0;
-  unsigned numCoresReqd = 0;
   unsigned numColsToAllocLast = 0;
   if (allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
     numRegions = (numElements - 1) / numCols + 1;
-    numCoresReqd = numRegions;
     numColsToAllocLast = numElements % numCols;
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
@@ -89,7 +93,6 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
     numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
-    numCoresReqd = numRegions;
     numColsToAllocLast = (numElements * bitsPerElement) % numCols;
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
@@ -99,33 +102,36 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
     return -1;
   }
 
-  if (numCoresReqd > m_device->getNumCores()) {
-    std::printf("PIM-Error: Failed to allocate as obj requires %u cores more than available\n", numCoresReqd);
-    return -1;
+  if (numRegions > numCores) {
+    std::printf("PIM-Warning: Obj requires %u regions among %u cores. Wrapping up is needed.\n", numRegions, numCores);
   }
 
   // create regions
+  std::vector<std::pair<unsigned, unsigned>> newAlloc;
   if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
     for (unsigned i = 0; i < numRegions; ++i) {
-      PimCoreId coreId = sortedCoreId[i];
+      PimCoreId coreId = sortedCoreId[i % numCores];
       unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
       pimRegion newRegion = findAvailRegionOnCore(coreId, numRowsToAlloc, numColsToAlloc);
       if (!newRegion.isValid()) {
         std::printf("PIM-Error: Failed to allocate object with %u rows on core %d\n", numRowsToAlloc, coreId);
+        // rollback new alloc
+        for (const auto& alloc : newAlloc) {
+          m_coreUsage[coreId].erase(alloc);
+        }
         return -1;
       }
       newObj.addRegion(newRegion);
+
+      // add to core usage map
+      auto alloc = std::make_pair(newRegion.getRowIdx(), numRowsToAlloc);
+      m_coreUsage[coreId].insert(alloc);
+      newAlloc.push_back(alloc);
     }
   }
 
   // update new object to resource mgr
   m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
-  for (const auto& region : newObj.getRegions()) {
-    PimCoreId coreId = region.getCoreId();
-    unsigned rowIdx = region.getRowIdx();
-    unsigned numAllocRows = region.getNumAllocRows();
-    m_coreUsage[coreId].insert(std::make_pair(rowIdx, numAllocRows));
-  }
 
   newObj.print();
 
@@ -165,6 +171,7 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsi
   pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
+  std::vector<std::pair<unsigned, unsigned>> newAlloc;
   for ( const pimRegion& region : refObj.getRegions()) {
     PimCoreId coreId = region.getCoreId();
     unsigned numAllocRows = region.getNumAllocRows();
@@ -175,19 +182,22 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsi
     pimRegion newRegion = findAvailRegionOnCore(coreId, numAllocRows, numAllocCols);
     if (!newRegion.isValid()) {
       std::printf("PIM-Error: Failed to allocate associated object with %u rows on core %d\n", numAllocRows, coreId);
+      // rollback new alloc
+      for (const auto& alloc : newAlloc) {
+        m_coreUsage[coreId].erase(alloc);
+      }
       return -1;
     }
     newObj.addRegion(newRegion);
+
+    // add to core usage map
+    auto alloc = std::make_pair(newRegion.getRowIdx(), numAllocRows);
+    m_coreUsage[coreId].insert(alloc);
+    newAlloc.push_back(alloc);
   }
 
   // update new object to resource mgr
   m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
-  for (const auto& region : newObj.getRegions()) {
-    PimCoreId coreId = region.getCoreId();
-    unsigned rowIdx = region.getRowIdx();
-    unsigned numAllocRows = region.getNumAllocRows();
-    m_coreUsage[coreId].insert(std::make_pair(rowIdx, numAllocRows));
-  }
 
   newObj.print();
 

@@ -323,6 +323,7 @@ int main(int argc, char* argv[])
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
   for (int i = 0; i < params.kernelDim; i++) {
+    int tempcol = 0;
     std::vector<int> srcVec, dstVec;
     for (int j = 0; j < params.dim; j+=numOfMatPerRow) {
       int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
@@ -333,12 +334,14 @@ int main(int argc, char* argv[])
         for (int idx = 0; idx < mergedMat.size(); idx++) {
           mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
           mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
+          tempcol = mergedMat[idx].size();
         }
       }
       std::vector<int> outVector;
-      performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, outMatCol*outMatRow);
+      //performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, outMatCol*outMatRow);
+      performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol);
 
-      //For architectures that don't support reduction, either perfor reduction in host or a mix of host and device.
+      //For architectures that don't support reduction, either perform reduction in host or a mix of host and device.
       if (!srcVec.empty()) {
         vectorAddition(outVector.size(), outVector, srcVec, dstVec);
         srcVec = dstVec;

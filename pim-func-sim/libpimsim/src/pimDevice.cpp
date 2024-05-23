@@ -128,7 +128,11 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
   unsigned numElements = pimObj.getNumElements();
   unsigned bitsPerElement = pimObj.getBitsPerElement();
 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: Copying %u elements of %u bits from host to PIM obj %d\n", numElements, bitsPerElement, dest);
+  #endif
+
   pimSim::get()->getStatsMgr()->recordCopyMainToDevice((uint64_t)numElements * bitsPerElement);
 
   // read in all bits from src
@@ -191,7 +195,10 @@ pimDevice::pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value)
   unsigned numElements = pimObj.getNumElements();
   unsigned bitsPerElement = pimObj.getBitsPerElement();
 
+  #if defined(DEBUG)
   std::printf("PIM-Info: Loading %u elements of %u bits with %u to PIM obj %d\n", numElements, bitsPerElement, value, dest);
+  #endif
+
   std::vector <unsigned> srcVec(numElements, value);
   // read in all bits from src
   std::vector<bool> bits = readBitsFromHost((void*)srcVec.data(), numElements, bitsPerElement);
@@ -253,7 +260,11 @@ pimDevice::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
   unsigned numElements = pimObj.getNumElements();
   unsigned bitsPerElement = pimObj.getBitsPerElement();
 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: Copying %u elements of %u bits from PIM obj %d to host\n", numElements, bitsPerElement, src);
+  #endif
+  
   pimSim::get()->getStatsMgr()->recordCopyDeviceToMain((uint64_t)numElements * bitsPerElement);
 
   // read in all bits from src

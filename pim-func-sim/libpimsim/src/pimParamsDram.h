@@ -20,6 +20,7 @@ public:
   float getNsRowWrite() const { return m_tCK * (m_tWR + m_tRP); }
   float getNsTCCD() const { return m_tCK * m_tCCD_S; }
   float getNsAAP() const { return m_tCK * (m_tRAS + m_tRP); }
+  double getTypicalRankBW() const { return m_typicalRankBW; }
 
 private:
   // [dram_structure]
@@ -88,6 +89,9 @@ private:
   // [other]
   int m_epochPeriod = 0;
   int m_outputLevel = 0;
+
+  // Extended
+  double m_typicalRankBW = 25.6; // GB/s
 };
 
 #endif
