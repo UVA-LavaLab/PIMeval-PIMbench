@@ -70,38 +70,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-int saved_stdout_fd = -1;
-FILE* saved_stdout = nullptr;
-
-void disable_stdout()
-{
-  if (saved_stdout_fd != -1) {
-    return;
-  }
-
-  fflush(stdout);
-
-  saved_stdout_fd = dup(fileno(stdout));
-  saved_stdout = fdopen(saved_stdout_fd, "w");
-
-  freopen("/dev/null", "w", stdout);
-}
-
-void enable_stdout()
-{
-  if (saved_stdout_fd == -1) {
-    return;
-  }
-
-  fflush(stdout);
-
-  dup2(saved_stdout_fd, fileno(stdout));
-  stdout = saved_stdout;
-
-  saved_stdout_fd = -1;
-  saved_stdout = nullptr;
-}
-
 struct NewImgWrapper {
   std::vector<uint8_t> new_img;
   int new_height;
@@ -279,9 +247,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
   uint8_t* pixels_in_it = pixels_in;
 
   for (int y = 0; y < avg_out.new_height; ++y) {
-    disable_stdout();
     pimAverageRows(pixels_out_avg_it, pixels_in_it, 2 * avg_out.new_pixel_data_width, pixels_in_it + avg_out.scanline_size, 2 * avg_out.new_pixel_data_width);
-    enable_stdout();
 
     // Set 0 padding to nearest 4 byte boundary as required by BMP standard [1]
     for (int x = avg_out.new_pixel_data_width; x < avg_out.new_scanline_size; ++x) {
