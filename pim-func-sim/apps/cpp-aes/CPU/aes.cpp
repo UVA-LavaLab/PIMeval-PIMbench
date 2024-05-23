@@ -3,6 +3,11 @@
 #include <string.h>
 #include <time.h>
 #include <inttypes.h>
+#include <omp.h>
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+
 #define MEASUREMENT_TIMES 10
 
 #define AES_BLOCK_SIZE 16
@@ -102,7 +107,12 @@ void aes256_init(uint8_t *k);
 void aes256_encrypt_ecb(uint8_t *buf, unsigned long offset);
 void aes256_decrypt_ecb(uint8_t *buf, unsigned long offset);
 void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
+void encryptdemo_parallel(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
+void decryptdemo_parallel(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
+
+// Function to compare two files
+int compare_files(const char *file1, const char *file2);
 
 int main(int argc, char *argv[]) {
     if (argc != 5) {
@@ -117,7 +127,6 @@ int main(int argc, char *argv[]) {
     char *input_file = argv[2];
     char *cipher_file = argv[3];
     char *output_file = argv[4];
-    clock_t start, end;
     int padding;
     uint8_t key[32]; // Encryption/Decryption key.
 
@@ -177,14 +186,17 @@ int main(int argc, char *argv[]) {
     numbytes += padding;
     printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
 
+    // Initialize the key
+    aes256_init(key);
+
     // Start encrypt in CPU
-    start = clock();
+    auto start = std::chrono::high_resolution_clock::now();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        encryptdemo(key, buf, numbytes);
+        encryptdemo_parallel(key, buf, numbytes);
     }
-    end = clock();
-    printf("Time used for encryption: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
-    printf("CPU encryption throughput: %f bytes/second\n", (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
 
     // Write the ciphertext to file
     file = fopen(cipher_file, "w");
@@ -192,22 +204,30 @@ int main(int argc, char *argv[]) {
     fclose(file);
 
     // Start decrypt in CPU
-    start = clock();
+    start = std::chrono::high_resolution_clock::now();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        decryptdemo(key, buf, numbytes);
+        decryptdemo_parallel(key, buf, numbytes);
     }
-    end = clock();
-    printf("Time used for decryption: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
-    printf("CPU decryption throughput: %f bytes/second\n", (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
+    end = std::chrono::high_resolution_clock::now();
+    elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
 
     // Write to output file
     file = fopen(output_file, "w");
     fwrite(buf, 1, numbytes - padding, file);
     fclose(file);
 
+    // Compare input and output files
+    if (compare_files(input_file, output_file) == 0) {
+        printf("The input file and the output file are the same.\n");
+    } else {
+        printf("The input file and the output file are different.\n");
+    }
+
     free(buf);
     return EXIT_SUCCESS;
 }
+
 
 // x-time operation
 uint8_t rj_xtime(uint8_t x){
@@ -499,8 +519,15 @@ void aes256_init(uint8_t *k){
 void aes256_encrypt_ecb(uint8_t *buf, unsigned long offset){
   uint8_t i, rcon;
   uint8_t buf_t[AES_BLOCK_SIZE];
+  uint8_t ctx_enckey_t[32];
+  uint8_t ctx_key_t[32];
+
+
   memcpy(buf_t, &buf[offset], AES_BLOCK_SIZE);
-  aes_addRoundKey_cpy(buf_t, ctx_enckey, ctx_key);
+  memcpy(ctx_enckey_t, ctx_enckey, 32);
+  memcpy(ctx_key_t, ctx_key, 32);
+
+  aes_addRoundKey_cpy(buf_t, ctx_enckey_t, ctx_key_t);
 
   for(i = 1, rcon = 1; i < 14; ++i){
     aes_subBytes(buf_t);
@@ -509,16 +536,16 @@ void aes256_encrypt_ecb(uint8_t *buf, unsigned long offset){
 
     if( i & 1 ){
       // aes_addRoundKey( buf_t, &ctx_key[16]);
-      aes_addRoundKey(buf_t, ctx_key);
+      aes_addRoundKey(buf_t, ctx_key_t);
     }
     else{
-      aes_expandEncKey(ctx_key, &rcon, sbox), aes_addRoundKey(buf_t, ctx_key);
+      aes_expandEncKey(ctx_key_t, &rcon, sbox), aes_addRoundKey(buf_t, ctx_key_t);
     }
   }
   aes_subBytes(buf_t);
   aes_shiftRows(buf_t);
-  aes_expandEncKey(ctx_key, &rcon, sbox);
-  aes_addRoundKey(buf_t, ctx_key);
+  aes_expandEncKey(ctx_key_t, &rcon, sbox);
+  aes_addRoundKey(buf_t, ctx_key_t);
   memcpy(&buf[offset], buf_t, AES_BLOCK_SIZE);
 }
 
@@ -527,25 +554,31 @@ void aes256_encrypt_ecb(uint8_t *buf, unsigned long offset){
 void aes256_decrypt_ecb(uint8_t *buf, unsigned long offset){
   uint8_t i, rcon;
   uint8_t buf_t[AES_BLOCK_SIZE];
+  uint8_t ctx_deckey_t[32];
+  uint8_t ctx_key_t[32];
+
   memcpy(buf_t, &buf[offset], AES_BLOCK_SIZE);
-  aes_addRoundKey_cpy(buf_t, ctx_deckey, ctx_key);
+  memcpy(ctx_deckey_t, ctx_deckey, 32);
+  memcpy(ctx_key_t, ctx_key, 32);
+
+  aes_addRoundKey_cpy(buf_t, ctx_deckey_t, ctx_key_t);
   aes_shiftRows_inv(buf_t);
   aes_subBytes_inv(buf_t);
   for (i = 14, rcon = 0x80; --i;){
     if((i & 1)){
-      aes_expandDecKey(ctx_key, &rcon);
+      aes_expandDecKey(ctx_key_t, &rcon);
       // aes_addRoundKey(buf_t, &ctx_key[16]);
-      aes_addRoundKey(buf_t, ctx_key);
+      aes_addRoundKey(buf_t, ctx_key_t);
 
     }
     else{
-      aes_addRoundKey(buf_t, ctx_key);
+      aes_addRoundKey(buf_t, ctx_key_t);
     }
     aes_mixColumns_inv(buf_t);
     aes_shiftRows_inv(buf_t);
     aes_subBytes_inv(buf_t);
     }
-  aes_addRoundKey( buf_t, ctx_key);
+  aes_addRoundKey( buf_t, ctx_key_t);
   memcpy(&buf[offset], buf_t, AES_BLOCK_SIZE);
 } 
 
@@ -561,10 +594,19 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
     aes256_encrypt_ecb(buf, offset);
 }
 
+// aes encrypt demo (parallel)
+void encryptdemo_parallel(uint8_t key[32], uint8_t *buf, unsigned long numbytes) {
+    unsigned long offset;
+
+    #pragma omp parallel for 
+    for (offset = 0; offset < numbytes; offset += AES_BLOCK_SIZE) {
+        aes256_encrypt_ecb(buf, offset);
+    }
+
+}
 
 // aes decrypt demo
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
-  printf("\nBeginning decryption\n");
   unsigned long offset;
 
   //printf("Creating %d threads over %d blocks\n", dimBlock.x*dimGrid.x, dimBlock.x);
@@ -572,3 +614,43 @@ void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
     aes256_decrypt_ecb(buf, offset);
 }
 
+// aes decrypt demo (parallel)
+void decryptdemo_parallel(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
+  unsigned long offset;
+  
+  #pragma omp parallel for 
+  for (offset = 0; offset < numbytes; offset += AES_BLOCK_SIZE) {
+    aes256_decrypt_ecb(buf, offset);
+  }
+}
+
+
+int compare_files(const char *file1, const char *file2) {
+    FILE *f1 = fopen(file1, "r");
+    FILE *f2 = fopen(file2, "r");
+    if (f1 == NULL || f2 == NULL) {
+        if (f1) fclose(f1);
+        if (f2) fclose(f2);
+        return -1;
+    }
+
+    int ch1, ch2;
+    do {
+        ch1 = fgetc(f1);
+        ch2 = fgetc(f2);
+        if (ch1 != ch2) {
+            fclose(f1);
+            fclose(f2);
+            return -1;
+        }
+    } while (ch1 != EOF && ch2 != EOF);
+
+    fclose(f1);
+    fclose(f2);
+
+    if (ch1 == EOF && ch2 == EOF) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
