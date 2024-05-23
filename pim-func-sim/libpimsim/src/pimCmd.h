@@ -126,8 +126,9 @@ public:
 protected:
   PimObjId m_src;
   int* m_result;
-  unsigned m_idxBegin = 0; 
+  unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
+  uint64_t m_totalBytes = 0;
 };
 
 //! @class  pimCmdRotateV
@@ -142,6 +143,7 @@ public:
   virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
+  unsigned m_numRegions = 0;
 };
 
 //! @class  pimCmdReadRowToSa

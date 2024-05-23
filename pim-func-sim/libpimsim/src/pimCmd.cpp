@@ -222,9 +222,9 @@ void
 pimCmdFunc1V::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000.0;
-  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000.0;
-  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
@@ -346,9 +346,9 @@ void
 pimCmdFunc2V::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000.0;
-  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000.0;
-  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
@@ -412,6 +412,9 @@ pimCmdRedSumV::execute(pimDevice* device)
     }
   }
 
+  unsigned numElements = objSrc.getNumElements();
+  unsigned bitsPerElement = objSrc.getBitsPerElement();
+  m_totalBytes = static_cast<uint64_t>(numElements) * bitsPerElement / 8;
   updateStats(1);
   return true;
 }
@@ -425,7 +428,7 @@ pimCmdRedSumV::updateStats(int numPass)
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = 100000; // todo
+    msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
     break;
   default:
     ;
@@ -510,6 +513,7 @@ pimCmdRotateV::execute(pimDevice* device)
     }
   }
 
+  m_numRegions = objSrc.getRegions().size();
   updateStats(1);
   return true;
 }
@@ -519,11 +523,18 @@ void
 pimCmdRotateV::updateStats(int numPass)
 {
   double msRuntime = 0.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
+
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = 100000; // todo
+    // rotate within subarray
+    msRuntime = tR + tW + 3 * tL;
+    // boundary handling
+    msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
     break;
   default:
     ;
