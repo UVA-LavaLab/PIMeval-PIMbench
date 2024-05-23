@@ -133,9 +133,6 @@ struct Params getInputParams(int argc, char **argv)
   p.row = 224;
   p.column = 224;
   p.dim = 64;
-  p.row = 224;
-  p.column = 224;
-  p.dim = 64;
   p.stride = 2;
   p.kernelSize = 2;
   p.configFile = nullptr;
@@ -267,7 +264,6 @@ int main(int argc, char* argv[])
     }
     std::vector<int> outMatrix;
     maxPool(mergedMat, outMatrix);
-    maxPool(mergedMat, outMatrix);
     int idx = 0;
     for (int j = i; j < matChunk; ++j)
     {
@@ -295,6 +291,7 @@ int main(int argc, char* argv[])
           }
         }
       }
+      std::cout << "Matched\n\n";
     }
   }
 
