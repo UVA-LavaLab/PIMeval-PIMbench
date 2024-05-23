@@ -148,7 +148,9 @@ pimCmd::updateStats(int numPass)
 bool
 pimCmdFunc1V::execute(pimDevice* device)
 {
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src, m_dest, resMgr)) {
@@ -249,7 +251,10 @@ pimCmdFunc1V::updateStats(int numPass)
 bool
 pimCmdFunc2V::execute(pimDevice* device)
 { 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -382,7 +387,10 @@ pimCmdFunc2V::updateStats(int numPass)
 bool
 pimCmdRedSumV::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -431,7 +439,10 @@ pimCmdRedSumV::updateStats(int numPass)
 bool
 pimCmdRotateV::execute(pimDevice* device)
 { 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -526,7 +537,11 @@ pimCmdRotateV::updateStats(int numPass)
 bool
 pimCmdReadRowToSa::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V ReadRowToSa (obj id %d ofst %u)\n", m_objId, m_ofst);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
@@ -546,7 +561,11 @@ pimCmdReadRowToSa::execute(pimDevice* device)
 bool
 pimCmdWriteSaToRow::execute(pimDevice* device)
 {
+  
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V WriteSaToRow (obj id %d ofst %u)\n", m_objId, m_ofst);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
@@ -566,8 +585,12 @@ pimCmdWriteSaToRow::execute(pimDevice* device)
 bool
 pimCmdRRegOp::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d dest-reg %d src-reg %d %d %d val %d)\n",
               getName().c_str(), m_objId, m_dest, m_src1, m_src2, m_src3, m_val);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& refObj = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < refObj.getRegions().size(); ++i) {
@@ -665,7 +688,11 @@ pimCmdRRegOp::execute(pimDevice* device)
 bool
 pimCmdRRegRotate::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
+  #endif
+  
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   if (m_cmdType == PimCmdEnum::RREG_ROTATE_R) {  // Right Rotate
