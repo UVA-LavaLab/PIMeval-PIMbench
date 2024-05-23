@@ -105,20 +105,44 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        printf("Usage: %s <input_file> <cipher_file> <output_file>\n", argv[0]);
+    if (argc != 5) {
+        printf("Usage: %s <key_file> <input_file> <cipher_file> <output_file>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     FILE *file;
     uint8_t *buf;
     unsigned long numbytes;
-    char *input_file = argv[1];
-    char *cipher_file = argv[2];
-    char *output_file = argv[3];
+    char *key_file = argv[1];
+    char *input_file = argv[2];
+    char *cipher_file = argv[3];
+    char *output_file = argv[4];
     clock_t start, end;
     int padding;
     uint8_t key[32]; // Encryption/Decryption key.
+
+    // Open and read the key file.
+    file = fopen(key_file, "r");
+    if (file == NULL) {
+        printf("Error opening key file %s\n", key_file);
+        return EXIT_FAILURE;
+    }
+
+    // Read the key from the key file.
+    if (fread(key, 1, 32, file) != 32) {
+        printf("The key length in %s is not 32 characters\n", key_file);
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
+    // Verify that there are no extra characters.
+    char extra;
+    if (fread(&extra, 1, 1, file) != 0) {
+        printf("The key length in %s is more than 32 characters\n", key_file);
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+    fclose(file);
 
     // Open and read the input file.
     file = fopen(input_file, "r");
@@ -152,9 +176,6 @@ int main(int argc, char *argv[]) {
     padding = AES_BLOCK_SIZE - (numbytes % AES_BLOCK_SIZE);
     numbytes += padding;
     printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
-
-    // Randomly generate key
-    for (int i = 0; i < sizeof(key); i++) key[i] = i;
 
     // Start encrypt in CPU
     start = clock();
