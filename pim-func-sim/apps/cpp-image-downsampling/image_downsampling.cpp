@@ -7,9 +7,68 @@
 #include <iostream>
 #include <vector>
 
+#include "../util.h"
 #include "libpimsim.h"
 
 using namespace std;
+
+typedef struct Params
+{
+  char *configFile;
+  char *inputFile;
+  bool shouldVerify;
+  char *outputFile;
+} Params;
+
+void usage()
+{
+  fprintf(stderr,
+          "\nUsage:  ./image_downsampling [options]"
+          "\n"
+          "\n    -c    dramsim config file"
+          "\n    -i    input image file of BMP type (default=\"Dataset/input_1.bmp\")"
+          "\n    -v    t = verifies PIM output with host output. (default=false)"
+          "\n    -o    output file for downsampled image (default=no output)"
+          "\n");
+}
+
+struct Params getInputParams(int argc, char **argv)
+{
+  struct Params p;
+  p.configFile = nullptr;
+  p.inputFile = "Dataset/input_1.bmp";
+  p.shouldVerify = false;
+  p.outputFile = nullptr;
+
+  int opt;
+  while ((opt = getopt(argc, argv, "h:c:i:v:o:")) >= 0)
+  {
+    switch (opt)
+    {
+    case 'h':
+      usage();
+      exit(0);
+      break;
+    case 'c':
+      p.configFile = optarg;
+      break;
+    case 'i':
+      p.inputFile = optarg;
+      break;
+    case 'v':
+      p.shouldVerify = (*optarg == 't') ? true : false;
+      break;
+    case 'o':
+      p.outputFile = optarg;
+      break;
+    default:
+      fprintf(stderr, "\nUnrecognized option!\n");
+      usage();
+      exit(0);
+    }
+  }
+  return p;
+}
 
 int saved_stdout_fd = -1;
 FILE* saved_stdout = nullptr;
@@ -281,7 +340,7 @@ std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
   return avg_out.new_img;
 }
 
-vector<uint8_t> read_file_bytes(string filename)
+vector<uint8_t> read_file_bytes(char* filename)
 {
   ifstream img_file(filename, std::ios::ate | std::ios::binary);
   streamsize img_size = img_file.tellg();
@@ -295,57 +354,69 @@ vector<uint8_t> read_file_bytes(string filename)
   return img_buffer;
 }
 
-int main()
-{
-  std::cout << "PIM test: Image Downsampling" << std::endl;
+void write_img(vector<uint8_t>& img, std::string filename) {
+    auto outfile = std::fstream(filename, std::ios::out | std::ios::binary);
+    outfile.write((char*) img.data(), img.size());
+    outfile.close();
+}
 
-  unsigned numCores = 4;
-  unsigned numRows = 512;
-  unsigned numCols = 512;
-
-  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-  if (status != PIM_OK) {
-    std::cout << "Abort" << std::endl;
-    return 1;
-  }
-
-  std::vector<uint8_t> img = read_file_bytes("Dataset/input_1.bmp");
-
+bool check_image(std::vector<uint8_t>& img) {
   if (img[0] != 'B' || img[1] != 'M') {
     cout << "Not a BMP file!\n";
-    return 1;
+    return false;
   }
 
   int compression = *((int*)(img.data() + 0x1E));
   if (compression) {
     cout << "Error, compressed bmp files not supported\n";
-    return 1;
+    return false;
   }
 
   int16_t bits_per_pixel = *((int16_t*)(img.data() + 0x1C));
   if (bits_per_pixel != 24) {
     cout << "Only 24 bits per pixel currently supported\n";
+    return false;
+  }
+  return true;
+}
+
+int main(int argc, char* argv[])
+{
+  struct Params params = getInputParams(argc, argv);
+  std::cout << "PIM test: Image Downsampling" << std::endl;
+
+  std::vector<uint8_t> img = read_file_bytes(params.inputFile);
+
+  if(!createDevice(params.configFile)) {
+    return 1;
+  }
+
+  if(!check_image(img)) {
     return 1;
   }
 
   vector<uint8_t> pim_averaged = avg_pim(img);
-  vector<uint8_t> cpu_averaged = avg_cpu(img);
 
-  pimShowStats();
+  if(params.shouldVerify) {
+    vector<uint8_t> cpu_averaged = avg_cpu(img);
 
-  if (cpu_averaged.size() != pim_averaged.size()) {
-    cout << "Average kernel fail, sizes do not match\n";
-    return 1;
-  }
-  else {
+    if (cpu_averaged.size() != pim_averaged.size()) {
+      cout << "Average kernel fail, sizes do not match" << endl;
+      return 1;
+    }
     for (size_t i = 0; i < cpu_averaged.size(); ++i) {
       if (cpu_averaged[i] != pim_averaged[i]) {
-        cout << "Average kernel mismatch at byte " << i << "\n";
+        cout << "Average kernel mismatch at byte " << i << endl;
         return 1;
       }
     }
+
+    cout << "PIM Result matches CPU result" << endl;
   }
-  cout << "Average success!\n";
+  pimShowStats();
+  if(params.outputFile != nullptr) {
+    write_img(pim_averaged, params.outputFile);
+  }
 }
 
 // [1] N. Liesch, The bmp file format. [Online]. Available:
