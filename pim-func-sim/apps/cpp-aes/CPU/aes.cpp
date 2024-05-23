@@ -104,21 +104,26 @@ void aes256_decrypt_ecb(uint8_t *buf, unsigned long offset);
 void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes);
 
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        printf("Usage: %s <input_file> <cipher_file> <output_file>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
-// The main function: Demonstrates encryption and decryption.
-int main() {
     FILE *file;
     uint8_t *buf;
     unsigned long numbytes;
-    char *fname = "../input.txt"; // Input file name.
+    char *input_file = argv[1];
+    char *cipher_file = argv[2];
+    char *output_file = argv[3];
     clock_t start, end;
     int padding;
     uint8_t key[32]; // Encryption/Decryption key.
 
     // Open and read the input file.
-    file = fopen(fname, "r");
+    file = fopen(input_file, "r");
     if (file == NULL) {
-        printf("Error opening file %s\n", fname);
+        printf("Error opening file %s\n", input_file);
         return EXIT_FAILURE;
     }
 
@@ -136,59 +141,52 @@ int main() {
 
     // Read the file into the buffer.
     if (fread(buf, 1, numbytes, file) != numbytes) {
-        printf("Unable to read all bytes from file %s\n", fname);
+        printf("Unable to read all bytes from file %s\n", input_file);
         fclose(file);
         free(buf);
         return EXIT_FAILURE;
     }
     fclose(file);
 
-    // generate padding
-    padding = numbytes % AES_BLOCK_SIZE;
+    // Generate padding
+    padding = AES_BLOCK_SIZE - (numbytes % AES_BLOCK_SIZE);
     numbytes += padding;
     printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
 
+    // Randomly generate key
+    for (int i = 0; i < sizeof(key); i++) key[i] = i;
 
-    // randomly generate key
-    for (int i = 0; i < sizeof(key);i++) key[i] = i;
-
-
-    // start encrypt in CPU
+    // Start encrypt in CPU
     start = clock();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-      encryptdemo(key, buf, numbytes);
+        encryptdemo(key, buf, numbytes);
     }
-
     end = clock();
-    printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
-    printf("CPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC/ MEASUREMENT_TIMES));
+    printf("Time used for encryption: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
+    printf("CPU encryption throughput: %f bytes/second\n", (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
 
-
-    // write the ciphertext to file
-    file = fopen("cipher.txt", "w");
+    // Write the ciphertext to file
+    file = fopen(cipher_file, "w");
     fwrite(buf, 1, numbytes, file);
     fclose(file);
 
-
-    // start decrypt in CPU
+    // Start decrypt in CPU
     start = clock();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-      decryptdemo(key, buf, numbytes);
+        decryptdemo(key, buf, numbytes);
     }
     end = clock();
-    printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC/ MEASUREMENT_TIMES);
-    printf("CPU decryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC/ MEASUREMENT_TIMES));
+    printf("Time used for decryption: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
+    printf("CPU decryption throughput: %f bytes/second\n", (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
 
-    // write to file
-    file = fopen("output.txt", "w");
+    // Write to output file
+    file = fopen(output_file, "w");
     fwrite(buf, 1, numbytes - padding, file);
     fclose(file);
 
     free(buf);
     return EXIT_SUCCESS;
 }
-
-
 
 // x-time operation
 uint8_t rj_xtime(uint8_t x){
