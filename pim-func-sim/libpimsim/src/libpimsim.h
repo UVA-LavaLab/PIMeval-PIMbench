@@ -58,7 +58,6 @@ extern "C" {
   // Data transfer
   PimStatus pimCopyHostToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
   PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
-  PimStatus pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value);
 
   // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -77,6 +76,7 @@ extern "C" {
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
   PimStatus pimRedSum(PimObjId src, int* sum);
   PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
+  PimStatus pimBroadcast(PimObjId dest, unsigned value);
   PimStatus pimRotateR(PimObjId src);
   PimStatus pimRotateL(PimObjId src);
 

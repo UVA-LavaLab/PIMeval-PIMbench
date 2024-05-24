@@ -13,14 +13,18 @@
 void
 pimRegion::print() const
 {
+  #if defined(DEBUG)
   std::printf("{ PIM-Region: CoreId = %d, Loc = (%u, %u), Size = (%u, %u) }\n",
               m_coreId, m_rowIdx, m_colIdx, m_numAllocRows, m_numAllocCols);
+  #endif
 }
 
 //! @brief  Print info of a PIM object
 void
 pimObjInfo::print() const
 {
+
+  #if defined(DEBUG)
   std::printf("----------------------------------------\n");
   std::printf("PIM-Object: ObjId = %d, AllocType = %d, Regions =\n",
               m_objId, static_cast<int>(m_allocType));
@@ -28,6 +32,7 @@ pimObjInfo::print() const
     region.print();
   }
   std::printf("----------------------------------------\n");
+  #endif
 }
 
 std::string 

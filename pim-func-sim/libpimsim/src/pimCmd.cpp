@@ -20,6 +20,8 @@ pimCmd::getName(PimCmdEnum cmdType)
     { PimCmdEnum::NOOP, "noop" },
     { PimCmdEnum::ABS_V, "abs.v" },
     { PimCmdEnum::POPCOUNT_V, "popcount.v" },
+    { PimCmdEnum::BROADCAST_V, "broadcast.v" },
+    { PimCmdEnum::BROADCAST_H, "broadcast.H" },
     { PimCmdEnum::ADD_V, "add.v" },
     { PimCmdEnum::SUB_V, "sub.v" },
     { PimCmdEnum::MUL_V, "mul.v" },
@@ -148,7 +150,9 @@ pimCmd::updateStats(int numPass)
 bool
 pimCmdFunc1V::execute(pimDevice* device)
 {
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src, m_dest, resMgr)) {
@@ -220,9 +224,9 @@ void
 pimCmdFunc1V::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000.0;
-  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000.0;
-  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
@@ -249,7 +253,10 @@ pimCmdFunc1V::updateStats(int numPass)
 bool
 pimCmdFunc2V::execute(pimDevice* device)
 { 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
   if (!isVAligned(m_src1, m_src2, resMgr) || !isVAligned(m_src1, m_dest, resMgr)) {
@@ -341,9 +348,9 @@ void
 pimCmdFunc2V::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000.0;
-  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000.0;
-  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
@@ -382,7 +389,10 @@ pimCmdFunc2V::updateStats(int numPass)
 bool
 pimCmdRedSumV::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -404,6 +414,9 @@ pimCmdRedSumV::execute(pimDevice* device)
     }
   }
 
+  m_numElements = objSrc.getNumElements();
+  unsigned bitsPerElement = objSrc.getBitsPerElement();
+  m_totalBytes = m_numElements * bitsPerElement / 8;
   updateStats(1);
   return true;
 }
@@ -417,7 +430,94 @@ pimCmdRedSumV::updateStats(int numPass)
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = 100000; // todo
+    //msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
+    msRuntime = static_cast<double>(m_numElements) / 3200000; // typical 3.2 GHz CPU
+    break;
+  default:
+    ;
+  }
+  msRuntime *= numPass;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
+}
+
+
+//! @brief  PIM CMD: broadcast a value to all elements
+bool
+pimCmdBroadcast::execute(pimDevice* device)
+{
+  #if defined(DEBUG)
+  std::printf("PIM-Info: %s (obj id %d value %u)\n", getName().c_str(), m_dest, m_val);
+  #endif
+
+  pimResMgr* resMgr = device->getResMgr();
+
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  m_bitsPerElement = objDest.getBitsPerElement();
+  m_numElements = objDest.getNumElements();
+  m_numRegions = objDest.getRegions().size();
+
+  assert(m_bitsPerElement == 32); // todo: support other types
+
+  std::unordered_map<int, int> coreIdCnt;
+  int numPass = 0;
+  for (const auto &region : objDest.getRegions()) {
+    PimCoreId coreId = region.getCoreId();
+    coreIdCnt[coreId]++;
+    if (numPass < coreIdCnt[coreId]) {
+      numPass = coreIdCnt[coreId];
+    }
+
+    pimCore &core = device->getCore(coreId);
+    unsigned colIdx = region.getColIdx();
+    unsigned numAllocCols = region.getNumAllocCols();
+    unsigned rowIdx = region.getRowIdx();
+
+    if (m_cmdType == PimCmdEnum::BROADCAST_V) {
+      for (unsigned i = 0; i < numAllocCols; ++i) {
+        core.setB32V(rowIdx, colIdx + i, m_val);
+      }
+    } else if (m_cmdType == PimCmdEnum::BROADCAST_H) {
+      for (unsigned i = 0; i < numAllocCols; i += m_bitsPerElement) {
+        core.setB32H(rowIdx, colIdx + i, m_val);
+      }
+    } else {
+      assert(0);
+    }
+  }
+
+  updateStats(numPass);
+  return true;
+}
+
+//! @brief  Update stats for broadcast
+void
+pimCmdBroadcast::updateStats(int numPass)
+{
+  double msRuntime = 0.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
+
+  PimDeviceEnum device = pimSim::get()->getDeviceType();
+  switch (device) {
+  case PIM_FUNCTIONAL:
+  case PIM_DEVICE_BITSIMD_V:
+  {
+    switch (m_cmdType) {
+    case PimCmdEnum::BROADCAST_V:
+      msRuntime = (tW + tL) * m_bitsPerElement * numPass;
+      break;
+    case PimCmdEnum::BROADCAST_H:
+      msRuntime = tW * m_numRegions + tL * m_numElements * m_bitsPerElement / 8;
+      break;
+    default: assert(0);
+    }
+    break;
+  }
+    // rotate within subarray
+    msRuntime = tR + tW + 3 * tL;
+    // boundary handling
+    msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
     break;
   default:
     ;
@@ -431,7 +531,10 @@ pimCmdRedSumV::updateStats(int numPass)
 bool
 pimCmdRotateV::execute(pimDevice* device)
 { 
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
 
   pimResMgr* resMgr = device->getResMgr();
 
@@ -499,6 +602,7 @@ pimCmdRotateV::execute(pimDevice* device)
     }
   }
 
+  m_numRegions = objSrc.getRegions().size();
   updateStats(1);
   return true;
 }
@@ -508,11 +612,18 @@ void
 pimCmdRotateV::updateStats(int numPass)
 {
   double msRuntime = 0.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
+
   PimDeviceEnum device = pimSim::get()->getDeviceType();
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = 100000; // todo
+    // rotate within subarray
+    msRuntime = tR + tW + 3 * tL;
+    // boundary handling
+    msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
     break;
   default:
     ;
@@ -526,7 +637,11 @@ pimCmdRotateV::updateStats(int numPass)
 bool
 pimCmdReadRowToSa::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V ReadRowToSa (obj id %d ofst %u)\n", m_objId, m_ofst);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
@@ -546,7 +661,11 @@ pimCmdReadRowToSa::execute(pimDevice* device)
 bool
 pimCmdWriteSaToRow::execute(pimDevice* device)
 {
+  
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V WriteSaToRow (obj id %d ofst %u)\n", m_objId, m_ofst);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
@@ -566,8 +685,12 @@ pimCmdWriteSaToRow::execute(pimDevice* device)
 bool
 pimCmdRRegOp::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d dest-reg %d src-reg %d %d %d val %d)\n",
               getName().c_str(), m_objId, m_dest, m_src1, m_src2, m_src3, m_val);
+  #endif
+
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& refObj = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < refObj.getRegions().size(); ++i) {
@@ -665,7 +788,11 @@ pimCmdRRegOp::execute(pimDevice* device)
 bool
 pimCmdRRegRotate::execute(pimDevice* device)
 {
+
+  #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
+  #endif
+  
   pimResMgr* resMgr = device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   if (m_cmdType == PimCmdEnum::RREG_ROTATE_R) {  // Right Rotate

@@ -52,7 +52,7 @@ int main()
     return 1;
   }
 
-  status = pimBroadCast(PIM_COPY_V, obj2, 10);
+  status = pimBroadcast(obj2, 10);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;

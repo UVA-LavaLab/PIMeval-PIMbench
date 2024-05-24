@@ -15,6 +15,7 @@
 
 using namespace std;
 
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -210,8 +211,11 @@ int main(int argc, char *argv[])
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
   linearRegression(params.dataSize, dataPointsX, dataPointsY, SX_device, SY_device, SXX_device, SXY_device, SYY_device);
 
+  auto start = std::chrono::high_resolution_clock::now();
   auto slope_device = (params.dataSize * SXY_device - SX_device * SY_device) / (params.dataSize * SXX_device - SX_device * SX_device);
   auto intercept_device = (SY_device - slope_device * SX_device) / params.dataSize;
+  auto end = std::chrono::high_resolution_clock::now();
+  hostElapsedTime += (end - start);
 
   if (params.shouldVerify)
   {
@@ -229,15 +233,18 @@ int main(int argc, char *argv[])
     // Calculate slope and intercept
     auto slope = (params.dataSize * SXY - SX * SY) / (params.dataSize * SXX - SX * SX);
     auto intercept = (SY - slope * SX) / params.dataSize;
-    if (intercept != intercept_device) {
+    if (intercept != intercept_device)
+    {
       cout << "\nWrong answer. Expected: " << intercept << " . Calculated: " << intercept_device << "\n";
-    } else {
+    }
+    else
+    {
       cout << "\n\nCorrect Answer!\n\n";
     }
-
   }
 
   pimShowStats();
+  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
 
   return 0;
 }

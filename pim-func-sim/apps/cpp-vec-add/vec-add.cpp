@@ -89,12 +89,6 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId dstObj = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, srcObj1, PIM_INT32);
-  if (dstObj == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
 
   PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)src1.data(), srcObj1);
   if (status != PIM_OK)
@@ -110,22 +104,21 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
     return;
   }
 
-  status = pimAdd(srcObj1, srcObj2, dstObj);
+  status = pimAdd(srcObj1, srcObj2, srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  dst.reserve(vectorLength);
-  status = pimCopyDeviceToHost(PIM_COPY_V, dstObj, (void *)dst.data());
+  dst.resize(vectorLength);
+  status = pimCopyDeviceToHost(PIM_COPY_V, srcObj1, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
   }
   pimFree(srcObj1);
   pimFree(srcObj2);
-  pimFree(dstObj);
 }
 
 int main(int argc, char* argv[])

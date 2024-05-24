@@ -54,6 +54,8 @@ public:
 
   void resetStats();
 
+  double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
+
 private:
   void showApiStats() const;
   void showDeviceParams() const;

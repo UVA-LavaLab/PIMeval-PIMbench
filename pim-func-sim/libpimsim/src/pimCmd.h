@@ -20,6 +20,8 @@ enum class PimCmdEnum {
   // Functional 1-operand v-layout
   ABS_V,
   POPCOUNT_V,
+  BROADCAST_V,
+  BROADCAST_H,
   // Functional 2-operand v-layout
   ADD_V,
   SUB_V,
@@ -126,8 +128,28 @@ public:
 protected:
   PimObjId m_src;
   int* m_result;
-  unsigned m_idxBegin = 0; 
+  unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
+  uint64_t m_numElements = 0;
+  uint64_t m_totalBytes = 0;
+};
+
+//! @class  pimCmdBroadcast
+//! @brief  Pim CMD: Broadcast a value to all elements, v/h-layout
+class pimCmdBroadcast : public pimCmd
+{
+public:
+  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, unsigned val)
+    : pimCmd(cmdType), m_dest(dest), m_val(val) {}
+  virtual ~pimCmdBroadcast() {}
+  virtual bool execute(pimDevice* device) override;
+  virtual void updateStats(int numPass) override;
+protected:
+  PimObjId m_dest;
+  unsigned m_val;
+  unsigned m_bitsPerElement = 0;
+  unsigned m_numElements = 0;
+  unsigned m_numRegions = 0;
 };
 
 //! @class  pimCmdRotateV
@@ -142,6 +164,7 @@ public:
   virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
+  unsigned m_numRegions = 0;
 };
 
 //! @class  pimCmdReadRowToSa

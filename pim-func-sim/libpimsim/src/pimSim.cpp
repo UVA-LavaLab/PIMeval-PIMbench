@@ -204,11 +204,13 @@ pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
 
 // @brief  Load vector with a scalar value
 bool
-pimSim::pimBroadCast(PimCopyEnum copyType, PimObjId src, unsigned value)
+pimSim::pimBroadcast(PimObjId dest, unsigned value)
 {
-  pimPerfMon perfMon("pimBroadCast");
+  pimPerfMon perfMon("pimBroadcast");
   if (!isValidDevice()) { return false; }
-  return m_device->pimBroadCast(copyType, src, value);
+  // todo: use v/h based on dest info
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast>(PimCmdEnum::BROADCAST_V, dest, value);
+  return m_device->executeCmd(std::move(cmd));
 }
 
 // @brief  PIM OP: add

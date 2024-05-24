@@ -5,6 +5,7 @@
 #include "pimStats.h"
 #include "pimSim.h"
 #include "pimUtils.h"
+#include <algorithm>
 
 
 //! @brief  Show PIM stats
@@ -70,6 +71,7 @@ pimStatsMgr::showDeviceParams() const
   std::printf(" %30s : %u\n", "Number of PIM Cores", pimSim::get()->getNumCores());
   std::printf(" %30s : %u\n", "Number of Rows per Core", pimSim::get()->getNumRows());
   std::printf(" %30s : %u\n", "Number of Columns per Core", pimSim::get()->getNumCols());
+  std::printf(" %30s : %f GB/s\n", "Typical Rank BW", m_paramsDram->getTypicalRankBW());
   std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
   std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());
   std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD());
@@ -81,8 +83,24 @@ void
 pimStatsMgr::showCopyStats() const
 {
   std::printf("Data Copy Stats:\n");
-  std::printf(" %30s : %llu bytes\n", "Host to Device", m_bitsCopiedMainToDevice / 8);
-  std::printf(" %30s : %llu bytes\n", "Device to Host", m_bitsCopiedDeviceToMain / 8);
+  uint64_t bytesCopiedMainToDevice = m_bitsCopiedMainToDevice / 8;
+  uint64_t bytesCopiedDeviceToMain = m_bitsCopiedDeviceToMain / 8;
+  uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
+  double totalMsRuntime = getMsRuntimeForBytesTransfer(totalBytes);
+  std::printf(" %30s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
+  std::printf(" %30s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
+  std::printf(" %30s : %llu bytes %14f ms Estimated Runtime\n", "TOTAL ---------", totalBytes, totalMsRuntime);
+}
+
+//! @brief  Get ms runtime for bytes transferred between host and device
+double
+pimStatsMgr::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
+{
+  int numCores = static_cast<int>(pimSim::get()->getNumCores());
+  int numActiveRank = std::min(numCores, 16); // Up to 16 ranks
+  double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
+  double totalMsRuntime = static_cast<double>(numBytes) / (typicalRankBW * numActiveRank * 1024 * 1024 * 1024 / 1000);
+  return totalMsRuntime;
 }
 
 //! @brief  Show PIM cmd and perf stats
