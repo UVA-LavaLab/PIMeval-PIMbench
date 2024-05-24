@@ -54,11 +54,7 @@ public:
 
   void resetStats();
 
-  double getMsRuntimeForBytesTransfer(uint64_t numBytes) const {
-    double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
-    double totalMsRuntime = static_cast<double>(numBytes) / (typicalRankBW * 1024 * 1024 * 1024 / 1000);
-    return totalMsRuntime;
-  }
+  double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
 
 private:
   void showApiStats() const;

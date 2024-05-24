@@ -20,6 +20,8 @@ pimCmd::getName(PimCmdEnum cmdType)
     { PimCmdEnum::NOOP, "noop" },
     { PimCmdEnum::ABS_V, "abs.v" },
     { PimCmdEnum::POPCOUNT_V, "popcount.v" },
+    { PimCmdEnum::BROADCAST_V, "broadcast.v" },
+    { PimCmdEnum::BROADCAST_H, "broadcast.H" },
     { PimCmdEnum::ADD_V, "add.v" },
     { PimCmdEnum::SUB_V, "sub.v" },
     { PimCmdEnum::MUL_V, "mul.v" },
@@ -412,9 +414,9 @@ pimCmdRedSumV::execute(pimDevice* device)
     }
   }
 
-  unsigned numElements = objSrc.getNumElements();
+  uint64_t m_numElements = objSrc.getNumElements();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
-  m_totalBytes = static_cast<uint64_t>(numElements) * bitsPerElement / 8;
+  m_totalBytes = m_numElements * bitsPerElement / 8;
   updateStats(1);
   return true;
 }
@@ -428,7 +430,94 @@ pimCmdRedSumV::updateStats(int numPass)
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
+    //msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
+    msRuntime = m_numElements / 3200000; // typical 3.2 GHz CPU
+    break;
+  default:
+    ;
+  }
+  msRuntime *= numPass;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), msRuntime);
+}
+
+
+//! @brief  PIM CMD: broadcast a value to all elements
+bool
+pimCmdBroadcast::execute(pimDevice* device)
+{
+  #if defined(DEBUG)
+  std::printf("PIM-Info: %s (obj id %d value %u)\n", getName().c_str(), m_dest, m_val);
+  #endif
+
+  pimResMgr* resMgr = device->getResMgr();
+
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  m_bitsPerElement = objDest.getBitsPerElement();
+  m_numElements = objDest.getNumElements();
+  m_numRegions = objDest.getRegions().size();
+
+  assert(m_bitsPerElement == 32); // todo: support other types
+
+  std::unordered_map<int, int> coreIdCnt;
+  int numPass = 0;
+  for (const auto &region : objDest.getRegions()) {
+    PimCoreId coreId = region.getCoreId();
+    coreIdCnt[coreId]++;
+    if (numPass < coreIdCnt[coreId]) {
+      numPass = coreIdCnt[coreId];
+    }
+
+    pimCore &core = device->getCore(coreId);
+    unsigned colIdx = region.getColIdx();
+    unsigned numAllocCols = region.getNumAllocCols();
+    unsigned rowIdx = region.getRowIdx();
+
+    if (m_cmdType == PimCmdEnum::BROADCAST_V) {
+      for (unsigned i = 0; i < numAllocCols; ++i) {
+        core.setB32V(rowIdx, colIdx + i, m_val);
+      }
+    } else if (m_cmdType == PimCmdEnum::BROADCAST_H) {
+      for (unsigned i = 0; i < numAllocCols; i += m_bitsPerElement) {
+        core.setB32H(rowIdx, colIdx + i, m_val);
+      }
+    } else {
+      assert(0);
+    }
+  }
+
+  updateStats(numPass);
+  return true;
+}
+
+//! @brief  Update stats for broadcast
+void
+pimCmdBroadcast::updateStats(int numPass)
+{
+  double msRuntime = 0.0;
+  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
+  double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
+
+  PimDeviceEnum device = pimSim::get()->getDeviceType();
+  switch (device) {
+  case PIM_FUNCTIONAL:
+  case PIM_DEVICE_BITSIMD_V:
+  {
+    switch (m_cmdType) {
+    case PimCmdEnum::BROADCAST_V:
+      msRuntime = (tW + tL) * m_bitsPerElement * numPass;
+      break;
+    case PimCmdEnum::BROADCAST_H:
+      msRuntime = tW * m_numRegions + tL * m_numElements * m_bitsPerElement / 8;
+      break;
+    default: assert(0);
+    }
+    break;
+  }
+    // rotate within subarray
+    msRuntime = tR + tW + 3 * tL;
+    // boundary handling
+    msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
     break;
   default:
     ;

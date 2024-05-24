@@ -127,7 +127,7 @@ void performConv(std::vector<std::vector<int>>& filterMatrix, std::vector<std::v
   {
     for (int j = 0; j < filterMatrix[i].size(); ++j)
     {
-      PimStatus status = pimBroadCast(PIM_COPY_V, filterObjects[idx], filterMatrix[i][j]);
+      PimStatus status = pimBroadcast(filterObjects[idx], filterMatrix[i][j]);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;

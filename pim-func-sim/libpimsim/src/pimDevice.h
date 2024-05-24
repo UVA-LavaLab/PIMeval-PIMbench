@@ -40,7 +40,6 @@ public:
 
   bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
   bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
-  bool pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value);
 
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
