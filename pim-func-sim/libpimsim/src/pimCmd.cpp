@@ -29,6 +29,7 @@ pimCmd::getName(PimCmdEnum cmdType)
     { PimCmdEnum::AND_V, "and.v" },
     { PimCmdEnum::OR_V, "or.v" },
     { PimCmdEnum::XOR_V, "xor.v" },
+    { PimCmdEnum::XNOR_V, "xnor.v" },
     { PimCmdEnum::GT_V, "gt.v" },
     { PimCmdEnum::LT_V, "lt.v" },
     { PimCmdEnum::EQ_V, "eq.v" },
@@ -322,6 +323,7 @@ pimCmdFunc2V::execute(pimDevice* device)
         case PimCmdEnum::AND_V: result = operand1 & operand2; break;
         case PimCmdEnum::OR_V: result = operand1 | operand2; break;
         case PimCmdEnum::XOR_V: result = operand1 ^ operand2; break;
+        case PimCmdEnum::XNOR_V: result = ~(operand1 ^ operand2); break;
         case PimCmdEnum::GT_V: result = operand1 > operand2 ? 1 : 0; break;
         case PimCmdEnum::LT_V: result = operand1 < operand2 ? 1 : 0; break;
         case PimCmdEnum::EQ_V: result = operand1 == operand2 ? 1 : 0; break;
@@ -366,6 +368,7 @@ pimCmdFunc2V::updateStats(int numPass)
     case PimCmdEnum::AND_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
     case PimCmdEnum::OR_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
     case PimCmdEnum::XOR_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
+    case PimCmdEnum::XNOR_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
     case PimCmdEnum::GT_V: msRuntime = 64 * tR + 32 * tW + 66 * tL; break;
     case PimCmdEnum::LT_V: msRuntime = 64 * tR + 32 * tW + 66 * tL; break;
     case PimCmdEnum::EQ_V: msRuntime = 64 * tR + 32 * tW + 66 * tL; break;
@@ -432,6 +435,7 @@ pimCmdRedSumV::updateStats(int numPass)
   case PIM_DEVICE_BITSIMD_V:
     // Sequentially process all elements per CPU cycle
     msRuntime = static_cast<double>(m_numElements) / 3200000; // typical 3.2 GHz CPU
+    // consider PCL
     break;
   default:
     ;

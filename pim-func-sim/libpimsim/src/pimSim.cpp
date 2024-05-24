@@ -293,6 +293,16 @@ pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: xnor
+bool
+pimSim::pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  pimPerfMon perfMon("pimXnor");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::XNOR_V, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 // @brief  PIM OP: gt
 bool
 pimSim::pimGT(PimObjId src1, PimObjId src2, PimObjId dest)

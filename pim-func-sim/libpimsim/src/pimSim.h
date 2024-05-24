@@ -53,6 +53,7 @@ public:
   bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimXnor(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);

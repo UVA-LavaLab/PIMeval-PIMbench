@@ -30,6 +30,7 @@ enum class PimCmdEnum {
   AND_V,
   OR_V,
   XOR_V,
+  XNOR_V,
   GT_V,
   LT_V,
   EQ_V,
