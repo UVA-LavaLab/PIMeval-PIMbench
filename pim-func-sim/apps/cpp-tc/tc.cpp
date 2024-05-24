@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <fstream>
+#include <bitset>
 #include <unordered_set>
 #include <sstream>
 #include <getopt.h>
@@ -16,8 +17,8 @@
 
 #define BITS_PER_INT 32
 
-#define NUM_SUBARRAY 1
-#define ROW_SIZE 587
+#define NUM_SUBARRAY 512
+#define ROW_SIZE 8192
 #define COL_SIZE 8192
 #define WORDS_PER_ROW (ROW_SIZE * NUM_SUBARRAY)
 
@@ -46,6 +47,16 @@ void usage()
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
+}
+
+template <typename T>
+void printNestedVector(const std::vector<std::vector<T>>& nestedVec) {
+    for (const std::vector<T>& innerVec : nestedVec) {
+        for (const T& element : innerVec) {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl; // Print a newline after each inner vector
+    }
 }
 
 struct Params getInputParams(int argc, char **argv)
@@ -139,7 +150,7 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
     return edgeList;
 }
 
-int vectorAndPopCntRedSum(uint64_t numElements, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst){
+int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2, std::vector<unsigned int> &dst){
     unsigned bitsPerElement = sizeof(int) * 8;
 
     PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
@@ -218,22 +229,27 @@ int run(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitA
     int V = bitAdjMatrix.size();
     // unsigned numElements = V;
     int numElements = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
+    cout << "number of ndoes: " << V << endl;
+    cout << "numElem: " << numElements << endl;
     assert(numElements <= WORDS_PER_ROW && "Number of vertices cannot exceed WORDS_PER_ROW");
 
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
                 // int l = j / BITS_PER_INT;
-                std::vector<int> src1(numElements);
-                std::vector<int> src2(numElements);
-                std::vector<int> dest(numElements);
-
+                std::vector<unsigned int> src1(numElements);
+                std::vector<unsigned int> src2(numElements);
+                std::vector<unsigned int> dest(numElements);
+                // cout << "i: " << i << ", j: " << j << endl;
                 for (int k = 0; k < numElements; ++k) {
                     // dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
                     src1[k] = bitAdjMatrix[i][k];
                     src2[k] = bitAdjMatrix[j][k];
                 } 
-                int sum = vectorAndPopCntRedSum((uint64_t) V, src1, src2, dest);
+                // cout << "src1: " << bitset<32>(src1[0]) << endl;
+                // cout << "src2: " << bitset<32>(src2[0]) << endl;
+                int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2, dest);
+                // cout << "sum: " << sum << endl;
                 //redsum
                 count += sum;
             }
@@ -251,6 +267,7 @@ int main(int argc, char** argv) {
         // Read edge list from JSON file
         string filename = argv[1];
         vector<pair<int, int>> edgeList = readEdgeList(filename);
+        
         // Determine the number of nodes
         unordered_set<int> nodes;
         for (const auto& edge : edgeList) {
@@ -264,12 +281,28 @@ int main(int argc, char** argv) {
         vector<vector<int>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
         cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
 
+        // cout << "-----edgelist-----\n";
+        // printNestedVector(adjMatrix);
+        // cout << "-----edgelist-----\n";
+
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
 
-         if (!createDevice(params.configFile))
+        //  cout << "-----bitAdjMatrix-----\n";
+        // for (const auto& row : bitAdjMatrix) {
+        //     for (UINT32 val : row) {
+        //         cout << bitset<32>(val) << " ";
+        //     }
+        //     cout << endl;
+        // }
+        // cout << "-----bitAdjMatrix-----\n";
+
+        if (!createDevice(params.configFile))
             return 1;
         //run
         run(adjMatrix, bitAdjMatrix);
+
+        //stats
+        pimShowStats();
 
     } catch (const exception& e) {
         cerr << "Error: " << e.what() << endl;
