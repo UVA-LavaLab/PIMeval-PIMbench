@@ -23,6 +23,10 @@ uint8_t ctx_deckey[32];
 #define FD(x)  (((x) >> 1) ^ (((x) & 1) ? 0x8d : 0))
 
 
+// Function to compare two files
+int compare_files(const char *file1, const char *file2);
+
+
 // S table
 __constant__ static const uint8_t sbox[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
@@ -373,8 +377,6 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
   cudaMemcpyToSymbol(sbox, sbox, sizeof(uint8_t)*256);
 
-  printf("\nBeginning encryption\n");
-  aes256_init(key);
 
   cudaMalloc((void**)&buf_d, numbytes);
   cudaMalloc((void**)&ctx_enckey_d, sizeof(ctx_enckey));
@@ -385,7 +387,6 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
   cudaMemcpy(ctx_key_d, ctx_key, sizeof(ctx_key), cudaMemcpyHostToDevice);
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
-  // printf("Creating %d threads over %d blocks\n", dimBlock.x*dimGrid.x, dimBlock.x);
   aes256_encrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_enckey_d, ctx_key_d);
 
   cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
@@ -406,7 +407,6 @@ void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
   cudaMemcpyToSymbol(sboxinv, sboxinv, sizeof(uint8_t)*256);
 
-  printf("\nBeginning decryption\n");
 
   cudaMalloc((void**)&buf_d, numbytes);
   cudaMalloc((void**)&ctx_deckey_d, sizeof(ctx_deckey));
@@ -418,7 +418,6 @@ void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
-  printf("Creating %d threads over %d blocks\n", dimBlock.x*dimGrid.x, dimBlock.x);
   aes256_decrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_deckey_d, ctx_key_d);
 
   cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
@@ -523,7 +522,8 @@ int main(int argc, char *argv[]) {
 
     // This is to force nvcc to put the GPU initialization here.
     GPU_init<<<1, 1>>>();
-
+  
+    aes256_init(key);
     // Encryption.
     auto start = std::chrono::high_resolution_clock::now();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
@@ -554,6 +554,46 @@ int main(int argc, char *argv[]) {
     fwrite(buf, 1, numbytes - padding, file);
     fclose(file);
 
+
+    // Compare input and output files
+    if (compare_files(input_file, output_file) == 0) {
+        printf("SUCCESS: The input file and the output file are the same.\n");
+    } else {
+        printf("FAILED: The input file and the output file are different.\n");
+    }
+
+
     free(buf);
     return EXIT_SUCCESS;
+}
+
+
+int compare_files(const char *file1, const char *file2) {
+    FILE *f1 = fopen(file1, "r");
+    FILE *f2 = fopen(file2, "r");
+    if (f1 == NULL || f2 == NULL) {
+        if (f1) fclose(f1);
+        if (f2) fclose(f2);
+        return -1;
+    }
+
+    int ch1, ch2;
+    do {
+        ch1 = fgetc(f1);
+        ch2 = fgetc(f2);
+        if (ch1 != ch2) {
+            fclose(f1);
+            fclose(f2);
+            return -1;
+        }
+    } while (ch1 != EOF && ch2 != EOF);
+
+    fclose(f1);
+    fclose(f2);
+
+    if (ch1 == EOF && ch2 == EOF) {
+        return 0;
+    } else {
+        return -1;
+    }
 }
