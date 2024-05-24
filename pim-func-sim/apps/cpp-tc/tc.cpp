@@ -8,19 +8,17 @@
 #include <unordered_set>
 #include <sstream>
 #include <getopt.h>
-#if defined(_OPENMP)
 #include <omp.h>
-#endif
 
 #include "../util.h"
 #include "libpimsim.h"
 
-#define BITS_PER_INT 32
+#define BITS_PER_INT 512
 
-#define NUM_SUBARRAY 512
+#define NUM_SUBARRAY 32
 #define ROW_SIZE 8192
 #define COL_SIZE 8192
-#define WORDS_PER_ROW (ROW_SIZE * NUM_SUBARRAY)
+#define WORDS_PER_ROW (ROW_SIZE * COL_SIZE * NUM_SUBARRAY)
 
 typedef uint32_t UINT32;
 
@@ -220,11 +218,12 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     pimFree(srcObj1);
     pimFree(srcObj2);
     pimFree(dstObj);
+    pimFree(popCntResObj);
 
     return sum;
 }
 
-int run(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int run_naive(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
     int count = 0;
     int V = bitAdjMatrix.size();
     // unsigned numElements = V;
@@ -232,11 +231,14 @@ int run(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitA
     cout << "number of ndoes: " << V << endl;
     cout << "numElem: " << numElements << endl;
     assert(numElements <= WORDS_PER_ROW && "Number of vertices cannot exceed WORDS_PER_ROW");
+    int oneCount = 0;
 
+    #pragma omp parallel for reduction(+:count)
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
                 // int l = j / BITS_PER_INT;
+                oneCount++;
                 std::vector<unsigned int> src1(numElements);
                 std::vector<unsigned int> src2(numElements);
                 std::vector<unsigned int> dest(numElements);
@@ -249,13 +251,62 @@ int run(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitA
                 // cout << "src1: " << bitset<32>(src1[0]) << endl;
                 // cout << "src2: " << bitset<32>(src2[0]) << endl;
                 int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2, dest);
+                if(sum < 0)
+                    return -1;
                 // cout << "sum: " << sum << endl;
                 //redsum
                 count += sum;
             }
         }
     }
+    cout << "oneCount: " << oneCount << endl;
+    cout << "bit32TriangleCount: " << count / 6 << endl;
+    // Each triangle is counted three times (once at each vertex), so divide the count by 3
+    return count / 6;
+}
 
+int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+    int count = 0;
+    int V = bitAdjMatrix.size();
+    // unsigned numElements = V;
+    int numElements = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
+    cout << "number of ndoes: " << V << endl;
+    cout << "numElem: " << numElements << endl;
+    assert(numElements <= WORDS_PER_ROW && "Number of vertices cannot exceed WORDS_PER_ROW");
+    int oneCount = 0;
+    int rowsPerRow =  WORDS_PER_ROW / numElements;
+    int rowsPerRowTmp = rowsPerRow;
+
+    #pragma omp parallel for reduction(+:count)
+    for (int i = 0; i < V; ++i) {
+        for (int j = 0; j < V; ++j) {
+            if (adjMatrix[i][j]) { // If there's an edge between i and j
+                // int l = j / BITS_PER_INT;
+                oneCount++;
+                std::vector<unsigned int> src1(WORDS_PER_ROW);
+                std::vector<unsigned int> src2(WORDS_PER_ROW);
+                std::vector<unsigned int> dest(WORDS_PER_ROW);
+                // cout << "i: " << i << ", j: " << j << endl;
+                for (int k = 0; k < numElements; ++k) {
+                    // dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
+                    src1[k] = bitAdjMatrix[i][k];
+                    src2[k] = bitAdjMatrix[j][k];
+                }
+                rowsPerRowTmp--; 
+                // cout << "src1: " << bitset<32>(src1[0]) << endl;
+                // cout << "src2: " << bitset<32>(src2[0]) << endl;
+                if(rowsPerRowTmp >= 0)
+                    continue;
+                int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2, dest);
+                if(sum < 0)
+                    return -1;
+                // cout << "sum: " << sum << endl;
+                //redsum
+                count += sum;
+            }
+        }
+    }
+    cout << "oneCount: " << oneCount << endl;
     cout << "bit32TriangleCount: " << count / 6 << endl;
     // Each triangle is counted three times (once at each vertex), so divide the count by 3
     return count / 6;
@@ -299,7 +350,7 @@ int main(int argc, char** argv) {
         if (!createDevice(params.configFile))
             return 1;
         //run
-        run(adjMatrix, bitAdjMatrix);
+        run_naive(adjMatrix, bitAdjMatrix);
 
         //stats
         pimShowStats();

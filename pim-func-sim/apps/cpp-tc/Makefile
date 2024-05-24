@@ -1,5 +1,6 @@
 include ../Makefile.common
 
+CXXFLAGS += -O3
 EXEC := tc
 SRC := tc.cpp
 
