@@ -5,7 +5,6 @@
 #include <vector>
 #include <getopt.h>
 #include <stdint.h>
-#include <iomanip>
 #include <unordered_map>
 
 #if defined(_OPENMP)
@@ -14,6 +13,8 @@
 
 #include "../util.h"
 #include "libpimsim.h"
+
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
 using namespace std;
 
@@ -169,11 +170,10 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     return;
   }
 
-
   for (int itr = 0; itr < iteration; ++itr)
   {
-    std::vector<std::vector<int>> distMat(k, vector<data_t>(numOfPoints));
-    std::vector<std::vector<int>> distFlag(k, vector<data_t>(numOfPoints));
+    std::vector<std::vector<int>> distMat(k, vector<int>(numOfPoints));
+    std::vector<std::vector<int>> distFlag(k, vector<int>(numOfPoints));
 
     for (int i = 0; i < k; ++i)
     {
@@ -251,6 +251,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
 
     // update the cluster in host
     // TODO: check if PIM will be benificial. My assumption it won't
+    auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < k; i++)
     {
       std::fill(centroids[i].begin(), centroids[i].end(), 0);
@@ -277,17 +278,22 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         centroids[i][j] /= clusterPointCount[i];
       }
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += (end - start);
   }
   pimFree(tempObj);
-  for (int i = 0; i < resultObjectList.size(); ++i) {
+  for (int i = 0; i < resultObjectList.size(); ++i)
+  {
     pimFree(resultObjectList[i]);
   }
 
-  for (int i = 0; i < dataPointObjectList.size(); ++i) {
+  for (int i = 0; i < dataPointObjectList.size(); ++i)
+  {
     pimFree(dataPointObjectList[i]);
   }
 
-  for (int i = 0; i < centroidObjectList.size(); ++i) {
+  for (int i = 0; i < centroidObjectList.size(); ++i)
+  {
     pimFree(centroidObjectList[i]);
   }
 }
@@ -306,7 +312,7 @@ void initCentroids(int k, int dimension, int numOfPoints, std::vector<std::vecto
   }
 }
 
-// TODO: This implementation does not handle dimension that's large enough to fit into one column. As in, bitsperelement*dimension*2 has to be smaller than the number of rows in a subarray.
+// TODO: This implementation does not handle dimension that's large enough to not fit into one column. As in, bitsperelement*dimension*2 has to be smaller than the number of rows in a subarray.
 
 int main(int argc, char *argv[])
 {
@@ -336,6 +342,7 @@ int main(int argc, char *argv[])
   }
 
   pimShowStats();
+  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
 
   return 0;
 }
