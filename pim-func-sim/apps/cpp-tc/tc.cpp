@@ -269,9 +269,10 @@ int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UI
                     src1.push_back(bitAdjMatrix[i][k]);
                     src2.push_back(bitAdjMatrix[j][k]);
                 }
-                if(words < WORDS_PER_RANK / 2 && i < V - 1 && j < V - 1)
+                if(words < WORDS_PER_RANK / 2){
                     continue;
-                
+                }
+                cout << "words: " << words << endl;
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
                 if(sum < 0)
                     return -1;
@@ -280,6 +281,17 @@ int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UI
                 src2.clear();
                 dest.clear();
                 count += sum;
+            } 
+            //last raound
+            if((i == V - 1) && (j == V - 1) && words > 0){
+                cout << "lr words: " << words << endl;
+                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
+                count += sum;
+                if(sum < 0)
+                    return -1;
+                src1.clear();
+                src2.clear();
+                dest.clear();
             }
         }
     }
