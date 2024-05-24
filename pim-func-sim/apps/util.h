@@ -9,15 +9,11 @@
 #include <omp.h>
 #endif
 #include <vector>
+#include <iomanip>
+#include <chrono>
 
 #include "libpimsim.h"
 using namespace std;
-
-#ifndef DATA_TYPE
-typedef int32_t data_t;
-#else
-typedef DATA_TYPE data_t;
-#endif
 
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 {

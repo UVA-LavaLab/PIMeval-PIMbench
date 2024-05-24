@@ -10,72 +10,10 @@
 #include <omp.h>
 #endif
 #include "../util.h"
+#include <iomanip>
+#include <chrono>
 
 using namespace std;
-
-void vectorAddition(uint64_t vectorLength, const std::vector<int> &src1, const std::vector<int> &src2, std::vector<int> &dst)
-{
-  unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
-  if (srcObj1 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-  PimObjId dstObj = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, srcObj1, PIM_INT32);
-  if (dstObj == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)src1.data(), srcObj1);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)src2.data(), srcObj2);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimAdd(srcObj1, srcObj2, dstObj);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  dst.resize(vectorLength);
-  status = pimCopyDeviceToHost(PIM_COPY_V, dstObj, (void *)dst.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-  }
-  pimFree(srcObj1);
-  pimFree(srcObj2);
-  pimFree(dstObj);
-// verify result
-#pragma omp parallel for
-  for (unsigned i = 0; i < vectorLength; ++i)
-  {
-    int sum = src1[i] + src2[i];
-    if (dst[i] != sum)
-    {
-      std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
-    }
-  }
-}
 
 void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int filterColumn, int stride, std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
 {
@@ -104,7 +42,6 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
 
   unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
-  cout << "Starting allocation\n";
   PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numRequiredPIMCol, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
@@ -123,7 +60,6 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     filterObjects.push_back(obj);
   }
 
-  cout << "Allocation done\n";
   int idx = 0;
   for (int i = 0; i < filterMatrix.size(); ++i)
   {
@@ -137,7 +73,6 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
       }
     }
   }
-  cout << "Broadcast done\n";
 
   std::vector<PimObjId> matrixObjects;
   for (int i = 0; i < numRequiredPIMRows; i++)
@@ -151,7 +86,6 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     matrixObjects.push_back(obj);
   }
 
-  cout << "Copying data from host to device\n";
   for (int i = 0; i < inputMatrix.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)inputMatrix[i].data(), matrixObjects[i]);
@@ -161,7 +95,6 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
       return;
     }
   }
-  cout << "Finished data copy\n";
 
   for (int i = 0; i < inputMatrix.size(); i++)
   {
@@ -200,7 +133,6 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   {
     pimFree(elem);
   }
-  cout << "Convolution done\n";
 }
 
 // Params ---------------------------------------------------------------------
@@ -330,25 +262,22 @@ int main(int argc, char *argv[])
   int numOfPIMRow = params.kernelSize * params.kernelSize;
 
   cout << "num mat per row: " << numOfMatPerRow << "\n";
-
+  std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
   for (int i = 0; i < params.kernelDim; i++)
   {
     int tempcol = 0;
-    std::vector<int> srcVec, dstVec;
+    std::vector<int> dstVec(outMatRow * outMatCol);
     for (int j = 0; j < params.dim; j += numOfMatPerRow)
     {
       int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
-      cout << "Matrix chunk: " << matChunk << "\n";
 
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
       for (int k = j; k < matChunk; k++)
       {
         std::vector<std::vector<int>> decompMat;
-        cout << "Getting decomposed matrix\n";
         getDecomposedMatrix(params.row, params.column, kernelMatrix[i].size(), kernelMatrix[i][0].size(), params.stride, inputMatrix[k], decompMat);
-        cout << "finished decomposed matrix\n";
         for (int idx = 0; idx < mergedMat.size(); idx++)
         {
           mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
@@ -356,31 +285,28 @@ int main(int argc, char *argv[])
           tempcol = mergedMat[idx].size();
         }
       }
-      cout << "starting convolution\n";
+
       std::vector<int> outVector;
       performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol);
 
-      // For architectures that don't support reduction, either perform reduction in host or a mix of host and device.
-      if (!srcVec.empty())
+      auto start = std::chrono::high_resolution_clock::now();
+
+      int hopSize = outMatCol * outMatRow;
+      if (j == 0)
       {
-        vectorAddition(outVector.size(), outVector, srcVec, dstVec);
-        srcVec = dstVec;
+        std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
       }
-      else
+
+      for (int m = 0; m < hopSize; ++m)
       {
-        srcVec = outVector;
+        for (int n = m + hopSize; n < outVector.size(); n += hopSize)
+        {
+          dstVec[m] += outVector[n];
+        }
       }
+      auto end = std::chrono::high_resolution_clock::now();
+      hostElapsedTime += (end - start);
     }
-      cout << "starting reduction on host\n";
-    // performing the reduction on host
-    for (int rdx = 0; rdx < outMatRow * outMatCol; ++rdx)
-    {
-      for (int cdx = outMatRow * outMatCol; cdx < dstVec.size(); cdx += (outMatRow * outMatCol) - 1)
-      {
-        dstVec[rdx] += dstVec[cdx + rdx];
-      }
-    }
-      cout << "finished reduction on host: " << dstVec.size() << "\n";
     int ddx = 0;
     for (int rdx = 0; rdx < outMatRow; ++rdx)
     {
@@ -392,6 +318,7 @@ int main(int argc, char *argv[])
   }
 
   pimShowStats();
+  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
 
   return 0;
 }
