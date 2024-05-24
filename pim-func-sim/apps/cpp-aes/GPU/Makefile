@@ -1,6 +1,6 @@
-all: gpu.cu
-	nvcc gpu.cu -o gpu
+all: aes.cu
+	nvcc aes.cu -o aes
 
 
 clean: 
-	rm -f *.txt gpu
+	rm -f *.txt aes

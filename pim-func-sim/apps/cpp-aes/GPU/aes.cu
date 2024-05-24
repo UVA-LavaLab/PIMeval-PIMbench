@@ -4,6 +4,9 @@
 #include <time.h>
 #include <math.h>
 #include <inttypes.h>
+#include <chrono>
+#include <iostream>
+#include <iomanip>
 #define MEASUREMENT_TIMES 10
 
 
@@ -432,95 +435,125 @@ __global__ void GPU_init() { }
 
 
 
-int main(){
+int main(int argc, char *argv[]) {
+    if (argc != 5) {
+        printf("Usage: %s <key_file> <input_file> <cipher_file> <output_file>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
-  // open file
-  FILE *file;
-  uint8_t *buf; 
-  unsigned long numbytes;
-  char *fname;
-  clock_t start, enc_time, dec_time, end;
-  int mili_sec, i;
-  int padding;
- 
-  uint8_t key[32];
+    FILE *file;
+    uint8_t *buf; 
+    unsigned long numbytes;
+    char *key_file = argv[1];
+    char *input_file = argv[2];
+    char *cipher_file = argv[3];
+    char *output_file = argv[4];
+    int padding;
+    uint8_t key[32];
 
-  int deviceCount = 0;
-  cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
+    int deviceCount = 0;
+    cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
 
-  if (error_id != cudaSuccess){
-    printf("Error: %s\n", cudaGetErrorString(error_id));
-    printf("Exiting...\n");
-    exit(EXIT_FAILURE);
-  }
+    if (error_id != cudaSuccess) {
+        printf("Error: %s\n", cudaGetErrorString(error_id));
+        printf("Exiting...\n");
+        return EXIT_FAILURE;
+    }
 
-  if (deviceCount == 0){
-    printf("There are no available device(s) that support CUDA\n");
-    exit(EXIT_FAILURE);
-  }
+    if (deviceCount == 0) {
+        printf("There are no available device(s) that support CUDA\n");
+        return EXIT_FAILURE;
+    }
 
+    // Open and read the key file.
+    file = fopen(key_file, "r");
+    if (file == NULL) {
+        printf("Error opening key file %s\n", key_file);
+        return EXIT_FAILURE;
+    }
 
-  // handle txt file
-  fname = "../input.txt";  
-  file = fopen(fname, "r");
-  if (file == NULL) {printf("File %s doesn't exist\n", fname); exit(1); }
-  printf("Opened file %s\n", fname);
-  fseek(file, 0L, SEEK_END);
-  numbytes = ftell(file);
-  printf("Size is %lu\n", numbytes);
+    // Read the key from the key file.
+    if (fread(key, 1, 32, file) != 32) {
+        printf("The key length in %s is not 32 characters\n", key_file);
+        fclose(file);
+        return EXIT_FAILURE;
+    }
 
-  // copy file into memory
-  fseek(file, 0L, SEEK_SET);
-  buf = (uint8_t*)calloc(numbytes, sizeof(uint8_t));
-  if(buf == NULL) exit(1);
-  if (fread(buf, 1, numbytes, file) != numbytes)
-  {
-    printf("Unable to read all bytes from file %s\n", fname);
-    exit(EXIT_FAILURE);
-  }
-  fclose(file);
+    // Verify that there are no extra characters.
+    char extra;
+    if (fread(&extra, 1, 1, file) != 0) {
+        printf("The key length in %s is more than 32 characters\n", key_file);
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+    fclose(file);
 
-  // calculate the padding
-  padding = numbytes % AES_BLOCK_SIZE;
-  numbytes += padding;
-  printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
+    // Open and read the input file.
+    file = fopen(input_file, "r");
+    if (file == NULL) {
+        printf("Error opening file %s\n", input_file);
+        return EXIT_FAILURE;
+    }
 
-  // generate key
-  for (i = 0; i < sizeof(key);i++) key[i] = i;
+    fseek(file, 0L, SEEK_END);
+    numbytes = ftell(file);
+    fseek(file, 0L, SEEK_SET);
 
-  // this is to force nvcc to put the gpu initialization here
-  GPU_init<<<1, 1>>>();
+    // Allocate memory for the file content.
+    buf = (uint8_t*)calloc(numbytes, sizeof(uint8_t));
+    if (buf == NULL) {
+        printf("Memory allocation error\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
 
-  // encryption
-  start = clock();
-  for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-    encryptdemo(key, buf, numbytes);
-  }
-  end = clock();
-  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC /MEASUREMENT_TIMES);
-  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
+    // Read the file into the buffer.
+    if (fread(buf, 1, numbytes, file) != numbytes) {
+        printf("Unable to read all bytes from file %s\n", input_file);
+        fclose(file);
+        free(buf);
+        return EXIT_FAILURE;
+    }
+    fclose(file);
 
+    // Calculate padding.
+    padding = AES_BLOCK_SIZE - (numbytes % AES_BLOCK_SIZE);
+    numbytes += padding;
+    printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
 
-  // write into file
-  file = fopen("cipher.txt", "w");
-  fwrite(buf, 1, numbytes, file);
-  fclose(file);
+    // This is to force nvcc to put the GPU initialization here.
+    GPU_init<<<1, 1>>>();
 
-  // decryption
-  start = clock();
-  for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-    decryptdemo(key, buf, numbytes);
-  }
-  end = clock();
-  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
-  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
+    // Encryption.
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+        encryptdemo(key, buf, numbytes);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+    std::cout << "GPU encryption throughput: " << std::fixed << std::setprecision(3) << (numbytes / elapsedTime.count() * 1000) << " bytes/second\n";
 
+    // Write the ciphertext to file.
+    file = fopen(cipher_file, "w");
+    fwrite(buf, 1, numbytes, file);
+    fclose(file);
 
-  // write into file
-  file = fopen("output.txt", "w");
-  fwrite(buf, 1, numbytes - padding, file);
-  fclose(file);
+    // Decryption.
+    start = std::chrono::high_resolution_clock::now();
+    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+        decryptdemo(key, buf, numbytes);
+    }
+    end = std::chrono::high_resolution_clock::now();
+    elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+    std::cout << "GPU decryption throughput: " << std::fixed << std::setprecision(3) << (numbytes / elapsedTime.count() * 1000) << " bytes/second\n";
 
-  free(buf);
-  return EXIT_SUCCESS;
+    // Write the output file.
+    file = fopen(output_file, "w");
+    fwrite(buf, 1, numbytes - padding, file);
+    fclose(file);
+
+    free(buf);
+    return EXIT_SUCCESS;
 }
