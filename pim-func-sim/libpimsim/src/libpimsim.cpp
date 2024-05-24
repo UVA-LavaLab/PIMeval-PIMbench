@@ -139,6 +139,14 @@ pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM xnor
+PimStatus
+pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimXnor(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM abs
 PimStatus
 pimAbs(PimObjId src, PimObjId dest)
