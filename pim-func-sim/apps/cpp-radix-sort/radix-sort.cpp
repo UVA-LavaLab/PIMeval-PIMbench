@@ -101,7 +101,7 @@ int main()
         //loop to count the occurance of all the possible number in sliced bit
         for (unsigned j = 0; j < radix; j++){
             unsigned brdcast_value = (j << (i * radix_bits)) & mask;
-            status = pimBroadCast(PIM_COPY_V, compare_obj[i], brdcast_value);
+            status = pimBroadcast(compare_obj[i], brdcast_value);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return 1;

@@ -142,7 +142,7 @@ void copyCentroid(std::vector<int> &currCentroid, std::vector<PimObjId> &pimObje
 {
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimBroadCast(PIM_COPY_V, pimObjectList[i], currCentroid[i]);
+    PimStatus status = pimBroadcast(pimObjectList[i], currCentroid[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
