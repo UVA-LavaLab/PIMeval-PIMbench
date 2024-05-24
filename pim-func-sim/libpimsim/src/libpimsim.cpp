@@ -85,9 +85,9 @@ pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
 
 //! @brief  Load vector with a scalar value
 PimStatus
-pimBroadCast(PimCopyEnum copyType, PimObjId dest, unsigned value)
+pimBroadcast(PimObjId dest, unsigned value)
 {
-  bool ok = pimSim::get()->pimBroadCast(copyType, dest, value);
+  bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
