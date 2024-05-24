@@ -13,12 +13,13 @@
 #include "../util.h"
 #include "libpimsim.h"
 
-#define BITS_PER_INT 512
+#define BITS_PER_INT 32
 
-#define NUM_SUBARRAY 32
+#define NUM_SUBARRAY 512
 #define ROW_SIZE 8192
 #define COL_SIZE 8192
-#define WORDS_PER_ROW (ROW_SIZE * COL_SIZE * NUM_SUBARRAY)
+
+uint64_t WORDS_PER_RANK = (uint64_t) 512 * (uint64_t) 8192 * (uint64_t) 8192 / (uint64_t) BITS_PER_INT;
 
 typedef uint32_t UINT32;
 
@@ -165,20 +166,6 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    PimObjId dstObj = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, srcObj1, PIM_INT32);
-    if (dstObj == -1)
-    {
-        std::cout << "Abort" << std::endl;
-        return -1;
-    }
-
-    PimObjId popCntResObj = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, srcObj1, PIM_INT32);
-    if (popCntResObj == -1)
-    {
-        std::cout << "Abort" << std::endl;
-        return -1;
-    }
-
     PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)src1.data(), srcObj1);
     if (status != PIM_OK)
     {
@@ -193,14 +180,14 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
     
-    status = pimAnd(srcObj1, srcObj2, dstObj);
+    status = pimAnd(srcObj1, srcObj2, srcObj1);
     if (status != PIM_OK)
     {
         std::cout << "Abort" << std::endl;
         return -1;
     }
 
-    status = pimPopCount(dstObj, popCntResObj);
+    status = pimPopCount(srcObj1, srcObj2);
     if (status != PIM_OK)
     {
         std::cout << "Abort" << std::endl;
@@ -208,7 +195,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     }
 
     int sum = 0;
-    status = pimRedSum(popCntResObj, &sum);
+    status = pimRedSum(srcObj2, &sum);
     if (status != PIM_OK)
     {
         std::cout << "Abort" << std::endl;
@@ -217,8 +204,6 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
 
     pimFree(srcObj1);
     pimFree(srcObj2);
-    pimFree(dstObj);
-    pimFree(popCntResObj);
 
     return sum;
 }
@@ -230,30 +215,26 @@ int run_naive(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>
     int numElements = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     cout << "number of ndoes: " << V << endl;
     cout << "numElem: " << numElements << endl;
-    assert(numElements <= WORDS_PER_ROW && "Number of vertices cannot exceed WORDS_PER_ROW");
+    cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
+    assert(numElements <= (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
     int oneCount = 0;
 
     #pragma omp parallel for reduction(+:count)
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
-                // int l = j / BITS_PER_INT;
                 oneCount++;
                 std::vector<unsigned int> src1(numElements);
                 std::vector<unsigned int> src2(numElements);
                 std::vector<unsigned int> dest(numElements);
                 // cout << "i: " << i << ", j: " << j << endl;
                 for (int k = 0; k < numElements; ++k) {
-                    // dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
                     src1[k] = bitAdjMatrix[i][k];
                     src2[k] = bitAdjMatrix[j][k];
                 } 
-                // cout << "src1: " << bitset<32>(src1[0]) << endl;
-                // cout << "src2: " << bitset<32>(src2[0]) << endl;
                 int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2, dest);
                 if(sum < 0)
                     return -1;
-                // cout << "sum: " << sum << endl;
                 //redsum
                 count += sum;
             }
@@ -268,40 +249,36 @@ int run_naive(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>
 int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
     int count = 0;
     int V = bitAdjMatrix.size();
-    // unsigned numElements = V;
-    int numElements = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
+    uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     cout << "number of ndoes: " << V << endl;
-    cout << "numElem: " << numElements << endl;
-    assert(numElements <= WORDS_PER_ROW && "Number of vertices cannot exceed WORDS_PER_ROW");
+    cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
+    cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
+    assert(wordsPerMatrixRow <=  (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
     int oneCount = 0;
-    int rowsPerRow =  WORDS_PER_ROW / numElements;
-    int rowsPerRowTmp = rowsPerRow;
-
-    #pragma omp parallel for reduction(+:count)
+    uint64_t words = 0;
+    std::vector<unsigned int> src1;
+    std::vector<unsigned int> src2;
+    std::vector<unsigned int> dest;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
-                // int l = j / BITS_PER_INT;
-                oneCount++;
-                std::vector<unsigned int> src1(WORDS_PER_ROW);
-                std::vector<unsigned int> src2(WORDS_PER_ROW);
-                std::vector<unsigned int> dest(WORDS_PER_ROW);
-                // cout << "i: " << i << ", j: " << j << endl;
-                for (int k = 0; k < numElements; ++k) {
-                    // dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
-                    src1[k] = bitAdjMatrix[i][k];
-                    src2[k] = bitAdjMatrix[j][k];
+                ++oneCount;
+                //TODO: check if we need to add timing for this
+                for (int k = 0; k < wordsPerMatrixRow; ++k) {
+                    ++words;
+                    src1.push_back(bitAdjMatrix[i][k]);
+                    src2.push_back(bitAdjMatrix[j][k]);
                 }
-                rowsPerRowTmp--; 
-                // cout << "src1: " << bitset<32>(src1[0]) << endl;
-                // cout << "src2: " << bitset<32>(src2[0]) << endl;
-                if(rowsPerRowTmp >= 0)
+                if(words < WORDS_PER_RANK / 2 && i < V - 1 && j < V - 1)
                     continue;
-                int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2, dest);
+                
+                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
                 if(sum < 0)
                     return -1;
-                // cout << "sum: " << sum << endl;
-                //redsum
+                words = 0;
+                src1.clear();
+                src2.clear();
+                dest.clear();
                 count += sum;
             }
         }
@@ -332,25 +309,13 @@ int main(int argc, char** argv) {
         vector<vector<int>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
         cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
 
-        // cout << "-----edgelist-----\n";
-        // printNestedVector(adjMatrix);
-        // cout << "-----edgelist-----\n";
-
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
-
-        //  cout << "-----bitAdjMatrix-----\n";
-        // for (const auto& row : bitAdjMatrix) {
-        //     for (UINT32 val : row) {
-        //         cout << bitset<32>(val) << " ";
-        //     }
-        //     cout << endl;
-        // }
-        // cout << "-----bitAdjMatrix-----\n";
 
         if (!createDevice(params.configFile))
             return 1;
-        //run
-        run_naive(adjMatrix, bitAdjMatrix);
+        //run simulation
+        // run_naive(adjMatrix, bitAdjMatrix);
+        run_rowmaxusage(adjMatrix, bitAdjMatrix);
 
         //stats
         pimShowStats();
