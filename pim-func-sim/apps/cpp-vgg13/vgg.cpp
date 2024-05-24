@@ -75,7 +75,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   {
     for (int j = 0; j < filterMatrix[i].size(); ++j)
     {
-      PimStatus status = pimBroadcast(filterObjects[idx], filterMatrix[i][j]);
+      PimStatus status = pimBroadCast(PIM_COPY_V, filterObjects[idx], filterMatrix[i][j]);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -420,7 +420,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  PimStatus status = pimBroadcast(dstObj, 0);
+  PimStatus status = pimBroadCast(PIM_COPY_V, dstObj, 0);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -436,7 +436,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimBroadcast(srcObj2, srcVector[i]);
+    status = pimBroadCast(PIM_COPY_V, srcObj2, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -650,28 +650,6 @@ int main(int argc, char *argv[])
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 56, 3);
   std::cout << "........ending conv3-2........\n";
 
-  // conv3-3
-  kernelMatrix.clear();
-  if (params.inputFile == nullptr)
-  {
-    kernelMatrix.resize(256);
-    for (auto &mat : kernelMatrix)
-    {
-      getMatrix(3, 3, 0, mat);
-    }
-  }
-  inputMatrix.clear();
-  inputMatrix.resize(256);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
-  {
-    addPadding(56, 56, 1, resultMatrix1[i], inputMatrix[i]);
-  }
-  resultMatrix1.clear();
-  resultMatrix1.shrink_to_fit();
-  std::cout << "........starting conv3-3........\n";
-  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 56, 3);
-  std::cout << "........starting conv3-3........\n";
-
   // pool
   resultMatrix2.clear();
   std::cout << "........starting pooling........\n";
@@ -722,28 +700,6 @@ int main(int argc, char *argv[])
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 28, 3);
   std::cout << "........ending conv4-2........\n";
 
-  // conv4-3
-  kernelMatrix.clear();
-  if (params.inputFile == nullptr)
-  {
-    kernelMatrix.resize(512);
-    for (auto &mat : kernelMatrix)
-    {
-      getMatrix(3, 3, 0, mat);
-    }
-  }
-  inputMatrix.clear();
-  inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
-  {
-    addPadding(28, 28, 1, resultMatrix1[i], inputMatrix[i]);
-  }
-  resultMatrix1.clear();
-  resultMatrix1.shrink_to_fit();
-  std::cout << "........starting conv4-3........\n";
-  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 28, 3);
-  std::cout << "........starting conv4-3........\n";
-
   // pool
   resultMatrix2.clear();
   std::cout << "........starting pooling........\n";
@@ -793,28 +749,6 @@ int main(int argc, char *argv[])
   std::cout << "........starting conv5-2........\n";
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 14, 3);
   std::cout << "........ending conv5-2........\n";
-
-  // conv5-3
-  kernelMatrix.clear();
-  if (params.inputFile == nullptr)
-  {
-    kernelMatrix.resize(512);
-    for (auto &mat : kernelMatrix)
-    {
-      getMatrix(3, 3, 0, mat);
-    }
-  }
-  inputMatrix.clear();
-  inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
-  {
-    addPadding(14, 14, 1, resultMatrix1[i], inputMatrix[i]);
-  }
-  resultMatrix1.clear();
-  resultMatrix1.shrink_to_fit();
-  std::cout << "........starting conv5-3........\n";
-  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 14, 3);
-  std::cout << "........ending conv5-3........\n";
 
   // pool
   resultMatrix2.clear();
