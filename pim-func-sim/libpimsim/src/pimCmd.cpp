@@ -414,7 +414,7 @@ pimCmdRedSumV::execute(pimDevice* device)
     }
   }
 
-  uint64_t m_numElements = objSrc.getNumElements();
+  m_numElements = objSrc.getNumElements();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
   m_totalBytes = m_numElements * bitsPerElement / 8;
   updateStats(1);
@@ -431,7 +431,7 @@ pimCmdRedSumV::updateStats(int numPass)
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
     //msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
-    msRuntime = m_numElements / 3200000; // typical 3.2 GHz CPU
+    msRuntime = static_cast<double>(m_numElements) / 3200000; // typical 3.2 GHz CPU
     break;
   default:
     ;
