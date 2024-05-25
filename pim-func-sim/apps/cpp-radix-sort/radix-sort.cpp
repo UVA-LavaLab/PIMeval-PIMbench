@@ -54,7 +54,7 @@ struct Params getInputParams(int argc, char **argv)
       exit(0);
       break;
     case 'n':
-      p.numInputValue = strtoull(optarg, NULL, 0);
+      p.arraySize = strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -77,14 +77,13 @@ struct Params getInputParams(int argc, char **argv)
 int main(int argc, char *argv[])
 {
     struct Params params = getInputParams(argc, argv);
-
     std::cout << "PIM test: Radix Sort" << std::endl;
 
     if (!createDevice(params.configFile)){
         return 1;
     }
 
-    unsigned numElements = params.numInputValue;
+    unsigned numElements = params.arraySize;
     //parameters that can be changed to explore design space
     unsigned bitsPerElement = 32;
     unsigned radix_bits = 8;
@@ -128,15 +127,13 @@ int main(int argc, char *argv[])
     std::vector<int> count_table(radix);
     
     //Assign random initial values to the input array
-    getVector(params.numInputValue, src1);
+    getVector(numElements, src1);
 
     sorted_array = src1;
 
     unsigned mask = 0x000000FF;
-    auto duration_cpu = high_resolution_clock::now() - high_resolution_clock::now();//initialize it to be 0
 
     //Outer iteration of radix sort, each iteration perform a counting sort
-    // auto start_total = high_resolution_clock::now();
     for (unsigned i = 0; i < num_passes; i++){
         std::fill(count_table.begin(), count_table.end(), 0);
 
@@ -192,22 +189,13 @@ int main(int argc, char *argv[])
         src1 = temp_array;
 
         auto stop_cpu = high_resolution_clock::now();
-        duration_cpu += (stop_cpu - start_cpu);
+        hostElapsedTime += (stop_cpu - start_cpu);
 
         //shift mask bit for next iteration
         mask = mask << radix_bits;
     }
 
-    // auto stop_total = high_resolution_clock::now();
-    // auto duration_total = duration_cast<microseconds>(stop_total - start_total);
-    hostElapsedTime = duration_cast<nanoseconds>(duration_cpu);
-    
-    // std::cout << "Total execution time = " << duration_total.count() / 1000 << "ms" << std::endl;
-    // std::cout << "CPU execution time = " << duration_cpu_total.count() / 1000 << "us" << std::endl;
-
     // !check results and print it like km
-    
-    
     pimShowStats();
 
     if (params.shouldVerify){
@@ -223,6 +211,5 @@ int main(int argc, char *argv[])
     }
 
     cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ns." << endl;
-
     return 0;
 }
