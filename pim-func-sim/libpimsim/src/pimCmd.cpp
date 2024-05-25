@@ -29,6 +29,7 @@ pimCmd::getName(PimCmdEnum cmdType)
     { PimCmdEnum::AND_V, "and.v" },
     { PimCmdEnum::OR_V, "or.v" },
     { PimCmdEnum::XOR_V, "xor.v" },
+    { PimCmdEnum::XNOR_V, "xnor.v" },
     { PimCmdEnum::GT_V, "gt.v" },
     { PimCmdEnum::LT_V, "lt.v" },
     { PimCmdEnum::EQ_V, "eq.v" },
@@ -322,6 +323,7 @@ pimCmdFunc2V::execute(pimDevice* device)
         case PimCmdEnum::AND_V: result = operand1 & operand2; break;
         case PimCmdEnum::OR_V: result = operand1 | operand2; break;
         case PimCmdEnum::XOR_V: result = operand1 ^ operand2; break;
+        case PimCmdEnum::XNOR_V: result = ~(operand1 ^ operand2); break;
         case PimCmdEnum::GT_V: result = operand1 > operand2 ? 1 : 0; break;
         case PimCmdEnum::LT_V: result = operand1 < operand2 ? 1 : 0; break;
         case PimCmdEnum::EQ_V: result = operand1 == operand2 ? 1 : 0; break;
@@ -366,6 +368,7 @@ pimCmdFunc2V::updateStats(int numPass)
     case PimCmdEnum::AND_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
     case PimCmdEnum::OR_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
     case PimCmdEnum::XOR_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
+    case PimCmdEnum::XNOR_V: msRuntime = 64 * tR + 32 * tW + 64 * tL; break;
     case PimCmdEnum::GT_V: msRuntime = 64 * tR + 32 * tW + 66 * tL; break;
     case PimCmdEnum::LT_V: msRuntime = 64 * tR + 32 * tW + 66 * tL; break;
     case PimCmdEnum::EQ_V: msRuntime = 64 * tR + 32 * tW + 66 * tL; break;
@@ -430,8 +433,9 @@ pimCmdRedSumV::updateStats(int numPass)
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    //msRuntime = pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_totalBytes);
+    // Sequentially process all elements per CPU cycle
     msRuntime = static_cast<double>(m_numElements) / 3200000; // typical 3.2 GHz CPU
+    // consider PCL
     break;
   default:
     ;
@@ -471,6 +475,7 @@ pimCmdBroadcast::execute(pimDevice* device)
     unsigned colIdx = region.getColIdx();
     unsigned numAllocCols = region.getNumAllocCols();
     unsigned rowIdx = region.getRowIdx();
+    m_maxElementsPerRegion = std::max(m_maxElementsPerRegion, numAllocCols / m_bitsPerElement);
 
     if (m_cmdType == PimCmdEnum::BROADCAST_V) {
       for (unsigned i = 0; i < numAllocCols; ++i) {
@@ -494,7 +499,7 @@ void
 pimCmdBroadcast::updateStats(int numPass)
 {
   double msRuntime = 0.0;
-  double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
+  //double tR = pimSim::get()->getParamsDram()->getNsRowRead() / 1000000.0;
   double tW = pimSim::get()->getParamsDram()->getNsRowWrite() / 1000000.0;
   double tL = pimSim::get()->getParamsDram()->getNsTCCD() / 1000000.0;
 
@@ -505,20 +510,20 @@ pimCmdBroadcast::updateStats(int numPass)
   {
     switch (m_cmdType) {
     case PimCmdEnum::BROADCAST_V:
-      msRuntime = (tW + tL) * m_bitsPerElement * numPass;
+      // For one pass: For every bit: Set SA to bit value; Write SA to row;
+      msRuntime = (tW + tL) * m_bitsPerElement;
       break;
     case PimCmdEnum::BROADCAST_H:
-      msRuntime = tW * m_numRegions + tL * m_numElements * m_bitsPerElement / 8;
+    {
+      // For one pass: For every element: 1 tCCD per byte
+      unsigned maxBytesPerRegion = m_maxElementsPerRegion * (m_bitsPerElement / 8);
+      msRuntime = tW + tL * maxBytesPerRegion; // for one pass
       break;
+    }
     default: assert(0);
     }
     break;
   }
-    // rotate within subarray
-    msRuntime = tR + tW + 3 * tL;
-    // boundary handling
-    msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
-    break;
   default:
     ;
   }
@@ -539,11 +544,18 @@ pimCmdRotateV::execute(pimDevice* device)
   pimResMgr* resMgr = device->getResMgr();
 
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  m_bitsPerElement = objSrc.getBitsPerElement();
+  m_numElements = objSrc.getNumElements();
 
+  std::unordered_map<int, int> coreIdCnt;
+  int numPass = 0;
   if (m_cmdType == PimCmdEnum::ROTATE_R_V) {
     unsigned carry = 0;
     for (const auto &srcRegion : objSrc.getRegions()) {
-      pimCore &core = device->getCore(srcRegion.getCoreId());
+      unsigned coreId = srcRegion.getCoreId();
+      coreIdCnt[coreId]++;
+      numPass = std::max(numPass, coreIdCnt[coreId]);
+      pimCore &core = device->getCore(coreId);
 
       // retrieve the values
       unsigned colIdx = srcRegion.getColIdx();
@@ -573,7 +585,10 @@ pimCmdRotateV::execute(pimDevice* device)
     unsigned carry = 0;
     for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i - 1];
-      pimCore &core = device->getCore(srcRegion.getCoreId());
+      unsigned coreId = srcRegion.getCoreId();
+      coreIdCnt[coreId]++;
+      numPass = std::max(numPass, coreIdCnt[coreId]);
+      pimCore &core = device->getCore(coreId);
 
       // retrieve the values
       unsigned colIdx = srcRegion.getColIdx();
@@ -603,7 +618,7 @@ pimCmdRotateV::execute(pimDevice* device)
   }
 
   m_numRegions = objSrc.getRegions().size();
-  updateStats(1);
+  updateStats(numPass);
   return true;
 }
 
@@ -620,8 +635,9 @@ pimCmdRotateV::updateStats(int numPass)
   switch (device) {
   case PIM_FUNCTIONAL:
   case PIM_DEVICE_BITSIMD_V:
-    // rotate within subarray
-    msRuntime = tR + tW + 3 * tL;
+    // rotate within subarray:
+    // For every bit: Read row to SA; move SA to R1; Shift R1; Move R1 to SA; Write SA to row
+    msRuntime = (tR + tW + 3 * tL) * m_bitsPerElement; // for one pass
     // boundary handling
     msRuntime += 2 * pimSim::get()->getStatsMgr()->getMsRuntimeForBytesTransfer(m_numRegions);
     break;

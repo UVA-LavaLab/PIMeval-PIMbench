@@ -68,6 +68,7 @@ extern "C" {
   PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimXnor(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
