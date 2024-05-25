@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
         }
 
         //Assuming the BitSIMD support 8 bits EQ, so CPU doesn't need to creat slice
-        auto start_cpu = high_resolution_clock::now();
+        auto start_cpu = std::chrono::high_resolution_clock::now();
         //host do prefix scan on the counting table
         for (unsigned j = 1; j < radix; j++){
             count_table[j] = count_table[j] + count_table[j-1];
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         }
         src1 = temp_array;
 
-        auto stop_cpu = high_resolution_clock::now();
+        auto stop_cpu = std::chrono::high_resolution_clock::now();
         hostElapsedTime += (stop_cpu - start_cpu);
 
         //shift mask bit for next iteration
