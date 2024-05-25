@@ -6,20 +6,18 @@
 #include <iostream>
 #include <vector>
 #include <getopt.h>
-
 #include <cstdlib>
 #include <time.h> 
 #include <algorithm>
 #include <chrono>
 using namespace std;
-using namespace std::chrono;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  uint64_t numInputValue;
+  uint64_t arraySize;
   char *configFile;
   char *inputFile;
   bool shouldVerify;
@@ -29,9 +27,9 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./radix-sort [options]"
+          "\n    Usage:  ./radix-sort [options]"
           "\n"
-          "\n    -n    number of input values (default=65536 elements)"
+          "\n    -n    array size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing the array of value to be sort (default=generates datapoints with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=true)"
@@ -41,13 +39,13 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.numInputValue = 65536;
+  p.arraySize = 65536;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = true;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:n:d:k:r:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:n:c:i:v:")) >= 0)
   {
     switch (opt)
     {
