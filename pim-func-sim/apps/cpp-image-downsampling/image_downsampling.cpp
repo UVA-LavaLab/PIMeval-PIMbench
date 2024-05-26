@@ -204,7 +204,7 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   pimFree(lr);
 }
 
-std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
+std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
 {
   // TODO: pack multiple pairs of rows into each PIM iteration
   NewImgWrapper avg_out = createNewImage(img, true);
@@ -217,42 +217,79 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
   // Seperate out horzontally adjacent pixels into vectors in CPU
   int sz = 3*avg_out.new_width;
   vector<uint32_t> upper_left;
-  upper_left.reserve(sz);
+  upper_left.reserve(pim_rows);
   vector<uint32_t> upper_right;
-  upper_right.reserve(sz);
+  upper_right.reserve(pim_rows);
   vector<uint32_t> lower_left;
-  lower_left.reserve(sz);
+  lower_left.reserve(pim_rows);
   vector<uint32_t> lower_right;
-  lower_right.reserve(sz);
+  lower_right.reserve(pim_rows);
   for (int y = 0; y < avg_out.new_height; ++y) {
-    upper_left.clear();
-    upper_right.clear();
-    lower_left.clear();
-    lower_right.clear();
+    // upper_left.clear();
+    // upper_right.clear();
+    // lower_left.clear();
+    // lower_right.clear();
     uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
     for(int x = 0; x < 6*avg_out.new_width; x += 6) {
-      upper_left.push_back((uint32_t) pixels_in_it[x]);
-      upper_left.push_back((uint32_t) pixels_in_it[x+1]);
-      upper_left.push_back((uint32_t) pixels_in_it[x+2]);
-      upper_right.push_back((uint32_t) pixels_in_it[x+3]);
-      upper_right.push_back((uint32_t) pixels_in_it[x+4]);
-      upper_right.push_back((uint32_t) pixels_in_it[x+5]);
+      for(int i=0; i<3; ++i) {
+        upper_left.push_back((uint32_t) pixels_in_it[x+i]);
+        upper_right.push_back((uint32_t) pixels_in_it[x+i+3]);
+        lower_left.push_back((uint32_t) row2_it[x+i]);
+        lower_right.push_back((uint32_t) row2_it[x+3+i]);
+        if(pim_rows == upper_left.size()) {
+          // TODO: avg rows and reset and continue
+          pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
+          pixels_out_avg_it += pim_rows;
+          upper_left.clear();
+          upper_right.clear();
+          lower_left.clear();
+          lower_right.clear();
+        }
+      }
 
-      lower_left.push_back((uint32_t) row2_it[x]);
-      lower_left.push_back((uint32_t) row2_it[x+1]);
-      lower_left.push_back((uint32_t) row2_it[x+2]);
-      lower_right.push_back((uint32_t) row2_it[x+3]);
-      lower_right.push_back((uint32_t) row2_it[x+4]);
-      lower_right.push_back((uint32_t) row2_it[x+5]);
+      // upper_left.push_back((uint32_t) pixels_in_it[x+1]);
+      // upper_left.push_back((uint32_t) pixels_in_it[x+2]);
+      
+      // upper_right.push_back((uint32_t) pixels_in_it[x+4]);
+      // upper_right.push_back((uint32_t) pixels_in_it[x+5]);
+
+      // lower_left.push_back((uint32_t) row2_it[x]);
+      // lower_left.push_back((uint32_t) row2_it[x+1]);
+      // lower_left.push_back((uint32_t) row2_it[x+2]);
+      // lower_right.push_back((uint32_t) row2_it[x+3]);
+      // lower_right.push_back((uint32_t) row2_it[x+4]);
+      // lower_right.push_back((uint32_t) row2_it[x+5]);
+      // if(upper_left.size() == pim_rows) {
+
+      // }
     }
-    pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
+    // pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
 
     // Set 0 padding to nearest 4 byte boundary as required by BMP standard [1]
-    for (int x = avg_out.new_pixel_data_width; x < avg_out.new_scanline_size; ++x) {
-      pixels_out_avg[avg_out.new_scanline_size * y + x] = 0;
+    for(int x=0; x<(avg_out.new_scanline_size - avg_out.new_pixel_data_width); ++x) {
+      upper_left.push_back(0);
+      upper_right.push_back(0);
+      lower_left.push_back(0);
+      lower_right.push_back(0);
+      if(pim_rows == upper_left.size()) {
+        // TODO: avg rows and reset and continue
+        pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
+        pixels_out_avg_it += pim_rows;
+        upper_left.clear();
+        upper_right.clear();
+        lower_left.clear();
+        lower_right.clear();
+      }
     }
+    // for (int x = avg_out.new_pixel_data_width; x < avg_out.new_scanline_size; ++x) {
+    //   pixels_out_avg[avg_out.new_scanline_size * y + x] = 0;
+    // }
     pixels_in_it += 2 * avg_out.scanline_size;
-    pixels_out_avg_it += avg_out.new_scanline_size;
+    // pixels_out_avg_it += avg_out.new_scanline_size;
+    if(upper_left.size() != 0) {
+      // TODO avg rows
+      pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
+    }
   }
 
   return avg_out.new_img;
@@ -352,6 +389,8 @@ int main(int argc, char* argv[])
 
   std::vector<uint8_t> img = read_file_bytes(params.inputFile);
 
+  int pim_rows = 8192;
+
   if(!createDevice(params.configFile)) {
     return 1;
   }
@@ -360,7 +399,11 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  vector<uint8_t> pim_averaged = avg_pim(img);
+  vector<uint8_t> pim_averaged = avg_pim(img, pim_rows);
+
+  if(params.outputFile != nullptr) {
+    write_img(pim_averaged, params.outputFile);
+  }
 
   if(params.shouldVerify) {
     vector<uint8_t> cpu_averaged = avg_cpu(img);
@@ -379,9 +422,6 @@ int main(int argc, char* argv[])
     cout << "PIM Result matches CPU result" << endl;
   }
   pimShowStats();
-  if(params.outputFile != nullptr) {
-    write_img(pim_averaged, params.outputFile);
-  }
 }
 
 // [1] N. Liesch, The bmp file format. [Online]. Available:
