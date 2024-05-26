@@ -142,23 +142,45 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
   return res;
 }
 
-void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, vector<uint8_t>& lower_left, vector<uint8_t>& lower_right, uint8_t* result)
+void printVec(vector<uint8_t> vec) {
+  for(auto& t : vec) {
+    cout << ((int)t) << ", ";
+  }
+  cout << endl;
+}
+
+void printVec(vector<uint32_t> vec) {
+  for(auto& t : vec) {
+    cout << ((int)t) << ", ";
+  }
+  cout << endl;
+}
+
+void print_pim(string name, PimObjId obj, int sz) {
+  vector<uint32_t> res;
+  res.resize(sz);
+  PimStatus result_copy_status = pimCopyDeviceToHost(PIM_COPY_V, obj, (void*)res.data());
+  cout << name << ": ";
+  printVec(res);
+}
+
+void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right, vector<uint32_t>& lower_left, vector<uint32_t>& lower_right, uint8_t* result)
 {
   int sz = upper_left.size();
 
-  PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 8, PIM_INT32);
+  PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 32, PIM_INT32);
   assert(-1 != ul);
 
-  PimObjId ur = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  PimObjId ur = pimAllocAssociated(PIM_ALLOC_V1, sz, 32, ul, PIM_INT32);
   assert(-1 != ur);
 
-  PimObjId ll = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  PimObjId ll = pimAllocAssociated(PIM_ALLOC_V1, sz, 32, ul, PIM_INT32);
   assert(-1 != ll);
 
-  PimObjId lr = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  PimObjId lr = pimAllocAssociated(PIM_ALLOC_V1, sz, 32, ul, PIM_INT32);
   assert(-1 != lr);
 
-  PimObjId divisor_4 = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  PimObjId divisor_4 = pimAllocAssociated(PIM_ALLOC_V1, sz, 32, ul, PIM_INT32);
   assert(-1 != divisor_4);
 
   PimStatus ul_status = pimCopyHostToDevice(PIM_COPY_V, upper_left.data(), ul);
@@ -176,17 +198,29 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   PimStatus divisor_4_status = pimBroadCast(PIM_COPY_V, divisor_4, 4);
   assert(PIM_OK == divisor_4_status);
 
-  PimStatus ul_div_status = pimDiv(ul, divisor_4, ul);
-  assert(PIM_OK == ul_div_status);
+  // print_pim("div4", divisor_4, sz);
 
-  PimStatus ur_div_status = pimDiv(ur, divisor_4, ur);
-  assert(PIM_OK == ur_div_status);
+  // print_pim("ul", ul, sz);
+  // print_pim("ur", ur, sz);
+  // print_pim("ll", ll, sz);
+  // print_pim("lr", lr, sz);
 
-  PimStatus ll_div_status = pimDiv(ll, divisor_4, ll);
-  assert(PIM_OK == ll_div_status);
+  // PimStatus ul_div_status = pimDiv(ul, divisor_4, ul);
+  // assert(PIM_OK == ul_div_status);
 
-  PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
-  assert(PIM_OK == lr_div_status);
+  // PimStatus ur_div_status = pimDiv(ur, divisor_4, ur);
+  // assert(PIM_OK == ur_div_status);
+
+  // PimStatus ll_div_status = pimDiv(ll, divisor_4, ll);
+  // assert(PIM_OK == ll_div_status);
+
+  // PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
+  // assert(PIM_OK == lr_div_status);
+
+  // print_pim("ul", ul, sz);
+  // print_pim("ur", ur, sz);
+  // print_pim("ll", ll, sz);
+  // print_pim("lr", lr, sz);
 
   PimStatus upper_sum_status = pimAdd(ul, ur, ur);
   assert(PIM_OK == upper_sum_status);
@@ -194,11 +228,31 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   PimStatus lower_sum_status = pimAdd(ll, lr, lr);
   assert(PIM_OK == lower_sum_status);
 
+  // print_pim("ul", ul, sz);
+  // print_pim("ur", ur, sz);
+  // print_pim("ll", ll, sz);
+  // print_pim("lr", lr, sz);
+
   PimStatus result_sum_status = pimAdd(ur, lr, lr);
   assert(PIM_OK == result_sum_status);
 
-  PimStatus result_copy_status = pimCopyDeviceToHost(PIM_COPY_V, lr, (void*)result);
+  PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
+  assert(PIM_OK == lr_div_status);
+
+  // print_pim("ul", ul, sz);
+  // print_pim("ur", ur, sz);
+  // print_pim("ll", ll, sz);
+  // print_pim("lr", lr, sz);
+
+  vector<uint32_t> tmp;
+  tmp.resize(sz);
+
+  PimStatus result_copy_status = pimCopyDeviceToHost(PIM_COPY_V, lr, (void*)tmp.data());
   assert(PIM_OK == result_copy_status);
+
+  for(int i=0; i<sz; ++i) {
+    result[i] = (uint8_t) tmp[i];
+  }
 
   pimFree(ul);
   pimFree(ur);
@@ -217,13 +271,13 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
 
   // Seperate out horzontally adjacent pixels into vectors in CPU
   int sz = 3*avg_out.new_width;
-  vector<uint8_t> upper_left;
+  vector<uint32_t> upper_left;
   upper_left.reserve(sz);
-  vector<uint8_t> upper_right;
+  vector<uint32_t> upper_right;
   upper_right.reserve(sz);
-  vector<uint8_t> lower_left;
+  vector<uint32_t> lower_left;
   lower_left.reserve(sz);
-  vector<uint8_t> lower_right;
+  vector<uint32_t> lower_right;
   lower_right.reserve(sz);
   for (int y = 0; y < avg_out.new_height; ++y) {
     upper_left.clear();
@@ -232,19 +286,19 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
     lower_right.clear();
     uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
     for(int x = 0; x < 6*avg_out.new_width; x += 6) {
-      upper_left.push_back(pixels_in_it[x]);
-      upper_left.push_back(pixels_in_it[x+1]);
-      upper_left.push_back(pixels_in_it[x+2]);
-      upper_right.push_back(pixels_in_it[x+3]);
-      upper_right.push_back(pixels_in_it[x+4]);
-      upper_right.push_back(pixels_in_it[x+5]);
+      upper_left.push_back((uint32_t) pixels_in_it[x]);
+      upper_left.push_back((uint32_t) pixels_in_it[x+1]);
+      upper_left.push_back((uint32_t) pixels_in_it[x+2]);
+      upper_right.push_back((uint32_t) pixels_in_it[x+3]);
+      upper_right.push_back((uint32_t) pixels_in_it[x+4]);
+      upper_right.push_back((uint32_t) pixels_in_it[x+5]);
 
-      lower_left.push_back(row2_it[x]);
-      lower_left.push_back(row2_it[x+1]);
-      lower_left.push_back(row2_it[x+2]);
-      lower_right.push_back(row2_it[x+3]);
-      lower_right.push_back(row2_it[x+4]);
-      lower_right.push_back(row2_it[x+5]);
+      lower_left.push_back((uint32_t) row2_it[x]);
+      lower_left.push_back((uint32_t) row2_it[x+1]);
+      lower_left.push_back((uint32_t) row2_it[x+2]);
+      lower_right.push_back((uint32_t) row2_it[x+3]);
+      lower_right.push_back((uint32_t) row2_it[x+4]);
+      lower_right.push_back((uint32_t) row2_it[x+5]);
     }
     pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
 
@@ -345,14 +399,6 @@ bool check_image(std::vector<uint8_t>& img) {
   return true;
 }
 
-template <typename T>
-void printVec(vector<T> vec) {
-  for(T& t : vec) {
-    cout << t << ", ";
-  }
-  cout << endl;
-}
-
 int main(int argc, char* argv[])
 {
 
@@ -364,6 +410,26 @@ int main(int argc, char* argv[])
   if(!createDevice(params.configFile)) {
     return 1;
   }
+
+  // vector<uint32_t> ul { 255, 0, 20, 40, 50, 100 };
+  // vector<uint32_t> ur { 70, 45, 33, 204, 12, 0 };
+  // vector<uint32_t> ll { 140, 180, 0, 255, 46, 77 };
+  // vector<uint32_t> lr { 75, 33, 89, 90, 190, 163 };
+
+  // vector<uint32_t> res;
+  // res.resize(6);
+
+  // pimAverageRows(ul, ur, ll, lr, res.data());
+
+  // vector<uint32_t> expected;
+  // for(int i=0; i<ul.size(); ++i) {
+  //   res.push_back((ul[i]>>2) + (ur[i]>>2) + (ll[i]>>2) + (lr[i]>>2));
+  // }
+
+  // printVec(res);
+  // cout << "\n";
+  // printVec(expected);
+  // return 0;
 
   if(!check_image(img)) {
     return 1;
