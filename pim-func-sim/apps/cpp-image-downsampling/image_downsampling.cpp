@@ -142,28 +142,6 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
   return res;
 }
 
-void printVec(vector<uint8_t> vec) {
-  for(auto& t : vec) {
-    cout << ((int)t) << ", ";
-  }
-  cout << endl;
-}
-
-void printVec(vector<uint32_t> vec) {
-  for(auto& t : vec) {
-    cout << ((int)t) << ", ";
-  }
-  cout << endl;
-}
-
-void print_pim(string name, PimObjId obj, int sz) {
-  vector<uint32_t> res;
-  res.resize(sz);
-  PimStatus result_copy_status = pimCopyDeviceToHost(PIM_COPY_V, obj, (void*)res.data());
-  cout << name << ": ";
-  printVec(res);
-}
-
 void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right, vector<uint32_t>& lower_left, vector<uint32_t>& lower_right, uint8_t* result)
 {
   int sz = upper_left.size();
@@ -198,51 +176,17 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   PimStatus divisor_4_status = pimBroadCast(PIM_COPY_V, divisor_4, 4);
   assert(PIM_OK == divisor_4_status);
 
-  // print_pim("div4", divisor_4, sz);
-
-  // print_pim("ul", ul, sz);
-  // print_pim("ur", ur, sz);
-  // print_pim("ll", ll, sz);
-  // print_pim("lr", lr, sz);
-
-  // PimStatus ul_div_status = pimDiv(ul, divisor_4, ul);
-  // assert(PIM_OK == ul_div_status);
-
-  // PimStatus ur_div_status = pimDiv(ur, divisor_4, ur);
-  // assert(PIM_OK == ur_div_status);
-
-  // PimStatus ll_div_status = pimDiv(ll, divisor_4, ll);
-  // assert(PIM_OK == ll_div_status);
-
-  // PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
-  // assert(PIM_OK == lr_div_status);
-
-  // print_pim("ul", ul, sz);
-  // print_pim("ur", ur, sz);
-  // print_pim("ll", ll, sz);
-  // print_pim("lr", lr, sz);
-
   PimStatus upper_sum_status = pimAdd(ul, ur, ur);
   assert(PIM_OK == upper_sum_status);
 
   PimStatus lower_sum_status = pimAdd(ll, lr, lr);
   assert(PIM_OK == lower_sum_status);
 
-  // print_pim("ul", ul, sz);
-  // print_pim("ur", ur, sz);
-  // print_pim("ll", ll, sz);
-  // print_pim("lr", lr, sz);
-
   PimStatus result_sum_status = pimAdd(ur, lr, lr);
   assert(PIM_OK == result_sum_status);
 
   PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
   assert(PIM_OK == lr_div_status);
-
-  // print_pim("ul", ul, sz);
-  // print_pim("ur", ur, sz);
-  // print_pim("ll", ll, sz);
-  // print_pim("lr", lr, sz);
 
   vector<uint32_t> tmp;
   tmp.resize(sz);
@@ -410,26 +354,6 @@ int main(int argc, char* argv[])
   if(!createDevice(params.configFile)) {
     return 1;
   }
-
-  // vector<uint32_t> ul { 255, 0, 20, 40, 50, 100 };
-  // vector<uint32_t> ur { 70, 45, 33, 204, 12, 0 };
-  // vector<uint32_t> ll { 140, 180, 0, 255, 46, 77 };
-  // vector<uint32_t> lr { 75, 33, 89, 90, 190, 163 };
-
-  // vector<uint32_t> res;
-  // res.resize(6);
-
-  // pimAverageRows(ul, ur, ll, lr, res.data());
-
-  // vector<uint32_t> expected;
-  // for(int i=0; i<ul.size(); ++i) {
-  //   res.push_back((ul[i]>>2) + (ur[i]>>2) + (ll[i]>>2) + (lr[i]>>2));
-  // }
-
-  // printVec(res);
-  // cout << "\n";
-  // printVec(expected);
-  // return 0;
 
   if(!check_image(img)) {
     return 1;
