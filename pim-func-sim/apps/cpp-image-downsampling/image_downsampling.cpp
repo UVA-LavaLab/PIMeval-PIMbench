@@ -142,99 +142,68 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
   return res;
 }
 
-void fullAdder(PimObjId A_obj, uint8_t A_offset, PimObjId B_obj,
-  uint8_t B_offset, PimObjId pix_out_obj, uint8_t output_offset,
-  PimRowReg Cin, PimRowReg Cout, bool output_enable,
-  bool cout_enable)
+void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, vector<uint8_t>& lower_left, vector<uint8_t>& lower_right, uint8_t* result)
 {
-  pimOpReadRowToSa(B_obj, B_offset);
-  pimOpMove(B_obj, PIM_RREG_SA, PIM_RREG_R1);  // Read bit of input1 into r1
-  pimOpReadRowToSa(A_obj, A_offset);
-  // A=SA, B=R1, Cin = R2
-  // Cout = R3
-  if (cout_enable) {
-    pimOpMaj(A_obj, PIM_RREG_SA, PIM_RREG_R1, Cin, Cout);
-  }
-  if (output_enable) {
-    pimOpXor(A_obj, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_SA);
-    pimOpXor(A_obj, PIM_RREG_SA, Cin, PIM_RREG_SA);
-    pimOpWriteSaToRow(pix_out_obj, output_offset);
-  }
-  // Calling with alternating Cin/Couts allows me to remove this move
-  // pimOpMove(pix_in_obj, PIM_RREG_R3, PIM_RREG_R2);
-}
+  int sz = upper_left.size();
 
-size_t pimAverageRows(uint8_t* output, uint8_t* in_row_1, size_t sz_1, uint8_t* in_row_2, size_t sz_2)
-{
-  assert(sz_1 == sz_2);
-  assert(0 == sz_1 % 6);
+  PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 8, PIM_INT32);
+  assert(-1 != ul);
 
-  int width_pix = sz_1 / 3;
+  PimObjId ur = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  assert(-1 != ur);
 
-  PimObjId pix_in_1_obj = pimAlloc(PIM_ALLOC_V1, width_pix >> 1, 48, PIM_INT64);
-  assert(-1 != pix_in_1_obj);
+  PimObjId ll = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  assert(-1 != ll);
 
-  PimObjId pix_in_2_obj = pimAllocAssociated(PIM_ALLOC_V1, width_pix >> 1, 48, pix_in_1_obj, PIM_INT64);
-  assert(-1 != pix_in_2_obj);
+  PimObjId lr = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  assert(-1 != lr);
 
-  PimObjId pix_out_obj = pimAllocAssociated(PIM_ALLOC_V1, width_pix >> 1, 24, pix_in_1_obj, PIM_INT32);
-  assert(-1 != pix_out_obj);
+  PimObjId divisor_4 = pimAllocAssociated(PIM_ALLOC_V1, sz, 8, ul, PIM_INT32);
+  assert(-1 != divisor_4);
 
-  PimStatus row_1_copy_status = pimCopyHostToDevice(PIM_COPY_V, in_row_1, pix_in_1_obj);
-  assert(PIM_OK == row_1_copy_status);
+  PimStatus ul_status = pimCopyHostToDevice(PIM_COPY_V, upper_left.data(), ul);
+  assert(PIM_OK == ul_status);
 
-  PimStatus row_2_copy_status = pimCopyHostToDevice(PIM_COPY_V, in_row_2, pix_in_2_obj);
-  assert(PIM_OK == row_2_copy_status);
+  PimStatus ur_status = pimCopyHostToDevice(PIM_COPY_V, upper_right.data(), ur);
+  assert(PIM_OK == ur_status);
 
-  for (int j = 0; j < 3; ++j) {
-    uint8_t input_offset_1 = 8 * j;
-    uint8_t input_offset_2 = 24 + input_offset_1;
-    uint8_t input_offset_3 = input_offset_1;
-    uint8_t input_offset_4 = input_offset_2;
-    uint8_t output_offset = input_offset_1;
-    PimStatus s = pimOpSet(pix_in_1_obj, PIM_RREG_R2, 0);  // Set Carry in = 0
-    assert(PIM_OK == s);
-    pimOpSet(pix_in_1_obj, PIM_RREG_R4, 0);
-    for (int i = 0; i < 8; i += 2) {
-      // Adder logic to add two bytes and produce a shifted result
-      // Optimized to minimize pim ops
-      fullAdder(pix_in_1_obj, input_offset_1 + i, pix_in_1_obj, input_offset_2 + i, pix_in_1_obj, output_offset + i, PIM_RREG_R2, PIM_RREG_R3, true, true);
-      fullAdder(pix_in_2_obj, input_offset_3 + i, pix_in_2_obj, input_offset_4 + i, pix_in_2_obj, output_offset + i, PIM_RREG_R4, PIM_RREG_R5, true, true);
+  PimStatus ll_status = pimCopyHostToDevice(PIM_COPY_V, lower_left.data(), ll);
+  assert(PIM_OK == ll_status);
 
-      fullAdder(pix_in_1_obj, input_offset_1 + i + 1, pix_in_1_obj, input_offset_2 + i + 1, pix_in_1_obj, output_offset + i + 1, PIM_RREG_R3, PIM_RREG_R2, true, true);
-      fullAdder(pix_in_2_obj, input_offset_3 + i + 1, pix_in_2_obj, input_offset_4 + i + 1, pix_in_2_obj, output_offset + i + 1, PIM_RREG_R5, PIM_RREG_R4, true, true);
-    }
+  PimStatus lr_status = pimCopyHostToDevice(PIM_COPY_V, lower_right.data(), lr);
+  assert(PIM_OK == lr_status);
 
-    // SA - used by adder
-    // R1 - used by adder
-    // R2 - Cout of first block
-    // R3 - Cin of second block
-    // R4 - Cout of first block
-    // R5 - Interemediate of second block
+  PimStatus divisor_4_status = pimBroadCast(PIM_COPY_V, divisor_4, 4);
+  assert(PIM_OK == divisor_4_status);
 
-    pimOpSet(pix_in_1_obj, PIM_RREG_R3, 0);  // Set Carry in = 0
-    for (int i = 0; i < 8; i += 2) {
-      // Adder logic to add two bytes and produce a shifted result
-      // Optimized to minimize pim ops
-      fullAdder(pix_in_1_obj, input_offset_1 + i, pix_in_2_obj, input_offset_3 + i, pix_out_obj, output_offset + i - 2, PIM_RREG_R3, PIM_RREG_R5, i > 0, true);
-      fullAdder(pix_in_1_obj, input_offset_1 + i + 1, pix_in_2_obj, input_offset_3 + i + 1, pix_out_obj, output_offset + i - 1, PIM_RREG_R5, PIM_RREG_R3, i > 0, true);
-    }
-    pimOpXor(pix_out_obj, PIM_RREG_R2, PIM_RREG_R3, PIM_RREG_SA);
-    pimOpXor(pix_out_obj, PIM_RREG_SA, PIM_RREG_R4, PIM_RREG_SA);
-    pimOpWriteSaToRow(pix_out_obj, output_offset + 6);
+  PimStatus ul_div_status = pimDiv(ul, divisor_4, ul);
+  assert(PIM_OK == ul_div_status);
 
-    pimOpMaj(pix_out_obj, PIM_RREG_R2, PIM_RREG_R3, PIM_RREG_R4, PIM_RREG_SA);
-    pimOpWriteSaToRow(pix_out_obj, output_offset + 7);
-  }
+  PimStatus ur_div_status = pimDiv(ur, divisor_4, ur);
+  assert(PIM_OK == ur_div_status);
 
-  PimStatus output_copy_status = pimCopyDeviceToHost(PIM_COPY_V, pix_out_obj, (void*)output);
-  assert(PIM_OK == output_copy_status);
+  PimStatus ll_div_status = pimDiv(ll, divisor_4, ll);
+  assert(PIM_OK == ll_div_status);
 
-  pimFree(pix_in_1_obj);
-  pimFree(pix_in_2_obj);
-  pimFree(pix_out_obj);
+  PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
+  assert(PIM_OK == lr_div_status);
 
-  return sz_1 >> 1;
+  PimStatus upper_sum_status = pimAdd(ul, ur, ur);
+  assert(PIM_OK == upper_sum_status);
+
+  PimStatus lower_sum_status = pimAdd(ll, lr, lr);
+  assert(PIM_OK == lower_sum_status);
+
+  PimStatus result_sum_status = pimAdd(ur, lr, lr);
+  assert(PIM_OK == result_sum_status);
+
+  PimStatus result_copy_status = pimCopyDeviceToHost(PIM_COPY_V, lr, (void*)result);
+  assert(PIM_OK == result_copy_status);
+
+  pimFree(ul);
+  pimFree(ur);
+  pimFree(ll);
+  pimFree(lr);
 }
 
 std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
@@ -246,8 +215,38 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
   uint8_t* pixels_out_avg_it = pixels_out_avg;
   uint8_t* pixels_in_it = pixels_in;
 
+  // Seperate out horzontally adjacent pixels into vectors in CPU
+  int sz = 3*avg_out.new_width;
+  vector<uint8_t> upper_left;
+  upper_left.reserve(sz);
+  vector<uint8_t> upper_right;
+  upper_right.reserve(sz);
+  vector<uint8_t> lower_left;
+  lower_left.reserve(sz);
+  vector<uint8_t> lower_right;
+  lower_right.reserve(sz);
   for (int y = 0; y < avg_out.new_height; ++y) {
-    pimAverageRows(pixels_out_avg_it, pixels_in_it, 2 * avg_out.new_pixel_data_width, pixels_in_it + avg_out.scanline_size, 2 * avg_out.new_pixel_data_width);
+    upper_left.clear();
+    upper_right.clear();
+    lower_left.clear();
+    lower_right.clear();
+    uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
+    for(int x = 0; x < 6*avg_out.new_width; x += 6) {
+      upper_left.push_back(pixels_in_it[x]);
+      upper_left.push_back(pixels_in_it[x+1]);
+      upper_left.push_back(pixels_in_it[x+2]);
+      upper_right.push_back(pixels_in_it[x+3]);
+      upper_right.push_back(pixels_in_it[x+4]);
+      upper_right.push_back(pixels_in_it[x+5]);
+
+      lower_left.push_back(row2_it[x]);
+      lower_left.push_back(row2_it[x+1]);
+      lower_left.push_back(row2_it[x+2]);
+      lower_right.push_back(row2_it[x+3]);
+      lower_right.push_back(row2_it[x+4]);
+      lower_right.push_back(row2_it[x+5]);
+    }
+    pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
 
     // Set 0 padding to nearest 4 byte boundary as required by BMP standard [1]
     for (int x = avg_out.new_pixel_data_width; x < avg_out.new_scanline_size; ++x) {
@@ -346,8 +345,17 @@ bool check_image(std::vector<uint8_t>& img) {
   return true;
 }
 
+template <typename T>
+void printVec(vector<T> vec) {
+  for(T& t : vec) {
+    cout << t << ", ";
+  }
+  cout << endl;
+}
+
 int main(int argc, char* argv[])
 {
+
   struct Params params = getInputParams(argc, argv);
   std::cout << "PIM test: Image Downsampling" << std::endl;
 
