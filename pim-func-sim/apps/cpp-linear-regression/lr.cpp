@@ -85,18 +85,6 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, dataSize, bitsPerElement, srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-  PimObjId dstObj = pimAllocAssociated(PIM_ALLOC_V1, dataSize, bitsPerElement, srcObj1, PIM_INT32);
-  if (dstObj == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
 
   PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)X.data(), srcObj1);
   if (status != PIM_OK)
@@ -105,21 +93,30 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)X.data(), srcObj2);
+  std::cout << "Done copying data\n";
+
+  status = pimRedSum(srcObj1, &SX);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimMul(srcObj1, srcObj2, dstObj);
+  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, dataSize, bitsPerElement, srcObj1, PIM_INT32);
+  if (srcObj2 == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  status = pimMul(srcObj1, srcObj1, srcObj2);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimRedSum(dstObj, &SXX);
+  status = pimRedSum(srcObj2, &SXX);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -133,49 +130,35 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimMul(srcObj1, srcObj2, dstObj);
+  status = pimMul(srcObj1, srcObj2, srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimRedSum(srcObj1, &SX);
+  status = pimRedSum(srcObj1, &SXY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimRedSum(dstObj, &SXY);
+  status = pimMul(srcObj2, srcObj2, srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)Y.data(), srcObj1);
+  status = pimRedSum(srcObj1, &SYY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimMul(srcObj1, srcObj2, dstObj);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimRedSum(dstObj, &SYY);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimRedSum(srcObj1, &SY);
+  status = pimRedSum(srcObj2, &SY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -184,7 +167,6 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
 
   pimFree(srcObj1);
   pimFree(srcObj2);
-  pimFree(dstObj);
 }
 
 int main(int argc, char *argv[])
@@ -206,7 +188,6 @@ int main(int argc, char *argv[])
     return 1;
 
   int SX_device = 0, SY_device = 0, SXX_device = 0, SYY_device = 0, SXY_device = 0;
-  std::vector<int> XX_device, XY_device;
 
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
   linearRegression(params.dataSize, dataPointsX, dataPointsY, SX_device, SY_device, SXX_device, SXY_device, SYY_device);
