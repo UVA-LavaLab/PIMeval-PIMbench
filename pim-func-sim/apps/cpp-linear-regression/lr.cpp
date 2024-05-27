@@ -75,6 +75,19 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+void reductionSumBitSerial(const std::vector<int> &reductionVector, int &reductionValue)
+{
+  auto start = std::chrono::high_resolution_clock::now();
+  reductionValue = 0;
+#pragma omp parallel for reduction(+ : sum)
+  for (size_t i = 0; i < reductionVector.size(); ++i)
+  {
+    reductionValue += reductionVector[i];
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  hostElapsedTime += (end - start);
+}
+
 void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::vector<int> &Y, int &SX, int &SY, int &SXX, int &SXY, int &SYY)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
@@ -95,12 +108,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
 
   std::cout << "Done copying data\n";
 
-  status = pimRedSum(srcObj1, &SX);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  reductionSumBitSerial(X, SX);
 
   PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (srcObj2 == -1)
