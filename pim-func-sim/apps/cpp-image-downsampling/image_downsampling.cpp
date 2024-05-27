@@ -173,7 +173,7 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   PimStatus lr_status = pimCopyHostToDevice(PIM_COPY_V, lower_right.data(), lr);
   assert(PIM_OK == lr_status);
 
-  PimStatus divisor_4_status = pimBroadCast(PIM_COPY_V, divisor_4, 4);
+  PimStatus divisor_4_status = pimBroadcast(divisor_4, 4);
   assert(PIM_OK == divisor_4_status);
 
   PimStatus upper_sum_status = pimAdd(ul, ur, ur);
@@ -208,6 +208,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
 {
   // TODO: pack multiple pairs of rows into each PIM iteration
   NewImgWrapper avg_out = createNewImage(img, true);
+  pim_rows = min(pim_rows, avg_out.new_height * avg_out.new_scanline_size);
   uint8_t* pixels_out_avg = (uint8_t*)avg_out.new_img.data() + avg_out.new_data_offset;
   uint8_t* pixels_in = (uint8_t*)img.data() + avg_out.data_offset;
 
