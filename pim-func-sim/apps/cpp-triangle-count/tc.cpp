@@ -97,8 +97,8 @@ struct Params getInputParams(int argc, char **argv)
 }
 
 // Function to convert edge list to adjacency matrix
-vector<vector<int>> edgeListToAdjMatrix(const vector<pair<int, int>>& edgeList, int numNodes) {
-    vector<vector<int>> adjMatrix(numNodes+1, vector<int>(numNodes+1, 0));
+vector<vector<bool>> edgeListToAdjMatrix(const vector<pair<int, int>>& edgeList, int numNodes) {
+    vector<vector<bool>> adjMatrix(numNodes+1, vector<bool>(numNodes+1, 0));
 
     for (const auto& edge : edgeList) {
         int u = edge.first;
@@ -110,17 +110,21 @@ vector<vector<int>> edgeListToAdjMatrix(const vector<pair<int, int>>& edgeList, 
 }
 
 // Function to convert standard adjacency matrix to bitwise adjacency matrix
-vector<vector<UINT32>> convertToBitwiseAdjMatrix(const vector<vector<int>>& adjMatrix) {
+vector<vector<UINT32>> convertToBitwiseAdjMatrix(const vector<vector<bool>>& adjMatrix) {
     int V = adjMatrix.size();
     int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
 
     vector<vector<UINT32>> bitAdjMatrix(V, vector<UINT32>(numInts, 0));
+    int step = V / 10; // Each 10 percent of the total iterations
 
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) {
                 bitAdjMatrix[i][j / BITS_PER_INT] |= (1 << (j % BITS_PER_INT));
             }
+        }
+        if (i % step == 0) {
+            std::cout << "convertToBitwiseAdjMatrix: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
         }
     }
 
@@ -208,7 +212,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     return sum;
 }
 
-int run_naive(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int run_naive(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
     int count = 0;
     int V = bitAdjMatrix.size();
     // unsigned numElements = V;
@@ -246,7 +250,7 @@ int run_naive(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>
     return count / 6;
 }
 
-int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
@@ -259,6 +263,8 @@ int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UI
     std::vector<unsigned int> src1;
     std::vector<unsigned int> src2;
     std::vector<unsigned int> dest;
+    int step = V / 10; // Each 10 percent of the total iterations
+
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
@@ -294,6 +300,9 @@ int run_rowmaxusage(const vector<vector<int>>& adjMatrix, const vector<vector<UI
                 dest.clear();
             }
         }
+        if (i % step == 0) {
+            std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
+        }
     }
     cout << "oneCount: " << oneCount << endl;
     cout << "bit32TriangleCount: " << count / 6 << endl;
@@ -305,8 +314,7 @@ int main(int argc, char** argv) {
     try {
         struct Params params = getInputParams(argc, argv);
         // Read edge list from JSON file
-        string filename = argv[1];
-        vector<pair<int, int>> edgeList = readEdgeList(filename);
+        vector<pair<int, int>> edgeList = readEdgeList(params.inputFile);
         
         // Determine the number of nodes
         unordered_set<int> nodes;
@@ -318,7 +326,7 @@ int main(int argc, char** argv) {
         cout << "Number of nodes: " << numNodes << endl;
 
         // Convert edge list to adjacency matrix
-        vector<vector<int>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
+        vector<vector<bool>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
         cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
 
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);

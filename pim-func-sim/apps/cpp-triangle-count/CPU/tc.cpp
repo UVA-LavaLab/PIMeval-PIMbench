@@ -38,8 +38,8 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
 }
 
 // Function to convert edge list to adjacency matrix
-vector<vector<int>> edgeListToAdjMatrix(const vector<pair<int, int>>& edgeList, int numNodes) {
-    vector<vector<int>> adjMatrix(numNodes+1, vector<int>(numNodes+1, 0));
+vector<vector<bool>> edgeListToAdjMatrix(const vector<pair<int, int>>& edgeList, int numNodes) {
+    vector<vector<bool>> adjMatrix(numNodes+1, vector<bool>(numNodes+1, 0));
 
     for (const auto& edge : edgeList) {
         int u = edge.first;
@@ -50,7 +50,7 @@ vector<vector<int>> edgeListToAdjMatrix(const vector<pair<int, int>>& edgeList, 
     return adjMatrix;
 }
 
-int countTrianglesMultiThread(const vector<vector<int>>& adjMatrix) {
+int countTrianglesMultiThread(const vector<vector<bool>>& adjMatrix) {
     int count = 0;
     int V = adjMatrix.size(); // Number of vertices
     #pragma omp parallel for reduction(+:count)
@@ -70,7 +70,7 @@ int countTrianglesMultiThread(const vector<vector<int>>& adjMatrix) {
 }
 
 // Function to count triangles in an undirected graph using the traditional method
-int countTriangles(const vector<vector<int>>& adjMatrix) {
+int countTriangles(const vector<vector<bool>>& adjMatrix) {
     int V = adjMatrix.size(); // Number of vertices
     int count = 0;
 
@@ -91,7 +91,7 @@ int countTriangles(const vector<vector<int>>& adjMatrix) {
 }
 
 // Function to count triangles using the row and column dot product method
-int bitTriangleCount(const vector<vector<int>>& adjMatrix) {
+int bitTriangleCount(const vector<vector<bool>>& adjMatrix) {
     int V = adjMatrix.size(); // Number of vertices
     int count = 0;
 
@@ -113,9 +113,10 @@ int bitTriangleCount(const vector<vector<int>>& adjMatrix) {
 }
 
 // Function to convert standard adjacency matrix to bitwise adjacency matrix
-vector<vector<UINT32>> convertToBitwiseAdjMatrix(const vector<vector<int>>& adjMatrix) {
+vector<vector<UINT32>> convertToBitwiseAdjMatrix(const vector<vector<bool>>& adjMatrix) {
     int V = adjMatrix.size();
     int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
+    int step = V / 10; // Each 10 percent of the total iterations
 
     vector<vector<UINT32>> bitAdjMatrix(V, vector<UINT32>(numInts, 0));
 
@@ -125,17 +126,20 @@ vector<vector<UINT32>> convertToBitwiseAdjMatrix(const vector<vector<int>>& adjM
                 bitAdjMatrix[i][j / BITS_PER_INT] |= (1 << (j % BITS_PER_INT));
             }
         }
+        if (i % step == 0) {
+            std::cout << "convertToBitwiseAdjMatrix: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
+        }
     }
 
     return bitAdjMatrix;
 }
 
 // Function to count triangles using bitwise AND operation
-int bit32TriangleCount(const vector<vector<int>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int bit32TriangleCount(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
     int count = 0;
     int V = bitAdjMatrix.size();
     int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
-
+    int step = V / 10; // Each 10 percent of the total iterations
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
@@ -146,6 +150,9 @@ int bit32TriangleCount(const vector<vector<int>>& adjMatrix, const vector<vector
                 }
                 count += dotProduct;
             }
+        }
+        if (i % step == 0) {
+            std::cout << "bit32TriangleCount: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
         }
     }
 
@@ -189,7 +196,7 @@ void runTests() {
 
     // Test 4: Larger graph with 2 triangles
     cout << "Test 4: Large sparse graph\n";
-    vector<vector<int>> adjMatrix4 = {
+    vector<vector<bool>> adjMatrix4 = {
         {0, 1, 1, 1, 0},
         {1, 0, 1, 0, 0},
         {1, 1, 0, 0, 0},
@@ -201,7 +208,7 @@ void runTests() {
 
     // Test 5: Large sparse graph (10 vertices, 1 triangle)
     cout << "Test 5: Large sparse graph\n";
-    vector<vector<int>> adjMatrix5 = {
+    vector<vector<bool>> adjMatrix5 = {
         {0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
         {1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
         {1, 1, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -230,28 +237,28 @@ void printAdjMatrix(const vector<vector<int>>& adjMatrix) {
     }
 }
 
-void run(const vector<vector<int>>& adjMatrix){
-    cout << "------------optimized baseline------------" << endl;
-    auto start = std::chrono::high_resolution_clock::now();
-    countTriangles(adjMatrix);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsedTime = (end - start);
-    cout << "Baseline Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+void run(const vector<vector<bool>>& adjMatrix){
+    // cout << "------------optimized baseline------------" << endl;
+    // auto start = std::chrono::high_resolution_clock::now();
+    // countTriangles(adjMatrix);
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double, std::milli> elapsedTime = (end - start);
+    // cout << "Baseline Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
     
-    cout << "------------bit32 (1b per word)------------" << endl;
-    cout << "Running optimized..." << endl;
-    start = std::chrono::high_resolution_clock::now();
-    bitTriangleCount(adjMatrix);
-    end = std::chrono::high_resolution_clock::now();
-    elapsedTime = (end - start);
-    cout << "bit32 Basline Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+    // cout << "------------bit32 (1b per word)------------" << endl;
+    // cout << "Running optimized..." << endl;
+    // start = std::chrono::high_resolution_clock::now();
+    // bitTriangleCount(adjMatrix);
+    // end = std::chrono::high_resolution_clock::now();
+    // elapsedTime = (end - start);
+    // cout << "bit32 Basline Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
 
     cout << "------------bit32 (32b per word)------------" << endl;
     vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
-    start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     bit32TriangleCount(adjMatrix, bitAdjMatrix);
-    end = std::chrono::high_resolution_clock::now();
-    elapsedTime = (end - start);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedTime = (end - start);
     cout << "bit32 Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
 
     cout << "------------MultiThreaded------------" << endl;
@@ -279,7 +286,7 @@ int main(int argc, char** argv) {
         cout << "Number of nodes: " << numNodes << endl;
 
         // Convert edge list to adjacency matrix
-        vector<vector<int>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
+        vector<vector<bool>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
         cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
 
         //run
