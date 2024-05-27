@@ -15,6 +15,8 @@
 
 using namespace std;
 
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -111,12 +113,30 @@ void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> 
     return;
   }
 
-  status = pimRedSum(srcObj1, &prod);
+  std::vector<int> dst(vectorLength);
+  status = pimCopyDeviceToHost(PIM_COPY_V, srcObj1, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
+
+  auto start = std::chrono::high_resolution_clock::now();
+  prod = 0;
+#pragma omp parallel for reduction(+ : sum)
+  for (size_t i = 0; i < vectorLength; ++i)
+  {
+    prod += dst[i];
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  hostElapsedTime += (end - start);
+
+  // status = pimRedSum(srcObj1, &prod);
+  // if (status != PIM_OK)
+  // {
+  //   std::cout << "Abort" << std::endl;
+  //   return;
+  // }
   pimFree(srcObj1);
   pimFree(srcObj2);
 }
@@ -151,12 +171,15 @@ int main(int argc, char *argv[])
     if (deviceValue != sum)
     {
       std::cout << "Wrong answer for dot product: " << deviceValue << " (expected " << sum << ")" << std::endl;
-    } else {
+    }
+    else
+    {
       std::cout << "Correct answer for dot product!" << std::endl;
     }
   }
 
   pimShowStats();
 
+  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
   return 0;
 }

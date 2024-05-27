@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
 
   int outMatDim = params.kernelDim;
   // TODO: this will not work if padding is not equal to 1

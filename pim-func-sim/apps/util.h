@@ -72,7 +72,7 @@ bool createDevice(char *configFile)
   if (configFile == nullptr)
   {
     // Total Bank = 16; Each Bank contains 32 subarrays
-    unsigned numCores = 512;
+    unsigned numCores = 4096;
     unsigned numRows = 8192;
     unsigned numCols = 8192;
     

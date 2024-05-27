@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
   // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   int numOfPIMRow = params.kernelSize * params.kernelSize;
   int numOfPIMColumn = params.row * params.column / numOfPIMRow;
