@@ -32,6 +32,9 @@ std::string
 pimUtils::pimAllocEnumToStr(PimAllocEnum allocType)
 {
   switch (allocType) {
+  case PIM_ALLOC_AUTO: return "PIM_ALLOC_AUTO";
+  case PIM_ALLOC_V: return "PIM_ALLOC_V";
+  case PIM_ALLOC_H: return "PIM_ALLOC_H";
   case PIM_ALLOC_V1: return "PIM_ALLOC_V1";
   case PIM_ALLOC_H1: return "PIM_ALLOC_H1";
   }

@@ -5,19 +5,15 @@
 #include "pimDevice.h"
 #include "pimResMgr.h"
 #include "pimSim.h"
+#include "libpimsim.h"
 #include <cstdio>
 #include <deque>
 #include <memory>
+#include <cassert>
 
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice()
-  : m_deviceType(PIM_DEVICE_NONE),
-    m_numCores(0),
-    m_numRows(0),
-    m_numCols(0),
-    m_isValid(false),
-    m_resMgr(nullptr)
 {
 }
 
@@ -28,10 +24,67 @@ pimDevice::~pimDevice()
   m_resMgr = nullptr;
 }
 
+//! @brief  If a PIM device uses vertical data layout
+bool
+pimDevice::isVLayoutDevice() const
+{
+  if (m_deviceType == PIM_FUNCTIONAL ||
+      m_deviceType == PIM_DEVICE_BITSIMD_V) {
+    return true;
+  }
+  return false;
+}
+
+//! @brief  If a PIM device uses horizontal data layout
+bool
+pimDevice::isHLayoutDevice() const
+{
+  return false;
+}
+
+//! @brief  If a PIM device uses hybrid data layout
+bool
+pimDevice::isHybridLayoutDevice() const
+{
+  return false;
+}
+
+//! @brief  If a PIM object uses vertical data layout
+bool
+pimDevice::isVLayoutObj(PimObjId objId) const
+{
+  const pimObjInfo& obj = m_resMgr->getObjInfo(objId);
+  PimAllocEnum allocType = obj.getAllocType();
+  if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
+    return true;
+  }
+  return false;
+}
+
+//! @brief  If a PIM object uses horizontal data layout
+bool
+pimDevice::isHLayoutObj(PimObjId objId) const
+{
+  const pimObjInfo& obj = m_resMgr->getObjInfo(objId);
+  PimAllocEnum allocType = obj.getAllocType();
+  if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
+    return true;
+  }
+  return false;
+}
+
+//! @brief  If a PIM object uses hybrid data layout
+bool
+pimDevice::isHybridLayoutObj(PimObjId objId) const
+{
+  return false;
+}
+
 //! @brief  Init pim device, with config file
 bool
 pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
 {
+  assert(!m_isInit);
   m_deviceType = deviceType;
   m_numCores = numCores;
   m_numRows = numRows;
@@ -49,6 +102,7 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, u
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", numCores, numRows, numCols);
 
+  m_isInit = true;
   return m_isValid;
 }
 
@@ -56,6 +110,7 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, u
 bool
 pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 {
+  assert(!m_isInit);
   if (!configFileName) {
     std::printf("PIM-Error: Null PIM device config file name\n");
     return false;
@@ -91,21 +146,46 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
+  m_isInit = true;
   return m_isValid;
+}
+
+//! @brief  Uninit pim device
+void
+pimDevice::uninit()
+{
+  m_cores.clear();
+  delete m_resMgr;
+  m_resMgr = nullptr;
+  m_deviceType = PIM_DEVICE_NONE;
+  m_numCores = 0;
+  m_numRows = 0;
+  m_numCols = 0;
+  m_isValid = false;
+  m_isInit = false;
 }
 
 //! @brief  Alloc a PIM object
 PimObjId
 pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
+  if (allocType == PIM_ALLOC_AUTO) {
+    if (isVLayoutDevice()) {
+      allocType = PIM_ALLOC_V;
+    } else if (isHLayoutDevice()) {
+      allocType = PIM_ALLOC_H;
+    } else {
+      assert(0);
+    }
+  }
   return m_resMgr->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 PimObjId
-pimDevice::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimDevice::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
-  return m_resMgr->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
+  return m_resMgr->pimAllocAssociated(bitsPerElement, ref, dataType);
 }
 
 //! @brief  Free a PIM object

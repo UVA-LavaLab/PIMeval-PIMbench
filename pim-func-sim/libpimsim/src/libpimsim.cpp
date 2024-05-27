@@ -46,9 +46,9 @@ pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements,
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
+pimAllocAssociated(unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
 {
-  return pimSim::get()->pimAllocAssociated(allocType, numElements, bitsPerElements, ref, dataType);
+  return pimSim::get()->pimAllocAssociated(bitsPerElements, ref, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -69,17 +69,33 @@ pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd)
 
 //! @brief  Copy data from main to PIM device
 PimStatus
-pimCopyHostToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimCopyHostToDevice(void* src, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimCopyMainToDevice(copyType, src, dest);
+  bool ok = pimSim::get()->pimCopyMainToDevice(src, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Copy data from PIM device to main
 PimStatus
-pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
+pimCopyDeviceToHost(PimObjId src, void* dest)
 {
-  bool ok = pimSim::get()->pimCopyDeviceToMain(copyType, src, dest);
+  bool ok = pimSim::get()->pimCopyDeviceToMain(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Copy data from main to PIM device with type
+PimStatus
+pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCopyMainToDeviceWithType(copyType, src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Copy data from PIM device to main with type
+PimStatus
+pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
+{
+  bool ok = pimSim::get()->pimCopyDeviceToMainWithType(copyType, src, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

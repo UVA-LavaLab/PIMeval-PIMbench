@@ -79,14 +79,14 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
 {
   unsigned bitsPerElement = sizeof(int) * 8;
 
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, dataSize, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, dataSize, bitsPerElement, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)X.data(), srcObj1);
+  PimStatus status = pimCopyHostToDevice((void *)X.data(), srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -102,7 +102,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, dataSize, bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -123,7 +123,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)Y.data(), srcObj2);
+  status = pimCopyHostToDevice((void *)Y.data(), srcObj2);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

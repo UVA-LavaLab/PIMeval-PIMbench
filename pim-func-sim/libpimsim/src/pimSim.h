@@ -37,12 +37,14 @@ public:
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   bool pimFree(PimObjId obj);
 
   // Data transfer
-  bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
-  bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyMainToDevice(void* src, PimObjId dest);
+  bool pimCopyDeviceToMain(PimObjId src, void* dest);
+  bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
+  bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
