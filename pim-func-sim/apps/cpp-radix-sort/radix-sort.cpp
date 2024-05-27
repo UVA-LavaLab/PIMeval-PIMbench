@@ -97,21 +97,21 @@ int main(int argc, char *argv[])
 
     //What is the difference between bitsPerElement and PIM_INT32
     for(unsigned i = 0; i < num_passes; i++){
-        src_obj[i] = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
+        src_obj[i] = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
         if (src_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
         }
     }
     for(unsigned i = 0; i < num_passes; i++){
-        compare_obj[i] = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, src_obj[i], PIM_INT32);
+        compare_obj[i] = pimAllocAssociated(bitsPerElement, src_obj[i], PIM_INT32);
         if (compare_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
         }
     }
     for(unsigned i = 0; i < num_passes; i++){
-        compare_results_obj[i] = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, src_obj[i], PIM_INT32);
+        compare_results_obj[i] = pimAllocAssociated(bitsPerElement, src_obj[i], PIM_INT32);
         if (compare_results_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
             src1_slice[j] = src1[j] & mask; //get the slices of all elements in the array
         }
 
-        PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1_slice.data(), src_obj[i]);
+        PimStatus status = pimCopyHostToDevice((void*)src1_slice.data(), src_obj[i]);
         if (status != PIM_OK) {
             std::cout << "Abort" << std::endl;
             return 1;

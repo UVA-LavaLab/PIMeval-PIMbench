@@ -51,7 +51,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   int numCols = inputMatrix[0].size();
 
   std::vector<PimObjId> pimObjectList(numRows);
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numCols, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -60,7 +60,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, numCols, bitsPerElement, pimObjectList[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -71,7 +71,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
 
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)inputMatrix[i].data(), pimObjectList[i]);
+    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -89,7 +89,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     }
   }
   outputMatrix.resize(numCols);
-  PimStatus status = pimCopyDeviceToHost(PIM_COPY_V, pimObjectList[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

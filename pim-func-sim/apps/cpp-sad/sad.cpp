@@ -25,17 +25,17 @@ int main()
   int vectorLength = 512;
   int subvectorLength = 64;
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
   if (obj1 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   if (obj2 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   if (obj3 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -61,13 +61,13 @@ int main()
     }
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
+  status = pimCopyHostToDevice((void*)src1.data(), obj1);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)replicateSrc2.data(), obj2);
+  status = pimCopyHostToDevice((void*)replicateSrc2.data(), obj2);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;

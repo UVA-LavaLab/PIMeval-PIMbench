@@ -168,11 +168,11 @@ pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerE
 
 //! @brief  Allocate a PIM object that is associated with a reference ojbect
 PimObjId
-pimSim::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
+  return m_device->pimAllocAssociated(bitsPerElement, ref, dataType);
 }
 
 // @brief  Free a PIM object
@@ -186,16 +186,36 @@ pimSim::pimFree(PimObjId obj)
 
 // @brief  Copy data from main memory to PIM device
 bool
-pimSim::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimSim::pimCopyMainToDevice(void* src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCopyMainToDevice");
+  if (!isValidDevice()) { return false; }
+  PimCopyEnum copyType = m_device->isHLayoutObj(dest) ? PIM_COPY_H : PIM_COPY_V;
+  return m_device->pimCopyMainToDevice(copyType, src, dest);
+}
+
+// @brief  Copy data from PIM device to main memory
+bool
+pimSim::pimCopyDeviceToMain(PimObjId src, void* dest)
+{
+  pimPerfMon perfMon("pimCopyDeviceToMain");
+  if (!isValidDevice()) { return false; }
+  PimCopyEnum copyType = m_device->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
+  return m_device->pimCopyDeviceToMain(copyType, src, dest);
+}
+
+// @brief  Copy data from main memory to PIM device with type
+bool
+pimSim::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
 {
   pimPerfMon perfMon("pimCopyMainToDevice");
   if (!isValidDevice()) { return false; }
   return m_device->pimCopyMainToDevice(copyType, src, dest);
 }
 
-// @brief  Copy data from PIM device to main memory
+// @brief  Copy data from PIM device to main memory with type
 bool
-pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
+pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
 {
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
