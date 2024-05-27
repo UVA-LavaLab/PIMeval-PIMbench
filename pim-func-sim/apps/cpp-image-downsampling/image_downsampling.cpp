@@ -389,7 +389,8 @@ int main(int argc, char* argv[])
 
   std::vector<uint8_t> img = read_file_bytes(params.inputFile);
 
-  int pim_rows = 8192;
+  // numCols * numCores
+  int pim_rows = 8192*4096;
 
   if(!createDevice(params.configFile)) {
     return 1;
