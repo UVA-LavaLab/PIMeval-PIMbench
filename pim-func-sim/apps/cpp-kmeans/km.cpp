@@ -281,6 +281,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     auto end = std::chrono::high_resolution_clock::now();
     hostElapsedTime += (end - start);
   }
+  
   pimFree(tempObj);
   for (int i = 0; i < resultObjectList.size(); ++i)
   {

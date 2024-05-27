@@ -29,7 +29,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./lr [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
@@ -114,22 +114,15 @@ void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> 
   }
 
   std::vector<int> dst(vectorLength);
-  status = pimCopyDeviceToHost(PIM_COPY_V, srcObj1, (void *)dst.data());
+  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
   prod = 0;
-#pragma omp parallel for reduction(+ : sum)
-  for (size_t i = 0; i < vectorLength; ++i)
-  {
-    prod += dst[i];
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  hostElapsedTime += (end - start);
+  reductionSumBitSerial(dst, prod, hostElapsedTime);
 
   // status = pimRedSum(srcObj1, &prod);
   // if (status != PIM_OK)
