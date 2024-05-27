@@ -15,6 +15,8 @@
 
 using namespace std;
 
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -29,7 +31,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./add [options]"
           "\n"
-          "\n    -l    input size (default=8M elements)"
+          "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -74,7 +76,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
+void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, int &prod)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
@@ -104,52 +106,80 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
     return;
   }
 
-  status = pimAdd(srcObj1, srcObj2, srcObj1);
+  status = pimMul(srcObj1, srcObj2, srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  dst.resize(vectorLength);
+  std::vector<int> dst(vectorLength);
   status = pimCopyDeviceToHost(PIM_COPY_V, srcObj1, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
+    return;
   }
+
+  auto start = std::chrono::high_resolution_clock::now();
+  prod = 0;
+#pragma omp parallel for reduction(+ : sum)
+  for (size_t i = 0; i < vectorLength; ++i)
+  {
+    prod += dst[i];
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  hostElapsedTime += (end - start);
+
+  // status = pimRedSum(srcObj1, &prod);
+  // if (status != PIM_OK)
+  // {
+  //   std::cout << "Abort" << std::endl;
+  //   return;
+  // }
   pimFree(srcObj1);
   pimFree(srcObj2);
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Vector length: " << params.vectorLength << "\n";
-  std::vector<int> src1, src2, dst;
+  std::vector<int> src1, src2;
   if (params.inputFile == nullptr)
   {
     getVector(params.vectorLength, src1);
     getVector(params.vectorLength, src2);
-  } else {
-    //TODO: Read from files
   }
-  if (!createDevice(params.configFile)) return 1;
-  //TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  vectorAddition(params.vectorLength, src1, src2, dst);
-  if (params.shouldVerify) {
+  else
+  {
+    // TODO: Read from files
+  }
+  if (!createDevice(params.configFile))
+    return 1;
+  // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
+  int deviceValue = 0;
+  dotProduct(params.vectorLength, src1, src2, deviceValue);
+  if (params.shouldVerify)
+  {
     // verify result
-    #pragma omp parallel for
+    int sum = 0;
     for (unsigned i = 0; i < params.vectorLength; ++i)
     {
-      int sum = src1[i] + src2[i];
-      if (dst[i] != sum)
-      {
-        std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
-      }
+      sum += src1[i] * src2[i];
+    }
+    if (deviceValue != sum)
+    {
+      std::cout << "Wrong answer for dot product: " << deviceValue << " (expected " << sum << ")" << std::endl;
+    }
+    else
+    {
+      std::cout << "Correct answer for dot product!" << std::endl;
     }
   }
 
   pimShowStats();
 
+  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
   return 0;
 }

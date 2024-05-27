@@ -43,7 +43,6 @@ public:
   // Data transfer
   bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
   bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
-  bool pimBroadCast(PimCopyEnum copyType, PimObjId src, unsigned value);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -54,6 +53,7 @@ public:
   bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimXnor(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -62,6 +62,7 @@ public:
   bool pimPopCount(PimObjId src, PimObjId dest);
   bool pimRedSum(PimObjId src, int* sum);
   bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
+  bool pimBroadcast(PimObjId dest, unsigned value);
   bool pimRotateR(PimObjId src);
   bool pimRotateL(PimObjId src);
 

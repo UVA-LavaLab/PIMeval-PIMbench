@@ -105,7 +105,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  PimStatus status = pimBroadCast(PIM_COPY_V, dstObj, 0);
+  PimStatus status = pimBroadcast(dstObj, 0);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -121,7 +121,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimBroadCast(PIM_COPY_V, srcObj2, srcVector[i]);
+    status = pimBroadcast(srcObj2, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;

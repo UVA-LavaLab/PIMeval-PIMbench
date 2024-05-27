@@ -9,15 +9,11 @@
 #include <omp.h>
 #endif
 #include <vector>
+#include <iomanip>
+#include <chrono>
 
 #include "libpimsim.h"
 using namespace std;
-
-#ifndef DATA_TYPE
-typedef int32_t data_t;
-#else
-typedef DATA_TYPE data_t;
-#endif
 
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 {
@@ -75,9 +71,11 @@ bool createDevice(char *configFile)
 {
   if (configFile == nullptr)
   {
-    unsigned numCores = 32;
+    // Total Bank = 16; Each Bank contains 32 subarrays
+    unsigned numCores = 4096;
     unsigned numRows = 8192;
-    unsigned numCols = 65536;
+    unsigned numCols = 8192;
+    
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
     if (status != PIM_OK)
     {

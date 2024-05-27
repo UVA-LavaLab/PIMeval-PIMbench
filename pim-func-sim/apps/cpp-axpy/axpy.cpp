@@ -98,7 +98,7 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
     return;
   }
 
-  status = pimBroadCast(PIM_COPY_V, obj2, A);
+  status = pimBroadcast(obj2, A);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

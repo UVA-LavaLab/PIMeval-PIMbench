@@ -5,6 +5,7 @@
 #include "pimStats.h"
 #include "pimSim.h"
 #include "pimUtils.h"
+#include <algorithm>
 
 
 //! @brief  Show PIM stats
@@ -89,6 +90,17 @@ pimStatsMgr::showCopyStats() const
   std::printf(" %30s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
   std::printf(" %30s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
   std::printf(" %30s : %llu bytes %14f ms Estimated Runtime\n", "TOTAL ---------", totalBytes, totalMsRuntime);
+}
+
+//! @brief  Get ms runtime for bytes transferred between host and device
+double
+pimStatsMgr::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
+{
+  int numCores = static_cast<int>(pimSim::get()->getNumCores());
+  int numActiveRank = std::min(numCores, 16); // Up to 16 ranks
+  double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
+  double totalMsRuntime = static_cast<double>(numBytes) / (typicalRankBW * numActiveRank * 1024 * 1024 * 1024 / 1000);
+  return totalMsRuntime;
 }
 
 //! @brief  Show PIM cmd and perf stats

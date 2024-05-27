@@ -670,7 +670,29 @@ int main(int argc, char *argv[])
   resultMatrix1.shrink_to_fit();
   std::cout << "........starting conv3-3........\n";
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 56, 3);
-  std::cout << "........starting conv3-3........\n";
+  std::cout << "........ending conv3-3........\n";
+
+  // conv3-4
+  kernelMatrix.clear();
+  if (params.inputFile == nullptr)
+  {
+    kernelMatrix.resize(256);
+    for (auto &mat : kernelMatrix)
+    {
+      getMatrix(3, 3, 0, mat);
+    }
+  }
+  inputMatrix.clear();
+  inputMatrix.resize(256);
+  for (int i = 0; i < resultMatrix1.size(); ++i)
+  {
+    addPadding(56, 56, 1, resultMatrix1[i], inputMatrix[i]);
+  }
+  resultMatrix1.clear();
+  resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv3-4........\n";
+  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 56, 3);
+  std::cout << "........ending conv3-4........\n";
 
   // pool
   resultMatrix2.clear();
@@ -744,6 +766,28 @@ int main(int argc, char *argv[])
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 28, 3);
   std::cout << "........starting conv4-3........\n";
 
+  // conv4-4
+  kernelMatrix.clear();
+  if (params.inputFile == nullptr)
+  {
+    kernelMatrix.resize(512);
+    for (auto &mat : kernelMatrix)
+    {
+      getMatrix(3, 3, 0, mat);
+    }
+  }
+  inputMatrix.clear();
+  inputMatrix.resize(512);
+  for (int i = 0; i < resultMatrix1.size(); ++i)
+  {
+    addPadding(28, 28, 1, resultMatrix1[i], inputMatrix[i]);
+  }
+  resultMatrix1.clear();
+  resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv4-4........\n";
+  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 28, 3);
+  std::cout << "........starting conv4-4........\n";
+
   // pool
   resultMatrix2.clear();
   std::cout << "........starting pooling........\n";
@@ -815,6 +859,28 @@ int main(int argc, char *argv[])
   std::cout << "........starting conv5-3........\n";
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 14, 3);
   std::cout << "........ending conv5-3........\n";
+
+  // conv5-4
+  kernelMatrix.clear();
+  if (params.inputFile == nullptr)
+  {
+    kernelMatrix.resize(512);
+    for (auto &mat : kernelMatrix)
+    {
+      getMatrix(3, 3, 0, mat);
+    }
+  }
+  inputMatrix.clear();
+  inputMatrix.resize(512);
+  for (int i = 0; i < resultMatrix1.size(); ++i)
+  {
+    addPadding(14, 14, 1, resultMatrix1[i], inputMatrix[i]);
+  }
+  resultMatrix1.clear();
+  resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv5-4........\n";
+  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1, 14, 3);
+  std::cout << "........ending conv5-4........\n";
 
   // pool
   resultMatrix2.clear();
