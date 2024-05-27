@@ -24,13 +24,16 @@ extern "C" {
 
   //! @brief  PIM allocation types
   enum PimAllocEnum {
-    PIM_ALLOC_V1 = 0,  // vertical layout, at most one region per core
-    PIM_ALLOC_H1,      // horizontal layout, at most one region per core
+    PIM_ALLOC_AUTO = 0, // Auto determine vertical or horizontal layout based on device type
+    PIM_ALLOC_V,        // V layout, multiple regions per core
+    PIM_ALLOC_H,        // H layout, multiple regions per core 
+    PIM_ALLOC_V1,       // V layout, at most 1 region per core
+    PIM_ALLOC_H1,       // H layout, at most 1 region per core
   };
 
   //! @brief  PIM data copy types
   enum PimCopyEnum {
-    PIM_COPY_V = 0,
+    PIM_COPY_V,
     PIM_COPY_H,
   };
 
@@ -51,13 +54,15 @@ extern "C" {
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   PimStatus pimFree(PimObjId obj);
   PimObjId pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd);
 
   // Data transfer
-  PimStatus pimCopyHostToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
-  PimStatus pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest);
+  PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
+  PimStatus pimCopyDeviceToHost(PimObjId src, void* dest);
+  PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
+  PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);

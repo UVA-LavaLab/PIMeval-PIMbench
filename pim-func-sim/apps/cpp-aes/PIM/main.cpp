@@ -465,7 +465,7 @@ int testRjXtime(void){
     unsigned totalElementCount = numCores * numCols;
 
     
-    PIMAuxilary* xObj = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    PIMAuxilary* xObj = new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_INT32);
     PIMAuxilary* zObj = new PIMAuxilary(xObj);
 
 
@@ -477,13 +477,13 @@ int testRjXtime(void){
     }
 
     // Copy x to the device 
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)xObj->array.data(), xObj->pimObjId);
+    status = pimCopyHostToDevice((void*)xObj->array.data(), xObj->pimObjId);
     assert(status == PIM_OK);
 
     rjXtime(xObj, zObj);
     pimShowStats();
 
-    status = pimCopyDeviceToHost(PIM_COPY_V, zObj->pimObjId, (void*)zObj->array.data());
+    status = pimCopyDeviceToHost(zObj->pimObjId, (void*)zObj->array.data());
     assert(status == PIM_OK);
 
     for (unsigned i = 0; i < totalElementCount; ++i) {
@@ -522,7 +522,7 @@ int testAesSubBytes(void) {
    
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -544,13 +544,13 @@ int testAesSubBytes(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
     for (int j = 0; j < AES_BLOCK_SIZE; j++)
     {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
     std::cout << "Flag 0" << std::endl;
@@ -572,7 +572,7 @@ int testAesSubBytes(void) {
     aesSubBytes(inputObjBuf);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -626,7 +626,7 @@ int testAesSubBytesInv(void) {
    
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -648,13 +648,13 @@ int testAesSubBytesInv(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
     for (int j = 0; j < AES_BLOCK_SIZE; j++)
     {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
     std::cout << "Flag 0" << std::endl;
@@ -676,7 +676,7 @@ int testAesSubBytesInv(void) {
     aesSubBytesInv(inputObjBuf);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -725,7 +725,7 @@ int testAesAddRoundKey(void) {
     unsigned totalElementCount = numCores * numCols;
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < 16; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -754,13 +754,13 @@ int testAesAddRoundKey(void) {
     
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -769,7 +769,7 @@ int testAesAddRoundKey(void) {
 
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -800,7 +800,7 @@ int testAesAddRoundKeyCpy(void) {
     unsigned totalElementCount = numCores * numCols;
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(16);
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < 16; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -845,17 +845,17 @@ int testAesAddRoundKeyCpy(void) {
     }
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -864,7 +864,7 @@ int testAesAddRoundKeyCpy(void) {
 
     
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -910,7 +910,7 @@ int testAesShiftRows(void) {
    
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -933,13 +933,13 @@ int testAesShiftRows(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
     for (int j = 0; j < AES_BLOCK_SIZE; j++)
     {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
     std::cout << "Flag 0: SIMD" << std::endl;
@@ -968,7 +968,7 @@ int testAesShiftRows(void) {
     aesShiftRows(inputObjBuf);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1023,7 +1023,7 @@ int testAesShiftRowsInv(void) {
    
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1044,7 +1044,7 @@ int testAesShiftRowsInv(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -1052,7 +1052,7 @@ int testAesShiftRowsInv(void) {
     aesShiftRowsInv(inputObjBuf);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1088,7 +1088,7 @@ int testAesMixColumns(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1108,13 +1108,13 @@ int testAesMixColumns(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
     for (int j = 0; j < AES_BLOCK_SIZE; j++)
     {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1124,7 +1124,7 @@ int testAesMixColumns(void) {
     aesMixColumns(inputObjBuf);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1159,7 +1159,7 @@ int testAesMixColumnsInv(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1179,13 +1179,13 @@ int testAesMixColumnsInv(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
     for (int j = 0; j < AES_BLOCK_SIZE; j++)
     {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1195,7 +1195,7 @@ int testAesMixColumnsInv(void) {
     aesMixColumnsInv(inputObjBuf);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1229,7 +1229,7 @@ int testAes256EncryptEcb(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1246,7 +1246,7 @@ int testAes256EncryptEcb(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -1266,7 +1266,7 @@ int testAes256EncryptEcb(void) {
     aes256EncryptEcb(inputObjBuf, offset);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1302,7 +1302,7 @@ int testAes256DecryptEcb(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1319,7 +1319,7 @@ int testAes256DecryptEcb(void) {
     }
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -1339,7 +1339,7 @@ int testAes256DecryptEcb(void) {
     aes256DecryptEcb(inputObjBuf, offset);
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1381,7 +1381,7 @@ int testEncryptdemo(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1414,7 +1414,7 @@ int testEncryptdemo(void) {
 
     // Copy inputObjBuf to the device 
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -1422,7 +1422,7 @@ int testEncryptdemo(void) {
     encryptdemo(key, inputObjBuf, numCalls);
 
    for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1464,7 +1464,7 @@ int testDecryptdemo(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1497,7 +1497,7 @@ int testDecryptdemo(void) {
 
     // Copy inputObjBuf to the device 
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -1505,7 +1505,7 @@ int testDecryptdemo(void) {
     decryptdemo(key, inputObjBuf, numCalls);
 
    for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1605,7 +1605,7 @@ int testDemo(void) {
 
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_V1, totalCols, bitsPerElement, PIM_INT32);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalCols, bitsPerElement, PIM_INT32);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -1632,7 +1632,7 @@ int testDemo(void) {
 
     // Copy inputObjBuf to the device 
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
     
@@ -1644,7 +1644,7 @@ int testDemo(void) {
     encryptdemo(key, inputObjBuf, numCalls);
         
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-            status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+            status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
             assert(status == PIM_OK);
         }
 
@@ -1697,7 +1697,7 @@ int testDemo(void) {
     pimShowStats();
           
     for (unsigned j = 0; j < (AES_BLOCK_SIZE * numCalls); ++j) {
-            status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
+            status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (*inputObjBuf)[j]->array.data());
             assert(status == PIM_OK);
     }
 
@@ -1745,24 +1745,24 @@ void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
 
     /* TODO: Change with the real PIM API */
     // uint8_t shifted = x << 1;
-    status = pimCopyDeviceToHost(PIM_COPY_V, xObj->pimObjId, (void*)xObj->array.data());
+    status = pimCopyDeviceToHost(xObj->pimObjId, (void*)xObj->array.data());
     assert(status == PIM_OK);
     PIMAuxilary* shiftedObj = new PIMAuxilary(xObj);
     pimShiftLeft(shiftedObj, 1); 
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)shiftedObj->array.data(), shiftedObj->pimObjId);
+    status = pimCopyHostToDevice((void*)shiftedObj->array.data(), shiftedObj->pimObjId);
     assert(status == PIM_OK);
     /* END */
 
     // uint8_t mask = x;
     PIMAuxilary* maskObj = new PIMAuxilary(xObj);
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)xObj->array.data(), maskObj->pimObjId);
+    status = pimCopyHostToDevice((void*)xObj->array.data(), maskObj->pimObjId);
     assert(status == PIM_OK);
     
     // uint8_t returnValue = 0x1b;
     for (unsigned i = 0; i < returnValueObj->numElements; ++i) {
         returnValueObj->array[i] =  0x1b;
     }
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)returnValueObj->array.data(), returnValueObj->pimObjId);
+    status = pimCopyHostToDevice((void*)returnValueObj->array.data(), returnValueObj->pimObjId);
     assert(status == PIM_OK);
 
     // uint8_t const1 = 0x80;
@@ -1770,7 +1770,7 @@ void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
     for (unsigned i = 0; i < const1Obj->numElements; ++i) {
         const1Obj->array[i] =  0x80;
     }
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)const1Obj->array.data(), const1Obj->pimObjId);
+    status = pimCopyHostToDevice((void*)const1Obj->array.data(), const1Obj->pimObjId);
     assert(status == PIM_OK);
 
     // mask = mask & const1;
@@ -1782,10 +1782,10 @@ void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
 
     /* TODO: Change with the real PIM API */
     // mask = mask >> 7;  
-    status = pimCopyDeviceToHost(PIM_COPY_V, maskObj->pimObjId, (void*)maskObj->array.data());
+    status = pimCopyDeviceToHost(maskObj->pimObjId, (void*)maskObj->array.data());
     assert(status == PIM_OK);
     pimShiftRight(maskObj, 7); 
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)maskObj->array.data(), maskObj->pimObjId);
+    status = pimCopyHostToDevice((void*)maskObj->array.data(), maskObj->pimObjId);
     assert(status == PIM_OK);
     /* END */
 
@@ -1815,7 +1815,7 @@ void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
     /* TODO: Implementation based on bit-serial look-up table */
     // Copy input buffer back to the host 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V,(*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
          assert(status == PIM_OK);
     }
 
@@ -1832,7 +1832,7 @@ void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
     
     // Copy input buffer to the device 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
     
@@ -1845,7 +1845,7 @@ void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf) {
     
     // Copy input buffer to the host 
         for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyDeviceToHost(PIM_COPY_V,(*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -1866,7 +1866,7 @@ void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf) {
 
 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
          assert(status == PIM_OK);       
     }
     /* END */
@@ -1947,7 +1947,7 @@ void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
 
     // Copy input buffer to the device 
     for (unsigned j = 0; j < 16; ++j) {
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*inputObjBuf)[j]->array.data(), (*inputObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -2185,7 +2185,7 @@ void aesMixColumnsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
     }
 
     for (int j = 0; j < 16; ++j){
-        status = pimCopyDeviceToHost(PIM_COPY_V, (*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
+        status = pimCopyDeviceToHost((*inputObjBuf)[j]->pimObjId, (void*)(*inputObjBuf)[j]->array.data());
         assert(status == PIM_OK);
     }
 
@@ -2304,9 +2304,9 @@ void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
             (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
             (*cpkObjBuf)[j]->array[i] = ctx_key[j];
         }    
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
     aesAddRoundKeyCpy(bufTObjBuf, keyObjBuf, cpkObjBuf);
@@ -2326,7 +2326,7 @@ void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
                     // (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
                     (*cpkObjBuf)[j]->array[i] = ctx_key[j];
                 }    
-                status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
+                status = pimCopyHostToDevice((void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
                 assert(status == PIM_OK);
             }
             aesAddRoundKey(bufTObjBuf, cpkObjBuf);
@@ -2340,7 +2340,7 @@ void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
             // (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
             (*cpkObjBuf)[j]->array[i] = ctx_key[j];
         }    
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
     aesAddRoundKey(bufTObjBuf, cpkObjBuf);
@@ -2358,7 +2358,7 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
     std::vector<PIMAuxilary*> *bufTObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
         (*bufTObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[j + offset]);
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + offset]->array.data(), (*bufTObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*inputObjBuf)[j + offset]->array.data(), (*bufTObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
 
@@ -2379,9 +2379,9 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
             (*keyObjBuf)[j]->array[i] = ctx_deckey[j];
             (*cpkObjBuf)[j]->array[i] = ctx_key[j];
         }    
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*keyObjBuf)[j]->array.data(), (*keyObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
+        status = pimCopyHostToDevice((void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
         assert(status == PIM_OK);
     }
         // {
@@ -2416,7 +2416,7 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
                     // (*keyObjBuf)[j]->array[i] = ctx_enckey[j];
                     (*cpkObjBuf)[j]->array[i] = ctx_key[j];
                 }    
-                status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
+                status = pimCopyHostToDevice((void*)(*cpkObjBuf)[j]->array.data(), (*cpkObjBuf)[j]->pimObjId);
                 assert(status == PIM_OK);
             }
 
