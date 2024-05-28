@@ -68,6 +68,8 @@ pimStatsMgr::showDeviceParams() const
   std::printf("PIM Params:\n");
   std::printf(" %30s : %s\n", "PIM Device Type Enum",
               pimUtils::pimDeviceEnumToStr(pimSim::get()->getDeviceType()).c_str());
+  std::printf(" %30s : %s\n", "PIM Simulation Target",
+              pimUtils::pimDeviceEnumToStr(pimSim::get()->getSimTarget()).c_str());
   std::printf(" %30s : %u\n", "Number of PIM Cores", pimSim::get()->getNumCores());
   std::printf(" %30s : %u\n", "Number of Rows per Core", pimSim::get()->getNumRows());
   std::printf(" %30s : %u\n", "Number of Columns per Core", pimSim::get()->getNumCols());
@@ -86,21 +88,10 @@ pimStatsMgr::showCopyStats() const
   uint64_t bytesCopiedMainToDevice = m_bitsCopiedMainToDevice / 8;
   uint64_t bytesCopiedDeviceToMain = m_bitsCopiedDeviceToMain / 8;
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
-  double totalMsRuntime = getMsRuntimeForBytesTransfer(totalBytes);
+  double totalMsRuntime = m_paramsPerf->getMsRuntimeForBytesTransfer(totalBytes);
   std::printf(" %30s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
   std::printf(" %30s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
   std::printf(" %30s : %llu bytes %14f ms Estimated Runtime\n", "TOTAL ---------", totalBytes, totalMsRuntime);
-}
-
-//! @brief  Get ms runtime for bytes transferred between host and device
-double
-pimStatsMgr::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
-{
-  int numCores = static_cast<int>(pimSim::get()->getNumCores());
-  int numActiveRank = std::min(numCores, 16); // Up to 16 ranks
-  double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
-  double totalMsRuntime = static_cast<double>(numBytes) / (typicalRankBW * numActiveRank * 1024 * 1024 * 1024 / 1000);
-  return totalMsRuntime;
 }
 
 //! @brief  Show PIM cmd and perf stats

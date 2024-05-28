@@ -24,67 +24,12 @@ pimDevice::~pimDevice()
   m_resMgr = nullptr;
 }
 
-//! @brief  If a PIM device uses vertical data layout
-bool
-pimDevice::isVLayoutDevice() const
-{
-  if (m_deviceType == PIM_FUNCTIONAL ||
-      m_deviceType == PIM_DEVICE_BITSIMD_V) {
-    return true;
-  }
-  return false;
-}
-
-//! @brief  If a PIM device uses horizontal data layout
-bool
-pimDevice::isHLayoutDevice() const
-{
-  return false;
-}
-
-//! @brief  If a PIM device uses hybrid data layout
-bool
-pimDevice::isHybridLayoutDevice() const
-{
-  return false;
-}
-
-//! @brief  If a PIM object uses vertical data layout
-bool
-pimDevice::isVLayoutObj(PimObjId objId) const
-{
-  const pimObjInfo& obj = m_resMgr->getObjInfo(objId);
-  PimAllocEnum allocType = obj.getAllocType();
-  if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
-    return true;
-  }
-  return false;
-}
-
-//! @brief  If a PIM object uses horizontal data layout
-bool
-pimDevice::isHLayoutObj(PimObjId objId) const
-{
-  const pimObjInfo& obj = m_resMgr->getObjInfo(objId);
-  PimAllocEnum allocType = obj.getAllocType();
-  if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
-    return true;
-  }
-  return false;
-}
-
-//! @brief  If a PIM object uses hybrid data layout
-bool
-pimDevice::isHybridLayoutObj(PimObjId objId) const
-{
-  return false;
-}
-
 //! @brief  Init pim device, with config file
 bool
 pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
 {
   assert(!m_isInit);
+  assert(deviceType != PIM_DEVICE_NONE);
   m_deviceType = deviceType;
   m_numCores = numCores;
   m_numRows = numRows;
@@ -111,6 +56,7 @@ bool
 pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 {
   assert(!m_isInit);
+  assert(deviceType != PIM_DEVICE_NONE);
   if (!configFileName) {
     std::printf("PIM-Error: Null PIM device config file name\n");
     return false;
@@ -170,9 +116,9 @@ PimObjId
 pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   if (allocType == PIM_ALLOC_AUTO) {
-    if (isVLayoutDevice()) {
+    if (pimSim::get()->getParamsPerf()->isVLayoutDevice()) {
       allocType = PIM_ALLOC_V;
-    } else if (isHLayoutDevice()) {
+    } else if (pimSim::get()->getParamsPerf()->isHLayoutDevice()) {
       allocType = PIM_ALLOC_H;
     } else {
       assert(0);
@@ -197,7 +143,23 @@ pimDevice::pimFree(PimObjId obj)
 
 //! @brief  Copy data from host to PIM
 bool
-pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimDevice::pimCopyMainToDevice(void* src, PimObjId dest)
+{
+  PimCopyEnum copyType = m_resMgr->isHLayoutObj(dest) ? PIM_COPY_H : PIM_COPY_V;
+  return pimCopyMainToDeviceWithType(copyType, src, dest);
+}
+
+//! @brief  Copy data from PIM to host
+bool
+pimDevice::pimCopyDeviceToMain(PimObjId src, void* dest)
+{
+  PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
+  return pimCopyDeviceToMainWithType(copyType, src, dest);
+}
+
+//! @brief  Copy data from host to PIM
+bool
+pimDevice::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
 {
   if (!m_resMgr->isValidObjId(dest)) {
     std::printf("PIM-Error: Invalid PIM object ID %d as copy destination\n", dest);
@@ -264,7 +226,7 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
 
 //! @brief  Copy data from PIM to host
 bool
-pimDevice::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
+pimDevice::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
 {
   if (!m_resMgr->isValidObjId(src)) {
     std::printf("PIM-Error: Invalid PIM object ID %d as copy source\n", src);

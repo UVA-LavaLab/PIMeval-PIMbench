@@ -122,6 +122,10 @@ public:
   bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }
   const pimObjInfo& getObjInfo(PimObjId objId) const { return m_objMap.at(objId); }
 
+  bool isVLayoutObj(PimObjId objId) const;
+  bool isHLayoutObj(PimObjId objId) const;
+  bool isHybridLayoutObj(PimObjId objId) const;
+
 private:
   pimRegion findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsigned numAllocCols) const;
   std::vector<PimCoreId> getCoreIdsSortedByLeastUsage() const;

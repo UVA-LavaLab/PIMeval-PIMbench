@@ -18,6 +18,9 @@ dramsim3_integ: $(LIBDIR) $(APPDIR)
 
 clean: $(LIBDIR) $(APPDIR)
 
+# Run "make PIM_SIM_TARGET=<PimDeviceEnum>" to override default simulation target
+PIM_SIM_TARGET ?= PIM_DEVICE_NONE
+
 $(LIBDIR) $(APPDIR):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET)
 

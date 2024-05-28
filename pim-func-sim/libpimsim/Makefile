@@ -43,6 +43,10 @@ ifeq ($(MAKECMDGOALS),dramsim3_integ)
 	THIRD_PARTY_LIB += $(DRAMSIM3_PATH)/build/libdramsim3.a
 endif
 
+# Run "make PIM_SIM_TARGET=<PimDeviceEnum>" to override default simulation target
+PIM_SIM_TARGET ?= PIM_DEVICE_NONE
+CXXFLAGS += -DPIM_SIM_TARGET=$(PIM_SIM_TARGET)
+
 debug: $(TARGET)
 	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
 
