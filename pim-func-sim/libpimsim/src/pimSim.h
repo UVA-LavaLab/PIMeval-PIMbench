@@ -8,6 +8,7 @@
 #include "libpimsim.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
+#include "pimParamsPerf.h"
 #include "pimStats.h"
 #include <vector>
 
@@ -27,6 +28,7 @@ public:
   bool isValidDevice(bool showMsg = true) const;
 
   PimDeviceEnum getDeviceType() const;
+  PimDeviceEnum getSimTarget() const;
   unsigned getNumCores() const;
   unsigned getNumRows() const;
   unsigned getNumCols() const;
@@ -34,6 +36,7 @@ public:
   void showStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
+  pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -97,6 +100,7 @@ private:
   // support one device for now
   pimDevice* m_device = nullptr;
   pimParamsDram* m_paramsDram = nullptr;
+  pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
 };
 

@@ -313,3 +313,34 @@ pimResMgr::getCoreIdsSortedByLeastUsage() const
   return result;
 }
 
+//! @brief  If a PIM object uses vertical data layout
+bool
+pimResMgr::isVLayoutObj(PimObjId objId) const
+{
+  const pimObjInfo& obj = getObjInfo(objId);
+  PimAllocEnum allocType = obj.getAllocType();
+  if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
+    return true;
+  }
+  return false;
+}
+
+//! @brief  If a PIM object uses horizontal data layout
+bool
+pimResMgr::isHLayoutObj(PimObjId objId) const
+{
+  const pimObjInfo& obj = getObjInfo(objId);
+  PimAllocEnum allocType = obj.getAllocType();
+  if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
+    return true;
+  }
+  return false;
+}
+
+//! @brief  If a PIM object uses hybrid data layout
+bool
+pimResMgr::isHybridLayoutObj(PimObjId objId) const
+{
+  return false;
+}
+
