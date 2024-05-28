@@ -1,4 +1,4 @@
-// Test: C++ version of vector addition
+// Test: C++ version of vector xor
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -27,7 +27,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./xor [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"

@@ -29,7 +29,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./axpy [options]"
           "\n"
-          "\n    -l    input size (default=8M elements)"
+          "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"

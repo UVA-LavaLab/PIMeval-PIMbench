@@ -35,7 +35,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./km [options]"
           "\n"
-          "\n    -n    number of points (default=65536 elements)"
+          "\n    -n    number of points (default=65536 points)"
           "\n    -d    dimension (default=2)"
           "\n    -k    centroid (default=20)"
           "\n    -r    max iteration (default=2)"
@@ -281,7 +281,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     auto end = std::chrono::high_resolution_clock::now();
     hostElapsedTime += (end - start);
   }
-  
+
   pimFree(tempObj);
   for (int i = 0; i < resultObjectList.size(); ++i)
   {
