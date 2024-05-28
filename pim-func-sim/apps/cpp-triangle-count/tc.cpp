@@ -264,7 +264,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     std::vector<unsigned int> src2;
     std::vector<unsigned int> dest;
     int step = V / 10; // Each 10 percent of the total iterations
-
+    uint16_t iterations = 0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
@@ -275,11 +275,18 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                     src1.push_back(bitAdjMatrix[i][k]);
                     src2.push_back(bitAdjMatrix[j][k]);
                 }
-                if(words < WORDS_PER_RANK / 2){
+                if((words < WORDS_PER_RANK / 2) && (words + wordsPerMatrixRow < (WORDS_PER_RANK / 2))){
                     continue;
                 }
                 cout << "words: " << words << endl;
+                iterations++;
+                cout << "-------------itr[" << iterations << "]-------------" << endl;
+                auto start = std::chrono::high_resolution_clock::now();
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsedTime = (end - start);
+                cout << "vectorAndPopCntRedSum time: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+
                 if(sum < 0)
                     return -1;
                 words = 0;
@@ -291,7 +298,13 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             //last raound
             if((i == V - 1) && (j == V - 1) && words > 0){
                 cout << "lr words: " << words << endl;
+
+                auto start = std::chrono::high_resolution_clock::now();
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsedTime = (end - start);
+                cout << "vectorAndPopCntRedSum time: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+
                 count += sum;
                 if(sum < 0)
                     return -1;
