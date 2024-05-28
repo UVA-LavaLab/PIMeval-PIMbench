@@ -201,7 +201,7 @@ struct Params getInputParams(int argc, char **argv)
 void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<std::vector<std::vector<int>>> &kernelMatrix, std::vector<std::vector<std::vector<int>>> &resultMatrix, int stride, int padding, int imageSize, int kernelSize)
 {
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
   int kernelDim = kernelMatrix.size(), inputDim = inputMatrix.size();
   int outMatDim = kernelMatrix.size();
   int outMatSize = imageSize;
@@ -353,7 +353,7 @@ void getDecomposedMatrixPool(int matrixRow, int matrixColumn, int kernelSize, in
 
 void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelSize, int stride, int imageSize, std::vector<std::vector<std::vector<int>>> &resultMatrix)
 {
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
 
   // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   int numOfPIMRow = kernelSize * kernelSize;
