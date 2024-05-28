@@ -15,11 +15,11 @@
 
 #define BITS_PER_INT 32
 
-#define NUM_SUBARRAY 512
+#define NUM_SUBARRAY 4096
 #define ROW_SIZE 8192
 #define COL_SIZE 8192
 
-uint64_t WORDS_PER_RANK = (uint64_t) 512 * (uint64_t) 8192 * (uint64_t) 8192 / (uint64_t) BITS_PER_INT;
+uint64_t WORDS_PER_RANK = (uint64_t) 4096 * (uint64_t) 8192 * (uint64_t) 8192 / (uint64_t) BITS_PER_INT;
 
 typedef uint32_t UINT32;
 
@@ -163,21 +163,21 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, srcObj1, PIM_INT32);
+    PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
     if (srcObj2 == -1)
     {
         std::cout << "Abort" << std::endl;
         return -1;
     }
 
-    PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)src1.data(), srcObj1);
+    PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
     if (status != PIM_OK)
     {
         std::cout << "Abort" << std::endl;
         return -1;
     }
 
-    status = pimCopyHostToDevice(PIM_COPY_V, (void *)src2.data(), srcObj2);
+    status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
     if (status != PIM_OK)
     {
         std::cout << "Abort" << std::endl;
@@ -298,6 +298,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             //last raound
             if((i == V - 1) && (j == V - 1) && words > 0){
                 cout << "lr words: " << words << endl;
+                cout << "oneCount: " << oneCount << endl;
 
                 auto start = std::chrono::high_resolution_clock::now();
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
