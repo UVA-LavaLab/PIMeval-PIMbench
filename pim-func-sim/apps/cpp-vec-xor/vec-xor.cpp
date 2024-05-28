@@ -1,4 +1,4 @@
-// Test: C++ version of vector addition
+// Test: C++ version of vector xor
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -27,7 +27,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./xor [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
@@ -74,7 +74,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
+void vectorXOR(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
@@ -104,7 +104,7 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
     return;
   }
 
-  status = pimAdd(srcObj1, srcObj2, srcObj1);
+  status = pimXor(srcObj1, srcObj2, srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -135,16 +135,16 @@ int main(int argc, char* argv[])
   }
   if (!createDevice(params.configFile)) return 1;
   //TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  vectorAddition(params.vectorLength, src1, src2, dst);
+  vectorXOR(params.vectorLength, src1, src2, dst);
   if (params.shouldVerify) {
     // verify result
     #pragma omp parallel for
     for (unsigned i = 0; i < params.vectorLength; ++i)
     {
-      int sum = src1[i] + src2[i];
+      int sum = src1[i] ^ src2[i];
       if (dst[i] != sum)
       {
-        std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
+        std::cout << "Wrong answer for xor: " << src1[i] << " ^ " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
       }
     }
   }

@@ -30,6 +30,7 @@ enum class PimCmdEnum {
   AND_V,
   OR_V,
   XOR_V,
+  XNOR_V,
   GT_V,
   LT_V,
   EQ_V,
@@ -150,6 +151,7 @@ protected:
   unsigned m_bitsPerElement = 0;
   unsigned m_numElements = 0;
   unsigned m_numRegions = 0;
+  unsigned m_maxElementsPerRegion = 0;
 };
 
 //! @class  pimCmdRotateV
@@ -165,6 +167,8 @@ public:
 protected:
   PimObjId m_src;
   unsigned m_numRegions = 0;
+  unsigned m_bitsPerElement = 0;
+  unsigned m_numElements = 0;
 };
 
 //! @class  pimCmdReadRowToSa

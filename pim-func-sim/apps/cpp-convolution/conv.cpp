@@ -42,7 +42,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
 
   unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numRequiredPIMCol, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -51,7 +51,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   filterObjects.push_back(obj1);
   for (int i = 1; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, numRequiredPIMCol, bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -77,7 +77,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   std::vector<PimObjId> matrixObjects;
   for (int i = 0; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, inputMatrix[i].size(), bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -88,7 +88,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
 
   for (int i = 0; i < inputMatrix.size(); i++)
   {
-    PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)inputMatrix[i].data(), matrixObjects[i]);
+    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -117,7 +117,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   }
   outputMatrix.resize(numRequiredPIMCol);
 
-  PimStatus status = pimCopyDeviceToHost(PIM_COPY_V, filterObjects[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(filterObjects[0], outputMatrix.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
 
   int outMatDim = params.kernelDim;
   // TODO: this will not work if padding is not equal to 1

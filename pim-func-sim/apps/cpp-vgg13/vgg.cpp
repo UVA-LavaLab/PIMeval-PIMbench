@@ -51,7 +51,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numRequiredPIMCol, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -61,7 +61,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
 
   for (int i = 1; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, numRequiredPIMCol, bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -87,7 +87,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   std::vector<PimObjId> matrixObjects;
   for (int i = 0; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, inputMatrix[i].size(), bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -98,7 +98,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
 
   for (int i = 0; i < inputMatrix.size(); i++)
   {
-    PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)inputMatrix[i].data(), matrixObjects[i]);
+    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -127,7 +127,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   }
   outputMatrix.resize(numRequiredPIMCol);
 
-  PimStatus status = pimCopyDeviceToHost(PIM_COPY_V, filterObjects[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(filterObjects[0], outputMatrix.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -201,7 +201,7 @@ struct Params getInputParams(int argc, char **argv)
 void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<std::vector<std::vector<int>>> &kernelMatrix, std::vector<std::vector<std::vector<int>>> &resultMatrix, int stride, int padding, int imageSize, int kernelSize)
 {
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
   int kernelDim = kernelMatrix.size(), inputDim = inputMatrix.size();
   int outMatDim = kernelMatrix.size();
   int outMatSize = imageSize;
@@ -276,7 +276,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   int numCols = inputMatrix[0].size();
 
   std::vector<PimObjId> pimObjectList(numRows);
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numCols, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -285,7 +285,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, numCols, bitsPerElement, pimObjectList[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -296,7 +296,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
 
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)inputMatrix[i].data(), pimObjectList[i]);
+    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -314,7 +314,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     }
   }
   outputMatrix.resize(numCols);
-  PimStatus status = pimCopyDeviceToHost(PIM_COPY_V, pimObjectList[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -353,7 +353,7 @@ void getDecomposedMatrixPool(int matrixRow, int matrixColumn, int kernelSize, in
 
 void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelSize, int stride, int imageSize, std::vector<std::vector<std::vector<int>>> &resultMatrix)
 {
-  unsigned numCols = 8192, numOfCore = 512;
+  unsigned numCols = 8192, numOfCore = 4096;
 
   // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
   int numOfPIMRow = kernelSize * kernelSize;
@@ -400,20 +400,20 @@ void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelSiz
 void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, row, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, row, bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimObjId dstObj = pimAllocAssociated(PIM_ALLOC_V1, row, bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (dstObj == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -429,7 +429,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 
   for (int i = 0; i < col; ++i)
   {
-    status = pimCopyHostToDevice(PIM_COPY_V, (void *)srcMatrix[i].data(), srcObj1);
+    status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -459,7 +459,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   }
 
   dst.resize(row);
-  status = pimCopyDeviceToHost(PIM_COPY_V, dstObj, (void *)dst.data());
+  status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

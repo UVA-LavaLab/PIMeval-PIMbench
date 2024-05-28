@@ -29,7 +29,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./axpy [options]"
           "\n"
-          "\n    -l    input size (default=8M elements)"
+          "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -77,21 +77,21 @@ struct Params getInputParams(int argc, char **argv)
 void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<int> &Y, int A, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)X.data(), obj1);
+  PimStatus status = pimCopyHostToDevice((void *)X.data(), obj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -112,7 +112,7 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
     return;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)Y.data(), obj2);
+  status = pimCopyHostToDevice((void *)Y.data(), obj2);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -127,7 +127,7 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
   }
 
   dst.resize(vectorLength);
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj2, (void *)dst.data());
+  status = pimCopyDeviceToHost(obj2, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

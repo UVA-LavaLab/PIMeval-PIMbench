@@ -5,7 +5,9 @@
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimParamsDram.h"
+#include "pimParamsPerf.h"
 #include "pimStats.h"
+#include "pimUtils.h"
 #include <cstdio>
 #include <memory>
 
@@ -38,7 +40,8 @@ pimSim::destroy()
 pimSim::pimSim()
 {
   m_paramsDram = new pimParamsDram();
-  m_statsMgr = new pimStatsMgr(m_paramsDram);
+  m_paramsPerf = new pimParamsPerf(m_paramsDram);
+  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
 }
 
 //! @brief  pimSim dtor
@@ -46,6 +49,7 @@ pimSim::~pimSim()
 {
   delete m_statsMgr;
   delete m_paramsDram;
+  delete m_paramsPerf;
 }
 
 //! @brief  Create a PIM device
@@ -64,6 +68,10 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRo
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
+  m_paramsPerf->setDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
   return true;
 }
 
@@ -83,6 +91,10 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
+  m_paramsPerf->setDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
   return true;
 }
 
@@ -96,6 +108,7 @@ pimSim::deleteDevice()
   }
   delete m_device;
   m_device = nullptr;
+  m_paramsPerf->setDevice(PIM_DEVICE_NONE);
   return true;
 }
 
@@ -114,10 +127,14 @@ pimSim::isValidDevice(bool showMsg) const
 PimDeviceEnum
 pimSim::getDeviceType() const
 {
-  if (m_device && m_device->isValid()) {
-    return m_device->getDeviceType();
-  }
-  return PIM_DEVICE_NONE;
+  return m_paramsPerf->getCurDevice();
+}
+
+//! @brief  Get simulation target device
+PimDeviceEnum
+pimSim::getSimTarget() const
+{
+  return m_paramsPerf->getSimTarget();
 }
 
 //! @brief  Get number of PIM cores
@@ -168,11 +185,11 @@ pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerE
 
 //! @brief  Allocate a PIM object that is associated with a reference ojbect
 PimObjId
-pimSim::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
+  return m_device->pimAllocAssociated(bitsPerElement, ref, dataType);
 }
 
 // @brief  Free a PIM object
@@ -186,20 +203,38 @@ pimSim::pimFree(PimObjId obj)
 
 // @brief  Copy data from main memory to PIM device
 bool
-pimSim::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimSim::pimCopyMainToDevice(void* src, PimObjId dest)
 {
   pimPerfMon perfMon("pimCopyMainToDevice");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyMainToDevice(copyType, src, dest);
+  return m_device->pimCopyMainToDevice(src, dest);
 }
 
 // @brief  Copy data from PIM device to main memory
 bool
-pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
+pimSim::pimCopyDeviceToMain(PimObjId src, void* dest)
 {
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyDeviceToMain(copyType, src, dest);
+  return m_device->pimCopyDeviceToMain(src, dest);
+}
+
+// @brief  Copy data from main memory to PIM device with type
+bool
+pimSim::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCopyMainToDevice");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyMainToDeviceWithType(copyType, src, dest);
+}
+
+// @brief  Copy data from PIM device to main memory with type
+bool
+pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
+{
+  pimPerfMon perfMon("pimCopyDeviceToMain");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyDeviceToMainWithType(copyType, src, dest);
 }
 
 // @brief  Load vector with a scalar value
@@ -290,6 +325,16 @@ pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
   pimPerfMon perfMon("pimXor");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::XOR_V, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: xnor
+bool
+pimSim::pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  pimPerfMon perfMon("pimXnor");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::XNOR_V, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 

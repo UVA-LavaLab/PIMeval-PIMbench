@@ -1,4 +1,4 @@
-// Test: C++ version of vector addition
+// Test: C++ version of vector popcount
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -27,7 +27,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./xor [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
@@ -74,37 +74,24 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
+void vectorPopCount(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
-  if (srcObj1 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
+  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  if (srcObj == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
+  PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimAdd(srcObj1, srcObj2, srcObj1);
+  status = pimPopCount(srcObj, srcObj);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -112,39 +99,37 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
   }
 
   dst.resize(vectorLength);
-  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
+  status = pimCopyDeviceToHost(srcObj, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
   }
-  pimFree(srcObj1);
-  pimFree(srcObj2);
+  pimFree(srcObj);
 }
 
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Vector length: " << params.vectorLength << "\n";
-  std::vector<int> src1, src2, dst;
+  std::vector<int> src1, dst;
   if (params.inputFile == nullptr)
   {
     getVector(params.vectorLength, src1);
-    getVector(params.vectorLength, src2);
   } else {
     //TODO: Read from files
   }
   if (!createDevice(params.configFile)) return 1;
   //TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  vectorAddition(params.vectorLength, src1, src2, dst);
+  vectorPopCount(params.vectorLength, src1, dst);
   if (params.shouldVerify) {
     // verify result
     #pragma omp parallel for
     for (unsigned i = 0; i < params.vectorLength; ++i)
     {
-      int sum = src1[i] + src2[i];
+      int sum = __builtin_popcount(src1[i]);
       if (dst[i] != sum)
       {
-        std::cout << "Wrong answer for addition: " << src1[i] << " + " << src2[i] << " = " << dst[i] << " (expected " << sum << ")" << std::endl;
+        std::cout << "Wrong answer for pop count: " << dst[i] << " (expected " << sum << ")" << std::endl;
       }
     }
   }

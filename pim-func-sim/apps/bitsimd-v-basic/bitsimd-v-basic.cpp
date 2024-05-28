@@ -30,11 +30,11 @@ bool testMicroOps()
 
   PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj2 != -1);
-  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj3 != -1);
-  PimObjId obj4 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj4 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj4 != -1);
 
   // assign some initial values
@@ -44,11 +44,11 @@ bool testMicroOps()
     src3[i] = i * 3;
   }
 
-  PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
+  PimStatus status = pimCopyHostToDevice((void*)src1.data(), obj1);
   assert(status == PIM_OK);
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src2.data(), obj2);
+  status = pimCopyHostToDevice((void*)src2.data(), obj2);
   assert(status == PIM_OK);
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src3.data(), obj3);
+  status = pimCopyHostToDevice((void*)src3.data(), obj3);
   assert(status == PIM_OK);
 
   // row read/write
@@ -56,7 +56,7 @@ bool testMicroOps()
   assert(status == PIM_OK);
   status = pimOpWriteSaToRow(obj4, 0);
   assert(status == PIM_OK);
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 0; i < numElements; ++i) {
     if ((dest[i] & 1) != (src1[i] & 1)) {
@@ -74,7 +74,7 @@ bool testMicroOps()
   assert(status == PIM_OK);
   status = pimOpWriteSaToRow(obj4, 1);
   assert(status == PIM_OK);
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 0; i < numElements; ++i) {
     if ((dest[i] & 1) != 0 || (dest[i] & 2) == 0) {
@@ -94,7 +94,7 @@ bool testMicroOps()
   assert(status == PIM_OK);
   status = pimOpWriteSaToRow(obj4, 0);
   assert(status == PIM_OK);
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 0; i < numElements; ++i) {
     if ((dest[i] & 1) != (src1[i] & 1)) {
@@ -120,7 +120,7 @@ bool testMicroOps()
   assert(status == PIM_OK);
   status = pimOpWriteSaToRow(obj4, 1);
   assert(status == PIM_OK);
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 0; i < numElements; ++i) {
     if (static_cast<bool>(dest[i] & 2) != static_cast<bool>(src2[i] & 2)) {
@@ -166,7 +166,7 @@ bool testMicroOps()
   assert(status == PIM_OK);
   status = pimOpWriteSaToRow(obj4, 8);
   assert(status == PIM_OK);
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 0; i < numElements; ++i) {
     bool val1 = static_cast<bool>(src1[i] & 1);
@@ -223,7 +223,7 @@ bool testMicroOps()
     status = pimOpWriteSaToRow(obj4, i);
     assert(status == PIM_OK);
   }
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 1; i < numElements; ++i) {
     if (dest[i] != src1[i - 1]) {
@@ -249,7 +249,7 @@ bool testMicroOps()
     status = pimOpWriteSaToRow(obj4, i);
     assert(status == PIM_OK);
   }
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj4, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj4, (void*)dest.data());
   assert(status == PIM_OK);
   for (unsigned i = 1; i < numElements; ++i) {
     if (dest[i - 1] != src1[i]) {

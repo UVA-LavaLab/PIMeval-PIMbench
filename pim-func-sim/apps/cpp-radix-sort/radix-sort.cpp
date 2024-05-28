@@ -2,33 +2,89 @@
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
+#include "../util.h"
 #include <iostream>
 #include <vector>
-
+#include <getopt.h>
 #include <cstdlib>
 #include <time.h> 
-#include <limits.h>
 #include <algorithm>
 #include <chrono>
 using namespace std;
-using namespace std::chrono;
 
-int main()
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
+// Params ---------------------------------------------------------------------
+typedef struct Params
 {
-    int SCALE = 1;
+  uint64_t arraySize;
+  char *configFile;
+  char *inputFile;
+  bool shouldVerify;
+} Params;
+
+
+void usage()
+{
+  fprintf(stderr,
+          "\n    Usage:  ./radix-sort [options]"
+          "\n"
+          "\n    -n    array size (default=65536 elements)"
+          "\n    -c    dramsim config file"
+          "\n    -i    input file containing the array of value to be sort (default=generates datapoints with random numbers)"
+          "\n    -v    t = verifies PIM output with host output. (default=true)"
+          "\n");
+}
+
+struct Params getInputParams(int argc, char **argv)
+{
+  struct Params p;
+  p.arraySize = 65536;
+  p.configFile = nullptr;
+  p.inputFile = nullptr;
+  p.shouldVerify = true;
+
+  int opt;
+  while ((opt = getopt(argc, argv, "h:n:c:i:v:")) >= 0)
+  {
+    switch (opt)
+    {
+    case 'h':
+      usage();
+      exit(0);
+      break;
+    case 'n':
+      p.arraySize = strtoull(optarg, NULL, 0);
+      break;
+    case 'c':
+      p.configFile = optarg;
+      break;
+    case 'i':
+      p.inputFile = optarg;
+      break;
+    case 'v':
+      p.shouldVerify = (*optarg == 't') ? true : false;
+      break;
+    default:
+      fprintf(stderr, "\nUnrecognized option!\n");
+      usage();
+      exit(0);
+    }
+  }
+  return p;
+}
+
+int main(int argc, char *argv[])
+{
+    struct Params params = getInputParams(argc, argv);
     std::cout << "PIM test: Radix Sort" << std::endl;
 
-    unsigned numCores = 8;  //make sure to select the correct number
-    unsigned numRows = 128; //make sure this is possible
-    unsigned numCols = 256 * SCALE;
-
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
+    if (!createDevice(params.configFile)){
         return 1;
     }
 
-    unsigned numElements = 512 * SCALE;
+    unsigned numElements = params.arraySize;
+    //parameters that can be changed to explore design space
     unsigned bitsPerElement = 32;
     unsigned radix_bits = 8;
     unsigned num_passes = bitsPerElement / radix_bits;
@@ -41,22 +97,21 @@ int main()
 
     //What is the difference between bitsPerElement and PIM_INT32
     for(unsigned i = 0; i < num_passes; i++){
-        src_obj[i] = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
+        src_obj[i] = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
         if (src_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
         }
     }
-    //How does the association affect the computation?
     for(unsigned i = 0; i < num_passes; i++){
-        compare_obj[i] = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, src_obj[i], PIM_INT32);
+        compare_obj[i] = pimAllocAssociated(bitsPerElement, src_obj[i], PIM_INT32);
         if (compare_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
         }
     }
     for(unsigned i = 0; i < num_passes; i++){
-        compare_results_obj[i] = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, src_obj[i], PIM_INT32);
+        compare_results_obj[i] = pimAllocAssociated(bitsPerElement, src_obj[i], PIM_INT32);
         if (compare_results_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
@@ -64,25 +119,21 @@ int main()
     }
 
     //vectore for host use
-    std::vector<unsigned> src1(numElements);
-    std::vector<unsigned> dest(numElements);
+    std::vector<int> src1(numElements);
+    std::vector<int> dest(numElements);
     //array used to check result
-    std::vector<unsigned> sorted_array(numElements);
+    std::vector<int> sorted_array(numElements);
     //counting table in host
     std::vector<int> count_table(radix);
     
-    srand((unsigned)time(NULL));
     //Assign random initial values to the input array
-    for (unsigned i = 0; i < numElements; ++i) {
-        src1[i] = rand() % UINT_MAX;
-    }
+    getVector(numElements, src1);
+
     sorted_array = src1;
 
     unsigned mask = 0x000000FF;
-    // auto duration_cpu = high_resolution_clock::now() - high_resolution_clock::now();//initialize it to be 0
 
     //Outer iteration of radix sort, each iteration perform a counting sort
-    // auto start_total = high_resolution_clock::now();
     for (unsigned i = 0; i < num_passes; i++){
         std::fill(count_table.begin(), count_table.end(), 0);
 
@@ -92,7 +143,7 @@ int main()
             src1_slice[j] = src1[j] & mask; //get the slices of all elements in the array
         }
 
-        status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1_slice.data(), src_obj[i]);
+        PimStatus status = pimCopyHostToDevice((void*)src1_slice.data(), src_obj[i]);
         if (status != PIM_OK) {
             std::cout << "Abort" << std::endl;
             return 1;
@@ -121,14 +172,14 @@ int main()
         }
 
         //Assuming the BitSIMD support 8 bits EQ, so CPU doesn't need to creat slice
-        // auto start_cpu = high_resolution_clock::now();
+        auto start_cpu = std::chrono::high_resolution_clock::now();
         //host do prefix scan on the counting table
         for (unsigned j = 1; j < radix; j++){
             count_table[j] = count_table[j] + count_table[j-1];
         }
 
         //host perform reording on temp_array and copy it to src1
-        std::vector<unsigned> temp_array(numElements);
+        std::vector<int> temp_array(numElements);
 
         for(int j = (int)(numElements - 1); j >= 0; j--){
             unsigned element_num = (src1[j] & mask) >> (i * radix_bits);
@@ -136,30 +187,29 @@ int main()
             count_table[element_num]--;
         }
         src1 = temp_array;
-        // auto stop_cpu = high_resolution_clock::now();
-        // duration_cpu += (stop_cpu - start_cpu);
+
+        auto stop_cpu = std::chrono::high_resolution_clock::now();
+        hostElapsedTime += (stop_cpu - start_cpu);
+
         //shift mask bit for next iteration
         mask = mask << radix_bits;
     }
 
-    // auto stop_total = high_resolution_clock::now();
-    // auto duration_total = duration_cast<microseconds>(stop_total - start_total);
-    // auto duration_cpu_total = duration_cast<nanoseconds>(duration_cpu);
-    
-    // std::cout << "Total execution time = " << duration_total.count() / 1000 << "ms" << std::endl;
-    // std::cout << "CPU execution time = " << duration_cpu_total.count() / 1000 << "us" << std::endl;
-
-    // check results
-    bool ok = true;
-    std::sort(sorted_array.begin(), sorted_array.end());
-    if(sorted_array != src1){
-        std::cout << "Wrong answer!" << std::endl;
-        ok = false;
-    }
+    // !check results and print it like km
     pimShowStats();
-    if (ok) {
-        std::cout << "All correct!" << std::endl;
+
+    if (params.shouldVerify){
+        bool ok = true;
+        std::sort(sorted_array.begin(), sorted_array.end());
+        if(sorted_array != src1){
+            std::cout << "Wrong answer!" << std::endl;
+            ok = false;
+        }
+        if (ok) {
+            std::cout << "All correct!" << std::endl;
+        }
     }
 
+    cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ns." << endl;
     return 0;
 }
