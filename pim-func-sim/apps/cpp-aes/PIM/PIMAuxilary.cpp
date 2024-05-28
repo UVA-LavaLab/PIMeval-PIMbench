@@ -103,40 +103,17 @@ void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
 
 void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
     PimStatus status; 
-    // status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
-    // status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
-    // for (size_t i = 0; i < dst->array.size(); i++)
-    // {
-    //     dst->array[i] = (src1->array[i] ^ src2->array[i]) % 256;
-    // }
-    // status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
-    // assert(status == PIM_OK);
-    // int PimObjId = -1;
-    std::cout << "[DEBUG] src1->pimObjId: " << src1->pimObjId << std::endl;
-    std::cout << "[DEBUG] src2->pimObjId: " << src2->pimObjId << std::endl;
-    std::cout << "[DEBUG] dst->pimObjId: " << dst->pimObjId << std::endl;
-    
-    // Debug
     status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
     status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
-    for (size_t i = 0; i < 2; i++) {
-        std::cout << "[DEBUG] src1->array[i] = " << src1->array[i] << std::endl;
-
+    for (size_t i = 0; i < dst->array.size(); i++)
+    {
+        dst->array[i] = (src1->array[i] ^ src2->array[i]) % 256;
     }
+    status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
+    assert(status == PIM_OK);
+    int PimObjId = -1;
 
-    for (size_t i = 0; i < 2; i++) {
-        std::cout << "[DEBUG] src2->array[i] = " << src2->array[i] << std::endl;
-
-    }
-
-
-    status = pimXor(src1->pimObjId, src2->pimObjId, dst->pimObjId); // TODO: Debug Xor
-
-    status = pimCopyDeviceToHost(PIM_COPY_V, dst->pimObjId, (void*)dst->array.data()); 
-    for (size_t i = 0; i < 2; i++) {
-        std::cout << "[DEBUG] dst->array[i] = " << dst->array[i] << std::endl;
-
-    }
+    // status = pimXor(PimObjId, PimObjId, PimObjId); // TODO: Debug Xor
     assert(status == PIM_OK);
 }
 
