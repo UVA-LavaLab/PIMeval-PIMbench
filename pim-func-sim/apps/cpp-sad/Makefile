@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := sad
+EXEC := sad.out
 SRC := sad.cpp
 
 debug perf dramsim3_integ: $(EXEC)

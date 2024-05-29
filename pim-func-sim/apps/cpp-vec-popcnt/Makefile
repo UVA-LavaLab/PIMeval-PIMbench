@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := popcnt
+EXEC := popcount.out
 SRC := popcount.cpp
 
 debug perf dramsim3_integ: $(EXEC)

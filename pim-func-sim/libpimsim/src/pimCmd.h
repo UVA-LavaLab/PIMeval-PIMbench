@@ -41,6 +41,8 @@ enum class PimCmdEnum {
   REDSUM_RANGE_V,
   ROTATE_R_V,
   ROTATE_L_V,
+  SHIFT_R_V,
+  SHIFT_L_V,
   // BitSIMD v-layout commands
   ROW_R,
   ROW_W,

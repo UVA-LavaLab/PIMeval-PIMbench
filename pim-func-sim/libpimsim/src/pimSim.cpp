@@ -437,6 +437,24 @@ pimSim::pimRotateL(PimObjId src)
 }
 
 bool
+pimSim::pimShiftR(PimObjId src)
+{
+  pimPerfMon perfMon("pimShiftR");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotateV>(PimCmdEnum::SHIFT_R_V, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimShiftL(PimObjId src)
+{
+  pimPerfMon perfMon("pimShiftL");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotateV>(PimCmdEnum::SHIFT_L_V, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
 pimSim::pimOpReadRowToSa(PimObjId objId, unsigned ofst)
 {
   pimPerfMon perfMon("pimOpReadRowToSa");
