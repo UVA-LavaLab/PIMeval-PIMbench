@@ -84,6 +84,7 @@ struct NewImgWrapper {
 
 NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
 {
+  // Parse BMP file [1]
   NewImgWrapper res;
 
   res.data_offset = *((int*)(img.data() + 0xA));
@@ -144,6 +145,7 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
 
 void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right, vector<uint32_t>& lower_left, vector<uint32_t>& lower_right, uint8_t* result)
 {
+  // Returns average of the four input vectors as a uint8_t array
   int sz = upper_left.size();
 
   PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 32, PIM_INT32);
@@ -193,7 +195,8 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
 
   PimStatus result_copy_status = pimCopyDeviceToHost(PIM_COPY_V, lr, (void*)tmp.data());
   assert(PIM_OK == result_copy_status);
-
+  
+  // Transform output from uint32_t (supported by PIM simulator) to uint8_t (required for BMP output)
   for(int i=0; i<sz; ++i) {
     result[i] = (uint8_t) tmp[i];
   }
@@ -206,7 +209,6 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
 
 std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
 {
-  // TODO: pack multiple pairs of rows into each PIM iteration
   NewImgWrapper avg_out = createNewImage(img, true);
   pim_rows = min(pim_rows, avg_out.new_height * avg_out.new_scanline_size);
   uint8_t* pixels_out_avg = (uint8_t*)avg_out.new_img.data() + avg_out.new_data_offset;
@@ -215,7 +217,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
   uint8_t* pixels_out_avg_it = pixels_out_avg;
   uint8_t* pixels_in_it = pixels_in;
 
-  // Seperate out horzontally adjacent pixels into vectors in CPU
+  // Transform input bitmap to vectors of colors in CPU
   int sz = 3*avg_out.new_width;
   vector<uint32_t> upper_left;
   upper_left.reserve(pim_rows);
@@ -226,10 +228,6 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
   vector<uint32_t> lower_right;
   lower_right.reserve(pim_rows);
   for (int y = 0; y < avg_out.new_height; ++y) {
-    // upper_left.clear();
-    // upper_right.clear();
-    // lower_left.clear();
-    // lower_right.clear();
     uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
     for(int x = 0; x < 6*avg_out.new_width; x += 6) {
       for(int i=0; i<3; ++i) {
@@ -238,7 +236,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
         lower_left.push_back((uint32_t) row2_it[x+i]);
         lower_right.push_back((uint32_t) row2_it[x+3+i]);
         if(pim_rows == upper_left.size()) {
-          // TODO: avg rows and reset and continue
+          // Perform PIM averaging when vectors at max capacity to maximize parallelism
           pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
           pixels_out_avg_it += pim_rows;
           upper_left.clear();
@@ -247,24 +245,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
           lower_right.clear();
         }
       }
-
-      // upper_left.push_back((uint32_t) pixels_in_it[x+1]);
-      // upper_left.push_back((uint32_t) pixels_in_it[x+2]);
-      
-      // upper_right.push_back((uint32_t) pixels_in_it[x+4]);
-      // upper_right.push_back((uint32_t) pixels_in_it[x+5]);
-
-      // lower_left.push_back((uint32_t) row2_it[x]);
-      // lower_left.push_back((uint32_t) row2_it[x+1]);
-      // lower_left.push_back((uint32_t) row2_it[x+2]);
-      // lower_right.push_back((uint32_t) row2_it[x+3]);
-      // lower_right.push_back((uint32_t) row2_it[x+4]);
-      // lower_right.push_back((uint32_t) row2_it[x+5]);
-      // if(upper_left.size() == pim_rows) {
-
-      // }
     }
-    // pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
 
     // Set 0 padding to nearest 4 byte boundary as required by BMP standard [1]
     for(int x=0; x<(avg_out.new_scanline_size - avg_out.new_pixel_data_width); ++x) {
@@ -273,7 +254,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
       lower_left.push_back(0);
       lower_right.push_back(0);
       if(pim_rows == upper_left.size()) {
-        // TODO: avg rows and reset and continue
+        // Perform PIM averaging when vectors at max capacity to maximize parallelism
         pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
         pixels_out_avg_it += pim_rows;
         upper_left.clear();
@@ -282,13 +263,9 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
         lower_right.clear();
       }
     }
-    // for (int x = avg_out.new_pixel_data_width; x < avg_out.new_scanline_size; ++x) {
-    //   pixels_out_avg[avg_out.new_scanline_size * y + x] = 0;
-    // }
     pixels_in_it += 2 * avg_out.scanline_size;
-    // pixels_out_avg_it += avg_out.new_scanline_size;
     if(upper_left.size() != 0) {
-      // TODO avg rows
+      // Average any leftover pixels
       pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
     }
   }
@@ -363,6 +340,7 @@ void write_img(vector<uint8_t>& img, std::string filename) {
 }
 
 bool check_image(std::vector<uint8_t>& img) {
+  // Verify that input image is of the correct type
   if (img[0] != 'B' || img[1] != 'M') {
     cout << "Not a BMP file!\n";
     return false;
