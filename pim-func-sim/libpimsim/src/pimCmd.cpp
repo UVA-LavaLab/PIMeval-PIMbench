@@ -332,10 +332,11 @@ pimCmdRedSum::execute(pimDevice* device)
   }
 
   // Update stats
+  unsigned numPass = objSrc.getMaxNumRegionsPerCore();
   uint64_t numElements = objSrc.getNumElements();
-  //unsigned bitsPerElement = objSrc.getBitsPerElement();
   //uint64_t totalBytes = numElements * bitsPerElement / 8;
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, numElements);
+  unsigned numRegions = objSrc.getRegions().size();
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, bitsPerElement, numElements, numRegions, numPass);
   pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
   return true;
 }
