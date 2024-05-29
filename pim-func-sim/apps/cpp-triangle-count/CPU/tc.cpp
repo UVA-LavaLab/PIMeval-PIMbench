@@ -161,6 +161,33 @@ int bit32TriangleCount(const vector<vector<bool>>& adjMatrix, const vector<vecto
     return count / 6;
 }
 
+// Function to count triangles using bitwise AND operation
+int bit32TriangleCount_parallel(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+    int count = 0;
+    int V = bitAdjMatrix.size();
+    int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
+    int step = V / 10; // Each 10 percent of the total iterations
+    #pragma omp parallel for reduction(+:count)
+    for (int i = 0; i < V; ++i) {
+        for (int j = 0; j < V; ++j) {
+            if (adjMatrix[i][j]) { // If there's an edge between i and j
+                // int l = j / BITS_PER_INT;
+                int dotProduct = 0;
+                for (int k = 0; k < numInts; ++k) {
+                    dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
+                }
+                count += dotProduct;
+            }
+        }
+        if (i % step == 0) {
+            std::cout << "bit32TriangleCount: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
+        }
+    }
+
+    cout << "bit32TriangleCount: " << count / 6 << endl;
+    // Each triangle is counted three times (once at each vertex), so divide the count by 3
+    return count / 6;
+}
 
 // Function to run unit tests
 void runTests() {
@@ -263,7 +290,8 @@ void run(const vector<vector<bool>>& adjMatrix){
 
     cout << "------------MultiThreaded------------" << endl;
     start = std::chrono::high_resolution_clock::now();
-    countTrianglesMultiThread(adjMatrix);
+    // countTrianglesMultiThread(adjMatrix);
+    bit32TriangleCount_parallel(adjMatrix, bitAdjMatrix);
     end = std::chrono::high_resolution_clock::now();
     elapsedTime = (end - start);
     cout << "OMP Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
@@ -292,10 +320,6 @@ int main(int argc, char** argv) {
         //run
         run(adjMatrix);
 
-        // Print the adjacency matrix
-        // cout << "Adjacency Matrix:" << endl;
-        // printAdjMatrix(adjMatrix);
-        // runTests();
     } catch (const exception& e) {
         cerr << "Error: " << e.what() << endl;
     }

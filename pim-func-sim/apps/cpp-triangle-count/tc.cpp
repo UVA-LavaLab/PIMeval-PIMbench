@@ -156,17 +156,19 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
 int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2, std::vector<unsigned int> &dst){
     unsigned bitsPerElement = sizeof(int) * 8;
 
-    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
+    cout << "numElements: " << numElements << endl;
+
+    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
     if (srcObj1 == -1)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "orignal Abort" << std::endl;
         return -1;
     }
 
     PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
     if (srcObj2 == -1)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "associated Abort" << std::endl;
         return -1;
     }
 
