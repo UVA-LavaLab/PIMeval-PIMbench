@@ -23,6 +23,8 @@ pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType)
   case PIM_DEVICE_NONE: return "PIM_DEVICE_NONE";
   case PIM_FUNCTIONAL: return "PIM_FUNCTIONAL";
   case PIM_DEVICE_BITSIMD_V: return "PIM_DEVICE_BITSIMD_V";
+  case PIM_DEVICE_FULCRUM: return "PIM_DEVICE_FUMCRUM";
+  case PIM_DEVICE_BANK_LEVEL: return "PIM_DEVICE_BANK_LEVEL";
   }
   return "Unknown";
 }
@@ -32,6 +34,9 @@ std::string
 pimUtils::pimAllocEnumToStr(PimAllocEnum allocType)
 {
   switch (allocType) {
+  case PIM_ALLOC_AUTO: return "PIM_ALLOC_AUTO";
+  case PIM_ALLOC_V: return "PIM_ALLOC_V";
+  case PIM_ALLOC_H: return "PIM_ALLOC_H";
   case PIM_ALLOC_V1: return "PIM_ALLOC_V1";
   case PIM_ALLOC_H1: return "PIM_ALLOC_H1";
   }

@@ -29,7 +29,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./lr [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
@@ -79,27 +79,27 @@ struct Params getInputParams(int argc, char **argv)
 void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, int &prod)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)src1.data(), srcObj1);
+  PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)src2.data(), srcObj2);
+  status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -114,22 +114,15 @@ void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> 
   }
 
   std::vector<int> dst(vectorLength);
-  status = pimCopyDeviceToHost(PIM_COPY_V, srcObj1, (void *)dst.data());
+  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
   prod = 0;
-#pragma omp parallel for reduction(+ : sum)
-  for (size_t i = 0; i < vectorLength; ++i)
-  {
-    prod += dst[i];
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  hostElapsedTime += (end - start);
+  reductionSumBitSerial(dst, prod, hostElapsedTime);
 
   // status = pimRedSum(srcObj1, &prod);
   // if (status != PIM_OK)

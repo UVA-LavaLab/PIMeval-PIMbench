@@ -6,6 +6,8 @@
 #define LAVA_PIM_STATS_H
 
 #include "pimParamsDram.h"
+#include "pimParamsPerf.h"
+#include "libpimsim.h"
 #include <cstdint>
 #include <string>
 #include <map>
@@ -30,8 +32,9 @@ private:
 class pimStatsMgr
 {
 public:
-  pimStatsMgr(pimParamsDram* paramsDram)
-    : m_paramsDram(paramsDram)
+  pimStatsMgr(pimParamsDram* paramsDram, pimParamsPerf* paramsPerf)
+    : m_paramsDram(paramsDram),
+      m_paramsPerf(paramsPerf)
   {}
   ~pimStatsMgr() {}
 
@@ -54,8 +57,6 @@ public:
 
   void resetStats();
 
-  double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
-
 private:
   void showApiStats() const;
   void showDeviceParams() const;
@@ -63,6 +64,7 @@ private:
   void showCmdStats() const;
 
   const pimParamsDram* m_paramsDram;
+  const pimParamsPerf* m_paramsPerf;
 
   std::map<std::string, std::pair<int, double>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;

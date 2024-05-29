@@ -35,7 +35,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./km [options]"
           "\n"
-          "\n    -n    number of points (default=65536 elements)"
+          "\n    -n    number of points (default=65536 points)"
           "\n    -d    dimension (default=2)"
           "\n    -k    centroid (default=20)"
           "\n    -r    max iteration (default=2)"
@@ -101,7 +101,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
   unsigned bitsPerElement = sizeof(int) * 8;
   if (refObj == -1)
   {
-    PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numOfPoints, bitsPerElement, PIM_INT32);
+    PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numOfPoints, bitsPerElement, PIM_INT32);
     if (obj1 == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -114,7 +114,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
 
   for (; idx < dimension; ++idx)
   {
-    PimObjId obj = pimAllocAssociated(PIM_ALLOC_V1, numOfPoints, bitsPerElement, refObj, PIM_INT32);
+    PimObjId obj = pimAllocAssociated(bitsPerElement, refObj, PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -129,7 +129,7 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
 
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)dataPoints[i].data(), pimObjectList[i]);
+    PimStatus status = pimCopyHostToDevice((void *)dataPoints[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -163,7 +163,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
   allocatePimObject(numOfPoints, dimension, centroidObjectList, dataPointObjectList[0]);
   allocatePimObject(numOfPoints, dimension, resultObjectList, dataPointObjectList[0]);
   // this object stores the minimum distance
-  PimObjId tempObj = pimAllocAssociated(PIM_ALLOC_V1, numOfPoints, sizeof(int) * 8, resultObjectList[0], PIM_INT32);
+  PimObjId tempObj = pimAllocAssociated(sizeof(int) * 8, resultObjectList[0], PIM_INT32);
   if (tempObj == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -204,7 +204,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
           }
         }
       }
-      PimStatus status = pimCopyDeviceToHost(PIM_COPY_V, resultObjectList[0], (void *)distMat[i].data());
+      PimStatus status = pimCopyDeviceToHost(resultObjectList[0], (void *)distMat[i].data());
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -212,7 +212,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       if (i == 0)
       {
         // this can be replaced with device to device api
-        PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)distMat[i].data(), tempObj);
+        PimStatus status = pimCopyHostToDevice((void *)distMat[i].data(), tempObj);
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;
@@ -231,7 +231,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
 
     for (int i = 0; i < k; i++)
     {
-      PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)distMat[i].data(), resultObjectList[0]);
+      PimStatus status = pimCopyHostToDevice((void *)distMat[i].data(), resultObjectList[0]);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -242,7 +242,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         std::cout << "Abort" << std::endl;
         return;
       }
-      status = pimCopyDeviceToHost(PIM_COPY_V, resultObjectList[0], (void *)distFlag[i].data());
+      status = pimCopyDeviceToHost(resultObjectList[0], (void *)distFlag[i].data());
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -281,6 +281,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     auto end = std::chrono::high_resolution_clock::now();
     hostElapsedTime += (end - start);
   }
+
   pimFree(tempObj);
   for (int i = 0; i < resultObjectList.size(); ++i)
   {

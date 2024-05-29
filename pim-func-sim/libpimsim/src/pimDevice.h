@@ -27,6 +27,7 @@ public:
 
   bool init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
   bool init(PimDeviceEnum deviceType, const char* configFileName);
+  void uninit();
 
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
   unsigned getNumCores() const { return m_numCores; }
@@ -35,11 +36,13 @@ public:
   bool isValid() const { return m_isValid; }
 
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   bool pimFree(PimObjId obj);
 
-  bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
-  bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyMainToDevice(void* src, PimObjId dest);
+  bool pimCopyDeviceToMain(PimObjId src, void* dest);
+  bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
+  bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
 
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
@@ -49,18 +52,19 @@ private:
   std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
 
-  PimDeviceEnum m_deviceType;
-  unsigned m_numCores;
-  unsigned m_numRows;
-  unsigned m_numCols;
-  bool m_isValid;
-  pimResMgr* m_resMgr;
+  PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
+  unsigned m_numCores = 0;
+  unsigned m_numRows = 0;
+  unsigned m_numCols = 0;
+  bool m_isValid = false;
+  bool m_isInit = false;
+  pimResMgr* m_resMgr = nullptr;
   std::vector<pimCore> m_cores;
 
 #ifdef DRAMSIM3_INTEG
-  dramsim3::PIMCPU* m_hostMemory;
-  dramsim3::PIMCPU* m_deviceMemory;
-  dramsim3::Config* m_deviceMemoryConfig;
+  dramsim3::PIMCPU* m_hostMemory = nullptr;
+  dramsim3::PIMCPU* m_deviceMemory = nullptr;
+  dramsim3::Config* m_deviceMemoryConfig = nullptr;
 #endif
 };
 
