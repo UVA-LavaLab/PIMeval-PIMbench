@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := pool
+EXEC := pool.out
 SRC := pool.cpp
 
 debug perf dramsim3_integ: $(EXEC)

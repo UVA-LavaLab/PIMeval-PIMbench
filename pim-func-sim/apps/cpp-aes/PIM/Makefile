@@ -10,7 +10,7 @@ LIB_DIR := ../../../libpimsim/lib
 CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimsim
 DEPS := $(INC_DIR)/libpimsim.h $(LIB_DIR)/libpimsim.a
 
-EXEC := aes
+EXEC := aes.out
 SRCS := PIMAuxilary.cpp main.cpp
 OBJS := $(SRCS:.cpp=.o)
 

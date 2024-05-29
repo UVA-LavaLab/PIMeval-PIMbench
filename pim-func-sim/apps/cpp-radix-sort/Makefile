@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := radix-sort
+EXEC := radix-sort.out
 SRC := radix-sort.cpp
 
 debug perf dramsim3_integ: $(EXEC)

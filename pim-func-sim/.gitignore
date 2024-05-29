@@ -1,0 +1,16 @@
+# Project files
+libpimsim/build/
+libpimsim/lib/
+
+# LSP
+compile_commands.json
+.cache
+
+# C++ object files
+*.o
+*.dSYM/
+*.out
+
+# Editors
+.vscode/
+

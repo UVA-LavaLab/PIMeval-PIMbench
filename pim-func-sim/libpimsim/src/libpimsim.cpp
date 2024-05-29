@@ -243,8 +243,6 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-
-
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus
 pimRotateR(PimObjId src)
@@ -260,6 +258,23 @@ pimRotateL(PimObjId src)
   bool ok = pimSim::get()->pimRotateL(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
+
+//! @brief  Shift elements of an obj by one step to the right and fill zero
+PimStatus
+pimShiftR(PimObjId src)
+{
+  bool ok = pimSim::get()->pimShiftR(src);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Shift elements of an obj by one step to the left and fill zero
+PimStatus
+pimShiftL(PimObjId src)
+{
+  bool ok = pimSim::get()->pimShiftL(src);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 
 //! @brief  BitSIMD-V: Read a row to SA
 PimStatus

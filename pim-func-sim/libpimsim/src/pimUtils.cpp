@@ -23,6 +23,8 @@ pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType)
   case PIM_DEVICE_NONE: return "PIM_DEVICE_NONE";
   case PIM_FUNCTIONAL: return "PIM_FUNCTIONAL";
   case PIM_DEVICE_BITSIMD_V: return "PIM_DEVICE_BITSIMD_V";
+  case PIM_DEVICE_BITSIMD_V_AP: return "PIM_DEVICE_BITSIMD_V_AP";
+  case PIM_DEVICE_BITSIMD_H: return "PIM_DEVICE_BITSIMD_H";
   case PIM_DEVICE_FULCRUM: return "PIM_DEVICE_FUMCRUM";
   case PIM_DEVICE_BANK_LEVEL: return "PIM_DEVICE_BANK_LEVEL";
   }
