@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := div
+EXEC := vec-div.out
 SRC := vec-div.cpp
 
 debug perf dramsim3_integ: $(EXEC)
