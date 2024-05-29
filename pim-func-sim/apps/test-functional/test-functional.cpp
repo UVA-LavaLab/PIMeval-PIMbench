@@ -338,7 +338,7 @@ int main()
 
   testFunctional();
 
-  //pimShowStats();
+  pimShowStats();
 
   return 0;
 }

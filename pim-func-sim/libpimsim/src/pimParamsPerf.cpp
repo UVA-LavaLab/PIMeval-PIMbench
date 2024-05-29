@@ -41,14 +41,34 @@ pimParamsPerf::setDevice(PimDeviceEnum deviceType)
 bool
 pimParamsPerf::isVLayoutDevice() const
 {
-  return m_simTarget == PIM_DEVICE_BITSIMD_V;
+  switch (m_simTarget) {
+  case PIM_DEVICE_BITSIMD_V: return true;
+  case PIM_DEVICE_BITSIMD_H: return false;
+  case PIM_DEVICE_FULCRUM: return false;
+  case PIM_DEVICE_BANK_LEVEL: return false;
+  case PIM_DEVICE_NONE:
+  case PIM_FUNCTIONAL:
+  default:
+    assert(0);
+  }
+  return false;
 }
 
 //! @brief  If a PIM device uses horizontal data layout
 bool
 pimParamsPerf::isHLayoutDevice() const
 {
-  return m_simTarget == PIM_DEVICE_FULCRUM || m_simTarget == PIM_DEVICE_BANK_LEVEL;
+  switch (m_simTarget) {
+  case PIM_DEVICE_BITSIMD_V: return false;
+  case PIM_DEVICE_BITSIMD_H: return true;
+  case PIM_DEVICE_FULCRUM: return true;
+  case PIM_DEVICE_BANK_LEVEL: return true;
+  case PIM_DEVICE_NONE:
+  case PIM_FUNCTIONAL:
+  default:
+    assert(0);
+  }
+  return false;
 }
 
 //! @brief  If a PIM device uses hybrid data layout
@@ -79,8 +99,8 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType) const
   case PIM_DEVICE_BITSIMD_V:
   {
     switch (cmdType) {
-    case PimCmdEnum::ABS_V: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break;
-    case PimCmdEnum::POPCOUNT_V: msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL; break;
+    case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break;
+    case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL; break;
     default:
       assert(0);
     }
@@ -105,19 +125,19 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType) const
   {
     // todo: support other data types
     switch (cmdType) {
-    case PimCmdEnum::ADD_V: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
-    case PimCmdEnum::SUB_V: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
-    case PimCmdEnum::MUL_V: msRuntime = 2035 * m_tR + 1047 * m_tW + 4031 * m_tL; break;
-    case PimCmdEnum::DIV_V: msRuntime = 3728 * m_tR + 1744 * m_tW + 6800 * m_tL; break;
-    case PimCmdEnum::AND_V: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-    case PimCmdEnum::OR_V: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-    case PimCmdEnum::XOR_V: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-    case PimCmdEnum::XNOR_V: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-    case PimCmdEnum::GT_V: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-    case PimCmdEnum::LT_V: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-    case PimCmdEnum::EQ_V: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-    case PimCmdEnum::MIN_V: msRuntime = 164 * m_tR + 67 * m_tW + 258 * m_tL; break;
-    case PimCmdEnum::MAX_V: msRuntime = 164 * m_tR + 67 * m_tW + 258 * m_tL; break;
+    case PimCmdEnum::ADD: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
+    case PimCmdEnum::SUB: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
+    case PimCmdEnum::MUL: msRuntime = 2035 * m_tR + 1047 * m_tW + 4031 * m_tL; break;
+    case PimCmdEnum::DIV: msRuntime = 3728 * m_tR + 1744 * m_tW + 6800 * m_tL; break;
+    case PimCmdEnum::AND: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
+    case PimCmdEnum::OR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
+    case PimCmdEnum::XOR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
+    case PimCmdEnum::XNOR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
+    case PimCmdEnum::GT: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
+    case PimCmdEnum::LT: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
+    case PimCmdEnum::EQ: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
+    case PimCmdEnum::MIN: msRuntime = 164 * m_tR + 67 * m_tW + 258 * m_tL; break;
+    case PimCmdEnum::MAX: msRuntime = 164 * m_tR + 67 * m_tW + 258 * m_tL; break;
     default:
       assert(0);
     }
@@ -154,11 +174,11 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, unsigned numElements) c
 
 //! @brief  Get ms runtime for broadcast
 double
-pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned maxElementsPerRegion) const
+pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, bool isVLayout, unsigned bitsPerElement, unsigned maxElementsPerRegion) const
 {
   double msRuntime = 0.0;
 
-  if (cmdType == PimCmdEnum::BROADCAST_V) {
+  if (cmdType == PimCmdEnum::BROADCAST && isVLayout) {
     switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     {
@@ -172,7 +192,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, unsigned bitsPerElem
       msRuntime = 1e10;
     }
 
-  } else if (cmdType == PimCmdEnum::BROADCAST_H) {
+  } else if (cmdType == PimCmdEnum::BROADCAST && !isVLayout) {
     switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     {

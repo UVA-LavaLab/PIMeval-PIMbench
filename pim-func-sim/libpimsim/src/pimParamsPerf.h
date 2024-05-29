@@ -31,7 +31,7 @@ public:
   double getMsRuntimeForFunc1(PimCmdEnum cmdType) const;
   double getMsRuntimeForFunc2(PimCmdEnum cmdType) const;
   double getMsRuntimeForRedSum(PimCmdEnum cmdType, unsigned numElements) const;
-  double getMsRuntimeForBroadcast(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned maxElementsPerRegion) const;
+  double getMsRuntimeForBroadcast(PimCmdEnum cmdType, bool isVLayout, unsigned bitsPerElement, unsigned maxElementsPerRegion) const;
   double getMsRuntimeForRotate(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numRegions) const;
 
 private:

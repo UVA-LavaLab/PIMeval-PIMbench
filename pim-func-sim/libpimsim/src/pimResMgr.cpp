@@ -223,6 +223,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId refId, PimDataTy
     objId = newObj.getObjId();
     newObj.finalize();
     newObj.print();
+    newObj.setRefObjId(refObj.getRefObjId());
     // update new object to resource mgr
     m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
   }
@@ -318,11 +319,7 @@ bool
 pimResMgr::isVLayoutObj(PimObjId objId) const
 {
   const pimObjInfo& obj = getObjInfo(objId);
-  PimAllocEnum allocType = obj.getAllocType();
-  if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
-    return true;
-  }
-  return false;
+  return obj.isVLayout();
 }
 
 //! @brief  If a PIM object uses horizontal data layout
@@ -330,11 +327,7 @@ bool
 pimResMgr::isHLayoutObj(PimObjId objId) const
 {
   const pimObjInfo& obj = getObjInfo(objId);
-  PimAllocEnum allocType = obj.getAllocType();
-  if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
-    return true;
-  }
-  return false;
+  return obj.isHLayout();
 }
 
 //! @brief  If a PIM object uses hybrid data layout
