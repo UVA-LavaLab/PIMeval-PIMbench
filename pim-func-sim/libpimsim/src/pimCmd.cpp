@@ -39,6 +39,8 @@ pimCmd::getName(PimCmdEnum cmdType)
     { PimCmdEnum::REDSUM_RANGE_V, "redsum_range.v" },
     { PimCmdEnum::ROTATE_R_V, "rotate_r.v" },
     { PimCmdEnum::ROTATE_L_V, "rotate_l.v" },
+    { PimCmdEnum::SHIFT_R_V, "shift_r.v" },
+    { PimCmdEnum::SHIFT_L_V, "shift_l.v" },
     { PimCmdEnum::ROW_R, "row_r" },
     { PimCmdEnum::ROW_W, "row_w" },
     { PimCmdEnum::RREG_MOV, "rreg.mov" },
@@ -443,7 +445,6 @@ pimCmdBroadcast::updateStats(int numPass)
 bool
 pimCmdRotateV::execute(pimDevice* device)
 { 
-
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
   #endif
@@ -456,7 +457,7 @@ pimCmdRotateV::execute(pimDevice* device)
 
   std::unordered_map<int, int> coreIdCnt;
   int numPass = 0;
-  if (m_cmdType == PimCmdEnum::ROTATE_R_V) {
+  if (m_cmdType == PimCmdEnum::ROTATE_R_V || m_cmdType == PimCmdEnum::SHIFT_R_V) {
     unsigned carry = 0;
     for (const auto &srcRegion : objSrc.getRegions()) {
       unsigned coreId = srcRegion.getCoreId();
@@ -482,13 +483,16 @@ pimCmdRotateV::execute(pimDevice* device)
         core.setB32V(srcRegion.getRowIdx(), colIdx + j, regionVector[j]);
       }
     }
+    if (m_cmdType == PimCmdEnum::SHIFT_R_V) {
+      carry = 0; // fill with zero
+    }
     if (!objSrc.getRegions().empty()) {
       const pimRegion &srcRegion = objSrc.getRegions().front();
       device->getCore(srcRegion.getCoreId())
           .setB32V(srcRegion.getRowIdx(), srcRegion.getColIdx(),
                    *reinterpret_cast<unsigned *>(&carry));
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L_V) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_L_V || m_cmdType == PimCmdEnum::SHIFT_L_V) {
     unsigned carry = 0;
     for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i - 1];
@@ -515,6 +519,9 @@ pimCmdRotateV::execute(pimDevice* device)
         core.setB32V(srcRegion.getRowIdx(), colIdx + j, regionVector[j]);
       }
     }
+    if (m_cmdType == PimCmdEnum::SHIFT_L_V) {
+      carry = 0; // fill with zero
+    }
     if (!objSrc.getRegions().empty()) {
       const pimRegion &srcRegion = objSrc.getRegions().back();
       device->getCore(srcRegion.getCoreId())
@@ -522,6 +529,8 @@ pimCmdRotateV::execute(pimDevice* device)
                    srcRegion.getColIdx() + srcRegion.getNumAllocCols() - 1,
                    *reinterpret_cast<unsigned *>(&carry));
     }
+  } else {
+    assert(0);
   }
 
   m_numRegions = objSrc.getRegions().size();
