@@ -93,9 +93,10 @@ pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
 
 //! @brief  Get ms runtime for func1
 double
-pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType) const
+pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
@@ -107,6 +108,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType) const
     default:
       assert(0);
     }
+    msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_BITSIMD_V_AP:
@@ -117,9 +119,17 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType) const
     default:
       assert(0);
     }
+    msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_FULCRUM:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency;
+    msRuntime *= numPass;
+    break;
+  }
   case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1000000;
@@ -129,9 +139,10 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType) const
 
 //! @brief  Get ms runtime for func2
 double
-pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType) const
+pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
@@ -155,6 +166,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType) const
     default:
       assert(0);
     }
+    msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_BITSIMD_V_AP:
@@ -177,9 +189,17 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType) const
     default:
       assert(0);
     }
+    msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_FULCRUM:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency;
+    msRuntime *= numPass;
+    break;
+  }
   case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;
@@ -189,16 +209,22 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType) const
 
 //! @brief  Get ms runtime for reduction sum
 double
-pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numElements, unsigned numRegions, unsigned numPass) const
+pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numRegions = obj.getRegions().size();
+  unsigned numElements = obj.getNumElements();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
     // Assume pop count reduction circut in tR runtime
-    msRuntime = ((m_tR + m_tR) * bitsPerElement) * numPass;
-    // reduction of all regions
+    msRuntime = ((m_tR + m_tR) * bitsPerElement);
+    msRuntime *= numPass;
+    // reduction for all regions
     msRuntime += static_cast<double>(numRegions) / 3200000;
     break;
   case PIM_DEVICE_BITSIMD_H:
@@ -207,6 +233,15 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, unsigned bitsPerElement
     // consider PCL
     break;
   case PIM_DEVICE_FULCRUM:
+  {
+    // read a row to walker, then reduce in serial
+    double aluLatency = 0.000005; // 5ns
+    msRuntime = (m_tR + maxElementsPerRegion * aluLatency);
+    msRuntime *= numPass;
+    // reduction for all regions
+    msRuntime += static_cast<double>(numRegions) / 3200000;
+    break;
+  }
   case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;
@@ -217,42 +252,41 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, unsigned bitsPerElement
 
 //! @brief  Get ms runtime for broadcast
 double
-pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, bool isVLayout, unsigned bitsPerElement, unsigned maxElementsPerRegion) const
+pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
 
-  if (cmdType == PimCmdEnum::BROADCAST && isVLayout) {
-    switch (m_simTarget) {
-    case PIM_DEVICE_BITSIMD_V:
-    case PIM_DEVICE_BITSIMD_V_AP:
-    {
-      // For one pass: For every bit: Set SA to bit value; Write SA to row;
-      msRuntime = (m_tW + m_tL) * bitsPerElement;
-      break;
-    }
-    case PIM_DEVICE_FULCRUM:
-    case PIM_DEVICE_BANK_LEVEL:
-    default:
-      msRuntime = 1e10;
-    }
-
-  } else if (cmdType == PimCmdEnum::BROADCAST && !isVLayout) {
-    switch (m_simTarget) {
-    case PIM_DEVICE_BITSIMD_H:
-    {
-      // For one pass: For every element: 1 tCCD per byte
-      unsigned maxBytesPerRegion = maxElementsPerRegion * (bitsPerElement / 8);
-      msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
-      break;
-      break;
-    }
-    case PIM_DEVICE_FULCRUM:
-    case PIM_DEVICE_BANK_LEVEL:
-    default:
-      msRuntime = 1e10;
-    }
-  } else {
-    assert(0);
+  switch (m_simTarget) {
+  case PIM_DEVICE_BITSIMD_V:
+  case PIM_DEVICE_BITSIMD_V_AP:
+  {
+    // For one pass: For every bit: Set SA to bit value; Write SA to row;
+    msRuntime = (m_tL + m_tW) * bitsPerElement;
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_BITSIMD_H:
+  {
+    // For one pass: For every element: 1 tCCD per byte
+    unsigned maxBytesPerRegion = maxElementsPerRegion * (bitsPerElement / 8);
+    msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_FULCRUM:
+  {
+    // assume taking 1 ALU latency to write an element
+    double aluLatency = 0.000005; // 5ns
+    msRuntime = aluLatency * maxElementsPerRegion;
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_BANK_LEVEL:
+  default:
+    msRuntime = 1e10;
   }
 
   return msRuntime;
@@ -260,27 +294,33 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, bool isVLayout, unsi
 
 //! @brief  Get ms runtime for rotate
 double
-pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numRegions) const
+//pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numRegions) const
+pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numRegions = obj.getRegions().size();
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
     // rotate within subarray:
     // For every bit: Read row to SA; move SA to R1; Shift R1; Move R1 to SA; Write SA to row
-    msRuntime = (m_tR + m_tW + 3 * m_tL) * bitsPerElement; // for one pass
+    msRuntime = (m_tR + 3 * m_tL + m_tW) * bitsPerElement; // for one pass
+    msRuntime *= numPass;
     // boundary handling
-    msRuntime += 2 * getMsRuntimeForBytesTransfer(numRegions);
+    msRuntime += 2 * getMsRuntimeForBytesTransfer(numRegions * bitsPerElement / 8);
     break;
   case PIM_DEVICE_BITSIMD_H:
+  case PIM_DEVICE_FULCRUM:
     // rotate within subarray:
     // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
-    msRuntime = (m_tR + m_tW + (bitsPerElement + 2) * m_tL); // for one pass
+    msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
+    msRuntime *= numPass;
     // boundary handling
-    msRuntime += 2 * getMsRuntimeForBytesTransfer(numRegions * 4);
+    msRuntime += 2 * getMsRuntimeForBytesTransfer(numRegions * bitsPerElement / 8);
     break;
-  case PIM_DEVICE_FULCRUM:
   case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;

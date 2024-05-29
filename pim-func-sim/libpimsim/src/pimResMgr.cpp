@@ -63,6 +63,9 @@ pimObjInfo::finalize()
     }
   }
   m_numCoresUsed = coreIdCnt.size();
+
+  const pimRegion& region = m_regions[0];
+  m_maxElementsPerRegion = (uint64_t)region.getNumAllocRows() * region.getNumAllocCols() / m_bitsPerElement;
 }
 
 //! @brief  Get all regions on a specific PIM core for current PIM object

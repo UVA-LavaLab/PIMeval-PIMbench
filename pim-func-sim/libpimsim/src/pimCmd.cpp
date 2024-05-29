@@ -194,9 +194,7 @@ pimCmdFunc1::execute(pimDevice* device)
   }
 
   // Update stats
-  unsigned numPass = objSrc.getMaxNumRegionsPerCore();
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType);
-  msRuntime *= numPass;
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
   return true;
 }
@@ -288,9 +286,7 @@ pimCmdFunc2::execute(pimDevice* device)
   }
 
   // Update stats
-  unsigned numPass = objSrc1.getMaxNumRegionsPerCore();
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc2(m_cmdType);
-  msRuntime *= numPass;
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc2(m_cmdType, objSrc1);
   pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
   return true;
 }
@@ -332,11 +328,7 @@ pimCmdRedSum::execute(pimDevice* device)
   }
 
   // Update stats
-  unsigned numPass = objSrc.getMaxNumRegionsPerCore();
-  uint64_t numElements = objSrc.getNumElements();
-  //uint64_t totalBytes = numElements * bitsPerElement / 8;
-  unsigned numRegions = objSrc.getRegions().size();
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, bitsPerElement, numElements, numRegions, numPass);
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
   return true;
 }
@@ -357,9 +349,6 @@ pimCmdBroadcast::execute(pimDevice* device)
   bool isVLayout = objDest.isVLayout();
 
   unsigned bitsPerElement = objDest.getBitsPerElement();
-  //unsigned numElements = objDest.getNumElements();
-  //unsigned numRegions = objDest.getRegions().size();
-  unsigned maxElementsPerRegion = 0;
 
   assert(bitsPerElement == 32); // todo: support other types
 
@@ -368,7 +357,6 @@ pimCmdBroadcast::execute(pimDevice* device)
     pimCore &core = device->getCore(coreId);
 
     unsigned numElementsInRegion = getNumElementsInRegion(region, bitsPerElement);
-    maxElementsPerRegion = std::max(maxElementsPerRegion, numElementsInRegion);
 
     for (unsigned j = 0; j < numElementsInRegion; ++j) {
       auto locDest = locateNthB32(region, isVLayout, j);
@@ -378,9 +366,7 @@ pimCmdBroadcast::execute(pimDevice* device)
   }
 
   // Update stats
-  unsigned numPass = objDest.getMaxNumRegionsPerCore();
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForBroadcast(m_cmdType, isVLayout, bitsPerElement, maxElementsPerRegion);
-  msRuntime *= numPass;
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForBroadcast(m_cmdType, objDest);
   pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
   return true;
 }
@@ -478,11 +464,7 @@ pimCmdRotate::execute(pimDevice* device)
   }
 
   // Update stats
-  unsigned numPass = objSrc.getMaxNumRegionsPerCore();
-  //unsigned numElements = objSrc.getNumElements();
-  unsigned numRegions = objSrc.getRegions().size();
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRotate(m_cmdType, bitsPerElement, numRegions);
-  msRuntime *= numPass;
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRotate(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
   return true;
 }

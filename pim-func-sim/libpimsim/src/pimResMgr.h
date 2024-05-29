@@ -93,6 +93,7 @@ public:
   std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
   unsigned getMaxNumRegionsPerCore() const { return m_maxNumRegionsPerCore; }
   unsigned getNumCoresUsed() const { return m_numCoresUsed; }
+  unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
 
   std::string getDataTypeName() const;
   void print() const;
@@ -107,6 +108,7 @@ private:
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
   unsigned m_maxNumRegionsPerCore = 0;
   unsigned m_numCoresUsed = 0;
+  unsigned m_maxElementsPerRegion = 0;
 };
 
 
