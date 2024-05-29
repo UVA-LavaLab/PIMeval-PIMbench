@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := xor
+EXEC := vec-xor.out
 SRC := vec-xor.cpp
 
 debug perf dramsim3_integ: $(EXEC)

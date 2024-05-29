@@ -20,6 +20,8 @@ extern "C" {
     PIM_DEVICE_NONE = 0,
     PIM_FUNCTIONAL,
     PIM_DEVICE_BITSIMD_V,
+    PIM_DEVICE_BITSIMD_V_AP,
+    PIM_DEVICE_BITSIMD_H,
     PIM_DEVICE_FULCRUM,
     PIM_DEVICE_BANK_LEVEL,
   };
@@ -68,10 +70,10 @@ extern "C" {
 
   // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
-  PimStatus pimAbs(PimObjId src, PimObjId dest);
-  PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimAbs(PimObjId src, PimObjId dest);
   PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -87,6 +89,8 @@ extern "C" {
   PimStatus pimBroadcast(PimObjId dest, unsigned value);
   PimStatus pimRotateR(PimObjId src);
   PimStatus pimRotateL(PimObjId src);
+  PimStatus pimShiftR(PimObjId src);
+  PimStatus pimShiftL(PimObjId src);
 
   // BitSIMD-V: Row-wide bit registers per subarray
   enum PimRowReg {

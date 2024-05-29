@@ -1,10 +1,10 @@
-# Makefile: C++ version of vector addition
+# Makefile: Test functional behavior
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
 
-EXEC := vec-div.out
-SRC := vec-div.cpp
+EXEC := test-functional.out
+SRC := test-functional.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 

@@ -70,6 +70,8 @@ public:
   bool pimBroadcast(PimObjId dest, unsigned value);
   bool pimRotateR(PimObjId src);
   bool pimRotateL(PimObjId src);
+  bool pimShiftR(PimObjId src);
+  bool pimShiftL(PimObjId src);
 
   // BitSIMD-V micro ops
   bool pimOpReadRowToSa(PimObjId src, unsigned ofst);

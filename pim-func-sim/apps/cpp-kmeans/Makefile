@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := km
+EXEC := km.out
 SRC := km.cpp
 
 debug perf dramsim3_integ: $(EXEC)
