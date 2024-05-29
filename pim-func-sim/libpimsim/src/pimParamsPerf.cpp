@@ -126,7 +126,8 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency;
+    double numberOfALUOperationPerPopCount = 12; //4 shifts, 4 ands, 3 add/sub, 1 mul
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerPopCount;
     msRuntime *= numPass;
     break;
   }
@@ -236,7 +237,8 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
   {
     // read a row to walker, then reduce in serial
     double aluLatency = 0.000005; // 5ns
-    msRuntime = (m_tR + maxElementsPerRegion * aluLatency);
+    double numberOfALUOperationPerReduction = 2; //1 shit, 1 add
+    msRuntime = (m_tR + maxElementsPerRegion * aluLatency * 2);
     msRuntime *= numPass;
     // reduction for all regions
     msRuntime += static_cast<double>(numRegions) / 3200000;
