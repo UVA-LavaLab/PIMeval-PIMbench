@@ -75,8 +75,6 @@ public:
   std::string getName() const { return getName(m_cmdType); }
   static std::string getName(PimCmdEnum cmdType);
 
-  virtual void updateStats(int numPass);
-
 protected:
   bool isCoreAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
   bool isVAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
@@ -94,7 +92,6 @@ public:
     : pimCmd(cmdType), m_src(src), m_dest(dest) {}
   virtual ~pimCmdFunc1V() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
   PimObjId m_dest;
@@ -109,7 +106,6 @@ public:
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdFunc2V() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
@@ -127,14 +123,11 @@ public:
     : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
   virtual ~pimCmdRedSumV() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
   int* m_result;
   unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
-  uint64_t m_numElements = 0;
-  uint64_t m_totalBytes = 0;
 };
 
 //! @class  pimCmdBroadcast
@@ -146,14 +139,9 @@ public:
     : pimCmd(cmdType), m_dest(dest), m_val(val) {}
   virtual ~pimCmdBroadcast() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_dest;
   unsigned m_val;
-  unsigned m_bitsPerElement = 0;
-  unsigned m_numElements = 0;
-  unsigned m_numRegions = 0;
-  unsigned m_maxElementsPerRegion = 0;
 };
 
 //! @class  pimCmdRotateV
@@ -165,12 +153,8 @@ public:
     : pimCmd(cmdType), m_src(src) {}
   virtual ~pimCmdRotateV() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
-  unsigned m_numRegions = 0;
-  unsigned m_bitsPerElement = 0;
-  unsigned m_numElements = 0;
 };
 
 //! @class  pimCmdReadRowToSa
