@@ -1,16 +1,12 @@
-# Makefile: C++ version of image downsampling
+# Makefile for PIM Functional Simulator - Applications
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-include ../Makefile.common
+SUBDIRS := CPU PIM
 
-EXEC := image_downsampling
-SRC := image_downsampling.cpp
+.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
+.DEFAULT_GOAL := perf
 
-debug perf dramsim3_integ: $(EXEC)
+debug perf dramsim3_integ clean: $(SUBDIRS)
 
-$(EXEC): $(SRC) $(DEPS)
-	$(CXX) $< $(CXXFLAGS) -o $@
-
-clean:
-	rm -rf $(EXEC) *.dSYM
-
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS)
