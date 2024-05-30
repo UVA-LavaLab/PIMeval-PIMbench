@@ -6,6 +6,8 @@
 #define LAVA_PIM_CMD_H
 
 #include "libpimsim.h"
+#include "pimResMgr.h"
+#include "pimCore.h"
 #include <vector>
 #include <string>
 #include <bit>
@@ -17,30 +19,31 @@ class pimResMgr;
 
 enum class PimCmdEnum {
   NOOP = 0,
-  // Functional 1-operand v-layout
-  ABS_V,
-  POPCOUNT_V,
-  BROADCAST_V,
-  BROADCAST_H,
-  // Functional 2-operand v-layout
-  ADD_V,
-  SUB_V,
-  MUL_V,
-  DIV_V,
-  AND_V,
-  OR_V,
-  XOR_V,
-  XNOR_V,
-  GT_V,
-  LT_V,
-  EQ_V,
-  MIN_V,
-  MAX_V,
-  // Functional special v-layout
-  REDSUM_V,
-  REDSUM_RANGE_V,
-  ROTATE_R_V,
-  ROTATE_L_V,
+  // Functional 1-operand
+  ABS,
+  POPCOUNT,
+  BROADCAST,
+  // Functional 2-operand
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  AND,
+  OR,
+  XOR,
+  XNOR,
+  GT,
+  LT,
+  EQ,
+  MIN,
+  MAX,
+  // Functional special
+  REDSUM,
+  REDSUM_RANGE,
+  ROTATE_R,
+  ROTATE_L,
+  SHIFT_R,
+  SHIFT_L,
   // BitSIMD v-layout commands
   ROW_R,
   ROW_W,
@@ -70,44 +73,49 @@ public:
 
   virtual bool execute(pimDevice* device) = 0;
 
-  std::string getName() const { return getName(m_cmdType); }
-  static std::string getName(PimCmdEnum cmdType);
-
-  virtual void updateStats(int numPass);
+  std::string getName() const {
+    return getName(m_cmdType, "");
+  }
+  std::string getName(bool isVLayout) const {
+    return getName(m_cmdType, isVLayout ? ".v" : ".h");
+  }
+  static std::string getName(PimCmdEnum cmdType, const std::string& suffix);
 
 protected:
-  bool isCoreAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
-  bool isVAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
-  bool isHAligned(PimObjId objId1, PimObjId objId2, pimResMgr* resMgr);
+  bool isValidObjId(pimResMgr* resMgr, PimObjId objId) const;
+  bool isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+
+  unsigned getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const;
+  std::pair<unsigned, unsigned> locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const;
+  unsigned getB32(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc) const;
+  void setB32(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned val) const;
 
   PimCmdEnum m_cmdType;
 };
 
-//! @class  pimCmdFunc1V
-//! @brief  Pim CMD: Functional 1-operand v-layout 
-class pimCmdFunc1V : public pimCmd
+//! @class  pimCmdFunc1
+//! @brief  Pim CMD: Functional 1-operand
+class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1V(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
     : pimCmd(cmdType), m_src(src), m_dest(dest) {}
-  virtual ~pimCmdFunc1V() {}
+  virtual ~pimCmdFunc1() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
   PimObjId m_dest;
 };
 
-//! @class  pimCmdFunc2V
-//! @brief  Pim CMD: Functional 2-operand v-layout 
-class pimCmdFunc2V : public pimCmd
+//! @class  pimCmdFunc2
+//! @brief  Pim CMD: Functional 2-operand
+class pimCmdFunc2 : public pimCmd
 {
 public:
-  pimCmdFunc2V(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
+  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
-  virtual ~pimCmdFunc2V() {}
+  virtual ~pimCmdFunc2() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
@@ -115,60 +123,61 @@ protected:
 };
 
 //! @class  pimCmdedSum
-//! @brief  Pim CMD: RedSum non-ranged/ranged v-layout
-class pimCmdRedSumV : public pimCmd
+//! @brief  Pim CMD: RedSum non-ranged/ranged
+class pimCmdRedSum : public pimCmd
 {
 public:
-  pimCmdRedSumV(PimCmdEnum cmdType, PimObjId src, int* result)
-    : pimCmd(cmdType), m_src(src), m_result(result) {}
-  pimCmdRedSumV(PimCmdEnum cmdType, PimObjId src, int* result, unsigned idxBegin, unsigned idxEnd)
-    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
-  virtual ~pimCmdRedSumV() {}
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int* result)
+    : pimCmd(cmdType), m_src(src), m_result(result)
+  {
+    assert(cmdType == PimCmdEnum::REDSUM);
+  }
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int* result, unsigned idxBegin, unsigned idxEnd)
+    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
+  {
+    assert(cmdType == PimCmdEnum::REDSUM_RANGE);
+  }
+  virtual ~pimCmdRedSum() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
   int* m_result;
   unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
-  uint64_t m_numElements = 0;
-  uint64_t m_totalBytes = 0;
 };
 
 //! @class  pimCmdBroadcast
-//! @brief  Pim CMD: Broadcast a value to all elements, v/h-layout
+//! @brief  Pim CMD: Broadcast a value to all elements
 class pimCmdBroadcast : public pimCmd
 {
 public:
   pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, unsigned val)
-    : pimCmd(cmdType), m_dest(dest), m_val(val) {}
+    : pimCmd(cmdType), m_dest(dest), m_val(val)
+  {
+    assert(cmdType == PimCmdEnum::BROADCAST);
+  }
   virtual ~pimCmdBroadcast() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_dest;
   unsigned m_val;
-  unsigned m_bitsPerElement = 0;
-  unsigned m_numElements = 0;
-  unsigned m_numRegions = 0;
-  unsigned m_maxElementsPerRegion = 0;
 };
 
-//! @class  pimCmdRotateV
-//! @brief  Pim CMD: rotate right/left v-layout
-class pimCmdRotateV : public pimCmd
+//! @class  pimCmdRotate
+//! @brief  Pim CMD: rotate right/left
+class pimCmdRotate : public pimCmd
 {
 public:
-  pimCmdRotateV(PimCmdEnum cmdType, PimObjId src)
-    : pimCmd(cmdType), m_src(src) {}
-  virtual ~pimCmdRotateV() {}
+  pimCmdRotate(PimCmdEnum cmdType, PimObjId src)
+    : pimCmd(cmdType), m_src(src)
+  {
+    assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
+           cmdType == PimCmdEnum::SHIFT_R || cmdType == PimCmdEnum::SHIFT_L);
+  }
+  virtual ~pimCmdRotate() {}
   virtual bool execute(pimDevice* device) override;
-  virtual void updateStats(int numPass) override;
 protected:
   PimObjId m_src;
-  unsigned m_numRegions = 0;
-  unsigned m_bitsPerElement = 0;
-  unsigned m_numElements = 0;
 };
 
 //! @class  pimCmdReadRowToSa

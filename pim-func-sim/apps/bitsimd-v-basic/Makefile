@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := bitsimd-v-basic
+EXEC := bitsimd-v-basic.out
 SRC := bitsimd-v-basic.cpp
 
 debug perf dramsim3_integ: $(EXEC)

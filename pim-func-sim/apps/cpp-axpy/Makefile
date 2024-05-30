@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := axpy
+EXEC := axpy.out
 SRC := axpy.cpp
 
 debug perf dramsim3_integ: $(EXEC)

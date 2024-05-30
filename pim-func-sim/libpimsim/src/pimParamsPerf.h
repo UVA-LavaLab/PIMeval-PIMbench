@@ -8,6 +8,7 @@
 #include "libpimsim.h"
 #include "pimParamsDram.h"
 #include "pimCmd.h"
+#include "pimResMgr.h"
 
 
 //! @class  pimParamsPerf
@@ -28,11 +29,11 @@ public:
   bool isHybridLayoutDevice() const;
 
   double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
-  double getMsRuntimeForFunc1(PimCmdEnum cmdType) const;
-  double getMsRuntimeForFunc2(PimCmdEnum cmdType) const;
-  double getMsRuntimeForRedSum(PimCmdEnum cmdType, unsigned numElements) const;
-  double getMsRuntimeForBroadcast(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned maxElementsPerRegion) const;
-  double getMsRuntimeForRotate(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numRegions) const;
+  double getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  double getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  double getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  double getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  double getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 
 private:
   const pimParamsDram* m_paramsDram; 

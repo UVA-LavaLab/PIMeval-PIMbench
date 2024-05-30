@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := gemv
+EXEC := gemv.out
 SRC := gemv.cpp
 
 debug perf dramsim3_integ: $(EXEC)

@@ -1,10 +1,10 @@
-# Makefile: C++ version of vector addition
+# Makefile: C++ version of vector reduction
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
 
-EXEC := vec-div.out
-SRC := vec-div.cpp
+EXEC := vec-red.out
+SRC := vec-red.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 
