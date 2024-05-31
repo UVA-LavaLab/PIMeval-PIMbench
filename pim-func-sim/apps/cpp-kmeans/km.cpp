@@ -249,37 +249,76 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
     }
 
-    // update the cluster in host
-    // TODO: check if PIM will be benificial. My assumption it won't
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++)
-    {
-      std::fill(centroids[i].begin(), centroids[i].end(), 0);
-    }
+    // update the cluster in PIM
     std::vector<int> clusterPointCount(k, 0);
     for (int i = 0; i < k; ++i)
     {
+      std::vector<int> bitMask(numOfPoints, 0);
+      auto start = std::chrono::high_resolution_clock::now();
       for (int j = 0; j < numOfPoints; ++j)
       {
         if (distFlag[i][j] == 1)
         {
           ++clusterPointCount[i];
-          for (int d = 0; d < dimension; ++d)
-          {
-            centroids[i][d] += dataPoints[d][j];
-          }
+          bitMask[j] = 1;
         }
       }
-    }
-    for (int i = 0; i < k; i++)
-    {
-      for (int j = 0; j < dimension; j++)
+      auto end = std::chrono::high_resolution_clock::now();
+      hostElapsedTime += (end - start);
+      PimStatus status = pimCopyHostToDevice((void *)bitMask.data(), resultObjectList[0]);
+      if (status != PIM_OK)
       {
-        centroids[i][j] /= clusterPointCount[i];
+        std::cout << "Abort" << std::endl;
+      }
+      for (int b = 0; b < dataPointObjectList.size(); ++b)
+      {
+        status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+        status = pimRedSum(resultObjectList[1], &centroids[i][b]);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+        centroids[i][b] /= clusterPointCount[i];
       }
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    hostElapsedTime += (end - start);
+
+    // update the cluster in host
+    // TODO: check if PIM will be benificial. My assumption it won't
+
+    // auto start = std::chrono::high_resolution_clock::now();
+    // for (int i = 0; i < k; i++)
+    // {
+    //   std::fill(centroids[i].begin(), centroids[i].end(), 0);
+    // }
+    // for (int i = 0; i < k; ++i)
+    // {
+    //   for (int j = 0; j < numOfPoints; ++j)
+    //   {
+    //     if (distFlag[i][j] == 1)
+    //     {
+    //       ++clusterPointCount[i];
+    //       for (int d = 0; d < dimension; ++d)
+    //       {
+    //         centroids[i][d] += dataPoints[d][j];
+    //       }
+    //     }
+    //   }
+    // }
+    // for (int i = 0; i < k; i++)
+    // {
+    //   for (int j = 0; j < dimension; j++)
+    //   {
+    //     centroids[i][j] /= clusterPointCount[i];
+    //   }
+    // }
+    // auto end = std::chrono::high_resolution_clock::now();
+    // hostElapsedTime += (end - start);
   }
 
   pimFree(tempObj);
