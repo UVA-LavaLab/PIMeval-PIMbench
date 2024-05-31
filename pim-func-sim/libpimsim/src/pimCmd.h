@@ -86,9 +86,40 @@ protected:
   bool isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
 
   unsigned getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const;
-  std::pair<unsigned, unsigned> locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const;
-  unsigned getB32(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc) const;
-  void setB32(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned val) const;
+
+  //! @brief  Utility: Locate nth B32 in region
+  inline std::pair<unsigned, unsigned> locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const
+  {
+    unsigned colIdx = region.getColIdx();
+    unsigned numAllocCols = region.getNumAllocCols();
+    unsigned rowIdx = region.getRowIdx();
+    unsigned numAllocRows = region.getNumAllocRows();
+    unsigned r = 0;
+    unsigned c = 0;
+    if (isVLayout) {
+      assert(numAllocRows % 32 == 0);
+      r = rowIdx + (nth / numAllocCols) * 32;
+      c = colIdx + nth % numAllocCols;
+    } else {
+      assert(numAllocCols % 32 == 0);
+      unsigned numB32PerRow = numAllocCols / 32;
+      r = rowIdx + nth / numB32PerRow;
+      c = colIdx + (nth % numB32PerRow) * 32;
+    }
+    return std::make_pair(r, c);
+  }
+
+  //! @brief  Utility: Get a B32 value from a region
+  inline unsigned getB32(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc) const
+  {
+    return isVLayout ? core.getB32V(rowLoc, colLoc) : core.getB32H(rowLoc, colLoc);
+  }
+
+  //! @brief  Utility: Set a B32 value from a region
+  inline void setB32(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned val) const
+  {
+    isVLayout ? core.setB32V(rowLoc, colLoc, val) : core.setB32H(rowLoc, colLoc, val);
+  }
 
   PimCmdEnum m_cmdType;
 };

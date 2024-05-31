@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <cassert>
 
 
 //! @class  pimCore
@@ -46,12 +47,54 @@ public:
   void print() const;
 
   // Directly manipulate bits for functional implementation
-  void setBit(unsigned rowIdx, unsigned colIdx, bool val);
-  bool getBit(unsigned rowIdx, unsigned colIdx) const;
-  void setB32V(unsigned rowIdx, unsigned colIdx, unsigned val);
-  unsigned getB32V(unsigned rowIdx, unsigned colIdx) const;
-  void setB32H(unsigned rowIdx, unsigned colIdx, unsigned val);
-  unsigned getB32H(unsigned rowIdx, unsigned colIdx) const;
+  //! @brief  Directly set a bit for functional simulation
+  inline void setBit(unsigned rowIdx, unsigned colIdx, bool val) {
+    assert(rowIdx < m_numRows && colIdx < m_numCols);
+    m_array[rowIdx][colIdx] = val;
+  }
+  //! @brief  Directly get a bit for functional simulation
+  inline bool getBit(unsigned rowIdx, unsigned colIdx) const {
+    assert(rowIdx < m_numRows && colIdx < m_numCols);
+    return m_array[rowIdx][colIdx];
+  }
+  //! @brief  Directly set 32 bits for V-layout functional simulation
+  inline void setB32V(unsigned rowIdx, unsigned colIdx, unsigned val) {
+    assert(rowIdx + 31 < m_numRows && colIdx < m_numCols);
+    bool bitVal = val & 1;
+    for (int i = 0; i < 32; ++i) {
+      setBit(rowIdx + i, colIdx, bitVal);
+      val = val >> 1;
+    }
+  }
+  //! @brief  Directly get 32 bits for V-layout functional simulation
+  inline unsigned getB32V(unsigned rowIdx, unsigned colIdx) const {
+    assert(rowIdx + 31 < m_numRows && colIdx < m_numCols);
+    unsigned val = 0;
+    for (int i = 31; i >= 0; --i) {
+      bool bitVal = getBit(rowIdx + i, colIdx);
+      val = (val << 1) | bitVal;
+    }
+    return val;
+  }
+  //! @brief  Directly set 32 bits for H-layout functional simulation
+  inline void setB32H(unsigned rowIdx, unsigned colIdx, unsigned val) {
+    assert(rowIdx < m_numRows && colIdx + 31 < m_numCols);
+    bool bitVal = val & 1;
+    for (int i = 0; i < 32; ++i) {
+      setBit(rowIdx, colIdx + i, bitVal);
+      val = val >> 1;
+    }
+  }
+  //! @brief  Directly get 32 bits for H-layout functional simulation
+  inline unsigned getB32H(unsigned rowIdx, unsigned colIdx) const {
+    assert(rowIdx < m_numRows && colIdx + 31 < m_numCols);
+    unsigned val = 0;
+    for (int i = 31; i >= 0; --i) {
+      bool bitVal = getBit(rowIdx, colIdx + i);
+      val = (val << 1) | bitVal;
+    }
+    return val;
+  }
 
 private:
   PimCoreId m_coreId;
