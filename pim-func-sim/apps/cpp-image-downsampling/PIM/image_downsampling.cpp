@@ -26,7 +26,7 @@ void usage()
           "\nUsage:  ./image_downsampling [options]"
           "\n"
           "\n    -c    dramsim config file"
-          "\n    -i    input image file of BMP type (default=\"Dataset/input_1.bmp\")"
+          "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n    -o    output file for downsampled image (default=no output)"
           "\n");
@@ -36,7 +36,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "Dataset/input_1.bmp";
+  p.inputFile = (char*) "input_1.bmp";
   p.shouldVerify = false;
   p.outputFile = nullptr;
 
@@ -218,7 +218,6 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
   uint8_t* pixels_in_it = pixels_in;
 
   // Transform input bitmap to vectors of colors in CPU
-  int sz = 3*avg_out.new_width;
   vector<uint32_t> upper_left;
   upper_left.reserve(pim_rows);
   vector<uint32_t> upper_right;
@@ -235,7 +234,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
         upper_right.push_back((uint32_t) pixels_in_it[x+i+3]);
         lower_left.push_back((uint32_t) row2_it[x+i]);
         lower_right.push_back((uint32_t) row2_it[x+3+i]);
-        if(pim_rows == upper_left.size()) {
+        if((uint32_t) pim_rows == upper_left.size()) {
           // Perform PIM averaging when vectors at max capacity to maximize parallelism
           pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
           pixels_out_avg_it += pim_rows;
@@ -253,7 +252,7 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
       upper_right.push_back(0);
       lower_left.push_back(0);
       lower_right.push_back(0);
-      if(pim_rows == upper_left.size()) {
+      if((uint32_t) pim_rows == upper_left.size()) {
         // Perform PIM averaging when vectors at max capacity to maximize parallelism
         pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
         pixels_out_avg_it += pim_rows;
@@ -367,7 +366,7 @@ int main(int argc, char* argv[])
   std::cout << "PIM test: Image Downsampling" << std::endl;
 
   string input_file = params.inputFile;
-  input_file = "../" + input_file;
+  input_file = "../Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
   // numCols * numCores
   int pim_rows = 8192*4096;

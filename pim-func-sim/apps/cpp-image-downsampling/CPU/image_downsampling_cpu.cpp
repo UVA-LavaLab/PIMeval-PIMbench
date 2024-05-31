@@ -30,7 +30,7 @@ void usage()
           "\nUsage:  ./image_downsampling [options]"
           "\n"
           "\n    -c    dramsim config file"
-          "\n    -i    input image file of BMP type (default=\"Dataset/input_1.bmp\")"
+          "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
           "\n    -o    output file for downsampled image (default=no output)"
           "\n");
 }
@@ -39,7 +39,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "Dataset/input_1.bmp";
+  p.inputFile = (char*) "input_1.bmp";
   p.outputFile = nullptr;
 
   int opt;
@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
   std::cout << "CPU test: Image Downsampling" << std::endl;
   
   string input_file = params.inputFile;
-  input_file = "../" + input_file;
+  input_file = "../Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
 
   if(!check_image(img)) {
@@ -247,7 +247,9 @@ int main(int argc, char* argv[])
   vector<uint8_t> cpu_averaged = avg_cpu(img);
   auto end_time = current_time_ns();
 
-  cout << "Time: " << end_time - start_time << " ns" << endl;
+  auto dur = ((double) (end_time - start_time))/1000000;
+
+  cout << "Time: " << dur << " ms" << endl;
 
   if(params.outputFile != nullptr) {
     write_img(cpu_averaged, params.outputFile);

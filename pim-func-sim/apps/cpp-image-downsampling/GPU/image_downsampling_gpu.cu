@@ -31,7 +31,7 @@ void usage()
           "\nUsage:  ./image_downsampling [options]"
           "\n"
           "\n    -c    dramsim config file"
-          "\n    -i    input image file of BMP type (default=\"Dataset/input_1.bmp\")"
+          "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n    -o    output file for downsampled image (default=no output)"
           "\n");
@@ -41,7 +41,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "Dataset/input_1.bmp";
+  p.inputFile = (char*) "input_1.bmp";
   p.shouldVerify = false;
   p.outputFile = nullptr;
 
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
   std::cout << "GPU test: Image Downsampling" << std::endl;
   
   string input_file = params.inputFile;
-  input_file = "../" + input_file;
+  input_file = "../Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
 
   if(!check_image(img)) {
@@ -320,7 +320,9 @@ int main(int argc, char* argv[])
   vector<uint8_t> gpu_averaged = avg_gpu(img);
   auto end_time = current_time_ns();
 
-  cout << "Time: " << end_time - start_time << " ns" << endl;
+  auto dur = ((double) (end_time - start_time))/1000000;
+
+  cout << "Time: " << dur << " ms" << endl;
 
   if(params.outputFile != nullptr) {
     write_img(gpu_averaged, params.outputFile);
