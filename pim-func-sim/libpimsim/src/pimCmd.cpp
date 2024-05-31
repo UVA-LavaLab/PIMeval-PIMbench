@@ -92,47 +92,6 @@ pimCmd::getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement)
   return (uint64_t)numAllocRows * numAllocCols / bitsPerElement;
 }
 
-//! @brief  Utility: Locate nth B32 in region
-std::pair<unsigned, unsigned>
-pimCmd::locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const
-{
-  unsigned colIdx = region.getColIdx();
-  unsigned numAllocCols = region.getNumAllocCols();
-  unsigned rowIdx = region.getRowIdx();
-  unsigned numAllocRows = region.getNumAllocRows();
-  unsigned r = 0;
-  unsigned c = 0;
-  if (isVLayout) {
-    assert(numAllocRows % 32 == 0);
-    r = rowIdx + (nth / numAllocCols) * 32;
-    c = colIdx + nth % numAllocCols;
-  } else {
-    assert(numAllocCols % 32 == 0);
-    unsigned numB32PerRow = numAllocCols / 32;
-    r = rowIdx + nth / numB32PerRow;
-    c = colIdx + (nth % numB32PerRow) * 32;
-  }
-  return std::make_pair(r, c);
-}
-
-//! @brief  Utility: Get a B32 value from a region
-unsigned
-pimCmd::getB32(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc) const
-{
-  return isVLayout ? core.getB32V(rowLoc, colLoc) : core.getB32H(rowLoc, colLoc);
-}
-
-//! @brief  Utility: Set a B32 value from a region
-void
-pimCmd::setB32(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned val) const
-{
-  if (isVLayout) {
-    core.setB32V(rowLoc, colLoc, val);
-  } else {
-    core.setB32H(rowLoc, colLoc, val);
-  }
-}
-
 //! @brief  PIM CMD: Functional 1-operand
 bool
 pimCmdFunc1::execute(pimDevice* device)

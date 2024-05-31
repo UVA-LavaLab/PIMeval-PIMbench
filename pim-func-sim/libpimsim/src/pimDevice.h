@@ -25,7 +25,7 @@ public:
   pimDevice();
   ~pimDevice();
 
-  bool init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
+  bool init(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool init(PimDeviceEnum deviceType, const char* configFileName);
   void uninit();
 
@@ -49,10 +49,13 @@ public:
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
 
 private:
+  bool adjustConfigForSimTarget(unsigned& numBanks, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
   std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
 
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
+  unsigned m_numBanks = 0;
+  unsigned m_numSubarrayPerBank = 0;
   unsigned m_numCores = 0;
   unsigned m_numRows = 0;
   unsigned m_numCols = 0;

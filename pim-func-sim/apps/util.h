@@ -72,11 +72,12 @@ bool createDevice(char *configFile)
   if (configFile == nullptr)
   {
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
-    unsigned numCores = 4096; // 8*16*32
+    unsigned numBanks = 128; // 8 chips * 16 banks
+    unsigned numSubarrayPerBank = 32;
     unsigned numRows = 8192;
     unsigned numCols = 8192;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numBanks, numSubarrayPerBank, numRows, numCols);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;

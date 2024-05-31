@@ -51,7 +51,7 @@ extern "C" {
   typedef int PimObjId;
 
   // Device creation and deletion
-  PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
+  PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   PimStatus pimDeleteDevice();
   void pimShowStats();
