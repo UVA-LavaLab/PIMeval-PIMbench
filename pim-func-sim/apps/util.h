@@ -35,7 +35,7 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = (rand() % ((i * j) + 1)) + 1;
+      inputMatrix[i][j] = rand() % (i + 1);
     }
   }
 }
