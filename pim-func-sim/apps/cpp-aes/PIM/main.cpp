@@ -458,7 +458,7 @@ int testRjXtime(void){
     unsigned numRows = 65536;
     unsigned numCols = 1024;
 
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     unsigned bitsPerElement = 8;
@@ -515,7 +515,7 @@ int testAesSubBytes(void) {
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     // int mame; std::cin >> mame;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
 
@@ -619,7 +619,7 @@ int testAesSubBytesInv(void) {
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     // int mame; std::cin >> mame;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
 
@@ -718,7 +718,7 @@ int testAesAddRoundKey(void) {
     unsigned numRows = 65536;
     unsigned numCols = 1024;
 
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     unsigned bitsPerElement = 8;
@@ -793,7 +793,7 @@ int testAesAddRoundKeyCpy(void) {
     unsigned numRows = 65536;
     unsigned numCols = 1024;
 
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     unsigned bitsPerElement = 8;
@@ -903,7 +903,7 @@ int testAesShiftRows(void) {
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     // int mame; std::cin >> mame;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
 
@@ -1016,7 +1016,7 @@ int testAesShiftRowsInv(void) {
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     // int mame; std::cin >> mame;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
 
@@ -1084,7 +1084,7 @@ int testAesMixColumns(void) {
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     // int mame; std::cin >> mame;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
@@ -1155,7 +1155,7 @@ int testAesMixColumnsInv(void) {
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     // int mame; std::cin >> mame;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
@@ -1225,7 +1225,7 @@ int testAes256EncryptEcb(void) {
     unsigned totalCols = numCores * numCols;
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
@@ -1298,7 +1298,7 @@ int testAes256DecryptEcb(void) {
     unsigned totalCols = numCores * numCols;
     unsigned long numBytes = totalCols * AES_BLOCK_SIZE;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
@@ -1377,7 +1377,7 @@ int testEncryptdemo(void) {
     unsigned numCalls = 1;
     unsigned numPaddedBufBytes = totalCols * AES_BLOCK_SIZE;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
@@ -1460,7 +1460,7 @@ int testDecryptdemo(void) {
     unsigned numCalls = 1;
     unsigned numPaddedBufBytes = totalCols * AES_BLOCK_SIZE;
 
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
@@ -1596,7 +1596,7 @@ int testDemo(void) {
             interrupt(__LINE__);
         }
     }
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
     assert(status == PIM_OK);
 
     fclose(file);

@@ -60,8 +60,8 @@ public:
   //! @brief  Directly set 32 bits for V-layout functional simulation
   inline void setB32V(unsigned rowIdx, unsigned colIdx, unsigned val) {
     assert(rowIdx + 31 < m_numRows && colIdx < m_numCols);
-    bool bitVal = val & 1;
     for (int i = 0; i < 32; ++i) {
+      bool bitVal = val & 1;
       setBit(rowIdx + i, colIdx, bitVal);
       val = val >> 1;
     }
@@ -79,8 +79,8 @@ public:
   //! @brief  Directly set 32 bits for H-layout functional simulation
   inline void setB32H(unsigned rowIdx, unsigned colIdx, unsigned val) {
     assert(rowIdx < m_numRows && colIdx + 31 < m_numCols);
-    bool bitVal = val & 1;
     for (int i = 0; i < 32; ++i) {
+      bool bitVal = val & 1;
       setBit(rowIdx, colIdx + i, bitVal);
       val = val >> 1;
     }

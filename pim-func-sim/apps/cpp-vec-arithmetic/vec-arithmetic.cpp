@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
   unsigned numRows = 128;
   unsigned numCols = 256;
 
-  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;

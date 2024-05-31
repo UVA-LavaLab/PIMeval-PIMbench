@@ -118,7 +118,11 @@ protected:
   //! @brief  Utility: Set a B32 value from a region
   inline void setB32(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned val) const
   {
-    isVLayout ? core.setB32V(rowLoc, colLoc, val) : core.setB32H(rowLoc, colLoc, val);
+    if (isVLayout) {
+      core.setB32V(rowLoc, colLoc, val);
+    } else {
+      core.setB32H(rowLoc, colLoc, val);
+    }
   }
 
   PimCmdEnum m_cmdType;
