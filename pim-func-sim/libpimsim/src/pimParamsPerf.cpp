@@ -123,15 +123,23 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     break;
   }
   case PIM_DEVICE_FULCRUM:
-  case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
     double numberOfALUOperation = 1;
     if (cmdType == PimCmdEnum::POPCOUNT) {
-      double numberOfALUOperation = 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+      numberOfALUOperation = 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
     }
     msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation;
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_BANK_LEVEL:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    unsigned numALU = 2;
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency / numALU;
     msRuntime *= numPass;
     break;
   }
@@ -197,11 +205,19 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     break;
   }
   case PIM_DEVICE_FULCRUM:
-  case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
     msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency;
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_BANK_LEVEL:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    unsigned numALU = 2;
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency / numALU;
     msRuntime *= numPass;
     break;
   }
