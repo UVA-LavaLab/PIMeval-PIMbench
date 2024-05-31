@@ -229,6 +229,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
     }
 
+    std::vector<int> clusterPointCount(k, 0);
     for (int i = 0; i < k; i++)
     {
       PimStatus status = pimCopyHostToDevice((void *)distMat[i].data(), resultObjectList[0]);
@@ -242,34 +243,15 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         std::cout << "Abort" << std::endl;
         return;
       }
-      status = pimCopyDeviceToHost(resultObjectList[0], (void *)distFlag[i].data());
-      if (status != PIM_OK)
-      {
-        std::cout << "Abort" << std::endl;
-      }
-    }
+      int totalNeighbors = 0; 
 
-    // update the cluster in PIM
-    std::vector<int> clusterPointCount(k, 0);
-    for (int i = 0; i < k; ++i)
-    {
-      std::vector<int> bitMask(numOfPoints, 0);
-      auto start = std::chrono::high_resolution_clock::now();
-      for (int j = 0; j < numOfPoints; ++j)
-      {
-        if (distFlag[i][j] == 1)
-        {
-          ++clusterPointCount[i];
-          bitMask[j] = 1;
-        }
-      }
-      auto end = std::chrono::high_resolution_clock::now();
-      hostElapsedTime += (end - start);
-      PimStatus status = pimCopyHostToDevice((void *)bitMask.data(), resultObjectList[0]);
+      status = pimRedSum(resultObjectList[0], &totalNeighbors);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
+        return;
       }
+
       for (int b = 0; b < dataPointObjectList.size(); ++b)
       {
         status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
@@ -284,7 +266,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
           std::cout << "Abort" << std::endl;
           return;
         }
-        centroids[i][b] /= clusterPointCount[i];
+        centroids[i][b] /= totalNeighbors;
       }
     }
 
