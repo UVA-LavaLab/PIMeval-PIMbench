@@ -369,7 +369,7 @@ int main(int argc, char* argv[])
   input_file = "../Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
   // numCols * numCores
-  int pim_rows = 8192*4096;
+  int pim_rows = 8192*16;
 
   if(!createDevice(params.configFile)) {
     return 1;
