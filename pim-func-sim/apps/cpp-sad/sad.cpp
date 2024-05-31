@@ -11,11 +11,11 @@ int main()
 {
   std::cout << "PIM test: SAD" << std::endl;
 
-  unsigned numCores = 3;
+  unsigned numCores = 4;
   unsigned numRows = 1024;
   unsigned numCols = 8192;
 
-  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, numCores, numRows, numCols);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;

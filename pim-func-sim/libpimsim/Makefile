@@ -4,7 +4,7 @@
 CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17
 CXXFLAGS_DEBUG := -g
-CXXFLAGS_PERF := -O3 -Wno-unused-parameter -Wno-unused-private-field
+CXXFLAGS_PERF := -Ofast -DNDEBUG -Wno-unused-parameter -Wno-unused-private-field
 INC :=
 AR := ar
 ARFLAGS := rcs

@@ -123,15 +123,18 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     break;
   }
   case PIM_DEVICE_FULCRUM:
+  case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    double numberOfALUOperationPerPopCount = 12; //4 shifts, 4 ands, 3 add/sub, 1 mul
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerPopCount;
+    double numberOfALUOperation = 1;
+    if (cmdType == PimCmdEnum::POPCOUNT) {
+      double numberOfALUOperation = 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    }
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation;
     msRuntime *= numPass;
     break;
   }
-  case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1000000;
   }
@@ -194,6 +197,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     break;
   }
   case PIM_DEVICE_FULCRUM:
+  case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
@@ -201,7 +205,6 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     msRuntime *= numPass;
     break;
   }
-  case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;
   }
@@ -234,6 +237,7 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
     // consider PCL
     break;
   case PIM_DEVICE_FULCRUM:
+  case PIM_DEVICE_BANK_LEVEL:
   {
     // read a row to walker, then reduce in serial
     double aluLatency = 0.000005; // 5ns
@@ -243,7 +247,6 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
     msRuntime += static_cast<double>(numRegions) / 3200000;
     break;
   }
-  case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;
   }
@@ -278,6 +281,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
     break;
   }
   case PIM_DEVICE_FULCRUM:
+  case PIM_DEVICE_BANK_LEVEL:
   {
     // assume taking 1 ALU latency to write an element
     double aluLatency = 0.000005; // 5ns
@@ -285,7 +289,6 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
     msRuntime *= numPass;
     break;
   }
-  case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;
   }
@@ -315,6 +318,7 @@ pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) 
     break;
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_FULCRUM:
+  case PIM_DEVICE_BANK_LEVEL:
     // rotate within subarray:
     // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
     msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
@@ -322,7 +326,6 @@ pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) 
     // boundary handling
     msRuntime += 2 * getMsRuntimeForBytesTransfer(numRegions * bitsPerElement / 8);
     break;
-  case PIM_DEVICE_BANK_LEVEL:
   default:
     msRuntime = 1e10;
   }

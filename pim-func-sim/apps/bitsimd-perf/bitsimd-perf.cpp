@@ -13,7 +13,7 @@ bool createPimDevice()
   unsigned numRows = 1024;
   unsigned numCols = 256;
 
-  PimStatus status = pimCreateDevice(PIM_DEVICE_BITSIMD_V, numCores, numRows, numCols);
+  PimStatus status = pimCreateDevice(PIM_DEVICE_BITSIMD_V, 1, numCores, numRows, numCols);
   assert(status == PIM_OK);
   return true;
 }
