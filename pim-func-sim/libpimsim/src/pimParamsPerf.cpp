@@ -127,8 +127,11 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    double numberOfALUOperationPerPopCount = 12; //4 shifts, 4 ands, 3 add/sub, 1 mul
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerPopCount;
+    double numberOfALUOperation = 1;
+    if (cmdType == PimCmdEnum::POPCOUNT) {
+      double numberOfALUOperation = 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    }
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation;
     msRuntime *= numPass;
     break;
   }
