@@ -249,12 +249,11 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
     }
 
-
-    //update the cluster in PIM
+    // update the cluster in PIM
     std::vector<int> clusterPointCount(k, 0);
-    std::vector<int> bitMask(numOfPoints, 0);
     for (int i = 0; i < k; ++i)
     {
+      std::vector<int> bitMask(numOfPoints, 0);
       auto start = std::chrono::high_resolution_clock::now();
       for (int j = 0; j < numOfPoints; ++j)
       {
