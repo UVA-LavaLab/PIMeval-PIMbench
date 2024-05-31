@@ -54,24 +54,26 @@ pimSim::~pimSim()
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
   if (m_device != nullptr) {
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
+
+  m_paramsPerf->setDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
+
   m_device = new pimDevice();
-  m_device->init(deviceType, numCores, numRows, numCols);
+  m_device->init(deviceType, numBanks, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
-  m_paramsPerf->setDevice(deviceType);
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
   return true;
 }
 
@@ -84,6 +86,12 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     std::printf("PIM-Error: PIM Device is already created\n");
     return false;
   }
+
+  m_paramsPerf->setDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
+
   m_device = new pimDevice();
   m_device->init(deviceType, configFileName);
   if (!m_device->isValid()) {
@@ -91,10 +99,6 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
-  m_paramsPerf->setDevice(deviceType);
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
   return true;
 }
 
