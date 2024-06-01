@@ -234,17 +234,33 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
       auto start = std::chrono::high_resolution_clock::now();
 
       int hopSize = outMatSize * outMatSize;
-      if (j == 0)
+      std::vector<int> localSums(hopSize, 0);
+
+#pragma omp parallel
       {
-        std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
+        std::vector<int> threadLocalSums(hopSize, 0);
+
+#pragma omp for
+        for (int m = 0; m < hopSize; ++m)
+        {
+          for (int n = m + hopSize; n < outVector.size(); n += hopSize)
+          {
+            threadLocalSums[m] += outVector[n];
+          }
+        }
+
+#pragma omp critical
+        {
+          for (int m = 0; m < hopSize; ++m)
+          {
+            localSums[m] += threadLocalSums[m];
+          }
+        }
       }
 
       for (int m = 0; m < hopSize; ++m)
       {
-        for (int n = m + hopSize; n < outVector.size(); n += hopSize)
-        {
-          dstVec[m] += outVector[n];
-        }
+        dstVec[m] += localSums[m];
       }
       auto end = std::chrono::high_resolution_clock::now();
       hostElapsedTime += (end - start);
