@@ -210,6 +210,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ns." << endl;
+    cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
     return 0;
 }
