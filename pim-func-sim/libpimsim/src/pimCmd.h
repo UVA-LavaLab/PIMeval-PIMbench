@@ -8,6 +8,7 @@
 #include "libpimsim.h"
 #include "pimResMgr.h"
 #include "pimCore.h"
+#include "pimUtils.h"
 #include <vector>
 #include <string>
 #include <bit>
@@ -22,7 +23,6 @@ enum class PimCmdEnum {
   // Functional 1-operand
   ABS,
   POPCOUNT,
-  BROADCAST,
   // Functional 2-operand
   ADD,
   SUB,
@@ -40,6 +40,7 @@ enum class PimCmdEnum {
   // Functional special
   REDSUM,
   REDSUM_RANGE,
+  BROADCAST,
   ROTATE_R,
   ROTATE_L,
   SHIFT_R,
@@ -76,8 +77,10 @@ public:
   std::string getName() const {
     return getName(m_cmdType, "");
   }
-  std::string getName(bool isVLayout) const {
-    return getName(m_cmdType, isVLayout ? ".v" : ".h");
+  std::string getName(PimDataType dataType, bool isVLayout) const {
+    std::string suffix = "." + pimUtils::pimDataTypeEnumToStr(dataType);
+    suffix += isVLayout ? ".v" : ".h";
+    return getName(m_cmdType, suffix);
   }
   static std::string getName(PimCmdEnum cmdType, const std::string& suffix);
 
