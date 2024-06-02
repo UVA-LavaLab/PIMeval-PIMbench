@@ -49,6 +49,25 @@ pimObjInfo::getDataTypeName() const
   }
 }
 
+//! @brief  Finalize obj info
+void
+pimObjInfo::finalize()
+{
+  std::unordered_map<PimCoreId, int> coreIdCnt;
+  for (const auto& region : m_regions) {
+    PimCoreId coreId = region.getCoreId();
+    coreIdCnt[coreId]++;
+    unsigned numRegionsPerCore = coreIdCnt[coreId];
+    if (m_maxNumRegionsPerCore < numRegionsPerCore) {
+      m_maxNumRegionsPerCore = numRegionsPerCore;
+    }
+  }
+  m_numCoresUsed = coreIdCnt.size();
+
+  const pimRegion& region = m_regions[0];
+  m_maxElementsPerRegion = (uint64_t)region.getNumAllocRows() * region.getNumAllocCols() / m_bitsPerElement;
+}
+
 //! @brief  Get all regions on a specific PIM core for current PIM object
 std::vector<pimRegion>
 pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
@@ -81,7 +100,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   unsigned numRowsToAlloc = 0;
   unsigned numRegions = 0;
   unsigned numColsToAllocLast = 0;
-  if (allocType == PIM_ALLOC_V1) {
+  if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
     numRegions = (numElements - 1) / numCols + 1;
@@ -89,7 +108,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
     }
-  } else if (allocType == PIM_ALLOC_H1) {
+  } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
     numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
@@ -103,12 +122,17 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   }
 
   if (numRegions > numCores) {
-    std::printf("PIM-Warning: Obj requires %u regions among %u cores. Wrapping up is needed.\n", numRegions, numCores);
+    if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
+      std::printf("PIM-Error: Obj requires %u regions among %u cores. Abort.\n", numRegions, numCores);
+      return -1;
+    } else {
+      std::printf("PIM-Warning: Obj requires %u regions among %u cores. Wrapping up is needed.\n", numRegions, numCores);
+    }
   }
 
   // create regions
   std::vector<std::pair<unsigned, unsigned>> newAlloc;
-  if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
+  if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     for (unsigned i = 0; i < numRegions; ++i) {
       PimCoreId coreId = sortedCoreId[i % numCores];
       unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
@@ -130,19 +154,22 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
     }
   }
 
-  // update new object to resource mgr
-  m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
-
-  newObj.print();
-
-  return newObj.getObjId();
+  PimObjId objId = -1;
+  if (newObj.isValid()) {
+    objId = newObj.getObjId();
+    newObj.finalize();
+    newObj.print();
+    // update new object to resource mgr
+    m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
+  }
+  return objId;
 }
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 //!         For V layout, expect same number of elements, while bits per element may be different
 //!         For H layout, expect exact same number of elements and bits per elements
 PimObjId
-pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId, PimDataType dataType)
+pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId refId, PimDataType dataType)
 {
   // check if ref obj is valid
   if (m_objMap.find(refId) == m_objMap.end()) {
@@ -154,18 +181,16 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsi
   const pimObjInfo& refObj = m_objMap.at(refId);
 
   // check if the request can be associated with ref
-  if (numElements != refObj.getNumElements()) {
-    std::printf("PIM-Error: Cannot allocate %u elements associated with ref object ID %d which has %u elements\n",
-                numElements, refId, refObj.getNumElements());
-    return -1;
-  }
-  if (allocType == PIM_ALLOC_H1) {
+  PimAllocEnum allocType = refObj.getAllocType();
+  unsigned numElements = refObj.getNumElements();
+  if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     if (bitsPerElement != refObj.getBitsPerElement()) {
       std::printf("PIM-Error: Cannot allocate elements of %u bits associated with ref object ID %d with %u bits in H1 style\n",
                   bitsPerElement, refId, refObj.getBitsPerElement());
       return -1;
     }
   }
+  assert(allocType == refObj.getAllocType());
 
   // allocate regions
   pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
@@ -176,7 +201,7 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsi
     PimCoreId coreId = region.getCoreId();
     unsigned numAllocRows = region.getNumAllocRows();
     unsigned numAllocCols = region.getNumAllocCols();
-    if (allocType == PIM_ALLOC_V1) {
+    if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
       numAllocRows = bitsPerElement;
     }
     pimRegion newRegion = findAvailRegionOnCore(coreId, numAllocRows, numAllocCols);
@@ -196,12 +221,16 @@ pimResMgr::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsi
     newAlloc.push_back(alloc);
   }
 
-  // update new object to resource mgr
-  m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
-
-  newObj.print();
-
-  return newObj.getObjId();
+  PimObjId objId = -1;
+  if (newObj.isValid()) {
+    objId = newObj.getObjId();
+    newObj.finalize();
+    newObj.print();
+    newObj.setRefObjId(refObj.getRefObjId());
+    // update new object to resource mgr
+    m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
+  }
+  return objId;
 }
 
 //! @brief  Free a PIM object
@@ -286,5 +315,28 @@ pimResMgr::getCoreIdsSortedByLeastUsage() const
     result.push_back(it.second);
   }
   return result;
+}
+
+//! @brief  If a PIM object uses vertical data layout
+bool
+pimResMgr::isVLayoutObj(PimObjId objId) const
+{
+  const pimObjInfo& obj = getObjInfo(objId);
+  return obj.isVLayout();
+}
+
+//! @brief  If a PIM object uses horizontal data layout
+bool
+pimResMgr::isHLayoutObj(PimObjId objId) const
+{
+  const pimObjInfo& obj = getObjInfo(objId);
+  return obj.isHLayout();
+}
+
+//! @brief  If a PIM object uses hybrid data layout
+bool
+pimResMgr::isHybridLayoutObj(PimObjId objId) const
+{
+  return false;
 }
 

@@ -67,6 +67,7 @@ class pimObjInfo
 public:
   pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
     : m_objId(objId),
+      m_refObjId(objId),
       m_dataType(dataType),
       m_allocType(allocType),
       m_numElements(numElements),
@@ -75,27 +76,39 @@ public:
   ~pimObjInfo() {}
 
   void addRegion(pimRegion region) { m_regions.push_back(region); }
+  void setRefObjId(PimObjId refObjId) { m_refObjId = refObjId; }
+  void finalize();
 
   PimObjId getObjId() const { return m_objId; }
+  PimObjId getRefObjId() const { return m_refObjId; }
   PimAllocEnum getAllocType() const { return m_allocType; }
   PimDataType getDataType() const { return m_dataType; }
   unsigned getNumElements() const { return m_numElements; }
   unsigned getBitsPerElement() const { return m_bitsPerElement; }
   bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
+  bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
+  bool isHLayout() const { return m_allocType == PIM_ALLOC_H || m_allocType == PIM_ALLOC_H1; }
 
   const std::vector<pimRegion>& getRegions() const { return m_regions; }
   std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
+  unsigned getMaxNumRegionsPerCore() const { return m_maxNumRegionsPerCore; }
+  unsigned getNumCoresUsed() const { return m_numCoresUsed; }
+  unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
 
   std::string getDataTypeName() const;
   void print() const;
 
 private:
   PimObjId m_objId;
+  PimObjId m_refObjId;
   PimDataType m_dataType;
   PimAllocEnum m_allocType;
   unsigned m_numElements;
   unsigned m_bitsPerElement;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
+  unsigned m_maxNumRegionsPerCore = 0;
+  unsigned m_numCoresUsed = 0;
+  unsigned m_maxElementsPerRegion = 0;
 };
 
 
@@ -111,11 +124,15 @@ public:
   ~pimResMgr() {}
 
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId refId, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId refId, PimDataType dataType);
   bool pimFree(PimObjId objId);
 
   bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }
   const pimObjInfo& getObjInfo(PimObjId objId) const { return m_objMap.at(objId); }
+
+  bool isVLayoutObj(PimObjId objId) const;
+  bool isHLayoutObj(PimObjId objId) const;
+  bool isHybridLayoutObj(PimObjId objId) const;
 
 private:
   pimRegion findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsigned numAllocCols) const;

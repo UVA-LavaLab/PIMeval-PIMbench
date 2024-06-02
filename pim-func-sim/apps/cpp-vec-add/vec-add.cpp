@@ -29,7 +29,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./add [options]"
           "\n"
-          "\n    -l    input size (default=8M elements)"
+          "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -77,27 +77,27 @@ struct Params getInputParams(int argc, char **argv)
 void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_V1, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(PIM_ALLOC_V1, vectorLength, bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice(PIM_COPY_V, (void *)src1.data(), srcObj1);
+  PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimCopyHostToDevice(PIM_COPY_V, (void *)src2.data(), srcObj2);
+  status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -112,7 +112,7 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
   }
 
   dst.resize(vectorLength);
-  status = pimCopyDeviceToHost(PIM_COPY_V, srcObj1, (void *)dst.data());
+  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

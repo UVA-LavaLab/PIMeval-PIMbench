@@ -17,12 +17,14 @@ pimCore::pimCore(unsigned numRows, unsigned numCols)
     m_senseAmpCol(numRows)
 {
   // Initialize memory contents with random 0/1
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dist(0, 1);
-  for (unsigned row = 0; row < m_numRows; ++row) {
-    for (unsigned col = 0; col < m_numCols; ++col) {
-      m_array[row][col] = dist(gen);
+  if (0) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 1);
+    for (unsigned row = 0; row < m_numRows; ++row) {
+      for (unsigned col = 0; col < m_numCols; ++col) {
+        m_array[row][col] = dist(gen);
+      }
     }
   }
 
@@ -200,113 +202,5 @@ pimCore::print() const
   }
   oss << std::endl;
   std::printf("%s\n", oss.str().c_str());
-}
-
-//! @brief  Directly set a bit for functional simulation
-void
-pimCore::setBit(unsigned rowIdx, unsigned colIdx, bool val)
-{
-  if (rowIdx > m_numRows) {
-    std::printf("PIM-Error: setBit row index %u out of range [0, %u)\n", rowIdx, m_numRows);
-    return;
-  }
-  if (colIdx > m_numCols) {
-    std::printf("PIM-Error: setBit col index %u out of range [0, %u)\n", colIdx, m_numCols);
-    return;
-  }
-  m_array[rowIdx][colIdx] = val;
-}
-
-//! @brief  Directly get a bit for functional simulation
-bool
-pimCore::getBit(unsigned rowIdx, unsigned colIdx) const
-{
-  if (rowIdx > m_numRows) {
-    std::printf("PIM-Error: getBit row index %u out of range [0, %u)\n", rowIdx, m_numRows);
-    return false;
-  }
-  if (colIdx > m_numCols) {
-    std::printf("PIM-Error: getBit col index %u out of range [0, %u)\n", colIdx, m_numCols);
-    return false;
-  }
-  return m_array[rowIdx][colIdx];
-}
-
-//! @brief  Directly set 32 bits for V-layout functional simulation
-void
-pimCore::setB32V(unsigned rowIdx, unsigned colIdx, unsigned val)
-{
-  if (rowIdx + 32 > m_numRows) {
-    std::printf("PIM-Error: setB32V row index %u out of range [0, %u - 32)\n", rowIdx, m_numRows);
-    return;
-  }
-  if (colIdx > m_numCols) {
-    std::printf("PIM-Error: setB32V col index %u out of range [0, %u)\n", colIdx, m_numCols);
-    return;
-  }
-  for (int i = 0; i < 32; ++i) {
-    bool bitVal = val & 1;
-    setBit(rowIdx + i, colIdx, bitVal);
-    val = val >> 1;
-  }
-}
-
-//! @brief  Directly get 32 bits for V-layout functional simulation
-unsigned
-pimCore::getB32V(unsigned rowIdx, unsigned colIdx) const
-{
-  if (rowIdx + 32 > m_numRows) {
-    std::printf("PIM-Error: setB32V row index %u out of range [0, %u - 32)\n", rowIdx, m_numRows);
-    return 0;
-  }
-  if (colIdx > m_numCols) {
-    std::printf("PIM-Error: setB32V col index %u out of range [0, %u)\n", colIdx, m_numCols);
-    return 0;
-  }
-  unsigned val = 0;
-  for (int i = 31; i >= 0; --i) {
-    bool bitVal = getBit(rowIdx + i, colIdx);
-    val = (val << 1) | bitVal;
-  }
-  return val;
-}
-
-//! @brief  Directly set 32 bits for H-layout functional simulation
-void
-pimCore::setB32H(unsigned rowIdx, unsigned colIdx, unsigned val)
-{
-  if (rowIdx > m_numRows) {
-    std::printf("PIM-Error: setB32V row index %u out of range [0, %u)\n", rowIdx, m_numRows);
-    return;
-  }
-  if (colIdx + 32 > m_numCols) {
-    std::printf("PIM-Error: setB32H col index %u out of range [0, %u - 32)\n", colIdx, m_numCols);
-    return;
-  }
-  for (int i = 0; i < 32; ++i) {
-    bool bitVal = val & 1;
-    setBit(rowIdx, colIdx + i, bitVal);
-    val = val >> 1;
-  }
-}
-
-//! @brief  Directly get 32 bits for H-layout functional simulation
-unsigned
-pimCore::getB32H(unsigned rowIdx, unsigned colIdx) const
-{
-  if (rowIdx > m_numRows) {
-    std::printf("PIM-Error: getB32V row index %u out of range [0, %u)\n", rowIdx, m_numRows);
-    return 0;
-  }
-  if (colIdx + 32 > m_numCols) {
-    std::printf("PIM-Error: getB32H col index %u out of range [0, %u - 32)\n", colIdx, m_numCols);
-    return 0;
-  }
-  unsigned val = 0;
-  for (int i = 31; i >= 0; --i) {
-    bool bitVal = getBit(rowIdx, colIdx + i);
-    val = (val << 1) | bitVal;
-  }
-  return val;
 }
 

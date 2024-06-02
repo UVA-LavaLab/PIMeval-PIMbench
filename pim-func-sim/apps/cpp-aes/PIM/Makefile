@@ -10,7 +10,7 @@ LIB_DIR := ../../../libpimsim/lib
 CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimsim
 DEPS := $(INC_DIR)/libpimsim.h $(LIB_DIR)/libpimsim.a
 
-EXEC := aes
+EXEC := aes.out
 SRCS := PIMAuxilary.cpp main.cpp
 OBJS := $(SRCS:.cpp=.o)
 
@@ -25,10 +25,10 @@ ifeq ($(MAKECMDGOALS),debug)
 	CXXFLAGS += -g -DDEBUG
 endif
 ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -O3
+	CXXFLAGS += -Ofast
 endif
 ifeq ($(MAKECMDGOALS),dramsim3_integ)
-	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
+	CXXFLAGS += -Ofast -DDRAMSIM3_INTEG
 endif
 
 debug perf dramsim3_integ: $(EXEC)

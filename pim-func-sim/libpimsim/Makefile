@@ -4,7 +4,7 @@
 CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17
 CXXFLAGS_DEBUG := -g
-CXXFLAGS_PERF := -O3 -Wno-unused-parameter -Wno-unused-private-field
+CXXFLAGS_PERF := -Ofast -DNDEBUG -Wno-unused-parameter -Wno-unused-private-field -Wno-unused-variable
 INC :=
 AR := ar
 ARFLAGS := rcs
@@ -42,6 +42,10 @@ ifeq ($(MAKECMDGOALS),dramsim3_integ)
 	INC += -I$(DRAMSIM3_SRC) -I$(DRAMSIM3_EXT)
 	THIRD_PARTY_LIB += $(DRAMSIM3_PATH)/build/libdramsim3.a
 endif
+
+# Run "make PIM_SIM_TARGET=<PimDeviceEnum>" to override default simulation target
+PIM_SIM_TARGET ?= PIM_DEVICE_NONE
+CXXFLAGS += -DPIM_SIM_TARGET=$(PIM_SIM_TARGET)
 
 debug: $(TARGET)
 	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"

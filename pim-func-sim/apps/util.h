@@ -11,6 +11,7 @@
 #include <vector>
 #include <iomanip>
 #include <chrono>
+#include <random>
 
 #include "libpimsim.h"
 using namespace std;
@@ -22,7 +23,24 @@ void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 #pragma omp parallel for
   for (int i = 0; i < vectorLength; ++i)
   {
-    srcVector[i] = rand() % (i + 1);
+    srcVector[i] = (rand() % (i + 1) + 1);
+  }
+}
+
+void getVectorFP32(uint64_t vectorLength, std::vector<float> &srcVector, bool nonZero)
+{
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dist(-1e10, 1e10);
+
+  srcVector.resize(vectorLength);
+  #pragma omp parallel for
+  for (int i = 0; i < vectorLength; ++i) {
+    float val = 0.0;
+    do {
+      val = dist(gen);
+      srcVector[i] = dist(gen);
+    } while (nonZero && val == 0.0);
   }
 }
 
@@ -35,7 +53,7 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = rand() % ((i * j) + 1);
+      inputMatrix[i][j] = rand() % (i + 1);
     }
   }
 }
@@ -71,12 +89,13 @@ bool createDevice(char *configFile)
 {
   if (configFile == nullptr)
   {
-    // Total Bank = 16; Each Bank contains 32 subarrays
-    unsigned numCores = 512;
+    // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
+    unsigned numBanks = 128; // 8 chips * 16 banks
+    unsigned numSubarrayPerBank = 32;
     unsigned numRows = 8192;
     unsigned numCols = 8192;
     
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numCores, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numBanks, numSubarrayPerBank, numRows, numCols);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -93,6 +112,20 @@ bool createDevice(char *configFile)
     }
   }
   return true;
+}
+
+//Bit serial PIM performs reduction operation on host
+void reductionSumBitSerial(const std::vector<int> &reductionVector, int &reductionValue, std::chrono::duration<double, std::milli> &reductionTime)
+{
+  auto start = std::chrono::high_resolution_clock::now();
+  reductionValue = 0;
+#pragma omp parallel for reduction(+ : sum)
+  for (size_t i = 0; i < reductionVector.size(); ++i)
+  {
+    reductionValue += reductionVector[i];
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  reductionTime += (end - start);
 }
 
 #endif

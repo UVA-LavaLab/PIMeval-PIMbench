@@ -8,6 +8,7 @@
 #include "libpimsim.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
+#include "pimParamsPerf.h"
 #include "pimStats.h"
 #include <vector>
 
@@ -21,12 +22,13 @@ public:
   static void destroy();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
 
   PimDeviceEnum getDeviceType() const;
+  PimDeviceEnum getSimTarget() const;
   unsigned getNumCores() const;
   unsigned getNumRows() const;
   unsigned getNumCols() const;
@@ -34,15 +36,18 @@ public:
   void showStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
+  pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
   bool pimFree(PimObjId obj);
 
   // Data transfer
-  bool pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest);
-  bool pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyMainToDevice(void* src, PimObjId dest);
+  bool pimCopyDeviceToMain(PimObjId src, void* dest);
+  bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
+  bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -65,6 +70,8 @@ public:
   bool pimBroadcast(PimObjId dest, unsigned value);
   bool pimRotateR(PimObjId src);
   bool pimRotateL(PimObjId src);
+  bool pimShiftR(PimObjId src);
+  bool pimShiftL(PimObjId src);
 
   // BitSIMD-V micro ops
   bool pimOpReadRowToSa(PimObjId src, unsigned ofst);
@@ -95,6 +102,7 @@ private:
   // support one device for now
   pimDevice* m_device = nullptr;
   pimParamsDram* m_paramsDram = nullptr;
+  pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
 };
 

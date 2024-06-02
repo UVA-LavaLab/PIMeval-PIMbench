@@ -1,10 +1,10 @@
-# Makefile: C++ version of vector boradcast and popcount
+# Makefile: C++ version of vector addition
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
 
-EXEC := vec-brdcast
-SRC := vec-broadcast-popcnt.cpp
+EXEC := vec-div.out
+SRC := vec-div.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 

@@ -8,9 +8,9 @@
 
 //! @brief  Create a PIM device
 PimStatus
-pimCreateDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
+pimCreateDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
-  bool ok = pimSim::get()->createDevice(deviceType, numCores, numRows, numCols);
+  bool ok = pimSim::get()->createDevice(deviceType, numBanks, numSubarrayPerBank, numRows, numCols);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -46,9 +46,9 @@ pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements,
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
+pimAllocAssociated(unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
 {
-  return pimSim::get()->pimAllocAssociated(allocType, numElements, bitsPerElements, ref, dataType);
+  return pimSim::get()->pimAllocAssociated(bitsPerElements, ref, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -69,17 +69,33 @@ pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd)
 
 //! @brief  Copy data from main to PIM device
 PimStatus
-pimCopyHostToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimCopyHostToDevice(void* src, PimObjId dest)
 {
-  bool ok = pimSim::get()->pimCopyMainToDevice(copyType, src, dest);
+  bool ok = pimSim::get()->pimCopyMainToDevice(src, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Copy data from PIM device to main
 PimStatus
-pimCopyDeviceToHost(PimCopyEnum copyType, PimObjId src, void* dest)
+pimCopyDeviceToHost(PimObjId src, void* dest)
 {
-  bool ok = pimSim::get()->pimCopyDeviceToMain(copyType, src, dest);
+  bool ok = pimSim::get()->pimCopyDeviceToMain(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Copy data from main to PIM device with type
+PimStatus
+pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCopyMainToDeviceWithType(copyType, src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Copy data from PIM device to main with type
+PimStatus
+pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
+{
+  bool ok = pimSim::get()->pimCopyDeviceToMainWithType(copyType, src, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -227,8 +243,6 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-
-
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus
 pimRotateR(PimObjId src)
@@ -244,6 +258,23 @@ pimRotateL(PimObjId src)
   bool ok = pimSim::get()->pimRotateL(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
+
+//! @brief  Shift elements of an obj by one step to the right and fill zero
+PimStatus
+pimShiftR(PimObjId src)
+{
+  bool ok = pimSim::get()->pimShiftR(src);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Shift elements of an obj by one step to the left and fill zero
+PimStatus
+pimShiftL(PimObjId src)
+{
+  bool ok = pimSim::get()->pimShiftL(src);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 
 //! @brief  BitSIMD-V: Read a row to SA
 PimStatus

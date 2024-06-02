@@ -5,19 +5,15 @@
 #include "pimDevice.h"
 #include "pimResMgr.h"
 #include "pimSim.h"
+#include "libpimsim.h"
 #include <cstdio>
 #include <deque>
 #include <memory>
+#include <cassert>
 
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice()
-  : m_deviceType(PIM_DEVICE_NONE),
-    m_numCores(0),
-    m_numRows(0),
-    m_numCols(0),
-    m_isValid(false),
-    m_resMgr(nullptr)
 {
 }
 
@@ -28,18 +24,49 @@ pimDevice::~pimDevice()
   m_resMgr = nullptr;
 }
 
+//! @brief  Adjust config for modeling different simulation target with same inputs
+bool
+pimDevice::adjustConfigForSimTarget(unsigned& numBanks, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
+{
+  std::printf("PIM-Info: Config: #banks = %u, #subarrayPerBank = %u, #rows = %u, $cols = %u\n", numBanks, numSubarrayPerBank, numRows, numCols);
+  PimDeviceEnum simTarget = pimSim::get()->getParamsPerf()->getSimTarget();
+  if (simTarget == PIM_DEVICE_FULCRUM) {
+    std::printf("PIM-Info: To model Fulcrum, aggregate every two subarrays as a single core\n");
+    if (numSubarrayPerBank % 2 != 0) {
+      std::printf("PIM-Error: Please config even number of subarrays in each bank for fulcrum\n");
+      return false;
+    }
+    numRows *= 2;
+    numSubarrayPerBank /= 2;
+  } else if (simTarget == PIM_DEVICE_BANK_LEVEL) {
+    std::printf("PIM-Info: To model bank level PIM, aggregate all subarrays within a bank as a single core.\n");
+    numRows *= numSubarrayPerBank;
+    numSubarrayPerBank = 1;
+  }
+  return true;
+}
+
 //! @brief  Init pim device, with config file
 bool
-pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
+pimDevice::init(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
+  assert(!m_isInit);
+  assert(deviceType != PIM_DEVICE_NONE);
+
   m_deviceType = deviceType;
-  m_numCores = numCores;
+  m_numBanks = numBanks;
+  m_numSubarrayPerBank = numSubarrayPerBank;
+  if (!adjustConfigForSimTarget(numBanks, numSubarrayPerBank, numRows, numCols)) {
+    return false;
+  }
+
+  m_numCores = numBanks * numSubarrayPerBank;
   m_numRows = numRows;
   m_numCols = numCols;
-  m_isValid = (numCores > 0 && numRows > 0 && numCols > 0);
+  m_isValid = (m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
 
   if (!m_isValid) {
-    std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", numCores, numRows, numCols);
+    std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
     return false;
   }
 
@@ -47,8 +74,9 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, u
 
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
 
-  std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", numCores, numRows, numCols);
+  std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
+  m_isInit = true;
   return m_isValid;
 }
 
@@ -56,6 +84,8 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, u
 bool
 pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 {
+  assert(!m_isInit);
+  assert(deviceType != PIM_DEVICE_NONE);
   if (!configFileName) {
     std::printf("PIM-Error: Null PIM device config file name\n");
     return false;
@@ -73,6 +103,9 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   m_deviceMemory = new dramsim3::PIMCPU(configFile, "");
   m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
   u_int64_t rowsPerBank = m_deviceMemoryConfig->rows, columnPerRow = m_deviceMemoryConfig->columns * m_deviceMemoryConfig->device_width;
+
+  // todo: adjust for sim target
+
   m_numCores = 16;
   m_numRows = rowsPerBank/m_numCores;
   m_numCols = columnPerRow;
@@ -91,21 +124,46 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
+  m_isInit = true;
   return m_isValid;
+}
+
+//! @brief  Uninit pim device
+void
+pimDevice::uninit()
+{
+  m_cores.clear();
+  delete m_resMgr;
+  m_resMgr = nullptr;
+  m_deviceType = PIM_DEVICE_NONE;
+  m_numCores = 0;
+  m_numRows = 0;
+  m_numCols = 0;
+  m_isValid = false;
+  m_isInit = false;
 }
 
 //! @brief  Alloc a PIM object
 PimObjId
 pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
+  if (allocType == PIM_ALLOC_AUTO) {
+    if (pimSim::get()->getParamsPerf()->isVLayoutDevice()) {
+      allocType = PIM_ALLOC_V;
+    } else if (pimSim::get()->getParamsPerf()->isHLayoutDevice()) {
+      allocType = PIM_ALLOC_H;
+    } else {
+      assert(0);
+    }
+  }
   return m_resMgr->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 PimObjId
-pimDevice::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimDevice::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
-  return m_resMgr->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
+  return m_resMgr->pimAllocAssociated(bitsPerElement, ref, dataType);
 }
 
 //! @brief  Free a PIM object
@@ -117,7 +175,23 @@ pimDevice::pimFree(PimObjId obj)
 
 //! @brief  Copy data from host to PIM
 bool
-pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimDevice::pimCopyMainToDevice(void* src, PimObjId dest)
+{
+  PimCopyEnum copyType = m_resMgr->isHLayoutObj(dest) ? PIM_COPY_H : PIM_COPY_V;
+  return pimCopyMainToDeviceWithType(copyType, src, dest);
+}
+
+//! @brief  Copy data from PIM to host
+bool
+pimDevice::pimCopyDeviceToMain(PimObjId src, void* dest)
+{
+  PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
+  return pimCopyDeviceToMainWithType(copyType, src, dest);
+}
+
+//! @brief  Copy data from host to PIM
+bool
+pimDevice::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
 {
   if (!m_resMgr->isValidObjId(dest)) {
     std::printf("PIM-Error: Invalid PIM object ID %d as copy destination\n", dest);
@@ -184,7 +258,7 @@ pimDevice::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
 
 //! @brief  Copy data from PIM to host
 bool
-pimDevice::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
+pimDevice::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
 {
   if (!m_resMgr->isValidObjId(src)) {
     std::printf("PIM-Error: Invalid PIM object ID %d as copy source\n", src);

@@ -13,7 +13,7 @@ bool createPimDevice()
   unsigned numRows = 1024;
   unsigned numCols = 256;
 
-  PimStatus status = pimCreateDevice(PIM_DEVICE_BITSIMD_V, numCores, numRows, numCols);
+  PimStatus status = pimCreateDevice(PIM_DEVICE_BITSIMD_V, 1, numCores, numRows, numCols);
   assert(status == PIM_OK);
   return true;
 }
@@ -27,11 +27,11 @@ bool testMicroOps()
   std::vector<int> src2(numElements);
   std::vector<int> dest(numElements);
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj2 != -1);
-  PimObjId obj3 = pimAllocAssociated(PIM_ALLOC_V1, numElements, bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj3 != -1);
 
   // assign some initial values
@@ -41,15 +41,15 @@ bool testMicroOps()
   }
 
   PimStatus status = PIM_OK;
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src1.data(), obj1);
+  status = pimCopyHostToDevice((void*)src1.data(), obj1);
   assert(status == PIM_OK);
-  status = pimCopyHostToDevice(PIM_COPY_V, (void*)src2.data(), obj2);
+  status = pimCopyHostToDevice((void*)src2.data(), obj2);
   assert(status == PIM_OK);
 
   status = pimAdd(obj1, obj2, obj3);
   assert(status == PIM_OK);
 
-  status = pimCopyDeviceToHost(PIM_COPY_V, obj3, (void*)dest.data());
+  status = pimCopyDeviceToHost(obj3, (void*)dest.data());
   assert(status == PIM_OK);
 
   for (unsigned i = 0; i < numElements; ++i) {

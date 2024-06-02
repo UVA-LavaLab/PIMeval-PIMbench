@@ -5,7 +5,9 @@
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimParamsDram.h"
+#include "pimParamsPerf.h"
 #include "pimStats.h"
+#include "pimUtils.h"
 #include <cstdio>
 #include <memory>
 
@@ -38,7 +40,8 @@ pimSim::destroy()
 pimSim::pimSim()
 {
   m_paramsDram = new pimParamsDram();
-  m_statsMgr = new pimStatsMgr(m_paramsDram);
+  m_paramsPerf = new pimParamsPerf(m_paramsDram);
+  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
 }
 
 //! @brief  pimSim dtor
@@ -46,19 +49,26 @@ pimSim::~pimSim()
 {
   delete m_statsMgr;
   delete m_paramsDram;
+  delete m_paramsPerf;
 }
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numCores, unsigned numRows, unsigned numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
   if (m_device != nullptr) {
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
+
+  m_paramsPerf->setDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
+
   m_device = new pimDevice();
-  m_device->init(deviceType, numCores, numRows, numCols);
+  m_device->init(deviceType, numBanks, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
@@ -76,6 +86,12 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     std::printf("PIM-Error: PIM Device is already created\n");
     return false;
   }
+
+  m_paramsPerf->setDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
+
   m_device = new pimDevice();
   m_device->init(deviceType, configFileName);
   if (!m_device->isValid()) {
@@ -96,6 +112,7 @@ pimSim::deleteDevice()
   }
   delete m_device;
   m_device = nullptr;
+  m_paramsPerf->setDevice(PIM_DEVICE_NONE);
   return true;
 }
 
@@ -114,10 +131,14 @@ pimSim::isValidDevice(bool showMsg) const
 PimDeviceEnum
 pimSim::getDeviceType() const
 {
-  if (m_device && m_device->isValid()) {
-    return m_device->getDeviceType();
-  }
-  return PIM_DEVICE_NONE;
+  return m_paramsPerf->getCurDevice();
+}
+
+//! @brief  Get simulation target device
+PimDeviceEnum
+pimSim::getSimTarget() const
+{
+  return m_paramsPerf->getSimTarget();
 }
 
 //! @brief  Get number of PIM cores
@@ -168,11 +189,11 @@ pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerE
 
 //! @brief  Allocate a PIM object that is associated with a reference ojbect
 PimObjId
-pimSim::pimAllocAssociated(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(allocType, numElements, bitsPerElement, ref, dataType);
+  return m_device->pimAllocAssociated(bitsPerElement, ref, dataType);
 }
 
 // @brief  Free a PIM object
@@ -186,20 +207,38 @@ pimSim::pimFree(PimObjId obj)
 
 // @brief  Copy data from main memory to PIM device
 bool
-pimSim::pimCopyMainToDevice(PimCopyEnum copyType, void* src, PimObjId dest)
+pimSim::pimCopyMainToDevice(void* src, PimObjId dest)
 {
   pimPerfMon perfMon("pimCopyMainToDevice");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyMainToDevice(copyType, src, dest);
+  return m_device->pimCopyMainToDevice(src, dest);
 }
 
 // @brief  Copy data from PIM device to main memory
 bool
-pimSim::pimCopyDeviceToMain(PimCopyEnum copyType, PimObjId src, void* dest)
+pimSim::pimCopyDeviceToMain(PimObjId src, void* dest)
 {
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyDeviceToMain(copyType, src, dest);
+  return m_device->pimCopyDeviceToMain(src, dest);
+}
+
+// @brief  Copy data from main memory to PIM device with type
+bool
+pimSim::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCopyMainToDevice");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyMainToDeviceWithType(copyType, src, dest);
+}
+
+// @brief  Copy data from PIM device to main memory with type
+bool
+pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
+{
+  pimPerfMon perfMon("pimCopyDeviceToMain");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyDeviceToMainWithType(copyType, src, dest);
 }
 
 // @brief  Load vector with a scalar value
@@ -208,8 +247,7 @@ pimSim::pimBroadcast(PimObjId dest, unsigned value)
 {
   pimPerfMon perfMon("pimBroadcast");
   if (!isValidDevice()) { return false; }
-  // todo: use v/h based on dest info
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast>(PimCmdEnum::BROADCAST_V, dest, value);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast>(PimCmdEnum::BROADCAST, dest, value);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -219,7 +257,7 @@ pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimAdd");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::ADD_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::ADD, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -229,7 +267,7 @@ pimSim::pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimSub");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::SUB_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::SUB, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -239,7 +277,7 @@ pimSim::pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimDiv");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::DIV_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::DIV, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -249,7 +287,7 @@ pimSim::pimAbs(PimObjId src, PimObjId dest)
 {
   pimPerfMon perfMon("pimAbs");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1V>(PimCmdEnum::ABS_V, src, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::ABS, src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -259,7 +297,7 @@ pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimMul");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::MUL_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::MUL, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -269,7 +307,7 @@ pimSim::pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimAnd");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::AND_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::AND, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -279,7 +317,7 @@ pimSim::pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimOr");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::OR_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::OR, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -289,7 +327,7 @@ pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimXor");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::XOR_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::XOR, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -299,7 +337,7 @@ pimSim::pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimXnor");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::XNOR_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::XNOR, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -309,7 +347,7 @@ pimSim::pimGT(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimGT");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::GT_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::GT, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -319,7 +357,7 @@ pimSim::pimLT(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimLT");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::LT_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::LT, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -329,7 +367,7 @@ pimSim::pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimEQ");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::EQ_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::EQ, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -339,7 +377,7 @@ pimSim::pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimMin");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::MIN_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::MIN, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -349,7 +387,7 @@ pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimPerfMon perfMon("pimMax");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2V>(PimCmdEnum::MAX_V, src1, src2, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::MAX, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -359,7 +397,7 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 {
   pimPerfMon perfMon("pimPopCount");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1V>(PimCmdEnum::POPCOUNT_V, src, dest);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::POPCOUNT, src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -369,7 +407,7 @@ pimSim::pimRedSum(PimObjId src, int* sum)
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSumV>(PimCmdEnum::REDSUM_V, src, sum);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(PimCmdEnum::REDSUM, src, sum);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -379,7 +417,7 @@ pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* s
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSumV>(PimCmdEnum::REDSUM_RANGE_V, src, sum, idxBegin, idxEnd);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -388,7 +426,7 @@ pimSim::pimRotateR(PimObjId src)
 {
   pimPerfMon perfMon("pimRotateR");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotateV>(PimCmdEnum::ROTATE_R_V, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_R, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -397,7 +435,25 @@ pimSim::pimRotateL(PimObjId src)
 {
   pimPerfMon perfMon("pimRotateL");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotateV>(PimCmdEnum::ROTATE_L_V, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_L, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimShiftR(PimObjId src)
+{
+  pimPerfMon perfMon("pimShiftR");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_R, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimShiftL(PimObjId src)
+{
+  pimPerfMon perfMon("pimShiftL");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_L, src);
   return m_device->executeCmd(std::move(cmd));
 }
 

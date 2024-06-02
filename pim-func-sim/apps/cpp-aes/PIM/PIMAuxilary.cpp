@@ -4,12 +4,12 @@
 #include <cassert>
 
 
-PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_V1), numElements(0), bitsPerElements(0), dataType(PIM_INT32) {
+PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_AUTO), numElements(0), bitsPerElements(0), dataType(PIM_INT32) {
     // Constructor initialization
 }
 
 PIMAuxilary::PIMAuxilary(const PIMAuxilary* src) {
-    this->pimObjId = pimAllocAssociated(src->allocType, src->numElements, src->bitsPerElements, src->pimObjId, src->dataType);
+    this->pimObjId = pimAllocAssociated(src->bitsPerElements, src->pimObjId, src->dataType);
     if (this->pimObjId == -1) {
         std::cout << "Abort" << std::endl;
         abort();
@@ -36,7 +36,7 @@ PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned 
 }
 
 PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref, PimDataType dataType) {
-    this->pimObjId = pimAllocAssociated(allocType, numElements, bitsPerElements, ref, dataType);
+    this->pimObjId = pimAllocAssociated(bitsPerElements, ref, dataType);
     if (this->pimObjId == -1) {
         std::cout << "Abort" << std::endl;
         abort();
@@ -89,13 +89,13 @@ void pimShiftRight(PIMAuxilary* x, int shiftAmount) { // TODO: Add this function
 
 void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
     PimStatus status; 
-    status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
-    status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
+    status = pimCopyDeviceToHost(src1->pimObjId, (void*)src1->array.data()); 
+    status = pimCopyDeviceToHost(src2->pimObjId, (void*)src2->array.data()); 
     for (size_t i = 0; i < dst->array.size(); ++i)
     {
         dst->array[i] = (src1->array[i] * src2->array[i]) % 256;
     }
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
+    status = pimCopyHostToDevice((void*)dst->array.data(), dst->pimObjId); 
     assert(status == PIM_OK);
     int PimObjId = -1;
     status = pimMul(PimObjId, PimObjId, PimObjId); // TODO: Debug Xor
@@ -103,13 +103,13 @@ void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
 
 void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
     PimStatus status; 
-    status = pimCopyDeviceToHost(PIM_COPY_V, src1->pimObjId, (void*)src1->array.data()); 
-    status = pimCopyDeviceToHost(PIM_COPY_V, src2->pimObjId, (void*)src2->array.data()); 
+    status = pimCopyDeviceToHost(src1->pimObjId, (void*)src1->array.data()); 
+    status = pimCopyDeviceToHost(src2->pimObjId, (void*)src2->array.data()); 
     for (size_t i = 0; i < dst->array.size(); i++)
     {
         dst->array[i] = (src1->array[i] ^ src2->array[i]) % 256;
     }
-    status = pimCopyHostToDevice(PIM_COPY_V, (void*)dst->array.data(), dst->pimObjId); 
+    status = pimCopyHostToDevice((void*)dst->array.data(), dst->pimObjId); 
     assert(status == PIM_OK);
     int PimObjId = -1;
 
@@ -119,11 +119,11 @@ void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
 
 void pimCopyDeviceToDevice(PIMAuxilary* src, PIMAuxilary* dst) { 
     PimStatus status; 
-    status = pimCopyDeviceToHost(PIM_COPY_V, src->pimObjId, src->array.data());
+    status = pimCopyDeviceToHost(src->pimObjId, src->array.data());
     for(int i = 0; i < dst->array.size(); i++) {
             dst->array[i] = src->array[i];
     }
-    status = pimCopyHostToDevice(PIM_COPY_V, dst->array.data(), dst->pimObjId);
+    status = pimCopyHostToDevice(dst->array.data(), dst->pimObjId);
     assert(status == PIM_OK);
 
 }

@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := vgg
+EXEC := vgg19.out
 SRC := vgg.cpp
 
 debug perf dramsim3_integ: $(EXEC)
