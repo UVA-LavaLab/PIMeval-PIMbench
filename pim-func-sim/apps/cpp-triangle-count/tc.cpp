@@ -269,7 +269,8 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     uint16_t iterations = 0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
-            if (adjMatrix[i][j]) { // If there's an edge between i and j
+            if (adjMatrix[i][j]) 
+            { // If there's an edge between i and j
                 ++oneCount;
                 //TODO: check if we need to add timing for this
                 for (int k = 0; k < wordsPerMatrixRow; ++k) {
@@ -277,11 +278,9 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                     src1.push_back(bitAdjMatrix[i][k]);
                     src2.push_back(bitAdjMatrix[j][k]);
                 }
-                if((words < WORDS_PER_RANK / 2) && (words + wordsPerMatrixRow < (WORDS_PER_RANK / 2))){
-                    continue;
-                }
+            }
+            if((words + wordsPerMatrixRow > (WORDS_PER_RANK / 2)) || ((i == V - 1) && (j == V - 1) && words > 0)){
                 cout << "words: " << words << endl;
-                iterations++;
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
                 auto start = std::chrono::high_resolution_clock::now();
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
@@ -292,32 +291,17 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 if(sum < 0)
                     return -1;
                 words = 0;
+                iterations++;
                 src1.clear();
                 src2.clear();
                 dest.clear();
                 count += sum;
-            } 
-            //last raound
-            if((i == V - 1) && (j == V - 1) && words > 0){
-                cout << "lr words: " << words << endl;
-                cout << "oneCount: " << oneCount << endl;
-
-                auto start = std::chrono::high_resolution_clock::now();
-                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
-                auto end = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double, std::milli> elapsedTime = (end - start);
-                cout << "vectorAndPopCntRedSum time: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
-
-                count += sum;
-                if(sum < 0)
-                    return -1;
-                src1.clear();
-                src2.clear();
-                dest.clear();
             }
+
         }
         if (i % step == 0) {
-            std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
+            cout << "count : " << count << " oneCount: " << oneCount << endl;
+            std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
         }
     }
     cout << "oneCount: " << oneCount << endl;
