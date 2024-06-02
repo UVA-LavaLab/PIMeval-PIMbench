@@ -45,6 +45,7 @@ extern "C" {
   enum PimDataType {
     PIM_INT32 = 0,
     PIM_INT64,
+    PIM_FP32,
   };
 
   typedef int PimCoreId;
