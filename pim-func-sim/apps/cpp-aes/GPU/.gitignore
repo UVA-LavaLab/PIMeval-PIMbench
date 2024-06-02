@@ -1,4 +1,6 @@
 !*.cu
 !Makefile
 *.txt
-gpu
+*.err
+*.out
+build/
