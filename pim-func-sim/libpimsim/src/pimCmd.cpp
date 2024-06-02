@@ -109,6 +109,7 @@ pimCmdFunc1::execute(pimDevice* device)
   if (!isAssociated(objSrc, objDest)) {
     return false;
   }
+  PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
   // todo: any data type checks
@@ -124,37 +125,41 @@ pimCmdFunc1::execute(pimDevice* device)
     // perform the computation
     unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
     for (unsigned j = 0; j < numElementsInRegion; ++j) {
-      auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-      auto locDest = locateNthB32(destRegion, isVLayout, j);
+      if (dataType == PIM_INT32) {
+        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
+        auto locDest = locateNthB32(destRegion, isVLayout, j);
 
-      switch (m_cmdType) {
-      case PimCmdEnum::ABS:
-      {
-        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
-        int operand = *reinterpret_cast<int*>(&operandBits);
-        int result = std::abs(operand);
-        setB32(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<unsigned *>(&result));
-      }
-      break;
-      case PimCmdEnum::POPCOUNT:
-      {
-        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
-        int result = std::bitset<32>(operandBits).count();
-        setB32(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<unsigned *>(&result));
-      }
-      break;
-      default:
-        std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
-        assert(0);
+        switch (m_cmdType) {
+        case PimCmdEnum::ABS:
+        {
+          auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+          int operand = *reinterpret_cast<int*>(&operandBits);
+          int result = std::abs(operand);
+          setB32(core, isVLayout, locDest.first, locDest.second,
+                 *reinterpret_cast<unsigned *>(&result));
+        }
+        break;
+        case PimCmdEnum::POPCOUNT:
+        {
+          auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+          int result = std::bitset<32>(operandBits).count();
+          setB32(core, isVLayout, locDest.first, locDest.second,
+                 *reinterpret_cast<unsigned *>(&result));
+        }
+        break;
+        default:
+          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+          assert(0);
+        }
+      } else {
+        assert(0); // todo: data type
       }
     }
   }
 
   // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
@@ -176,6 +181,7 @@ pimCmdFunc2::execute(pimDevice* device)
   if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest)) {
     return false;
   }
+  PimDataType dataType = objSrc1.getDataType();
   bool isVLayout = objSrc1.isVLayout();
   
   if (objSrc1.getDataType() != objSrc2.getDataType()) {
@@ -190,7 +196,6 @@ pimCmdFunc2::execute(pimDevice* device)
   // todo: other data types
   unsigned bitsPerElement = objSrc1.getBitsPerElement();
 
-  PimDataType dataType = objSrc1.getDataType();
   for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
     const pimRegion& src1Region = objSrc1.getRegions()[i];
     const pimRegion& src2Region = objSrc2.getRegions()[i];
@@ -238,6 +243,29 @@ pimCmdFunc2::execute(pimDevice* device)
         }
         setB32(core, isVLayout, locDest.first, locDest.second,
                *reinterpret_cast<unsigned *>(&result));
+      } else if (dataType == PIM_FP32) {
+        auto operandBits1 = getB32(core, isVLayout, locSrc1.first, locSrc1.second);
+        auto operandBits2 = getB32(core, isVLayout, locSrc2.first, locSrc2.second);
+        float operand1 = *reinterpret_cast<float *>(&operandBits1);
+        float operand2 = *reinterpret_cast<float *>(&operandBits2);
+        float result = 0;
+        switch (m_cmdType) {
+        case PimCmdEnum::ADD: result = operand1 + operand2; break;
+        case PimCmdEnum::SUB: result = operand1 - operand2; break;
+        case PimCmdEnum::MUL: result = operand1 * operand2; break;
+        case PimCmdEnum::DIV:
+          if (operand2 == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+          }
+          result = operand1 / operand2;
+          break;
+        default:
+          std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", m_cmdType);
+          assert(0);
+        }
+        setB32(core, isVLayout, locDest.first, locDest.second,
+               *reinterpret_cast<unsigned *>(&result));
       } else {
         assert(0); // todo: data type
       }
@@ -246,7 +274,7 @@ pimCmdFunc2::execute(pimDevice* device)
 
   // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc2(m_cmdType, objSrc1);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
@@ -263,6 +291,7 @@ pimCmdRedSum::execute(pimDevice* device)
     return false;
   }
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
   unsigned bitsPerElement = objSrc.getBitsPerElement();
@@ -288,7 +317,7 @@ pimCmdRedSum::execute(pimDevice* device)
 
   // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, objSrc);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
@@ -305,6 +334,7 @@ pimCmdBroadcast::execute(pimDevice* device)
     return false;
   }
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  PimDataType dataType = objDest.getDataType();
   bool isVLayout = objDest.isVLayout();
 
   unsigned bitsPerElement = objDest.getBitsPerElement();
@@ -326,7 +356,7 @@ pimCmdBroadcast::execute(pimDevice* device)
 
   // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForBroadcast(m_cmdType, objDest);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
@@ -343,6 +373,7 @@ pimCmdRotate::execute(pimDevice* device)
     return false;
   }
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
 
@@ -424,7 +455,7 @@ pimCmdRotate::execute(pimDevice* device)
 
   // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRotate(m_cmdType, objSrc);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(isVLayout), msRuntime);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
