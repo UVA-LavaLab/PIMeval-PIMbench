@@ -463,11 +463,11 @@ void test_encryptdemo_parallel() {
     // Start encrypt in CPU
     auto start = std::chrono::high_resolution_clock::now();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        encryptdemo_parallel(key, buffer.data(), SIZE);
+        encryptdemo(key, buffer.data(), SIZE);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
-    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
 
 }
 
@@ -498,11 +498,11 @@ void test_decryptdemo_parallel() {
     // Start encrypt in CPU
     auto start = std::chrono::high_resolution_clock::now();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        decryptdemo_parallel(key, buffer.data(), SIZE);
+        decryptdemo(key, buffer.data(), SIZE);
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
-    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
 
 }
 

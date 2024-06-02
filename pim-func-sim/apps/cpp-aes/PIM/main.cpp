@@ -170,7 +170,8 @@ int compare_files(const char *file1, const char *file2);
 
 int main(){
     // srand(time(NULL));
-    int returnStatus = FUNCTION_UNDER_TEST();
+    // int returnStatus = testEncryptdemo();
+    int returnStatus = testDecryptdemo();
     assert(returnStatus == 0);
     return 0;
 }
@@ -1280,12 +1281,12 @@ int testEncryptdemo(void) {
     std::cout << "PIM test: AES.encryptdemo" << std::endl;
 
     // unsigned long numBytes = 1310720; 
-    unsigned long numBytes = 131072; 
+    unsigned long numBytes = 1UL * 1024 * 1024; // 1 MB
 
     unsigned bitsPerElement = 32;
     unsigned numRows = 8192;
     unsigned numCols = 8192;
-    unsigned numCores = 1; 
+    unsigned numCores = 4; 
     unsigned totalCols = numCores * numCols;
     unsigned numCalls = CEIL_DIV(numBytes, totalCols * AES_BLOCK_SIZE);
     unsigned numPaddedBufBytes = totalCols * numCalls * AES_BLOCK_SIZE;
@@ -1372,12 +1373,12 @@ int testEncryptdemo(void) {
 int testDecryptdemo(void) {
     std::cout << "PIM test: AES.decryptdemo" << std::endl;
 
-    // unsigned long numBytes = 1190406; 
-    unsigned long numBytes = 1024; 
+    // unsigned long numBytes = 1310720; 
+    unsigned long numBytes = 1UL * 1024 * 128; // 1 MB
 
     unsigned bitsPerElement = 32;
-    unsigned numRows = 65536;
-    unsigned numCols = 256;
+    unsigned numRows = 8192;
+    unsigned numCols = 8192;
     unsigned numCores = 1; 
     unsigned totalCols = numCores * numCols;
     unsigned numCalls = CEIL_DIV(numBytes, totalCols * AES_BLOCK_SIZE);
@@ -2353,13 +2354,13 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
     std::vector<PIMAuxilary*> *bufTObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
 
-        {
-            std::cout << "[DEBUG] Flag 2" << std::endl;
-            std::cout << "[DEBUG] j = " << j << std::endl;
-            std::cout << "[DEBUG] offset = " << offset << std::endl;
+        // {
+        //     std::cout << "[DEBUG] Flag 2" << std::endl;
+        //     std::cout << "[DEBUG] j = " << j << std::endl;
+        //     std::cout << "[DEBUG] offset = " << offset << std::endl;
 
-            // std::cout << "[DEBUG] (*bufTObjBuf)[" << j << "]->pimObjId = " << (*bufTObjBuf)[j]->pimObjId << std::endl;
-        }
+        //     // std::cout << "[DEBUG] (*bufTObjBuf)[" << j << "]->pimObjId = " << (*bufTObjBuf)[j]->pimObjId << std::endl;
+        // }
 
         (*bufTObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[j + offset]);
         status = pimCopyHostToDevice(PIM_COPY_V, (void*)(*inputObjBuf)[j + offset]->array.data(), (*bufTObjBuf)[j]->pimObjId);
