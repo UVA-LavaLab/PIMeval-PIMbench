@@ -234,17 +234,33 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
       auto start = std::chrono::high_resolution_clock::now();
 
       int hopSize = outMatSize * outMatSize;
-      if (j == 0)
+      std::vector<int> localSums(hopSize, 0);
+
+#pragma omp parallel
       {
-        std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
+        std::vector<int> threadLocalSums(hopSize, 0);
+
+#pragma omp for
+        for (int m = 0; m < hopSize; ++m)
+        {
+          for (int n = m + hopSize; n < outVector.size(); n += hopSize)
+          {
+            threadLocalSums[m] += outVector[n];
+          }
+        }
+
+#pragma omp critical
+        {
+          for (int m = 0; m < hopSize; ++m)
+          {
+            localSums[m] += threadLocalSums[m];
+          }
+        }
       }
 
       for (int m = 0; m < hopSize; ++m)
       {
-        for (int n = m + hopSize; n < outVector.size(); n += hopSize)
-        {
-          dstVec[m] += outVector[n];
-        }
+        dstVec[m] += localSums[m];
       }
       auto end = std::chrono::high_resolution_clock::now();
       hostElapsedTime += (end - start);
@@ -476,17 +492,27 @@ void softmax(const std::vector<int> &input, std::vector<int> &output)
   int max_input = *std::max_element(input.begin(), input.end());
 
   // Compute the exponentials of each element (subtracting the max value for stability)
-  std::vector<int> exponentials(input.size());
+  std::vector<double> exponentials(input.size());
+
+#pragma omp parallel for
   for (size_t i = 0; i < input.size(); ++i)
   {
-    exponentials[i] = std::exp(input[i] - max_input);
+    exponentials[i] = std::exp(static_cast<double>(input[i] - max_input));
   }
 
   // Compute the sum of exponentials
-  int sum_exponentials = std::accumulate(exponentials.begin(), exponentials.end(), 0.0);
+  double sum_exponentials = 0.0;
+
+#pragma omp parallel for reduction(+ : sum_exponentials)
+  for (size_t i = 0; i < exponentials.size(); ++i)
+  {
+    sum_exponentials += exponentials[i];
+  }
 
   // Compute the softmax values
   output.resize(input.size());
+
+#pragma omp parallel for
   for (size_t i = 0; i < input.size(); ++i)
   {
     output[i] = exponentials[i] / sum_exponentials;
