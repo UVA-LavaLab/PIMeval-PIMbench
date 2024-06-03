@@ -8,5 +8,5 @@
 #SBATCH --nodelist=cheetah01
 #SBATCH --reservation=skadron
 #SBATCH --partition=gpu
-./aes
+./aes.out
 
