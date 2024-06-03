@@ -4,6 +4,11 @@
 #include <time.h>
 #include <math.h>
 #include <inttypes.h>
+#include <chrono>
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <random>
 #define MEASUREMENT_TIMES 10
 
 
@@ -18,6 +23,10 @@ uint8_t ctx_deckey[32];
 
 #define F(x)   (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
 #define FD(x)  (((x) >> 1) ^ (((x) & 1) ? 0x8d : 0))
+
+
+// Function to compare two files
+int compare_files(const char *file1, const char *file2);
 
 
 // S table
@@ -370,8 +379,6 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
   cudaMemcpyToSymbol(sbox, sbox, sizeof(uint8_t)*256);
 
-  printf("\nBeginning encryption\n");
-  aes256_init(key);
 
   cudaMalloc((void**)&buf_d, numbytes);
   cudaMalloc((void**)&ctx_enckey_d, sizeof(ctx_enckey));
@@ -382,7 +389,6 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
   cudaMemcpy(ctx_key_d, ctx_key, sizeof(ctx_key), cudaMemcpyHostToDevice);
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
-  // printf("Creating %d threads over %d blocks\n", dimBlock.x*dimGrid.x, dimBlock.x);
   aes256_encrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_enckey_d, ctx_key_d);
 
   cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
@@ -403,7 +409,6 @@ void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
   cudaMemcpyToSymbol(sboxinv, sboxinv, sizeof(uint8_t)*256);
 
-  printf("\nBeginning decryption\n");
 
   cudaMalloc((void**)&buf_d, numbytes);
   cudaMalloc((void**)&ctx_deckey_d, sizeof(ctx_deckey));
@@ -415,7 +420,6 @@ void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
-  printf("Creating %d threads over %d blocks\n", dimBlock.x*dimGrid.x, dimBlock.x);
   aes256_decrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_deckey_d, ctx_key_d);
 
   cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
@@ -432,95 +436,240 @@ __global__ void GPU_init() { }
 
 
 
-int main(){
+// Tester function
+void test_encryptdemo_parallel() {
+    const unsigned long SIZE = 1UL * 1024 * 1024 * 1024; // 1 GB
+    uint8_t key[32];
 
-  // open file
-  FILE *file;
-  uint8_t *buf; 
-  unsigned long numbytes;
-  char *fname;
-  clock_t start, enc_time, dec_time, end;
-  int mili_sec, i;
-  int padding;
- 
-  uint8_t key[32];
+    // Fill the key with random bytes
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+    for (auto& k : key) {
+        k = dis(gen);
+    }
 
-  int deviceCount = 0;
-  cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
+    // Allocate 1GB buffer and fill with random data
+    std::vector<uint8_t> buffer(SIZE);
+    for (auto& byte : buffer) {
+        byte = dis(gen);
+    }
 
-  if (error_id != cudaSuccess){
-    printf("Error: %s\n", cudaGetErrorString(error_id));
-    printf("Exiting...\n");
-    exit(EXIT_FAILURE);
-  }
+    // This is to force nvcc to put the GPU initialization here.
+    GPU_init<<<1, 1>>>();
+  
+    aes256_init(key);
 
-  if (deviceCount == 0){
-    printf("There are no available device(s) that support CUDA\n");
-    exit(EXIT_FAILURE);
-  }
+    // Start encrypt in CPU
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+        encryptdemo(key, buffer.data(), SIZE);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
 
+}
 
-  // handle txt file
-  fname = "../input.txt";  
-  file = fopen(fname, "r");
-  if (file == NULL) {printf("File %s doesn't exist\n", fname); exit(1); }
-  printf("Opened file %s\n", fname);
-  fseek(file, 0L, SEEK_END);
-  numbytes = ftell(file);
-  printf("Size is %lu\n", numbytes);
+void test_decryptdemo_parallel() {
+    const unsigned long SIZE = 1UL * 1024 * 1024 * 1024; // 1 GB
+    uint8_t key[32];
 
-  // copy file into memory
-  fseek(file, 0L, SEEK_SET);
-  buf = (uint8_t*)calloc(numbytes, sizeof(uint8_t));
-  if(buf == NULL) exit(1);
-  if (fread(buf, 1, numbytes, file) != numbytes)
-  {
-    printf("Unable to read all bytes from file %s\n", fname);
-    exit(EXIT_FAILURE);
-  }
-  fclose(file);
+    // Fill the key with random bytes
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+    for (auto& k : key) {
+        k = dis(gen);
+    }
 
-  // calculate the padding
-  padding = numbytes % AES_BLOCK_SIZE;
-  numbytes += padding;
-  printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
+    // Allocate 1GB buffer and fill with random data
+    std::vector<uint8_t> buffer(SIZE);
+    for (auto& byte : buffer) {
+        byte = dis(gen);
+    }
 
-  // generate key
-  for (i = 0; i < sizeof(key);i++) key[i] = i;
-
-  // this is to force nvcc to put the gpu initialization here
-  GPU_init<<<1, 1>>>();
-
-  // encryption
-  start = clock();
-  for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-    encryptdemo(key, buf, numbytes);
-  }
-  end = clock();
-  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC /MEASUREMENT_TIMES);
-  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
+    // This is to force nvcc to put the GPU initialization here.
+    GPU_init<<<1, 1>>>();
+  
+    aes256_init(key);
 
 
-  // write into file
-  file = fopen("cipher.txt", "w");
-  fwrite(buf, 1, numbytes, file);
-  fclose(file);
+    // Start encrypt in CPU
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+        decryptdemo(key, buffer.data(), SIZE);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
 
-  // decryption
-  start = clock();
-  for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-    decryptdemo(key, buf, numbytes);
-  }
-  end = clock();
-  printf("time used:%f\n",  (double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES);
-  printf("GPU encryption throughput: %f bytes/second\n",  (double)(numbytes) / ((double)(end - start) / CLOCKS_PER_SEC / MEASUREMENT_TIMES));
+}
 
 
-  // write into file
-  file = fopen("output.txt", "w");
-  fwrite(buf, 1, numbytes - padding, file);
-  fclose(file);
+int main(int argc, char *argv[]) {
+    test_encryptdemo_parallel();
+    test_decryptdemo_parallel();
+    return 0;
+    // if (argc != 5) {
+    //     printf("Usage: %s <key_file> <input_file> <cipher_file> <output_file>\n", argv[0]);
+    //     return EXIT_FAILURE;
+    // }
 
-  free(buf);
-  return EXIT_SUCCESS;
+    // FILE *file;
+    // uint8_t *buf; 
+    // unsigned long numbytes;
+    // char *key_file = argv[1];
+    // char *input_file = argv[2];
+    // char *cipher_file = argv[3];
+    // char *output_file = argv[4];
+    // int padding;
+    // uint8_t key[32];
+
+    // int deviceCount = 0;
+    // cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
+
+    // if (error_id != cudaSuccess) {
+    //     printf("Error: %s\n", cudaGetErrorString(error_id));
+    //     printf("Exiting...\n");
+    //     return EXIT_FAILURE;
+    // }
+
+    // if (deviceCount == 0) {
+    //     printf("There are no available device(s) that support CUDA\n");
+    //     return EXIT_FAILURE;
+    // }
+
+    // // Open and read the key file.
+    // file = fopen(key_file, "r");
+    // if (file == NULL) {
+    //     printf("Error opening key file %s\n", key_file);
+    //     return EXIT_FAILURE;
+    // }
+
+    // // Read the key from the key file.
+    // if (fread(key, 1, 32, file) != 32) {
+    //     printf("The key length in %s is not 32 characters\n", key_file);
+    //     fclose(file);
+    //     return EXIT_FAILURE;
+    // }
+
+    // // Verify that there are no extra characters.
+    // char extra;
+    // if (fread(&extra, 1, 1, file) != 0) {
+    //     printf("The key length in %s is more than 32 characters\n", key_file);
+    //     fclose(file);
+    //     return EXIT_FAILURE;
+    // }
+    // fclose(file);
+
+    // // Open and read the input file.
+    // file = fopen(input_file, "r");
+    // if (file == NULL) {
+    //     printf("Error opening file %s\n", input_file);
+    //     return EXIT_FAILURE;
+    // }
+
+    // fseek(file, 0L, SEEK_END);
+    // numbytes = ftell(file);
+    // fseek(file, 0L, SEEK_SET);
+
+    // // Allocate memory for the file content.
+    // buf = (uint8_t*)calloc(numbytes, sizeof(uint8_t));
+    // if (buf == NULL) {
+    //     printf("Memory allocation error\n");
+    //     fclose(file);
+    //     return EXIT_FAILURE;
+    // }
+
+    // // Read the file into the buffer.
+    // if (fread(buf, 1, numbytes, file) != numbytes) {
+    //     printf("Unable to read all bytes from file %s\n", input_file);
+    //     fclose(file);
+    //     free(buf);
+    //     return EXIT_FAILURE;
+    // }
+    // fclose(file);
+
+    // // Calculate padding.
+    // padding = AES_BLOCK_SIZE - (numbytes % AES_BLOCK_SIZE);
+    // numbytes += padding;
+    // printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
+
+    // // This is to force nvcc to put the GPU initialization here.
+    // GPU_init<<<1, 1>>>();
+  
+    // aes256_init(key);
+    // // Encryption.
+    // auto start = std::chrono::high_resolution_clock::now();
+    // for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+    //     encryptdemo(key, buf, numbytes);
+    // }
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    // std::cout << "Encryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+    // std::cout << "GPU encryption throughput: " << std::fixed << std::setprecision(3) << (numbytes / elapsedTime.count() * 1000) << " bytes/second\n";
+
+    // // Write the ciphertext to file.
+    // file = fopen(cipher_file, "w");
+    // fwrite(buf, 1, numbytes, file);
+    // fclose(file);
+
+    // // Decryption.
+    // start = std::chrono::high_resolution_clock::now();
+    // for (int k = 0; k < MEASUREMENT_TIMES; k++) {
+    //     decryptdemo(key, buf, numbytes);
+    // }
+    // end = std::chrono::high_resolution_clock::now();
+    // elapsedTime = (end - start) / MEASUREMENT_TIMES;
+    // std::cout << "Decryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+    // std::cout << "GPU decryption throughput: " << std::fixed << std::setprecision(3) << (numbytes / elapsedTime.count() * 1000) << " bytes/second\n";
+
+    // // Write the output file.
+    // file = fopen(output_file, "w");
+    // fwrite(buf, 1, numbytes - padding, file);
+    // fclose(file);
+
+
+    // // Compare input and output files
+    // if (compare_files(input_file, output_file) == 0) {
+    //     printf("SUCCESS: The input file and the output file are the same.\n");
+    // } else {
+    //     printf("FAILED: The input file and the output file are different.\n");
+    // }
+
+
+    // free(buf);
+    // return EXIT_SUCCESS;
+}
+
+
+int compare_files(const char *file1, const char *file2) {
+    FILE *f1 = fopen(file1, "r");
+    FILE *f2 = fopen(file2, "r");
+    if (f1 == NULL || f2 == NULL) {
+        if (f1) fclose(f1);
+        if (f2) fclose(f2);
+        return -1;
+    }
+
+    int ch1, ch2;
+    do {
+        ch1 = fgetc(f1);
+        ch2 = fgetc(f2);
+        if (ch1 != ch2) {
+            fclose(f1);
+            fclose(f2);
+            return -1;
+        }
+    } while (ch1 != EOF && ch2 != EOF);
+
+    fclose(f1);
+    fclose(f2);
+
+    if (ch1 == EOF && ch2 == EOF) {
+        return 0;
+    } else {
+        return -1;
+    }
 }
