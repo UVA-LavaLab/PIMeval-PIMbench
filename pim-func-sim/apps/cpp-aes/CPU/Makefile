@@ -1,6 +1,24 @@
+# Compiler
+CXX := g++
 
-all: main.c
-	gcc main.c -o cpu
+# Compiler flags
+CXXFLAGS := -Wall -std=c++11 -O3 -fopenmp
 
-clean: 
-	rm -f *.txt cpu
+# Output directory
+BUILD_DIR := ./build
+
+# Executable name
+TARGET := $(BUILD_DIR)/aes
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^ aes.cpp
+
+$(BUILD_DIR):
+	@mkdir -p $(BUILD_DIR)
+
+clean:
+	rm -r $(BUILD_DIR)
