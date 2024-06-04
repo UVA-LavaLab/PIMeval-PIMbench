@@ -141,8 +141,6 @@ int bit32TriangleCount(const vector<vector<bool>>& adjMatrix, const vector<vecto
     int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     int step = V / 10; // Each 10 percent of the total iterations
     int oneCount = 0;
-    uint32_t words = 0;
-    int partialcount = 0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
@@ -150,21 +148,12 @@ int bit32TriangleCount(const vector<vector<bool>>& adjMatrix, const vector<vecto
                 int dotProduct = 0;
                 for (int k = 0; k < numInts; ++k) {
                     dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
-                    words++;
                 }
                 count += dotProduct;
                 oneCount++;
-                partialcount += dotProduct;
-                if(words > 4294964000)
-                {
-                    cout << "*words: " << words << " count: " << count << " partialcount: " << partialcount << endl;
-                    words = 0;
-                    partialcount = 0;
-                }
             }
         }
         if (i % step == 0) {
-            cout << "words: " << words << " count: " << count << " partialcount: " << partialcount << endl;
             cout << "count: " << count << " oneCount: " << oneCount << endl;
             std::cout << "bit32TriangleCount: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
         }
@@ -206,37 +195,7 @@ int bit32TriangleCount_parallel(const vector<vector<bool>>& adjMatrix, const vec
 // Function to run unit tests
 void runTests() {
     // Test 1: Simple triangle
-    // vector<vector<int>> adjMatrix1 = {
-    //     {0, 1, 1, 0},
-    //     {1, 0, 1, 0},
-    //     {1, 1, 0, 0},
-    //     {0, 0, 0, 0}
-    // };
-    // assert(countTriangles(adjMatrix1) == 1);
-    // assert(bitTriangleCount(adjMatrix1) == 1);
-
-    // // Test 2: No triangles
-    // vector<vector<int>> adjMatrix2 = {
-    //     {0, 1, 0, 0},
-    //     {1, 0, 1, 0},
-    //     {0, 1, 0, 1},
-    //     {0, 0, 1, 0}
-    // };
-    // assert(countTriangles(adjMatrix2) == 0);
-    // assert(bitTriangleCount(adjMatrix2) == 0);
-
-    // // Test 3: Multiple triangles
-    // vector<vector<int>> adjMatrix3 = {
-    //     {0, 1, 1, 1},
-    //     {1, 0, 1, 1},
-    //     {1, 1, 0, 1},
-    //     {1, 1, 1, 0}
-    // };
-    // assert(countTriangles(adjMatrix3) == 4);
-    // assert(bitTriangleCount(adjMatrix3) == 4);
-
-    // Test 4: Larger graph with 2 triangles
-    cout << "Test 4: Large sparse graph\n";
+    cout << "Test 1: Large sparse graph\n";
     vector<vector<bool>> adjMatrix4 = {
         {0, 1, 1, 1, 0},
         {1, 0, 1, 0, 0},
@@ -247,8 +206,8 @@ void runTests() {
     assert(countTriangles(adjMatrix4) == 1);
     assert(bitTriangleCount(adjMatrix4) == 1);
 
-    // Test 5: Large sparse graph (10 vertices, 1 triangle)
-    cout << "Test 5: Large sparse graph\n";
+    // Test 2: Large sparse graph (10 vertices, 1 triangle)
+    cout << "Test 2: Large sparse graph\n";
     vector<vector<bool>> adjMatrix5 = {
         {0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
         {1, 0, 1, 0, 0, 0, 0, 0, 0, 0},

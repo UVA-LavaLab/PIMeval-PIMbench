@@ -19,7 +19,7 @@
 #define ROW_SIZE 8192
 #define COL_SIZE 8192
 
-uint64_t WORDS_PER_RANK = (uint64_t) 4 * (uint64_t) 8192 * (uint64_t) 8192 / (uint64_t) BITS_PER_INT;
+uint64_t WORDS_PER_RANK = (uint64_t) NUM_SUBARRAY * (uint64_t) ROW_SIZE * (uint64_t) COL_SIZE / (uint64_t) BITS_PER_INT;
 
 typedef uint32_t UINT32;
 
@@ -153,20 +153,6 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
     return edgeList;
 }
 
-//Bit serial PIM performs reduction operation on host
-void reductionSumBitSerial_n(const std::vector<int> &reductionVector, int &reductionValue, std::chrono::duration<double, std::milli> &reductionTime)
-{
-  auto start = std::chrono::high_resolution_clock::now();
-  reductionValue = 0;
-// #pragma omp parallel for reduction(+ : sum)
-  for (size_t i = 0; i < reductionVector.size(); ++i)
-  {
-    reductionValue += reductionVector[i];
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  reductionTime += (end - start);
-}
-
 int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2){
     unsigned bitsPerElement = sizeof(int) * 8;
 
@@ -229,13 +215,6 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "Abort" << std::endl;
         return -1;
     }
-    
-    // int sum2 = 0;
-    // std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
-    // reductionSumBitSerial_n(dst, sum2, hostElapsedTime);
-
-    // cout << "sum: " << sum << endl;
-    // cout << "sum2: " << sum2 << endl;
 
     pimFree(srcObj1);
     pimFree(srcObj2);
@@ -284,7 +263,6 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
-    cout << "number of ndoes: " << V << endl;
     cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
     cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
     assert(wordsPerMatrixRow <=  (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
@@ -314,14 +292,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsedTime = (end - start);
                 cout << "vectorAndPopCntRedSum time: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
-                return -1;
-                // verfy by cpu
-                // int sum3 = 0;
-                // for (int l = 0; l < src1.size(); ++l) {
-                //     sum3 += __builtin_popcount(src1[l] & src2[l]);
-                // }
-                // cout << "cpu sum3: " << sum3 << " src1.size(): " << src1.size() << endl;
-
+           
                 if(sum < 0)
                     return -1;
                 words = 0;
