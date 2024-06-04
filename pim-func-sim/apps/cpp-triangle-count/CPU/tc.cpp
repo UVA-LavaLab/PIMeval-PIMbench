@@ -141,6 +141,8 @@ int bit32TriangleCount(const vector<vector<bool>>& adjMatrix, const vector<vecto
     int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     int step = V / 10; // Each 10 percent of the total iterations
     int oneCount = 0;
+    uint32_t words = 0;
+    int partialcount = 0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) { // If there's an edge between i and j
@@ -148,12 +150,21 @@ int bit32TriangleCount(const vector<vector<bool>>& adjMatrix, const vector<vecto
                 int dotProduct = 0;
                 for (int k = 0; k < numInts; ++k) {
                     dotProduct += __builtin_popcount(bitAdjMatrix[i][k] & bitAdjMatrix[j][k]);
+                    words++;
                 }
                 count += dotProduct;
                 oneCount++;
+                partialcount += dotProduct;
+                if(words > 4294964000)
+                {
+                    cout << "*words: " << words << " count: " << count << " partialcount: " << partialcount << endl;
+                    words = 0;
+                    partialcount = 0;
+                }
             }
         }
         if (i % step == 0) {
+            cout << "words: " << words << " count: " << count << " partialcount: " << partialcount << endl;
             cout << "count: " << count << " oneCount: " << oneCount << endl;
             std::cout << "bit32TriangleCount: Progress: " << (i * 100 / V) << "\% completed." << std::endl;
         }
@@ -170,7 +181,6 @@ int bit32TriangleCount_parallel(const vector<vector<bool>>& adjMatrix, const vec
     int V = bitAdjMatrix.size();
     int numInts = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     int step = V / 10; // Each 10 percent of the total iterations
-    
     #pragma omp parallel for reduction(+:count)
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {

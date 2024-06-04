@@ -19,7 +19,7 @@
 #define ROW_SIZE 8192
 #define COL_SIZE 8192
 
-uint64_t WORDS_PER_RANK = (uint64_t) 4096 * (uint64_t) 8192 * (uint64_t) 8192 / (uint64_t) BITS_PER_INT;
+uint64_t WORDS_PER_RANK = (uint64_t) 4 * (uint64_t) 8192 * (uint64_t) 8192 / (uint64_t) BITS_PER_INT;
 
 typedef uint32_t UINT32;
 
@@ -153,7 +153,21 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
     return edgeList;
 }
 
-int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2, std::vector<unsigned int> &dst){
+//Bit serial PIM performs reduction operation on host
+void reductionSumBitSerial_n(const std::vector<int> &reductionVector, int &reductionValue, std::chrono::duration<double, std::milli> &reductionTime)
+{
+  auto start = std::chrono::high_resolution_clock::now();
+  reductionValue = 0;
+// #pragma omp parallel for reduction(+ : sum)
+  for (size_t i = 0; i < reductionVector.size(); ++i)
+  {
+    reductionValue += reductionVector[i];
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  reductionTime += (end - start);
+}
+
+int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2){
     unsigned bitsPerElement = sizeof(int) * 8;
 
     cout << "numElements: " << numElements << endl;
@@ -200,6 +214,14 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
+    std::vector<int> dst(numElements);
+    status = pimCopyDeviceToHost(srcObj2, (void *)dst.data());
+    if (status != PIM_OK)
+    {
+        std::cout << "Abort" << std::endl;
+        return -1;
+    }
+
     int sum = 0;
     status = pimRedSum(srcObj2, &sum);
     if (status != PIM_OK)
@@ -207,6 +229,13 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "Abort" << std::endl;
         return -1;
     }
+    
+    // int sum2 = 0;
+    // std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+    // reductionSumBitSerial_n(dst, sum2, hostElapsedTime);
+
+    // cout << "sum: " << sum << endl;
+    // cout << "sum2: " << sum2 << endl;
 
     pimFree(srcObj1);
     pimFree(srcObj2);
@@ -232,13 +261,12 @@ int run_naive(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>
                 oneCount++;
                 std::vector<unsigned int> src1(numElements);
                 std::vector<unsigned int> src2(numElements);
-                std::vector<unsigned int> dest(numElements);
                 // cout << "i: " << i << ", j: " << j << endl;
                 for (int k = 0; k < numElements; ++k) {
                     src1[k] = bitAdjMatrix[i][k];
                     src2[k] = bitAdjMatrix[j][k];
                 } 
-                int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2, dest);
+                int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2);
                 if(sum < 0)
                     return -1;
                 //redsum
@@ -264,7 +292,6 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     uint64_t words = 0;
     std::vector<unsigned int> src1;
     std::vector<unsigned int> src2;
-    std::vector<unsigned int> dest;
     int step = V / 10; // Each 10 percent of the total iterations
     uint16_t iterations = 0;
     for (int i = 0; i < V; ++i) {
@@ -283,10 +310,17 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 cout << "words: " << words << endl;
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
                 auto start = std::chrono::high_resolution_clock::now();
-                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dest);
+                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2);
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsedTime = (end - start);
                 cout << "vectorAndPopCntRedSum time: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+                return -1;
+                // verfy by cpu
+                // int sum3 = 0;
+                // for (int l = 0; l < src1.size(); ++l) {
+                //     sum3 += __builtin_popcount(src1[l] & src2[l]);
+                // }
+                // cout << "cpu sum3: " << sum3 << " src1.size(): " << src1.size() << endl;
 
                 if(sum < 0)
                     return -1;
@@ -294,7 +328,6 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 iterations++;
                 src1.clear();
                 src2.clear();
-                dest.clear();
                 count += sum;
             }
 
