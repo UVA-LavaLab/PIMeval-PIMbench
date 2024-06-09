@@ -1,3 +1,6 @@
+// Triangle Counting Benchmark
+// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -8,7 +11,9 @@
 #include <unordered_set>
 #include <sstream>
 #include <getopt.h>
+#if defined(_OPENMP)
 #include <omp.h>
+#endif
 
 #include "../util.h"
 #include "libpimsim.h"
