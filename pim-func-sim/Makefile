@@ -4,6 +4,8 @@
 LIBDIR := libpimsim
 APPDIR := apps
 TESTDIR := tests
+# Handle dependency between lib and apps to support make -j
+DEP_LIBPIMSIM := $(LIBDIR)/lib/libpimsim.a
 
 .PHONY: debug perf dramsim3_integ clean $(LIBDIR) $(APPDIR) $(TESTDIR)
 .DEFAULT_GOAL := perf
@@ -25,6 +27,9 @@ PIM_SIM_TARGET ?= PIM_DEVICE_NONE
 # Run make with USE_OPENMP=1 to enable OpenMP in some apps
 USE_OPENMP ?= 0
 
-$(LIBDIR) $(APPDIR) $(TESTDIR):
+$(DEP_LIBPIMSIM) $(LIBDIR):
+	$(MAKE) -C $(LIBDIR) $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP)
+
+$(APPDIR) $(TESTDIR): $(DEP_LIBPIMSIM)
 	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP)
 
