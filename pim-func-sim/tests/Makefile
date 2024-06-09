@@ -1,4 +1,4 @@
-# Makefile for PIM Functional Simulator - Applications
+# Makefile for PIM Functional Simulator - Tests
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 SUBDIRS := $(wildcard */.)
@@ -6,19 +6,17 @@ SUBDIRS := $(wildcard */.)
 .PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
 .DEFAULT_GOAL := perf
 
-USE_OPENMP ?= 0
-
 debug: $(SUBDIRS)
-	@echo "INFO: apps target = debug"
+	@echo "INFO: tests target = debug"
 
 perf: $(SUBDIRS)
-	@echo "INFO: apps target = perf"
+	@echo "INFO: tests target = perf"
 
 dramsim3_integ: $(SUBDIRS)
-	@echo "INFO: apps target = dramsim3_integ"
+	@echo "INFO: tests target = dramsim3_integ"
 
 clean: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 

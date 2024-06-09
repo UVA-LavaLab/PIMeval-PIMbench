@@ -1,4 +1,4 @@
-# Makefile common settings used by apps subdirs
+# Makefile common settings used by tests subdirs
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 CXX := g++
