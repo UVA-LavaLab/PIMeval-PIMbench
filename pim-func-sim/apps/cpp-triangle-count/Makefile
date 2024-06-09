@@ -1,3 +1,6 @@
+# Makefile for Triangle Counting Benchmark
+# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+
 include ../Makefile.common
 
 CXXFLAGS += -O3
