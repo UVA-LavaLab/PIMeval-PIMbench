@@ -19,9 +19,12 @@ dramsim3_integ: $(LIBDIR) $(APPDIR) $(TESTDIR)
 
 clean: $(LIBDIR) $(APPDIR) $(TESTDIR)
 
-# Run "make PIM_SIM_TARGET=<PimDeviceEnum>" to override default simulation target
+# Run make with PIM_SIM_TARGET=<PimDeviceEnum> to override default simulation target
 PIM_SIM_TARGET ?= PIM_DEVICE_NONE
 
+# Run make with USE_OPENMP=1 to enable OpenMP in some apps
+USE_OPENMP ?= 0
+
 $(LIBDIR) $(APPDIR) $(TESTDIR):
-	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET)
+	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP)
 
