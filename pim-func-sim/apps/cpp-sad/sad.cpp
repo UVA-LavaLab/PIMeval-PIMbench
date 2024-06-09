@@ -51,12 +51,12 @@ int main()
     src1[i] = i;
   }
 
-  for(int i = 0; i < subvectorLength; i++){
+  for (int i = 0; i < subvectorLength; ++i) {
     src2[i] = src1[i + correct_idx];
   }
-  
-  for(int i = 0; i < vectorLength; i += subvectorLength){
-    for(int j = 0; j < subvectorLength; j++){
+
+  for (int i = 0; i < vectorLength; i += subvectorLength) {
+    for (int j = 0; j < subvectorLength; j++) {
       replicateSrc2[i+j] = src2[j];
     }
   }
@@ -90,16 +90,16 @@ int main()
       return 1;
     }
 
-    for(int i = 0; i < vectorLength; i += subvectorLength){
-      status = pimRedSumRanged(obj3, ((idx+i) % vectorLength), ((idx+i+subvectorLength-1) % vectorLength), &sum_abs_diff);
+    for (int i = idx; i + subvectorLength - 1 < vectorLength; i += subvectorLength) {
+      status = pimRedSumRanged(obj3, i, i + subvectorLength - 1, &sum_abs_diff);
       if (status != PIM_OK) {
         std::cout << "Abort" << std::endl;
         return 1;
       }
-      // Update minimum 
+      // Update minimum
       // TODO: put the reduction sum ranged value in a vector object and calculate the minimum in PIM. Currently it executes the comparison on CPU
-      if(sum_abs_diff < min_diff){
-        min_idx = idx + i;
+      if (sum_abs_diff < min_diff) {
+        min_idx = i;
         min_diff = sum_abs_diff;
       }
     }
@@ -111,12 +111,11 @@ int main()
     }
   }
 
-  if(min_idx == correct_idx)
+  if (min_idx == correct_idx) {
     printf("Best match found!\n");
-  else{
+  } else {
     std::cout << "Failed to find best match" << std::endl;
-    std::cout << "measured: " << min_idx << ", expected " 
-    << correct_idx << std::endl;
+    std::cout << "Result index is " << min_idx << ", expected to be " << correct_idx << std::endl;
   }
 
   pimShowStats();
