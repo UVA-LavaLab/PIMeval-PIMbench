@@ -31,18 +31,26 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
   std::printf("PIM-Info: Config: #ranks = %u, #bankPerRank = %u, #subarrayPerBank = %u, #rows = %u, $cols = %u\n",
               numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   PimDeviceEnum simTarget = pimSim::get()->getParamsPerf()->getSimTarget();
-  if (simTarget == PIM_DEVICE_FULCRUM) {
-    std::printf("PIM-Info: To model Fulcrum, aggregate every two subarrays as a single core\n");
+  switch (simTarget) {
+  case PIM_DEVICE_BITSIMD_V:
+  case PIM_DEVICE_BITSIMD_V_AP:
+  case PIM_DEVICE_BITSIMD_H:
+  case PIM_DEVICE_FULCRUM:
+    std::printf("PIM-Info: Aggregate every two subarrays as a single core\n");
     if (numSubarrayPerBank % 2 != 0) {
-      std::printf("PIM-Error: Please config even number of subarrays in each bank for fulcrum\n");
+      std::printf("PIM-Error: Please config even number of subarrays in each bank\n");
       return false;
     }
     numRows *= 2;
     numSubarrayPerBank /= 2;
-  } else if (simTarget == PIM_DEVICE_BANK_LEVEL) {
-    std::printf("PIM-Info: To model bank level PIM, aggregate all subarrays within a bank as a single core.\n");
+    break;
+  case PIM_DEVICE_BANK_LEVEL:
+    std::printf("PIM-Info: Aggregate all subarrays within a bank as a single core\n");
     numRows *= numSubarrayPerBank;
     numSubarrayPerBank = 1;
+    break;
+  default:
+    assert(0);
   }
   return true;
 }
