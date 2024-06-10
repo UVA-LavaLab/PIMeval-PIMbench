@@ -54,7 +54,7 @@ pimSim::~pimSim()
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
   if (m_device != nullptr) {
@@ -68,7 +68,7 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSu
               pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
 
   m_device = new pimDevice();
-  m_device->init(deviceType, numBanks, numSubarrayPerBank, numRows, numCols);
+  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
@@ -139,6 +139,56 @@ PimDeviceEnum
 pimSim::getSimTarget() const
 {
   return m_paramsPerf->getSimTarget();
+}
+
+//! @brief  Get number of ranks
+unsigned
+pimSim::getNumRanks() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumRanks();
+  }
+  return 0;
+}
+
+//! @brief  Get number of banks per rank
+unsigned
+pimSim::getNumBankPerRank() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumBankPerRank();
+  }
+  return 0;
+}
+
+//! @brief  Get number of subarrays per bank
+unsigned
+pimSim::getNumSubarrayPerBank() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumSubarrayPerBank();
+  }
+  return 0;
+}
+
+//! @brief  Get number of rows per subarray
+unsigned
+pimSim::getNumRowPerSubarray() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumRowPerSubarray();
+  }
+  return 0;
+}
+
+//! @brief  Get number of cols per subarray
+unsigned
+pimSim::getNumColPerSubarray() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumColPerSubarray();
+  }
+  return 0;
 }
 
 //! @brief  Get number of PIM cores

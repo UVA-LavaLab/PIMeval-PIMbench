@@ -8,9 +8,9 @@
 
 //! @brief  Create a PIM device
 PimStatus
-pimCreateDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
-  bool ok = pimSim::get()->createDevice(deviceType, numBanks, numSubarrayPerBank, numRows, numCols);
+  bool ok = pimSim::get()->createDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
