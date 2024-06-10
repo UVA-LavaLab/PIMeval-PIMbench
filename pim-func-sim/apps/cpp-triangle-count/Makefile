@@ -4,7 +4,7 @@
 include ../Makefile.common
 
 CXXFLAGS += -O3
-EXEC := tc
+EXEC := tc.out
 SRC := tc.cpp
 
 debug perf dramsim3_integ: $(EXEC)

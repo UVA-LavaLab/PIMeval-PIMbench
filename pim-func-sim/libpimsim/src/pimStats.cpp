@@ -70,9 +70,15 @@ pimStatsMgr::showDeviceParams() const
               pimUtils::pimDeviceEnumToStr(pimSim::get()->getDeviceType()).c_str());
   std::printf(" %30s : %s\n", "PIM Simulation Target",
               pimUtils::pimDeviceEnumToStr(pimSim::get()->getSimTarget()).c_str());
+  std::printf(" %30s : %u, %u, %u, %u, %u\n", "Rank, Bank, Subarray, Row, Col",
+              pimSim::get()->getNumRanks(),
+              pimSim::get()->getNumBankPerRank(),
+              pimSim::get()->getNumSubarrayPerBank(),
+              pimSim::get()->getNumRowPerSubarray(),
+              pimSim::get()->getNumColPerSubarray());
   std::printf(" %30s : %u\n", "Number of PIM Cores", pimSim::get()->getNumCores());
   std::printf(" %30s : %u\n", "Number of Rows per Core", pimSim::get()->getNumRows());
-  std::printf(" %30s : %u\n", "Number of Columns per Core", pimSim::get()->getNumCols());
+  std::printf(" %30s : %u\n", "Number of Cols per Core", pimSim::get()->getNumCols());
   std::printf(" %30s : %f GB/s\n", "Typical Rank BW", m_paramsDram->getTypicalRankBW());
   std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
   std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());

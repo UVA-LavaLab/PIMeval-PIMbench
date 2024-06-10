@@ -84,8 +84,8 @@ pimParamsPerf::isHybridLayoutDevice() const
 double
 pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
 {
-  int numCores = static_cast<int>(pimSim::get()->getNumCores());
-  int numActiveRank = std::min(numCores, 16); // Up to 16 ranks
+  int numRanks = static_cast<int>(pimSim::get()->getNumRanks());
+  int numActiveRank = numRanks;
   double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
   double totalMsRuntime = static_cast<double>(numBytes) / (typicalRankBW * numActiveRank * 1024 * 1024 * 1024 / 1000);
   return totalMsRuntime;
