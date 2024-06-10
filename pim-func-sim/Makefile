@@ -3,24 +3,33 @@
 
 LIBDIR := libpimsim
 APPDIR := apps
+TESTDIR := tests
+# Handle dependency between lib and apps to support make -j
+DEP_LIBPIMSIM := $(LIBDIR)/lib/libpimsim.a
 
-.PHONY: debug perf dramsim3_integ clean $(LIBDIR) $(APPDIR)
+.PHONY: debug perf dramsim3_integ clean $(LIBDIR) $(APPDIR) $(TESTDIR)
 .DEFAULT_GOAL := perf
 
-debug: $(LIBDIR) $(APPDIR)
+debug: $(LIBDIR) $(APPDIR) $(TESTDIR)
 	@echo "\nINFO: Built PIM Functional Simulator with target = debug\n"
 
-perf: $(LIBDIR) $(APPDIR)
+perf: $(LIBDIR) $(APPDIR) $(TESTDIR)
 	@echo "\nINFO: Built PIM Functional Simulator with target = perf\n"
 
-dramsim3_integ: $(LIBDIR) $(APPDIR)
+dramsim3_integ: $(LIBDIR) $(APPDIR) $(TESTDIR)
 	@echo "\nINFO: Built PIM Functional Simulator with target = dramsim3_integ\n"
 
-clean: $(LIBDIR) $(APPDIR)
+clean: $(LIBDIR) $(APPDIR) $(TESTDIR)
 
-# Run "make PIM_SIM_TARGET=<PimDeviceEnum>" to override default simulation target
+# Run make with PIM_SIM_TARGET=<PimDeviceEnum> to override default simulation target
 PIM_SIM_TARGET ?= PIM_DEVICE_NONE
 
-$(LIBDIR) $(APPDIR):
-	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET)
+# Run make with USE_OPENMP=1 to enable OpenMP in some apps
+USE_OPENMP ?= 0
+
+$(DEP_LIBPIMSIM) $(LIBDIR):
+	$(MAKE) -C $(LIBDIR) $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP)
+
+$(APPDIR) $(TESTDIR): $(DEP_LIBPIMSIM)
+	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP)
 

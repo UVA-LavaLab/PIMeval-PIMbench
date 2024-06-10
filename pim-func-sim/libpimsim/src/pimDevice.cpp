@@ -26,44 +26,60 @@ pimDevice::~pimDevice()
 
 //! @brief  Adjust config for modeling different simulation target with same inputs
 bool
-pimDevice::adjustConfigForSimTarget(unsigned& numBanks, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
+pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
 {
-  std::printf("PIM-Info: Config: #banks = %u, #subarrayPerBank = %u, #rows = %u, $cols = %u\n", numBanks, numSubarrayPerBank, numRows, numCols);
+  std::printf("PIM-Info: Config: #ranks = %u, #bankPerRank = %u, #subarrayPerBank = %u, #rows = %u, $cols = %u\n",
+              numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   PimDeviceEnum simTarget = pimSim::get()->getParamsPerf()->getSimTarget();
-  if (simTarget == PIM_DEVICE_FULCRUM) {
-    std::printf("PIM-Info: To model Fulcrum, aggregate every two subarrays as a single core\n");
+  switch (simTarget) {
+  case PIM_DEVICE_BITSIMD_V:
+  case PIM_DEVICE_BITSIMD_V_AP:
+  case PIM_DEVICE_BITSIMD_H:
+  case PIM_DEVICE_FULCRUM:
+    std::printf("PIM-Info: Aggregate every two subarrays as a single core\n");
     if (numSubarrayPerBank % 2 != 0) {
-      std::printf("PIM-Error: Please config even number of subarrays in each bank for fulcrum\n");
+      std::printf("PIM-Error: Please config even number of subarrays in each bank\n");
       return false;
     }
     numRows *= 2;
     numSubarrayPerBank /= 2;
-  } else if (simTarget == PIM_DEVICE_BANK_LEVEL) {
-    std::printf("PIM-Info: To model bank level PIM, aggregate all subarrays within a bank as a single core.\n");
+    break;
+  case PIM_DEVICE_BANK_LEVEL:
+    std::printf("PIM-Info: Aggregate all subarrays within a bank as a single core\n");
     numRows *= numSubarrayPerBank;
     numSubarrayPerBank = 1;
+    break;
+  default:
+    assert(0);
   }
   return true;
 }
 
 //! @brief  Init pim device, with config file
 bool
-pimDevice::init(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   assert(!m_isInit);
   assert(deviceType != PIM_DEVICE_NONE);
 
   m_deviceType = deviceType;
-  m_numBanks = numBanks;
+
+  // input params
+  m_numRanks = numRanks;
+  m_numBankPerRank = numBankPerRank;
   m_numSubarrayPerBank = numSubarrayPerBank;
-  if (!adjustConfigForSimTarget(numBanks, numSubarrayPerBank, numRows, numCols)) {
+  m_numRowPerSubarray = numRows;
+  m_numColPerSubarray = numCols;
+
+  if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
+    m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
+    m_numRows = numRows;
+    m_numCols = numCols;
+  } else {
     return false;
   }
 
-  m_numCores = numBanks * numSubarrayPerBank;
-  m_numRows = numRows;
-  m_numCols = numCols;
-  m_isValid = (m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
+  m_isValid = (m_numRanks > 0 && m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
 
   if (!m_isValid) {
     std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
@@ -105,13 +121,13 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   u_int64_t rowsPerBank = m_deviceMemoryConfig->rows, columnPerRow = m_deviceMemoryConfig->columns * m_deviceMemoryConfig->device_width;
 
   // todo: adjust for sim target
-
+  m_numRanks = 1;
   m_numCores = 16;
   m_numRows = rowsPerBank/m_numCores;
   m_numCols = columnPerRow;
 #endif
 
-  m_isValid = (m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
+  m_isValid = (m_numRanks > 0 && m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
 
   if (!m_isValid) {
     std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);

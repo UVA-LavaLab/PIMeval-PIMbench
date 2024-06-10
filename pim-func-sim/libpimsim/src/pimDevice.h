@@ -25,11 +25,16 @@ public:
   pimDevice();
   ~pimDevice();
 
-  bool init(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+  bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool init(PimDeviceEnum deviceType, const char* configFileName);
   void uninit();
 
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
+  unsigned getNumRanks() const { return m_numRanks; }
+  unsigned getNumBankPerRank() const { return m_numBankPerRank; }
+  unsigned getNumSubarrayPerBank() const { return m_numSubarrayPerBank; }
+  unsigned getNumRowPerSubarray() const { return m_numRowPerSubarray; }
+  unsigned getNumColPerSubarray() const { return m_numColPerSubarray; }
   unsigned getNumCores() const { return m_numCores; }
   unsigned getNumRows() const { return m_numRows; }
   unsigned getNumCols() const { return m_numCols; }
@@ -49,13 +54,16 @@ public:
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
 
 private:
-  bool adjustConfigForSimTarget(unsigned& numBanks, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
+  bool adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
   std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
 
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
-  unsigned m_numBanks = 0;
+  unsigned m_numRanks = 0;
+  unsigned m_numBankPerRank = 0;
   unsigned m_numSubarrayPerBank = 0;
+  unsigned m_numRowPerSubarray = 0;
+  unsigned m_numColPerSubarray = 0;
   unsigned m_numCores = 0;
   unsigned m_numRows = 0;
   unsigned m_numCols = 0;

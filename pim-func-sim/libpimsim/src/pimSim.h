@@ -22,13 +22,18 @@ public:
   static void destroy();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
 
   PimDeviceEnum getDeviceType() const;
   PimDeviceEnum getSimTarget() const;
+  unsigned getNumRanks() const;
+  unsigned getNumBankPerRank() const;
+  unsigned getNumSubarrayPerBank() const;
+  unsigned getNumRowPerSubarray() const;
+  unsigned getNumColPerSubarray() const;
   unsigned getNumCores() const;
   unsigned getNumRows() const;
   unsigned getNumCols() const;
