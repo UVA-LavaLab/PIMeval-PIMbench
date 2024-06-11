@@ -273,7 +273,7 @@ void testFunctional()
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
-    status = pimRotateR(obj3);
+    status = pimRotateRight(obj3);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
@@ -281,14 +281,14 @@ void testFunctional()
       assert(dest[i + 1] == src1[i]);
     }
     assert(dest.front() == src1.back());
-    std::cout << "[PASSED] pimRotateR" << std::endl;
+    std::cout << "[PASSED] pimRotateRight" << std::endl;
   }
 
   // Test rotate L
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
-    status = pimRotateL(obj3);
+    status = pimRotateLeft(obj3);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
@@ -296,14 +296,14 @@ void testFunctional()
       assert(dest[i] == src1[i + 1]);
     }
     assert(dest.back() == src1.front());
-    std::cout << "[PASSED] pimRotateL" << std::endl;
+    std::cout << "[PASSED] pimRotateLeft" << std::endl;
   }
 
   // Test shift R
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
-    status = pimShiftR(obj3);
+    status = pimShiftElementsRight(obj3);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
@@ -311,14 +311,14 @@ void testFunctional()
       assert(dest[i + 1] == src1[i]);
     }
     assert(dest.front() == 0);
-    std::cout << "[PASSED] pimShiftR" << std::endl;
+    std::cout << "[PASSED] pimShiftElementsRight" << std::endl;
   }
 
   // Test shift L
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
-    status = pimShiftL(obj3);
+    status = pimShiftElementsLeft(obj3);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
@@ -326,7 +326,7 @@ void testFunctional()
       assert(dest[i] == src1[i + 1]);
     }
     assert(dest.back() == 0);
-    std::cout << "[PASSED] pimShiftL" << std::endl;
+    std::cout << "[PASSED] pimShiftElementsLeft" << std::endl;
   }
 }
 

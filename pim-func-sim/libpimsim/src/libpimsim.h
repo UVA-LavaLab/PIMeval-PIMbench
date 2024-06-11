@@ -88,10 +88,10 @@ extern "C" {
   PimStatus pimRedSum(PimObjId src, int* sum);
   PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
   PimStatus pimBroadcast(PimObjId dest, unsigned value);
-  PimStatus pimRotateR(PimObjId src);
-  PimStatus pimRotateL(PimObjId src);
-  PimStatus pimShiftR(PimObjId src);
-  PimStatus pimShiftL(PimObjId src);
+  PimStatus pimRotateRight(PimObjId src);
+  PimStatus pimRotateLeft(PimObjId src);
+  PimStatus pimShiftElementsRight(PimObjId src);
+  PimStatus pimShiftElementsLeft(PimObjId src);
 
   // BitSIMD-V: Row-wide bit registers per subarray
   enum PimRowReg {

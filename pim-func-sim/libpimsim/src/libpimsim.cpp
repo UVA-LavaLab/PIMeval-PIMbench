@@ -245,33 +245,33 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
 
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus
-pimRotateR(PimObjId src)
+pimRotateRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateR(src);
+  bool ok = pimSim::get()->pimRotateRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Rotate all elements of an obj by one step to the left
 PimStatus
-pimRotateL(PimObjId src)
+pimRotateLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateL(src);
+  bool ok = pimSim::get()->pimRotateLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the right and fill zero
 PimStatus
-pimShiftR(PimObjId src)
+pimShiftElementsRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftR(src);
+  bool ok = pimSim::get()->pimShiftElementsRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the left and fill zero
 PimStatus
-pimShiftL(PimObjId src)
+pimShiftElementsLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftL(src);
+  bool ok = pimSim::get()->pimShiftElementsLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
