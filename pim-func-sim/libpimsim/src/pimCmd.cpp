@@ -39,8 +39,10 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::ROTATE_R, "rotate_r" },
     { PimCmdEnum::ROTATE_L, "rotate_l" },
-    { PimCmdEnum::SHIFT_ELEMENTS_RIGHT, "shift_r" },
-    { PimCmdEnum::SHIFT_ELEMENTS_LEFT, "shift_l" },
+    { PimCmdEnum::SHIFT_ELEMENTS_RIGHT, "shift_elements_r" },
+    { PimCmdEnum::SHIFT_ELEMENTS_LEFT, "shift_elements_l" },
+    { PimCmdEnum::SHIFT_BITS_RIGHT, "shift_bits_r" },
+    { PimCmdEnum::SHIFT_BITS_LEFT, "shift_bits_l" },
     { PimCmdEnum::ROW_R, "row_r" },
     { PimCmdEnum::ROW_W, "row_w" },
     { PimCmdEnum::RREG_MOV, "rreg.mov" },
@@ -240,7 +242,7 @@ pimCmdFunc1Imm::execute(pimDevice* device)
   }
 
   // Update stats
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1Imm(m_cmdType, objSrc, m_immediateValue);
   pimSim::get()->getStatsMgr()->recordCmd(getName(srcDataType, isVLayout), msRuntime);
   return true;
 }
