@@ -209,30 +209,13 @@ public:
   pimCmdRotate(PimCmdEnum cmdType, PimObjId src)
     : pimCmd(cmdType), m_src(src)
   {
-    assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L);
+    assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
+           cmdType == PimCmdEnum::SHIFT_R || cmdType == PimCmdEnum::SHIFT_L);
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute(pimDevice* device) override;
 protected:
   PimObjId m_src;
-};
-
-//! @class  pimCmdShift
-//! @brief  Pim CMD: shift right/left
-class pimCmdShift : public pimCmd
-{
-public:
-  pimCmdShift(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned val)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_shiftAmount(val)
-  {
-    assert(cmdType == PimCmdEnum::SHIFT_R || cmdType == PimCmdEnum::SHIFT_L);
-  }
-  virtual ~pimCmdShift() {}
-  virtual bool execute(pimDevice* device) override;
-protected:
-  PimObjId m_src;
-  PimObjId m_dest;
-  unsigned m_shiftAmount;
 };
 
 //! @class  pimCmdReadRowToSa

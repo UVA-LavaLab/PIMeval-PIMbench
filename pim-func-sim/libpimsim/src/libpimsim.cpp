@@ -259,19 +259,19 @@ pimRotateL(PimObjId src)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Shift bits of each elements of an obj by bitsToShift to the right and does not preserve the sign bit
+//! @brief  Shift elements of an obj by one step to the right and fill zero
 PimStatus
-pimShiftRight(PimObjId src, PimObjId dest, unsigned bitsToShift)
+pimShiftR(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftRight(src, dest, bitsToShift);
+  bool ok = pimSim::get()->pimShiftR(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief   Shift bits of each elements of an obj by bitsToShift to the right and does not preserve the sign bit
+//! @brief  Shift elements of an obj by one step to the left and fill zero
 PimStatus
-pimShiftLeft(PimObjId src, PimObjId dest, unsigned bitsToShift)
+pimShiftL(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftLeft(src, dest, bitsToShift);
+  bool ok = pimSim::get()->pimShiftL(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

@@ -34,7 +34,6 @@ public:
   double getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   double getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   double getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  double getMsRuntimeForShift(PimCmdEnum cmdType, const pimObjInfo& obj, const unsigned& shiftAmount) const;
 
 private:
   const pimParamsDram* m_paramsDram; 

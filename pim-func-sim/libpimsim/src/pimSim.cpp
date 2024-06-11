@@ -490,20 +490,20 @@ pimSim::pimRotateL(PimObjId src)
 }
 
 bool
-pimSim::pimShiftRight(PimObjId src, PimObjId dest, unsigned bitsToShift)
+pimSim::pimShiftR(PimObjId src)
 {
-  pimPerfMon perfMon("pimShiftRight");
+  pimPerfMon perfMon("pimShiftR");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdShift>(PimCmdEnum::SHIFT_R, src, dest, bitsToShift);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_R, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimShiftLeft(PimObjId src, PimObjId dest, unsigned bitsToShift)
+pimSim::pimShiftL(PimObjId src)
 {
-  pimPerfMon perfMon("pimShiftLeft");
+  pimPerfMon perfMon("pimShiftL");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdShift>(PimCmdEnum::SHIFT_L, src, dest, bitsToShift);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_L, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
