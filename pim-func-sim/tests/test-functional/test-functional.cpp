@@ -273,7 +273,7 @@ void testFunctional()
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
-    status = pimRotateRight(obj3);
+    status = pimRotateElementsRight(obj3);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
@@ -281,14 +281,14 @@ void testFunctional()
       assert(dest[i + 1] == src1[i]);
     }
     assert(dest.front() == src1.back());
-    std::cout << "[PASSED] pimRotateRight" << std::endl;
+    std::cout << "[PASSED] pimRotateElementsRight" << std::endl;
   }
 
   // Test rotate L
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
-    status = pimRotateLeft(obj3);
+    status = pimRotateElementsLeft(obj3);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
@@ -296,10 +296,10 @@ void testFunctional()
       assert(dest[i] == src1[i + 1]);
     }
     assert(dest.back() == src1.front());
-    std::cout << "[PASSED] pimRotateLeft" << std::endl;
+    std::cout << "[PASSED] pimRotateElementsLeft" << std::endl;
   }
 
-  // Test shift R
+  // Test shift elements R
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
@@ -314,7 +314,7 @@ void testFunctional()
     std::cout << "[PASSED] pimShiftElementsRight" << std::endl;
   }
 
-  // Test shift L
+  // Test shift elements L
   {
     status = pimCopyHostToDevice((void *)src1.data(), obj3);
     assert(status == PIM_OK);
@@ -327,6 +327,34 @@ void testFunctional()
     }
     assert(dest.back() == 0);
     std::cout << "[PASSED] pimShiftElementsLeft" << std::endl;
+  }
+
+  // Test shift bits R
+  {
+    status = pimCopyHostToDevice((void *)src1.data(), obj1);
+    assert(status == PIM_OK);
+    status = pimShiftBitsRight(obj1, obj3, 4);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == (src1[i] >> 4));
+    }
+    std::cout << "[PASSED] pimShiftBitsRight" << std::endl;
+  }
+
+  // Test shift bits L
+  {
+    status = pimCopyHostToDevice((void *)src1.data(), obj1);
+    assert(status == PIM_OK);
+    status = pimShiftBitsLeft(obj1, obj3, 2);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == (src1[i] << 2));
+    }
+    std::cout << "[PASSED] pimShiftBitsLeft" << std::endl;
   }
 }
 

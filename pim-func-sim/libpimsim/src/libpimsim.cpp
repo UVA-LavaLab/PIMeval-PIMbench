@@ -245,17 +245,17 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
 
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus
-pimRotateRight(PimObjId src)
+pimRotateElementsRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateRight(src);
+  bool ok = pimSim::get()->pimRotateElementsRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Rotate all elements of an obj by one step to the left
 PimStatus
-pimRotateLeft(PimObjId src)
+pimRotateElementsLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateLeft(src);
+  bool ok = pimSim::get()->pimRotateElementsLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -275,6 +275,21 @@ pimShiftElementsLeft(PimObjId src)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Shift bits of each elements of an obj by shiftAmount to the right. This currently implements arithmetic shift.
+PimStatus
+pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  bool ok = pimSim::get()->pimShiftBitsRight(src, dest, shiftAmount);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Shift bits of each elements of an obj by shiftAmount to the left.
+PimStatus
+pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  bool ok = pimSim::get()->pimShiftBitsLeft(src, dest, shiftAmount);
+  return ok ? PIM_OK : PIM_ERROR;
+}
 
 //! @brief  BitSIMD-V: Read a row to SA
 PimStatus

@@ -104,7 +104,7 @@ int main()
       }
     }
 
-    status = pimRotateRight(obj2);
+    status = pimRotateElementsRight(obj2);
     if (status != PIM_OK) {
       std::cout << "Abort" << std::endl;
       return 1;

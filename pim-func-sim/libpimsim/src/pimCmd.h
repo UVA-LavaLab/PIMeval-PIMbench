@@ -43,8 +43,11 @@ enum class PimCmdEnum {
   BROADCAST,
   ROTATE_R,
   ROTATE_L,
-  SHIFT_R,
-  SHIFT_L,
+  SHIFT_ELEMENTS_RIGHT,
+  SHIFT_ELEMENTS_LEFT,
+  SHIFT_BITS_RIGHT,
+  SHIFT_BITS_LEFT,
+
   // BitSIMD v-layout commands
   ROW_R,
   ROW_W,
@@ -145,6 +148,21 @@ protected:
   PimObjId m_dest;
 };
 
+//! @class  pimCmdFunc1Imm
+//! @brief  Pim CMD: Functional 1-operand with immediate value
+class pimCmdFunc1Imm : public pimCmd
+{
+public:
+  pimCmdFunc1Imm(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
+  virtual ~pimCmdFunc1Imm() {}
+  virtual bool execute(pimDevice* device) override;
+protected:
+  PimObjId m_src;
+  PimObjId m_dest;
+  unsigned m_immediateValue;
+};
+
 //! @class  pimCmdFunc2
 //! @brief  Pim CMD: Functional 2-operand
 class pimCmdFunc2 : public pimCmd
@@ -210,7 +228,7 @@ public:
     : pimCmd(cmdType), m_src(src)
   {
     assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
-           cmdType == PimCmdEnum::SHIFT_R || cmdType == PimCmdEnum::SHIFT_L);
+           cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT || cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT);
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute(pimDevice* device) override;
