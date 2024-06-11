@@ -1,0 +1,3 @@
+./knn -n 6710886 -m 100 > BITSIMD_output_CPU.txt
+./knn -n 6710886 -m 100 > FULCRUM_output_CPU.txt
+./knn -n 6710886 -m 100 > BANK_LEVEL_output_CPU.txt

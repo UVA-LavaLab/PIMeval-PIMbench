@@ -1,0 +1,46 @@
+PIM-Info: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_FUMCRUM
+PIM-Info: Config: #banks = 128, #subarrayPerBank = 32, #rows = 8192, $cols = 8192
+PIM-Info: To model Fulcrum, aggregate every two subarrays as a single core
+PIM-Info: Created PIM device with 2048 cores of 16384 rows and 8192 columns.
+PIM-Warning: Obj requires 26215 regions among 2048 cores. Wrapping up is needed.
+done with alloc
+----------------------------------------
+Simulator API Stats:
+                        PIM-API :        CNT    Elapsed(ms)
+                   createDevice :          1   19350.789081
+                         pimAbs :        100   63198.171386
+                       pimAlloc :          1       3.296278
+             pimAllocAssociated :          2      16.162917
+                   pimBroadcast :        100   39138.929618
+            pimCopyDeviceToMain :        100   94686.671728
+            pimCopyMainToDevice :          1    3119.169994
+                        pimFree :          3       4.258735
+                         pimSub :        100  103220.381564
+                TOTAL --------- :        408  322737.831301
+                TOTAL (Device ) :          1   19350.789081
+                TOTAL ( Alloc ) :          6      23.717930
+                TOTAL (  Copy ) :        101   97805.841722
+                TOTAL (Compute) :        300  205557.482568
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_FUMCRUM
+            Number of PIM Cores : 2048
+        Number of Rows per Core : 16384
+     Number of Columns per Core : 8192
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 27.719999
+                 Row Write (ns) : 28.980000
+                      tCCD (ns) : 2.520000
+                       AAP (ns) : 46.619999
+Data Copy Stats:
+                 Host to Device : 26843544 bytes
+                 Device to Host : 2684354400 bytes
+                TOTAL --------- : 2711197944 bytes       6.164550 ms Estimated Runtime
+PIM Command Stats:
+                        PIM-CMD :        CNT EstimatedRuntime(ms)
+                          abs.h :        100       1.737710
+                    broadcast.h :        100       1.664000
+                          sub.h :        100       1.773746
+                TOTAL --------- :        300       5.175456
+----------------------------------------
+Host elapsed time: 0.000 ms.

@@ -1,0 +1,44 @@
+PIM-Info: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BITSIMD_V_AP
+PIM-Info: Config: #banks = 128, #subarrayPerBank = 32, #rows = 8192, $cols = 8192
+PIM-Info: Created PIM device with 4096 cores of 8192 rows and 8192 columns.
+done with alloc
+----------------------------------------
+Simulator API Stats:
+                        PIM-API :        CNT    Elapsed(ms)
+                   createDevice :          1   16277.532785
+                         pimAbs :        100   60521.538833
+                       pimAlloc :          1       0.319625
+             pimAllocAssociated :          2       0.295199
+                   pimBroadcast :        100   35541.713952
+            pimCopyDeviceToMain :        100  125696.012631
+            pimCopyMainToDevice :          1    3315.047753
+                        pimFree :          3       0.167110
+                         pimSub :        100  106059.658196
+                TOTAL --------- :        408  347412.286084
+                TOTAL (Device ) :          1   16277.532785
+                TOTAL ( Alloc ) :          6       0.781934
+                TOTAL (  Copy ) :        101  129011.060384
+                TOTAL (Compute) :        300  202122.910981
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
+            Number of PIM Cores : 4096
+        Number of Rows per Core : 8192
+     Number of Columns per Core : 8192
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 27.719999
+                 Row Write (ns) : 28.980000
+                      tCCD (ns) : 2.520000
+                       AAP (ns) : 46.619999
+Data Copy Stats:
+                 Host to Device : 26843544 bytes
+                 Device to Host : 2684354400 bytes
+                TOTAL --------- : 2711197944 bytes       6.164550 ms Estimated Runtime
+PIM Command Stats:
+                        PIM-CMD :        CNT EstimatedRuntime(ms)
+                          abs.v :        100       0.543564
+                    broadcast.v :        100       0.100800
+                          sub.v :        100       0.313614
+                TOTAL --------- :        300       0.957978
+----------------------------------------
+Host elapsed time: 0.000 ms.
