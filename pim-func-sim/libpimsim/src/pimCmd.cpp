@@ -526,7 +526,7 @@ pimCmdShift::execute(pimDevice* device)
   }
 
   // Update stats
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRotate(m_cmdType, objSrc);
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForShift(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(srcDataType, isVLayout), msRuntime);
   return true;
 }
