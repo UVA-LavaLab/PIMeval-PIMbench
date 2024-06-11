@@ -299,34 +299,33 @@ void testFunctional()
     std::cout << "[PASSED] pimRotateL" << std::endl;
   }
 
-  // Test shift R
+  // Test shift R 
   {
-    status = pimCopyHostToDevice((void *)src1.data(), obj3);
+    status = pimCopyHostToDevice((void *)src1.data(), obj1);
     assert(status == PIM_OK);
-    status = pimShiftR(obj3);
+    status = pimShiftRight(obj1, obj3, 4);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
-    for (unsigned i = 0; i < numElements - 1; ++i) {
-      assert(dest[i + 1] == src1[i]);
+    for (unsigned i = 0; i < numElements; ++i) {
+      int result = src1[i] >> 4;
+      assert(dest[i] == result);
     }
-    assert(dest.front() == 0);
-    std::cout << "[PASSED] pimShiftR" << std::endl;
+    std::cout << "[PASSED] pimShiftRight" << std::endl;
   }
 
   // Test shift L
   {
-    status = pimCopyHostToDevice((void *)src1.data(), obj3);
+    status = pimCopyHostToDevice((void *)src1.data(), obj1);
     assert(status == PIM_OK);
-    status = pimShiftL(obj3);
+    status = pimShiftLeft(obj1, obj3, 2);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
-    for (unsigned i = 0; i < numElements - 1; ++i) {
-      assert(dest[i] == src1[i + 1]);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == (src1[i] << 2));
     }
-    assert(dest.back() == 0);
-    std::cout << "[PASSED] pimShiftL" << std::endl;
+    std::cout << "[PASSED] pimShiftLeft" << std::endl;
   }
 }
 

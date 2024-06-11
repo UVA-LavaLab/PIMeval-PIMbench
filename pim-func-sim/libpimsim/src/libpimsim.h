@@ -6,17 +6,20 @@
 #define LAVA_LIB_PIM_SIM_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
   //! @brief  PIM API return status
-  enum PimStatus {
+  enum PimStatus
+  {
     PIM_ERROR = 0,
     PIM_OK,
   };
 
   //! @brief  PIM device types
-  enum PimDeviceEnum {
+  enum PimDeviceEnum
+  {
     PIM_DEVICE_NONE = 0,
     PIM_FUNCTIONAL,
     PIM_DEVICE_BITSIMD_V,
@@ -27,22 +30,25 @@ extern "C" {
   };
 
   //! @brief  PIM allocation types
-  enum PimAllocEnum {
+  enum PimAllocEnum
+  {
     PIM_ALLOC_AUTO = 0, // Auto determine vertical or horizontal layout based on device type
     PIM_ALLOC_V,        // V layout, multiple regions per core
-    PIM_ALLOC_H,        // H layout, multiple regions per core 
+    PIM_ALLOC_H,        // H layout, multiple regions per core
     PIM_ALLOC_V1,       // V layout, at most 1 region per core
     PIM_ALLOC_H1,       // H layout, at most 1 region per core
   };
 
   //! @brief  PIM data copy types
-  enum PimCopyEnum {
+  enum PimCopyEnum
+  {
     PIM_COPY_V,
     PIM_COPY_H,
   };
 
   //! @brief  PIM datatypes
-  enum PimDataType {
+  enum PimDataType
+  {
     PIM_INT32 = 0,
     PIM_INT64,
     PIM_FP32,
@@ -53,7 +59,7 @@ extern "C" {
 
   // Device creation and deletion
   PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
-  PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
+  PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char *configFileName);
   PimStatus pimDeleteDevice();
   void pimShowStats();
 
@@ -64,10 +70,10 @@ extern "C" {
   PimObjId pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd);
 
   // Data transfer
-  PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
-  PimStatus pimCopyDeviceToHost(PimObjId src, void* dest);
-  PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
-  PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  PimStatus pimCopyHostToDevice(void *src, PimObjId dest);
+  PimStatus pimCopyDeviceToHost(PimObjId src, void *dest);
+  PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void *src, PimObjId dest);
+  PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void *dest);
 
   // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -85,16 +91,17 @@ extern "C" {
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
-  PimStatus pimRedSum(PimObjId src, int* sum);
-  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
+  PimStatus pimRedSum(PimObjId src, int *sum);
+  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int *sum);
   PimStatus pimBroadcast(PimObjId dest, unsigned value);
   PimStatus pimRotateR(PimObjId src);
   PimStatus pimRotateL(PimObjId src);
-  PimStatus pimShiftR(PimObjId src);
-  PimStatus pimShiftL(PimObjId src);
+  PimStatus pimShiftRight(PimObjId src, PimObjId dest, unsigned bitsToShift);
+  PimStatus pimShiftLeft(PimObjId src, PimObjId dest, unsigned bitsToShift);
 
   // BitSIMD-V: Row-wide bit registers per subarray
-  enum PimRowReg {
+  enum PimRowReg
+  {
     PIM_RREG_NONE = 0,
     PIM_RREG_SA,
     PIM_RREG_R1,
@@ -127,4 +134,3 @@ extern "C" {
 #endif
 
 #endif
-

@@ -388,3 +388,45 @@ pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) 
   return msRuntime;
 }
 
+//! @brief  Get ms runtime for shift
+double
+pimParamsPerf::getMsRuntimeForShift(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  PimDataType dataType = obj.getDataType();
+
+  switch (m_simTarget) {
+  case PIM_DEVICE_BITSIMD_V:
+  case PIM_DEVICE_BITSIMD_V_AP:
+  {
+    // For every bit: Read row to SA; move SA to R1; Shift R1; Move R1 to SA; Write SA to row
+    msRuntime = (m_tR + 3 * m_tL + m_tW) * bitsPerElement; // for one pass
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_BITSIMD_H:
+  case PIM_DEVICE_FULCRUM:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    double numberOfALUOperation = 1; 
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation;
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_BANK_LEVEL:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    unsigned numALU = 2;
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency / numALU;
+    msRuntime *= numPass;
+    break;
+  }
+  default:
+    msRuntime = 1e10;
+  }
+  return msRuntime;
+}
