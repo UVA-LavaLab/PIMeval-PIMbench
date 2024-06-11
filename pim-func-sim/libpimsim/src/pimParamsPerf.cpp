@@ -206,7 +206,7 @@ pimParamsPerf::getMsRuntimeForFunc1Imm(PimCmdEnum cmdType, const pimObjInfo &obj
       case PimCmdEnum::SHIFT_BITS_RIGHT:
       case PimCmdEnum::SHIFT_BITS_LEFT:
       {
-        // Assuming fulcrum ALU has shift circuit, so it can perform one 32-bit shift in one cycle.
+        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
         unsigned bitsPerElement = obj.getBitsPerElement();
         msRuntime = (m_tR + m_tW) * (bitsPerElement - immValue);
         msRuntime *= numPass;
