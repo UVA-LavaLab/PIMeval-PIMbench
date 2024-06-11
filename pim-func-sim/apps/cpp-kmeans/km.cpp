@@ -229,6 +229,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
     }
 
+    std::vector<int> clusterPointCount(k, 0);
     for (int i = 0; i < k; i++)
     {
       PimStatus status = pimCopyHostToDevice((void *)distMat[i].data(), resultObjectList[0]);
@@ -242,44 +243,64 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         std::cout << "Abort" << std::endl;
         return;
       }
-      status = pimCopyDeviceToHost(resultObjectList[0], (void *)distFlag[i].data());
+      int totalNeighbors = 0; 
+
+      status = pimRedSum(resultObjectList[0], &totalNeighbors);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
+        return;
+      }
+
+      for (int b = 0; b < dataPointObjectList.size(); ++b)
+      {
+        status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+        status = pimRedSum(resultObjectList[1], &centroids[i][b]);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+        centroids[i][b] /= totalNeighbors;
       }
     }
 
     // update the cluster in host
     // TODO: check if PIM will be benificial. My assumption it won't
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++)
-    {
-      std::fill(centroids[i].begin(), centroids[i].end(), 0);
-    }
-    std::vector<int> clusterPointCount(k, 0);
-    for (int i = 0; i < k; ++i)
-    {
-      for (int j = 0; j < numOfPoints; ++j)
-      {
-        if (distFlag[i][j] == 1)
-        {
-          ++clusterPointCount[i];
-          for (int d = 0; d < dimension; ++d)
-          {
-            centroids[i][d] += dataPoints[d][j];
-          }
-        }
-      }
-    }
-    for (int i = 0; i < k; i++)
-    {
-      for (int j = 0; j < dimension; j++)
-      {
-        centroids[i][j] /= clusterPointCount[i];
-      }
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    hostElapsedTime += (end - start);
+
+    // auto start = std::chrono::high_resolution_clock::now();
+    // for (int i = 0; i < k; i++)
+    // {
+    //   std::fill(centroids[i].begin(), centroids[i].end(), 0);
+    // }
+    // for (int i = 0; i < k; ++i)
+    // {
+    //   for (int j = 0; j < numOfPoints; ++j)
+    //   {
+    //     if (distFlag[i][j] == 1)
+    //     {
+    //       ++clusterPointCount[i];
+    //       for (int d = 0; d < dimension; ++d)
+    //       {
+    //         centroids[i][d] += dataPoints[d][j];
+    //       }
+    //     }
+    //   }
+    // }
+    // for (int i = 0; i < k; i++)
+    // {
+    //   for (int j = 0; j < dimension; j++)
+    //   {
+    //     centroids[i][j] /= clusterPointCount[i];
+    //   }
+    // }
+    // auto end = std::chrono::high_resolution_clock::now();
+    // hostElapsedTime += (end - start);
   }
 
   pimFree(tempObj);

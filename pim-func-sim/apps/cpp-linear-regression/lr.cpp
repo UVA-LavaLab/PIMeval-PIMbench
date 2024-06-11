@@ -79,11 +79,6 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
 {
   unsigned bitsPerElement = sizeof(int) * 8;
 
-  SX = 0;
-  reductionSumBitSerial(X, SX, hostElapsedTime);
-  SY = 0;
-  reductionSumBitSerial(Y, SY, hostElapsedTime);
-
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, dataSize, bitsPerElement, PIM_INT32);
   if (srcObj1 == -1)
   {
@@ -98,7 +93,12 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  std::cout << "Done copying data\n";
+  status = pimRedSum(srcObj1, &SX);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (srcObj2 == -1)
@@ -122,16 +122,6 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  SXX = 0;
-  reductionSumBitSerial(dst, SXX, hostElapsedTime);
-
-  // status = pimRedSum(srcObj2, &SXX);
-  // if (status != PIM_OK)
-  // {
-  //   std::cout << "Abort" << std::endl;
-  //   return;
-  // }
-
   status = pimCopyHostToDevice((void *)Y.data(), srcObj2);
   if (status != PIM_OK)
   {
@@ -153,15 +143,12 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  SXY = 0;
-  reductionSumBitSerial(dst, SXY, hostElapsedTime);
-
-  // status = pimRedSum(srcObj1, &SXY);
-  // if (status != PIM_OK)
-  // {
-  //   std::cout << "Abort" << std::endl;
-  //   return;
-  // }
+  status = pimRedSum(srcObj1, &SXY);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   status = pimMul(srcObj2, srcObj2, srcObj1);
   if (status != PIM_OK)
@@ -177,22 +164,19 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  SYY = 0;
-  reductionSumBitSerial(dst, SYY, hostElapsedTime);
+  status = pimRedSum(srcObj1, &SYY);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
-  // status = pimRedSum(srcObj1, &SYY);
-  // if (status != PIM_OK)
-  // {
-  //   std::cout << "Abort" << std::endl;
-  //   return;
-  // }
-
-  // status = pimRedSum(srcObj2, &SY);
-  // if (status != PIM_OK)
-  // {
-  //   std::cout << "Abort" << std::endl;
-  //   return;
-  // }
+  status = pimRedSum(srcObj2, &SY);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   pimFree(srcObj1);
   pimFree(srcObj2);

@@ -1,4 +1,4 @@
-// Test: C++ version of vector addition
+// Test: C++ version of vector multiplication
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -15,8 +15,6 @@
 
 using namespace std;
 
-std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
-
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -29,12 +27,13 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./lr [options]"
+          "\nUsage:  ./mul [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
+          "\n    -h    shows help text"
           "\n");
 }
 
@@ -76,70 +75,41 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, int &result)
+void vectorRed(uint64_t vectorLength, std::vector<int> src, int &reductionValue)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
-  if (srcObj1 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
+  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  if (srcObj == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
+  PimStatus status = pimCopyHostToDevice((void *)src.data(), srcObj);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
+  status = pimRedSum(srcObj, &reductionValue);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimMul(srcObj1, srcObj2, srcObj1);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  std::vector<int> dst(vectorLength);
-  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimRedSum(srcObj1, &result);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-  pimFree(srcObj1);
-  pimFree(srcObj2);
+  pimFree(srcObj);
 }
 
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Vector length: " << params.vectorLength << "\n";
-  std::vector<int> src1, src2;
+  std::vector<int> src;
   if (params.inputFile == nullptr)
   {
-    getVector(params.vectorLength, src1);
-    getVector(params.vectorLength, src2);
+    getVector(params.vectorLength, src);
   }
   else
   {
@@ -148,28 +118,28 @@ int main(int argc, char *argv[])
   if (!createDevice(params.configFile))
     return 1;
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  int deviceValue = 0;
-  dotProduct(params.vectorLength, src1, src2, deviceValue);
+  int reductionValue = 0;
+  vectorRed(params.vectorLength, src, reductionValue);
   if (params.shouldVerify)
   {
-    // verify result
     int sum = 0;
+// verify result
+#pragma omp parallel for
     for (unsigned i = 0; i < params.vectorLength; ++i)
     {
-      sum += src1[i] * src2[i];
+      sum += src[i];
     }
-    if (deviceValue != sum)
+
+    if (reductionValue != sum)
     {
-      std::cout << "Wrong answer for dot product: " << deviceValue << " (expected " << sum << ")" << std::endl;
+      std::cout << "Wrong answer for reduction: "<< reductionValue << " (expected " << sum << ")" << std::endl;
     }
-    else
-    {
-      std::cout << "Correct answer for dot product!" << std::endl;
+    else {
+      std::cout << "Correct Answer!" << std::endl;
     }
   }
 
   pimShowStats();
 
-  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
   return 0;
 }

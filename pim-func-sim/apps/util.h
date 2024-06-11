@@ -115,18 +115,4 @@ bool createDevice(char *configFile)
   return true;
 }
 
-//Bit serial PIM performs reduction operation on host
-void reductionSumBitSerial(const std::vector<int> &reductionVector, int &reductionValue, std::chrono::duration<double, std::milli> &reductionTime)
-{
-  auto start = std::chrono::high_resolution_clock::now();
-  reductionValue = 0;
-#pragma omp parallel for reduction(+ : sum)
-  for (size_t i = 0; i < reductionVector.size(); ++i)
-  {
-    reductionValue += reductionVector[i];
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  reductionTime += (end - start);
-}
-
 #endif
