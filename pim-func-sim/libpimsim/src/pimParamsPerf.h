@@ -29,8 +29,7 @@ public:
   bool isHybridLayoutDevice() const;
 
   double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
-  double getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  double getMsRuntimeForFunc1Imm(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned immValue) const;
+  double getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned immediateValue = 0) const;
   double getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   double getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   double getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;

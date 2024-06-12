@@ -102,7 +102,7 @@ pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
 
 //! @brief  Get ms runtime for func1
 double
-pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj) const
+pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj, unsigned immediateValue) const
 {
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
@@ -123,6 +123,15 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj) c
       case PimCmdEnum::POPCOUNT:
         msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL;
         break;
+      case PimCmdEnum::SHIFT_BITS_RIGHT:
+      case PimCmdEnum::SHIFT_BITS_LEFT:
+      {
+        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
+        unsigned bitsPerElement = obj.getBitsPerElement();
+        msRuntime = (m_tR + m_tW) * (bitsPerElement - immediateValue);
+        msRuntime *= numPass;
+      }
+      break;
       default:
         assert(0);
       }
@@ -146,6 +155,15 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj) c
       case PimCmdEnum::POPCOUNT:
         msRuntime = 161 * m_tR + 105 * m_tW + 318 * m_tL;
         break;
+      case PimCmdEnum::SHIFT_BITS_RIGHT:
+      case PimCmdEnum::SHIFT_BITS_LEFT:
+      {
+        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
+        unsigned bitsPerElement = obj.getBitsPerElement();
+        msRuntime = (m_tR + m_tW) * (bitsPerElement - immediateValue);
+        msRuntime *= numPass;
+      }
+      break;
       default:
         assert(0);
       }
@@ -177,86 +195,6 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj) c
     unsigned numALU = 2;
     msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency / numALU;
     msRuntime *= numPass;
-    break;
-  }
-  default:
-    msRuntime = 1000000;
-  }
-  return msRuntime;
-}
-
-//! @brief  Get ms runtime for func1 with immediate value
-double
-pimParamsPerf::getMsRuntimeForFunc1Imm(PimCmdEnum cmdType, const pimObjInfo &obj, unsigned immValue) const
-{
-  double msRuntime = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
-  PimDataType dataType = obj.getDataType();
-
-  switch (m_simTarget)
-  {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_H:
-  case PIM_DEVICE_BITSIMD_V_AP:
-  {
-    if (dataType == PIM_INT32)
-    {
-      switch (cmdType)
-      {
-      case PimCmdEnum::SHIFT_BITS_RIGHT:
-      case PimCmdEnum::SHIFT_BITS_LEFT:
-      {
-        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
-        unsigned bitsPerElement = obj.getBitsPerElement();
-        msRuntime = (m_tR + m_tW) * (bitsPerElement - immValue);
-        msRuntime *= numPass;
-      }
-      break;
-      default:
-        assert(0);
-      }
-    }
-    break;
-  }
-  case PIM_DEVICE_FULCRUM:
-  {
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.000005; // 5ns
-    double numberOfALUOperation = 1;
-    switch (cmdType)
-    {
-    case PimCmdEnum::SHIFT_BITS_RIGHT:
-    case PimCmdEnum::SHIFT_BITS_LEFT:
-    {
-      // Assuming fulcrum ALU has shift circuit, so it can perform one 32-bit shift in one cycle.
-      msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation;
-      msRuntime *= numPass;
-    }
-    break;
-    default:
-      assert(0);
-    }
-    break;
-  }
-  case PIM_DEVICE_BANK_LEVEL:
-  {
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.000005; // 5ns
-    unsigned numALU = 2;
-    double numberOfALUOperation = 1;
-    switch (cmdType)
-    {
-    case PimCmdEnum::SHIFT_BITS_RIGHT:
-    case PimCmdEnum::SHIFT_BITS_LEFT:
-    {
-      // Assuming bank level ALU has shift circuit, so it can perform one 32-bit shift in one cycle.
-      msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation / numALU;
-      msRuntime *= numPass;
-    }
-    break;
-    default:
-      assert(0);
-    }
     break;
   }
   default:

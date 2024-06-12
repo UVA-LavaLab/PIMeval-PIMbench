@@ -91,6 +91,8 @@ public:
 protected:
   bool isValidObjId(pimResMgr* resMgr, PimObjId objId) const;
   bool isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+  bool isCompatibleType(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+  bool isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const;
 
   unsigned getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const;
 
@@ -160,27 +162,13 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
-    : pimCmd(cmdType), m_src(src), m_dest(dest) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue = 0)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
   virtual bool computeRegion(unsigned index) override;
   virtual bool updateStats() const override;
-protected:
-  PimObjId m_src;
-  PimObjId m_dest;
-};
-
-//! @class  pimCmdFunc1Imm
-//! @brief  Pim CMD: Functional 1-operand with immediate value
-class pimCmdFunc1Imm : public pimCmd
-{
-public:
-  pimCmdFunc1Imm(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
-  virtual ~pimCmdFunc1Imm() {}
-  virtual bool execute(pimDevice* device) override;
 protected:
   PimObjId m_src;
   PimObjId m_dest;
