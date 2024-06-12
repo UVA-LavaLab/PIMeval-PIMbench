@@ -91,6 +91,11 @@ protected:
 
   unsigned getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const;
 
+  virtual bool sanityCheck() const { return false; }
+  virtual bool computeRegion(unsigned index) { return false; }
+  virtual bool updateStats() const { return false; }
+  bool computeAllRegions(unsigned numRegions);
+
   //! @brief  Utility: Locate nth B32 in region
   inline std::pair<unsigned, unsigned> locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const
   {
@@ -131,6 +136,20 @@ protected:
 
   PimCmdEnum m_cmdType;
   pimDevice* m_device = nullptr;
+
+  //! @class  pimCmd::regionWorker
+  //! @brief  Thread worker to process regions in parallel
+  class regionWorker : public pimUtils::threadWorker {
+  public:
+    regionWorker(pimCmd* cmd, unsigned regionIdx) : m_cmd(cmd), m_regionIdx(regionIdx) {}
+    virtual ~regionWorker() {}
+    virtual void execute() {
+      m_cmd->computeRegion(m_regionIdx);
+    }
+  private:
+    pimCmd* m_cmd = nullptr;
+    unsigned m_regionIdx = 0;
+  };
 };
 
 //! @class  pimCmdFunc1
@@ -142,9 +161,9 @@ public:
     : pimCmd(cmdType), m_src(src), m_dest(dest) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
-  bool sanityCheck() const;
-  bool computeRegion(unsigned index);
-  bool updateStats() const;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
   PimObjId m_dest;
@@ -159,9 +178,9 @@ public:
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
-  bool sanityCheck() const;
-  bool computeRegion(unsigned index);
-  bool updateStats() const;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
@@ -185,9 +204,9 @@ public:
   }
   virtual ~pimCmdRedSum() {}
   virtual bool execute() override;
-  bool sanityCheck() const;
-  bool computeRegion(unsigned index);
-  bool updateStats() const;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
   int* m_result;
@@ -208,9 +227,9 @@ public:
   }
   virtual ~pimCmdBroadcast() {}
   virtual bool execute() override;
-  bool sanityCheck() const;
-  bool computeRegion(unsigned index);
-  bool updateStats() const;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
   unsigned m_val;
@@ -229,9 +248,9 @@ public:
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute() override;
-  bool sanityCheck() const;
-  bool computeRegion(unsigned index);
-  bool updateStats() const;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
   std::vector<unsigned> m_regionBoundary;
