@@ -94,13 +94,13 @@ pimCmd::getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement)
 
 //! @brief  PIM CMD: Functional 1-operand
 bool
-pimCmdFunc1::execute(pimDevice* device)
+pimCmdFunc1::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !isValidObjId(resMgr, m_dest)) {
     return false;
   }
@@ -120,7 +120,7 @@ pimCmdFunc1::execute(pimDevice* device)
     const pimRegion& destRegion = objDest.getRegions()[i];
 
     PimCoreId coreId = srcRegion.getCoreId();
-    pimCore& core = device->getCore(coreId);
+    pimCore& core = m_device->getCore(coreId);
 
     // perform the computation
     unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
@@ -165,13 +165,13 @@ pimCmdFunc1::execute(pimDevice* device)
 
 //! @brief  PIM CMD: Functional 2-operand
 bool
-pimCmdFunc2::execute(pimDevice* device)
+pimCmdFunc2::execute()
 { 
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src1) || !isValidObjId(resMgr, m_src2) || !isValidObjId(resMgr, m_dest)) {
     return false;
   }
@@ -202,7 +202,7 @@ pimCmdFunc2::execute(pimDevice* device)
     const pimRegion& destRegion = objDest.getRegions()[i];
 
     PimCoreId coreId = src1Region.getCoreId();
-    pimCore& core = device->getCore(coreId);
+    pimCore& core = m_device->getCore(coreId);
 
     // perform the computation
     unsigned numElementsInRegion = getNumElementsInRegion(src1Region, bitsPerElement);
@@ -280,13 +280,13 @@ pimCmdFunc2::execute(pimDevice* device)
 
 //! @brief  PIM CMD: redsum non-ranged/ranged
 bool
-pimCmdRedSum::execute(pimDevice* device)
+pimCmdRedSum::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !m_result) {
     return false;
   }
@@ -301,7 +301,7 @@ pimCmdRedSum::execute(pimDevice* device)
     const pimRegion& srcRegion = objSrc.getRegions()[i];
 
     PimCoreId coreId = srcRegion.getCoreId();
-    pimCore& core = device->getCore(coreId);
+    pimCore& core = m_device->getCore(coreId);
 
     unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
     for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
@@ -323,13 +323,13 @@ pimCmdRedSum::execute(pimDevice* device)
 
 //! @brief  PIM CMD: broadcast a value to all elements
 bool
-pimCmdBroadcast::execute(pimDevice* device)
+pimCmdBroadcast::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d value %u)\n", getName().c_str(), m_dest, m_val);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_dest)) {
     return false;
   }
@@ -343,7 +343,7 @@ pimCmdBroadcast::execute(pimDevice* device)
 
   for (const auto &region : objDest.getRegions()) {
     PimCoreId coreId = region.getCoreId();
-    pimCore &core = device->getCore(coreId);
+    pimCore &core = m_device->getCore(coreId);
 
     unsigned numElementsInRegion = getNumElementsInRegion(region, bitsPerElement);
 
@@ -362,13 +362,13 @@ pimCmdBroadcast::execute(pimDevice* device)
 
 //! @brief  PIM CMD: rotate right/left
 bool
-pimCmdRotate::execute(pimDevice* device)
+pimCmdRotate::execute()
 { 
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src)) {
     return false;
   }
@@ -381,7 +381,7 @@ pimCmdRotate::execute(pimDevice* device)
     unsigned carry = 0;
     for (const auto &srcRegion : objSrc.getRegions()) {
       unsigned coreId = srcRegion.getCoreId();
-      pimCore &core = device->getCore(coreId);
+      pimCore &core = m_device->getCore(coreId);
 
       // retrieve the values
       unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
@@ -407,7 +407,7 @@ pimCmdRotate::execute(pimDevice* device)
     if (!objSrc.getRegions().empty()) {
       const pimRegion &srcRegion = objSrc.getRegions().front();
       unsigned coreId = srcRegion.getCoreId();
-      pimCore &core = device->getCore(coreId);
+      pimCore &core = m_device->getCore(coreId);
       auto locSrc = locateNthB32(srcRegion, isVLayout, 0);
       setB32(core, isVLayout, locSrc.first, locSrc.second,
              *reinterpret_cast<unsigned *>(&carry));
@@ -417,7 +417,7 @@ pimCmdRotate::execute(pimDevice* device)
     for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i - 1];
       unsigned coreId = srcRegion.getCoreId();
-      pimCore &core = device->getCore(coreId);
+      pimCore &core = m_device->getCore(coreId);
 
       // retrieve the values
       unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
@@ -443,7 +443,7 @@ pimCmdRotate::execute(pimDevice* device)
     if (!objSrc.getRegions().empty()) {
       const pimRegion &srcRegion = objSrc.getRegions().back();
       unsigned coreId = srcRegion.getCoreId();
-      pimCore &core = device->getCore(coreId);
+      pimCore &core = m_device->getCore(coreId);
       unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
       auto locSrc = locateNthB32(srcRegion, isVLayout, numElementsInRegion - 1);
       setB32(core, isVLayout, locSrc.first, locSrc.second,
@@ -461,13 +461,13 @@ pimCmdRotate::execute(pimDevice* device)
 
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 bool
-pimCmdReadRowToSa::execute(pimDevice* device)
+pimCmdReadRowToSa::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V ReadRowToSa (obj id %d ofst %u)\n", m_objId, m_ofst);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
     const pimRegion& srcRegion = objSrc.getRegions()[i];
@@ -476,7 +476,7 @@ pimCmdReadRowToSa::execute(pimDevice* device)
       return false;
     }
     PimCoreId coreId = srcRegion.getCoreId();
-    device->getCore(coreId).readRow(srcRegion.getRowIdx() + m_ofst);
+    m_device->getCore(coreId).readRow(srcRegion.getRowIdx() + m_ofst);
   }
 
   // Update stats
@@ -486,13 +486,13 @@ pimCmdReadRowToSa::execute(pimDevice* device)
 
 //! @brief  Pim CMD: BitSIMD-V: Write SA to a row
 bool
-pimCmdWriteSaToRow::execute(pimDevice* device)
+pimCmdWriteSaToRow::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V WriteSaToRow (obj id %d ofst %u)\n", m_objId, m_ofst);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
     const pimRegion& srcRegion = objSrc.getRegions()[i];
@@ -501,7 +501,7 @@ pimCmdWriteSaToRow::execute(pimDevice* device)
       return false;
     }
     PimCoreId coreId = srcRegion.getCoreId();
-    device->getCore(coreId).writeRow(srcRegion.getRowIdx() + m_ofst);
+    m_device->getCore(coreId).writeRow(srcRegion.getRowIdx() + m_ofst);
   }
 
   // Update stats
@@ -511,93 +511,93 @@ pimCmdWriteSaToRow::execute(pimDevice* device)
 
 //! @brief  Pim CMD: BitSIMD-V: Row reg operations
 bool
-pimCmdRRegOp::execute(pimDevice* device)
+pimCmdRRegOp::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d dest-reg %d src-reg %d %d %d val %d)\n",
               getName().c_str(), m_objId, m_dest, m_src1, m_src2, m_src3, m_val);
   #endif
 
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& refObj = resMgr->getObjInfo(m_objId);
   for (unsigned i = 0; i < refObj.getRegions().size(); ++i) {
     const pimRegion& refRegion = refObj.getRegions()[i];
     PimCoreId coreId = refRegion.getCoreId();
-    for (unsigned j = 0; j < device->getNumCols(); j++) {
+    for (unsigned j = 0; j < m_device->getNumCols(); j++) {
       switch (m_cmdType) {
       case PimCmdEnum::RREG_MOV: 
       {
-        device->getCore(coreId).getRowReg(m_dest)[j] = device->getCore(coreId).getRowReg(m_src1)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = m_device->getCore(coreId).getRowReg(m_src1)[j];
         break;
       }
       case PimCmdEnum::RREG_SET: 
       {
-        device->getCore(coreId).getRowReg(m_dest)[j] = m_val;
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = m_val;
         break;
       }
       case PimCmdEnum::RREG_NOT: 
       {
-        bool src = device->getCore(coreId).getRowReg(m_src1)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = !src;
+        bool src = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = !src;
         break;
       }
       case PimCmdEnum::RREG_AND: 
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = (src1 & src2);
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = (src1 & src2);
         break;
       }
       case PimCmdEnum::RREG_OR: 
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = src1 | src2;
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = src1 | src2;
         break;
       }
       case PimCmdEnum::RREG_NAND: 
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 & src2);
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 & src2);
         break;
       }
       case PimCmdEnum::RREG_NOR: 
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 | src2);
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 | src2);
         break;
       }
       case PimCmdEnum::RREG_XOR: 
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = src1 ^ src2;
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = src1 ^ src2;
         break;
       }
       case PimCmdEnum::RREG_XNOR:
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 ^ src2);
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 ^ src2);
         break;
       }
       case PimCmdEnum::RREG_MAJ:
       {
-        bool src1 = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        bool src3 = device->getCore(coreId).getRowReg(m_src3)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] =
+        bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        bool src3 = m_device->getCore(coreId).getRowReg(m_src3)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] =
             ((src1 & src2) || (src1 & src3) || (src2 & src3));
         break;
       }
       case PimCmdEnum::RREG_SEL: 
       {
-        bool cond = device->getCore(coreId).getRowReg(m_src1)[j];
-        bool src2 = device->getCore(coreId).getRowReg(m_src2)[j];
-        bool src3 = device->getCore(coreId).getRowReg(m_src3)[j];
-        device->getCore(coreId).getRowReg(m_dest)[j] = (cond ? src2 : src3);
+        bool cond = m_device->getCore(coreId).getRowReg(m_src1)[j];
+        bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
+        bool src3 = m_device->getCore(coreId).getRowReg(m_src3)[j];
+        m_device->getCore(coreId).getRowReg(m_dest)[j] = (cond ? src2 : src3);
         break;
       }
       default:
@@ -615,13 +615,13 @@ pimCmdRRegOp::execute(pimDevice* device)
 
 //! @brief  Pim CMD: BitSIMD-V: row reg rotate right/left by one step
 bool
-pimCmdRRegRotate::execute(pimDevice* device)
+pimCmdRRegRotate::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
   #endif
   
-  pimResMgr* resMgr = device->getResMgr();
+  pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   if (m_cmdType == PimCmdEnum::RREG_ROTATE_R) {  // Right Rotate
     bool prevVal = 0;
@@ -630,8 +630,8 @@ pimCmdRRegRotate::execute(pimDevice* device)
       PimCoreId coreId = srcRegion.getCoreId();
       for (unsigned j = 0; j < srcRegion.getNumAllocCols(); ++j) {
         unsigned colIdx = srcRegion.getColIdx() + j;
-        bool tmp = device->getCore(coreId).getRowReg(m_dest)[colIdx];
-        device->getCore(coreId).getRowReg(m_dest)[colIdx] = prevVal;
+        bool tmp = m_device->getCore(coreId).getRowReg(m_dest)[colIdx];
+        m_device->getCore(coreId).getRowReg(m_dest)[colIdx] = prevVal;
         prevVal = tmp;
       }
     }
@@ -639,7 +639,7 @@ pimCmdRRegRotate::execute(pimDevice* device)
     const pimRegion &firstRegion = objSrc.getRegions().front();
     PimCoreId firstCoreId = firstRegion.getCoreId();
     unsigned firstColIdx = firstRegion.getColIdx();
-    device->getCore(firstCoreId).getRowReg(m_dest)[firstColIdx] = prevVal;
+    m_device->getCore(firstCoreId).getRowReg(m_dest)[firstColIdx] = prevVal;
   } else if (m_cmdType == PimCmdEnum::RREG_ROTATE_L) {  // Left Rotate
     bool prevVal = 0;
     for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
@@ -647,8 +647,8 @@ pimCmdRRegRotate::execute(pimDevice* device)
       PimCoreId coreId = srcRegion.getCoreId();
       for (unsigned j = srcRegion.getNumAllocCols(); j > 0; --j) {
         unsigned colIdx = srcRegion.getColIdx() + j - 1;
-        bool tmp = device->getCore(coreId).getRowReg(m_dest)[colIdx];
-        device->getCore(coreId).getRowReg(m_dest)[colIdx] = prevVal;
+        bool tmp = m_device->getCore(coreId).getRowReg(m_dest)[colIdx];
+        m_device->getCore(coreId).getRowReg(m_dest)[colIdx] = prevVal;
         prevVal = tmp;
       }
     }
@@ -656,7 +656,7 @@ pimCmdRRegRotate::execute(pimDevice* device)
     const pimRegion &lastRegion = objSrc.getRegions().back();
     PimCoreId lastCoreId = lastRegion.getCoreId();
     unsigned lastColIdx = lastRegion.getColIdx() + lastRegion.getNumAllocCols() - 1;
-    device->getCore(lastCoreId).getRowReg(m_dest)[lastColIdx] = prevVal;
+    m_device->getCore(lastCoreId).getRowReg(m_dest)[lastColIdx] = prevVal;
   }
 
   // Update stats
