@@ -42,6 +42,8 @@ public:
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
   pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
+  pimUtils::threadPool* getThreadPool() { return m_threadPool; }
+  unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -111,6 +113,8 @@ private:
   pimParamsDram* m_paramsDram = nullptr;
   pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
+  pimUtils::threadPool* m_threadPool = nullptr;
+  unsigned m_numThreads = 1;
 };
 
 #endif

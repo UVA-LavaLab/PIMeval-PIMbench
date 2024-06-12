@@ -379,7 +379,8 @@ pimDevice::writeBitsToHost(void* dest, const std::vector<bool>& bits)
 bool
 pimDevice::executeCmd(std::unique_ptr<pimCmd> cmd)
 {
-  bool ok = cmd->execute(this);
+  cmd->setDevice(this);
+  bool ok = cmd->execute();
 
   return ok;
 }

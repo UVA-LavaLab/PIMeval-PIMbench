@@ -42,11 +42,15 @@ pimSim::pimSim()
   m_paramsDram = new pimParamsDram();
   m_paramsPerf = new pimParamsPerf(m_paramsDram);
   m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+
+  m_numThreads = std::thread::hardware_concurrency();
+  m_threadPool = new pimUtils::threadPool(m_numThreads);
 }
 
 //! @brief  pimSim dtor
 pimSim::~pimSim()
 {
+  delete m_threadPool;
   delete m_statsMgr;
   delete m_paramsDram;
   delete m_paramsPerf;
