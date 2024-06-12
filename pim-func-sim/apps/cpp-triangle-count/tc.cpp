@@ -249,7 +249,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     std::vector<unsigned int> src2;
     int step = V / 10; // Each 10 percent of the total iterations
     uint16_t iterations = 0;
-    uint32_t skippedWords = 0, transferredWords = 0;
+    // uint32_t skippedWords = 0, transferredWords = 0;
     double host_time_if = 0.0, host_time_forloop = 0.0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
@@ -257,6 +257,10 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             { // If there's an edge between i and j
                 ++oneCount;
                 auto start = std::chrono::high_resolution_clock::now();
+#ifdef ENABLE_PARALLEL
+                // Parallelizing the loop with OpenMP
+                #pragma omp parallel for reduction(+:host_time_if, words) 
+#endif
                 for (int k = 0; k < wordsPerMatrixRow; ++k) {
                     auto ifstart = std::chrono::high_resolution_clock::now();
                     if(optimized && (!bitAdjMatrix[i][k] || !bitAdjMatrix[j][k]))
@@ -264,16 +268,24 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                         auto ifend = std::chrono::high_resolution_clock::now();
                         auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                         host_time_if += ifelapsedTime.count();
-                        skippedWords++;
+                        // skippedWords++;
                         continue;
                     }
                     auto ifend = std::chrono::high_resolution_clock::now();
                     auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                     host_time_if += ifelapsedTime.count();
-                    transferredWords++;
+                    // transferredWords++;
+#ifdef ENABLE_PARALLEL
+                    #pragma omp atomic
+#endif
                     ++words;
-                    src1.push_back(bitAdjMatrix[i][k]);
-                    src2.push_back(bitAdjMatrix[j][k]);
+#ifdef ENABLE_PARALLEL
+                    #pragma omp critical
+#endif
+                    {
+                        src1.push_back(bitAdjMatrix[i][k]);
+                        src2.push_back(bitAdjMatrix[j][k]);
+                    }
                 }
                 auto end = std::chrono::high_resolution_clock::now();
                 auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -303,7 +315,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     }
     cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
     cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
-    cout << "oneCount: " << oneCount << ", skippedWords: " << skippedWords << ", transferredWords: " << transferredWords << endl;
+    // cout << "oneCount: " << oneCount << ", skippedWords: " << skippedWords << ", transferredWords: " << transferredWords << endl;
     cout << "TriangleCount: " << count / 6 << endl;
     // Each triangle is counted three times (once at each vertex), so divide the count by 3
     return count / 6;
