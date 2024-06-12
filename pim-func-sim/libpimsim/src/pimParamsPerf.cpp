@@ -129,7 +129,6 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj, u
         // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
         unsigned bitsPerElement = obj.getBitsPerElement();
         msRuntime = (m_tR + m_tW) * (bitsPerElement - immediateValue);
-        msRuntime *= numPass;
       }
       break;
       default:
@@ -161,7 +160,6 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj, u
         // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
         unsigned bitsPerElement = obj.getBitsPerElement();
         msRuntime = (m_tR + m_tW) * (bitsPerElement - immediateValue);
-        msRuntime *= numPass;
       }
       break;
       default:
