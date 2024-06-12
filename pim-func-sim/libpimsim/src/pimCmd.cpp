@@ -100,6 +100,23 @@ pimCmdFunc1::execute()
   std::printf("PIM-Info: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
   #endif
 
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+    computeRegion(i);
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 1-operand - sanity check
+bool
+pimCmdFunc1::sanityCheck() const
+{
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !isValidObjId(resMgr, m_dest)) {
     return false;
@@ -109,68 +126,100 @@ pimCmdFunc1::execute()
   if (!isAssociated(objSrc, objDest)) {
     return false;
   }
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 1-operand - compute region
+bool
+pimCmdFunc1::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  PimDataType dataType = objSrc.getDataType();
+  bool isVLayout = objSrc.isVLayout();
+  unsigned bitsPerElement = objSrc.getBitsPerElement();
+
+  const pimRegion& srcRegion = objSrc.getRegions()[index];
+  const pimRegion& destRegion = objDest.getRegions()[index];
+
+  PimCoreId coreId = srcRegion.getCoreId();
+  pimCore& core = m_device->getCore(coreId);
+
+  // perform the computation
+  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+  for (unsigned j = 0; j < numElementsInRegion; ++j) {
+    if (dataType == PIM_INT32) {
+      auto locSrc = locateNthB32(srcRegion, isVLayout, j);
+      auto locDest = locateNthB32(destRegion, isVLayout, j);
+
+      switch (m_cmdType) {
+      case PimCmdEnum::ABS:
+      {
+        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+        int operand = *reinterpret_cast<int*>(&operandBits);
+        int result = std::abs(operand);
+        setB32(core, isVLayout, locDest.first, locDest.second,
+               *reinterpret_cast<unsigned *>(&result));
+      }
+      break;
+      case PimCmdEnum::POPCOUNT:
+      {
+        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+        int result = std::bitset<32>(operandBits).count();
+        setB32(core, isVLayout, locDest.first, locDest.second,
+               *reinterpret_cast<unsigned *>(&result));
+      }
+      break;
+      default:
+        std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+        assert(0);
+      }
+    } else {
+      assert(0); // todo: data type
+    }
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 1-operand - update stats
+bool
+pimCmdFunc1::updateStats() const
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  // todo: any data type checks
-  unsigned bitsPerElement = objSrc.getBitsPerElement();
-
-  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
-    const pimRegion& srcRegion = objSrc.getRegions()[i];
-    const pimRegion& destRegion = objDest.getRegions()[i];
-
-    PimCoreId coreId = srcRegion.getCoreId();
-    pimCore& core = m_device->getCore(coreId);
-
-    // perform the computation
-    unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-    for (unsigned j = 0; j < numElementsInRegion; ++j) {
-      if (dataType == PIM_INT32) {
-        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-        auto locDest = locateNthB32(destRegion, isVLayout, j);
-
-        switch (m_cmdType) {
-        case PimCmdEnum::ABS:
-        {
-          auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
-          int operand = *reinterpret_cast<int*>(&operandBits);
-          int result = std::abs(operand);
-          setB32(core, isVLayout, locDest.first, locDest.second,
-                 *reinterpret_cast<unsigned *>(&result));
-        }
-        break;
-        case PimCmdEnum::POPCOUNT:
-        {
-          auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
-          int result = std::bitset<32>(operandBits).count();
-          setB32(core, isVLayout, locDest.first, locDest.second,
-                 *reinterpret_cast<unsigned *>(&result));
-        }
-        break;
-        default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
-          assert(0);
-        }
-      } else {
-        assert(0); // todo: data type
-      }
-    }
-  }
-
-  // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
+
 //! @brief  PIM CMD: Functional 2-operand
 bool
 pimCmdFunc2::execute()
-{ 
+{
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
   #endif
 
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+  for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
+    computeRegion(i);
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 2-operand - sanity check
+bool
+pimCmdFunc2::sanityCheck() const
+{
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src1) || !isValidObjId(resMgr, m_src2) || !isValidObjId(resMgr, m_dest)) {
     return false;
@@ -181,9 +230,7 @@ pimCmdFunc2::execute()
   if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest)) {
     return false;
   }
-  PimDataType dataType = objSrc1.getDataType();
-  bool isVLayout = objSrc1.isVLayout();
-  
+
   if (objSrc1.getDataType() != objSrc2.getDataType()) {
     std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
     return false;
@@ -193,90 +240,110 @@ pimCmdFunc2::execute()
     std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
     return false;
   }
-  // todo: other data types
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 2-operand - compute region
+bool
+pimCmdFunc2::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+  const pimObjInfo& objSrc2 = m_device->getResMgr()->getObjInfo(m_src2);
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+
+  PimDataType dataType = objSrc1.getDataType();
+  bool isVLayout = objSrc1.isVLayout();
   unsigned bitsPerElement = objSrc1.getBitsPerElement();
 
-  for (unsigned i = 0; i < objSrc1.getRegions().size(); ++i) {
-    const pimRegion& src1Region = objSrc1.getRegions()[i];
-    const pimRegion& src2Region = objSrc2.getRegions()[i];
-    const pimRegion& destRegion = objDest.getRegions()[i];
+  const pimRegion& src1Region = objSrc1.getRegions()[index];
+  const pimRegion& src2Region = objSrc2.getRegions()[index];
+  const pimRegion& destRegion = objDest.getRegions()[index];
 
-    PimCoreId coreId = src1Region.getCoreId();
-    pimCore& core = m_device->getCore(coreId);
+  PimCoreId coreId = src1Region.getCoreId();
+  pimCore& core = m_device->getCore(coreId);
 
-    // perform the computation
-    unsigned numElementsInRegion = getNumElementsInRegion(src1Region, bitsPerElement);
-    for (unsigned j = 0; j < numElementsInRegion; ++j) {
-      auto locSrc1 = locateNthB32(src1Region, isVLayout, j);
-      auto locSrc2 = locateNthB32(src2Region, isVLayout, j);
-      auto locDest = locateNthB32(destRegion, isVLayout, j);
+  // perform the computation
+  unsigned numElementsInRegion = getNumElementsInRegion(src1Region, bitsPerElement);
+  for (unsigned j = 0; j < numElementsInRegion; ++j) {
+    auto locSrc1 = locateNthB32(src1Region, isVLayout, j);
+    auto locSrc2 = locateNthB32(src2Region, isVLayout, j);
+    auto locDest = locateNthB32(destRegion, isVLayout, j);
 
-      if (dataType == PIM_INT32) {
-        auto operandBits1 = getB32(core, isVLayout, locSrc1.first, locSrc1.second);
-        auto operandBits2 = getB32(core, isVLayout, locSrc2.first, locSrc2.second);
-        int operand1 = *reinterpret_cast<unsigned *>(&operandBits1);
-        int operand2 = *reinterpret_cast<unsigned *>(&operandBits2);
-        int result = 0;
-        switch (m_cmdType) {
-        case PimCmdEnum::ADD: result = operand1 + operand2; break;
-        case PimCmdEnum::SUB: result = operand1 - operand2; break;
-        case PimCmdEnum::MUL: result = operand1 * operand2; break;
-        case PimCmdEnum::DIV:
-          if (operand2 == 0) {
-            std::printf("PIM-Error: Division by zero\n");
-            return false;
-          }
-          result = operand1 / operand2;
-          break;
-        case PimCmdEnum::AND: result = operand1 & operand2; break;
-        case PimCmdEnum::OR: result = operand1 | operand2; break;
-        case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
-        case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
-        case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
-        case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
-        case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
-        case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
-          assert(0);
+    if (dataType == PIM_INT32) {
+      auto operandBits1 = getB32(core, isVLayout, locSrc1.first, locSrc1.second);
+      auto operandBits2 = getB32(core, isVLayout, locSrc2.first, locSrc2.second);
+      int operand1 = *reinterpret_cast<unsigned *>(&operandBits1);
+      int operand2 = *reinterpret_cast<unsigned *>(&operandBits2);
+      int result = 0;
+      switch (m_cmdType) {
+      case PimCmdEnum::ADD: result = operand1 + operand2; break;
+      case PimCmdEnum::SUB: result = operand1 - operand2; break;
+      case PimCmdEnum::MUL: result = operand1 * operand2; break;
+      case PimCmdEnum::DIV:
+        if (operand2 == 0) {
+          std::printf("PIM-Error: Division by zero\n");
+          return false;
         }
-        setB32(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<unsigned *>(&result));
-      } else if (dataType == PIM_FP32) {
-        auto operandBits1 = getB32(core, isVLayout, locSrc1.first, locSrc1.second);
-        auto operandBits2 = getB32(core, isVLayout, locSrc2.first, locSrc2.second);
-        float operand1 = *reinterpret_cast<float *>(&operandBits1);
-        float operand2 = *reinterpret_cast<float *>(&operandBits2);
-        float result = 0;
-        switch (m_cmdType) {
-        case PimCmdEnum::ADD: result = operand1 + operand2; break;
-        case PimCmdEnum::SUB: result = operand1 - operand2; break;
-        case PimCmdEnum::MUL: result = operand1 * operand2; break;
-        case PimCmdEnum::DIV:
-          if (operand2 == 0) {
-            std::printf("PIM-Error: Division by zero\n");
-            return false;
-          }
-          result = operand1 / operand2;
-          break;
-        default:
-          std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", m_cmdType);
-          assert(0);
-        }
-        setB32(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<unsigned *>(&result));
-      } else {
-        assert(0); // todo: data type
+        result = operand1 / operand2;
+        break;
+      case PimCmdEnum::AND: result = operand1 & operand2; break;
+      case PimCmdEnum::OR: result = operand1 | operand2; break;
+      case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
+      case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
+      case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
+      case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
+      case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+      case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
+      case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
+      default:
+        std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+        assert(0);
       }
+      setB32(core, isVLayout, locDest.first, locDest.second,
+             *reinterpret_cast<unsigned *>(&result));
+    } else if (dataType == PIM_FP32) {
+      auto operandBits1 = getB32(core, isVLayout, locSrc1.first, locSrc1.second);
+      auto operandBits2 = getB32(core, isVLayout, locSrc2.first, locSrc2.second);
+      float operand1 = *reinterpret_cast<float *>(&operandBits1);
+      float operand2 = *reinterpret_cast<float *>(&operandBits2);
+      float result = 0;
+      switch (m_cmdType) {
+      case PimCmdEnum::ADD: result = operand1 + operand2; break;
+      case PimCmdEnum::SUB: result = operand1 - operand2; break;
+      case PimCmdEnum::MUL: result = operand1 * operand2; break;
+      case PimCmdEnum::DIV:
+        if (operand2 == 0) {
+          std::printf("PIM-Error: Division by zero\n");
+          return false;
+        }
+        result = operand1 / operand2;
+        break;
+      default:
+        std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", m_cmdType);
+        assert(0);
+      }
+      setB32(core, isVLayout, locDest.first, locDest.second,
+             *reinterpret_cast<unsigned *>(&result));
+    } else {
+      assert(0); // todo: data type
     }
   }
+  return true;
+}
 
-  // Update stats
+//! @brief  PIM CMD: Functional 2-operand - update stats
+bool
+pimCmdFunc2::updateStats() const
+{
+  const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+  PimDataType dataType = objSrc1.getDataType();
+  bool isVLayout = objSrc1.isVLayout();
+
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc2(m_cmdType, objSrc1);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
+
 
 //! @brief  PIM CMD: redsum non-ranged/ranged
 bool
@@ -286,36 +353,72 @@ pimCmdRedSum::execute()
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
   #endif
 
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  // prepare per-region storage
+  m_regionSum.resize(objSrc.getRegions().size(), 0);
+
+  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+    computeRegion(i);
+  }
+
+  // reduction
+  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+    *m_result += m_regionSum[i];
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
+bool
+pimCmdRedSum::sanityCheck() const
+{
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !m_result) {
     return false;
   }
-  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  return true;
+}
+
+//! @brief  PIM CMD: redsum non-ranged/ranged - compute region
+bool
+pimCmdRedSum::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  bool isVLayout = objSrc.isVLayout();
+  unsigned bitsPerElement = objSrc.getBitsPerElement();
+
+  const pimRegion& srcRegion = objSrc.getRegions()[index];
+  PimCoreId coreId = srcRegion.getCoreId();
+  pimCore& core = m_device->getCore(coreId);
+
+  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+  unsigned currIdx = numElementsInRegion * index;
+  for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
+    if (currIdx >= m_idxBegin) {
+      auto locSrc = locateNthB32(srcRegion, isVLayout, j);
+      auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+      int operand = *reinterpret_cast<int*>(&operandBits);
+      m_regionSum[index] += operand;
+    }
+    currIdx += 1;
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: redsum non-ranged/ranged - update stats
+bool
+pimCmdRedSum::updateStats() const
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  unsigned bitsPerElement = objSrc.getBitsPerElement();
-
-  unsigned currIdx = 0;
-  for (unsigned i = 0; i < objSrc.getRegions().size() && currIdx < m_idxEnd; ++i) {
-    const pimRegion& srcRegion = objSrc.getRegions()[i];
-
-    PimCoreId coreId = srcRegion.getCoreId();
-    pimCore& core = m_device->getCore(coreId);
-
-    unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-    for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
-      if (currIdx >= m_idxBegin) {
-        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
-        int operand = *reinterpret_cast<int*>(&operandBits);
-        *m_result += operand;
-      }
-      currIdx += 1;
-    }
-  }
-
-  // Update stats
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
@@ -329,135 +432,201 @@ pimCmdBroadcast::execute()
   std::printf("PIM-Info: %s (obj id %d value %u)\n", getName().c_str(), m_dest, m_val);
   #endif
 
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  for (unsigned i = 0; i < objDest.getRegions().size(); ++i) {
+    computeRegion(i);
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: broadcast a value to all elements - sanity check
+bool
+pimCmdBroadcast::sanityCheck() const
+{
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_dest)) {
     return false;
   }
-  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
-  PimDataType dataType = objDest.getDataType();
+  return true;
+}
+
+//! @brief  PIM CMD: broadcast a value to all elements - compute region
+bool
+pimCmdBroadcast::computeRegion(unsigned index)
+{
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   bool isVLayout = objDest.isVLayout();
 
   unsigned bitsPerElement = objDest.getBitsPerElement();
-
   assert(bitsPerElement == 32); // todo: support other types
 
-  for (const auto &region : objDest.getRegions()) {
-    PimCoreId coreId = region.getCoreId();
-    pimCore &core = m_device->getCore(coreId);
+  const pimRegion& destRegion = objDest.getRegions()[index];
+  PimCoreId coreId = destRegion.getCoreId();
+  pimCore &core = m_device->getCore(coreId);
 
-    unsigned numElementsInRegion = getNumElementsInRegion(region, bitsPerElement);
+  unsigned numElementsInRegion = getNumElementsInRegion(destRegion, bitsPerElement);
 
-    for (unsigned j = 0; j < numElementsInRegion; ++j) {
-      auto locDest = locateNthB32(region, isVLayout, j);
-      setB32(core, isVLayout, locDest.first, locDest.second,
-             *reinterpret_cast<unsigned *>(&m_val));
-    }
+  unsigned val = *reinterpret_cast<unsigned *>(&m_val);
+  for (unsigned j = 0; j < numElementsInRegion; ++j) {
+    auto locDest = locateNthB32(destRegion, isVLayout, j);
+    setB32(core, isVLayout, locDest.first, locDest.second, val);
   }
+  return true;
+}
 
-  // Update stats
+//! @brief  PIM CMD: broadcast a value to all elements - update stats
+bool
+pimCmdBroadcast::updateStats() const
+{
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  PimDataType dataType = objDest.getDataType();
+  bool isVLayout = objDest.isVLayout();
+
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForBroadcast(m_cmdType, objDest);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
 
+
 //! @brief  PIM CMD: rotate right/left
 bool
 pimCmdRotate::execute()
-{ 
+{
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
   #endif
 
-  pimResMgr* resMgr = m_device->getResMgr();
-  if (!isValidObjId(resMgr, m_src)) {
+  if (!sanityCheck()) {
     return false;
   }
-  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
-  PimDataType dataType = objSrc.getDataType();
+
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  unsigned numRegions = objSrc.getRegions().size();
+  m_regionBoundary.resize(numRegions, 0);
+
+  for (unsigned i = 0; i < numRegions; ++i) {
+    computeRegion(i);
+  }
+
+  // handle region boundaries
   bool isVLayout = objSrc.isVLayout();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
-
   if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_R) {
-    unsigned carry = 0;
-    for (const auto &srcRegion : objSrc.getRegions()) {
-      unsigned coreId = srcRegion.getCoreId();
-      pimCore &core = m_device->getCore(coreId);
-
-      // retrieve the values
-      unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-      std::vector<unsigned> regionVector(numElementsInRegion);
-      for (unsigned j = 0; j < numElementsInRegion; ++j) {
-        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-        regionVector[j] = getB32(core, isVLayout, locSrc.first, locSrc.second);
-      }
-      // Perform the rotation
-      for (unsigned j = 0; j < numElementsInRegion; ++j) {
-        int temp = regionVector[j];
-        regionVector[j] = carry;
-        carry = temp;
-      }
-      for (unsigned j = 0; j < numElementsInRegion; ++j) {
-        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-        setB32(core, isVLayout, locSrc.first, locSrc.second, regionVector[j]);
-      }
-    }
-    if (m_cmdType == PimCmdEnum::SHIFT_R) {
-      carry = 0; // fill with zero
-    }
-    if (!objSrc.getRegions().empty()) {
-      const pimRegion &srcRegion = objSrc.getRegions().front();
+    for (unsigned i = 0; i < numRegions; ++i) {
+      const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
       auto locSrc = locateNthB32(srcRegion, isVLayout, 0);
-      setB32(core, isVLayout, locSrc.first, locSrc.second,
-             *reinterpret_cast<unsigned *>(&carry));
+      unsigned val = 0;
+      if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_R) {
+        val = m_regionBoundary[numRegions - 1];
+      } else if (i > 0) {
+        val = m_regionBoundary[i - 1];
+      }
+      setB32(core, isVLayout, locSrc.first, locSrc.second, val);
     }
   } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_L) {
-    unsigned carry = 0;
-    for (unsigned i = objSrc.getRegions().size(); i > 0; --i) {
-      const pimRegion &srcRegion = objSrc.getRegions()[i - 1];
-      unsigned coreId = srcRegion.getCoreId();
-      pimCore &core = m_device->getCore(coreId);
-
-      // retrieve the values
-      unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-      std::vector<unsigned> regionVector(numElementsInRegion);
-      for (unsigned j = 0; j < numElementsInRegion; ++j) {
-        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-        regionVector[j] = getB32(core, isVLayout, locSrc.first, locSrc.second);
-      }
-      // Perform the rotation
-      for (int j = numElementsInRegion - 1; j >= 0; --j) {
-        unsigned temp = regionVector[j];
-        regionVector[j] = carry;
-        carry = temp;
-      }
-      for (unsigned j = 0; j < numElementsInRegion; ++j) {
-        auto locSrc = locateNthB32(srcRegion, isVLayout, j);
-        setB32(core, isVLayout, locSrc.first, locSrc.second, regionVector[j]);
-      }
-    }
-    if (m_cmdType == PimCmdEnum::SHIFT_L) {
-      carry = 0; // fill with zero
-    }
-    if (!objSrc.getRegions().empty()) {
-      const pimRegion &srcRegion = objSrc.getRegions().back();
+    for (unsigned i = 0; i < numRegions; ++i) {
+      const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
       unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
       auto locSrc = locateNthB32(srcRegion, isVLayout, numElementsInRegion - 1);
-      setB32(core, isVLayout, locSrc.first, locSrc.second,
-             *reinterpret_cast<unsigned *>(&carry));
+      unsigned val = 0;
+      if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_R) {
+        val = m_regionBoundary[0];
+      } else if (i < numRegions - 1) {
+        val = m_regionBoundary[i + 1];
+      }
+      setB32(core, isVLayout, locSrc.first, locSrc.second, val);
     }
   } else {
     assert(0);
   }
 
-  // Update stats
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: rotate right/left - sanity check
+bool
+pimCmdRotate::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+  if (!isValidObjId(resMgr, m_src)) {
+    return false;
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: rotate right/left - compute region
+bool
+pimCmdRotate::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  bool isVLayout = objSrc.isVLayout();
+  unsigned bitsPerElement = objSrc.getBitsPerElement();
+
+  const pimRegion& srcRegion = objSrc.getRegions()[index];
+  unsigned coreId = srcRegion.getCoreId();
+  pimCore &core = m_device->getCore(coreId);
+
+  // read out values
+  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+  std::vector<unsigned> regionVector(numElementsInRegion);
+  for (unsigned j = 0; j < numElementsInRegion; ++j) {
+    auto locSrc = locateNthB32(srcRegion, isVLayout, j);
+    regionVector[j] = getB32(core, isVLayout, locSrc.first, locSrc.second);
+  }
+
+  // perform rotation
+  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_R) {
+    m_regionBoundary[index] = regionVector[numElementsInRegion - 1];
+    unsigned carry = 0;
+    for (unsigned j = 0; j < numElementsInRegion; ++j) {
+      int temp = regionVector[j];
+      regionVector[j] = carry;
+      carry = temp;
+    }
+  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_L) {
+    m_regionBoundary[index] = regionVector[0];
+    unsigned carry = 0;
+    for (int j = numElementsInRegion - 1; j >= 0; --j) {
+      unsigned temp = regionVector[j];
+      regionVector[j] = carry;
+      carry = temp;
+    }
+  } else {
+    assert(0);
+  }
+
+  // write back values
+  for (unsigned j = 0; j < numElementsInRegion; ++j) {
+    auto locSrc = locateNthB32(srcRegion, isVLayout, j);
+    setB32(core, isVLayout, locSrc.first, locSrc.second, regionVector[j]);
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: rotate right/left - update stats
+bool
+pimCmdRotate::updateStats() const
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  PimDataType dataType = objSrc.getDataType();
+  bool isVLayout = objSrc.isVLayout();
+
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRotate(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
+
 
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 bool
@@ -525,51 +694,51 @@ pimCmdRRegOp::execute()
     PimCoreId coreId = refRegion.getCoreId();
     for (unsigned j = 0; j < m_device->getNumCols(); j++) {
       switch (m_cmdType) {
-      case PimCmdEnum::RREG_MOV: 
+      case PimCmdEnum::RREG_MOV:
       {
         m_device->getCore(coreId).getRowReg(m_dest)[j] = m_device->getCore(coreId).getRowReg(m_src1)[j];
         break;
       }
-      case PimCmdEnum::RREG_SET: 
+      case PimCmdEnum::RREG_SET:
       {
         m_device->getCore(coreId).getRowReg(m_dest)[j] = m_val;
         break;
       }
-      case PimCmdEnum::RREG_NOT: 
+      case PimCmdEnum::RREG_NOT:
       {
         bool src = m_device->getCore(coreId).getRowReg(m_src1)[j];
         m_device->getCore(coreId).getRowReg(m_dest)[j] = !src;
         break;
       }
-      case PimCmdEnum::RREG_AND: 
+      case PimCmdEnum::RREG_AND:
       {
         bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
         bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
         m_device->getCore(coreId).getRowReg(m_dest)[j] = (src1 & src2);
         break;
       }
-      case PimCmdEnum::RREG_OR: 
+      case PimCmdEnum::RREG_OR:
       {
         bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
         bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
         m_device->getCore(coreId).getRowReg(m_dest)[j] = src1 | src2;
         break;
       }
-      case PimCmdEnum::RREG_NAND: 
+      case PimCmdEnum::RREG_NAND:
       {
         bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
         bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
         m_device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 & src2);
         break;
       }
-      case PimCmdEnum::RREG_NOR: 
+      case PimCmdEnum::RREG_NOR:
       {
         bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
         bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
         m_device->getCore(coreId).getRowReg(m_dest)[j] = !(src1 | src2);
         break;
       }
-      case PimCmdEnum::RREG_XOR: 
+      case PimCmdEnum::RREG_XOR:
       {
         bool src1 = m_device->getCore(coreId).getRowReg(m_src1)[j];
         bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
@@ -592,7 +761,7 @@ pimCmdRRegOp::execute()
             ((src1 & src2) || (src1 & src3) || (src2 & src3));
         break;
       }
-      case PimCmdEnum::RREG_SEL: 
+      case PimCmdEnum::RREG_SEL:
       {
         bool cond = m_device->getCore(coreId).getRowReg(m_src1)[j];
         bool src2 = m_device->getCore(coreId).getRowReg(m_src2)[j];
@@ -620,7 +789,7 @@ pimCmdRRegRotate::execute()
   #if defined(DEBUG)
   std::printf("PIM-Info: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
   #endif
-  
+
   pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
   if (m_cmdType == PimCmdEnum::RREG_ROTATE_R) {  // Right Rotate

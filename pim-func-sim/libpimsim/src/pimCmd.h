@@ -142,6 +142,9 @@ public:
     : pimCmd(cmdType), m_src(src), m_dest(dest) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
+  bool sanityCheck() const;
+  bool computeRegion(unsigned index);
+  bool updateStats() const;
 protected:
   PimObjId m_src;
   PimObjId m_dest;
@@ -156,6 +159,9 @@ public:
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
+  bool sanityCheck() const;
+  bool computeRegion(unsigned index);
+  bool updateStats() const;
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
@@ -179,9 +185,13 @@ public:
   }
   virtual ~pimCmdRedSum() {}
   virtual bool execute() override;
+  bool sanityCheck() const;
+  bool computeRegion(unsigned index);
+  bool updateStats() const;
 protected:
   PimObjId m_src;
   int* m_result;
+  std::vector<int> m_regionSum;
   unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
 };
@@ -198,6 +208,9 @@ public:
   }
   virtual ~pimCmdBroadcast() {}
   virtual bool execute() override;
+  bool sanityCheck() const;
+  bool computeRegion(unsigned index);
+  bool updateStats() const;
 protected:
   PimObjId m_dest;
   unsigned m_val;
@@ -216,8 +229,12 @@ public:
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute() override;
+  bool sanityCheck() const;
+  bool computeRegion(unsigned index);
+  bool updateStats() const;
 protected:
   PimObjId m_src;
+  std::vector<unsigned> m_regionBoundary;
 };
 
 //! @class  pimCmdReadRowToSa
