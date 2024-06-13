@@ -68,6 +68,7 @@ extern "C" {
   PimStatus pimCopyDeviceToHost(PimObjId src, void* dest);
   PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
   PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
 
   // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);

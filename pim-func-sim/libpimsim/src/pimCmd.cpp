@@ -113,6 +113,225 @@ pimCmd::computeAllRegions(unsigned numRegions)
   return true;
 }
 
+
+//! @brief  PIM Data Copy
+bool
+pimCmdCopy::execute()
+{
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  if (m_cmdType == PimCmdEnum::COPY_H2D) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    unsigned numRegions = objDest.getRegions().size();
+    computeAllRegions(numRegions);
+  } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    unsigned numRegions = objSrc.getRegions().size();
+    computeAllRegions(numRegions);
+  } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    unsigned numRegions = objSrc.getRegions().size();
+    computeAllRegions(numRegions);
+  } else {
+    assert(0);
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM Data Copy - sanity check
+bool
+pimCmdCopy::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+  switch (m_cmdType) {
+  case PimCmdEnum::COPY_H2D:
+  {
+    if (!m_ptr) {
+      std::printf("PIM-Error: Invalid null pointer as copy source\n");
+      return false;
+    }
+    if (!resMgr->isValidObjId(m_dest)) {
+      std::printf("PIM-Error: Invalid PIM object ID %d as copy destination\n", m_dest);
+      return false;
+    }
+    break;
+  }
+  case PimCmdEnum::COPY_D2H:
+  {
+    if (!resMgr->isValidObjId(m_src)) {
+      std::printf("PIM-Error: Invalid PIM object ID %d as copy source\n", m_src);
+      return false;
+    }
+    if (!m_ptr) {
+      std::printf("PIM-Error: Invalid null pointer as copy destination\n");
+      return false;
+    }
+    break;
+  }
+  case PimCmdEnum::COPY_D2D:
+  {
+    if (!resMgr->isValidObjId(m_src)) {
+      std::printf("PIM-Error: Invalid PIM object ID %d as copy source\n", m_src);
+      return false;
+    }
+    if (!resMgr->isValidObjId(m_dest)) {
+      std::printf("PIM-Error: Invalid PIM object ID %d as copy destination\n", m_dest);
+      return false;
+    }
+    const pimObjInfo &objSrc = resMgr->getObjInfo(m_src);
+    const pimObjInfo &objDest = resMgr->getObjInfo(m_dest);
+    if (!isAssociated(objSrc, objDest)) {
+      std::printf("PIM-Error: PIM object IDs %d and %d are not associated for device-to-device copying\n", m_src, m_dest);
+      return false;
+    }
+    break;
+  }
+  default:
+    assert(0);
+  }
+  return true;
+}
+
+//! @brief  PIM Data Copy - compute region
+bool
+pimCmdCopy::computeRegion(unsigned index)
+{
+  // read in bits from src (host or PIM)
+  std::vector<bool> bits;
+  if (m_cmdType == PimCmdEnum::COPY_H2D) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    const pimRegion& region = objDest.getRegions()[index];
+    unsigned numAllocRows = region.getNumAllocRows();
+    unsigned numAllocCols = region.getNumAllocCols();
+    unsigned bitsPerElement = objDest.getBitsPerElement();
+    unsigned numElementInCurRegion = numAllocRows * numAllocCols / bitsPerElement;
+    unsigned byteOfst = index * objDest.getMaxElementsPerRegion() * bitsPerElement / 8;
+    void* ptr = (void*)((char*)m_ptr + byteOfst);
+    bits = pimUtils::readBitsFromHost(ptr, numElementInCurRegion, bitsPerElement);
+  } else if (m_cmdType == PimCmdEnum::COPY_D2H || m_cmdType == PimCmdEnum::COPY_D2D) {
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    const pimRegion& region = objSrc.getRegions()[index];
+    unsigned rowIdx = region.getRowIdx();
+    unsigned colIdx = region.getColIdx();
+    unsigned numAllocRows = region.getNumAllocRows();
+    unsigned numAllocCols = region.getNumAllocCols();
+    PimCoreId coreId = region.getCoreId();
+    pimCore& core = m_device->getCore(coreId);
+    if (m_copyType == PIM_COPY_V) {
+      for (unsigned c = 0; c < numAllocCols; ++c) {
+        for (unsigned r = 0; r < numAllocRows; ++r) {
+          unsigned row = rowIdx + r;
+          unsigned col = colIdx + c;
+          bool val = core.getBit(row, col);
+          bits.push_back(val);
+        }
+      }
+    } else if (m_copyType == PIM_COPY_H) {
+      for (unsigned r = 0; r < numAllocRows; ++r) {
+        for (unsigned c = 0; c < numAllocCols; ++c) {
+          unsigned row = rowIdx + r;
+          unsigned col = colIdx + c;
+          bool val = core.getBit(row, col);
+          bits.push_back(val);
+        }
+      }
+    } else {
+      assert(0);
+    }
+  } else {
+    assert(0);
+  }
+
+  // write bits to dest (host or PIM)
+  if (m_cmdType == PimCmdEnum::COPY_H2D || m_cmdType == PimCmdEnum::COPY_D2D) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    const pimRegion& region = objDest.getRegions()[index];
+    unsigned rowIdx = region.getRowIdx();
+    unsigned colIdx = region.getColIdx();
+    unsigned numAllocRows = region.getNumAllocRows();
+    unsigned numAllocCols = region.getNumAllocCols();
+    PimCoreId coreId = region.getCoreId();
+    pimCore& core = m_device->getCore(coreId);
+    if (m_copyType == PIM_COPY_V) {
+      size_t bitIdx = 0;
+      for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
+        bool val = bits[bitIdx++];
+        unsigned row = rowIdx + i % numAllocRows;
+        unsigned col = colIdx + i / numAllocRows;
+        core.setBit(row, col, val);
+      }
+    } else if (m_copyType == PIM_COPY_H) {
+      size_t bitIdx = 0;
+      for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
+        bool val = bits[bitIdx++];
+        unsigned row = rowIdx + i / numAllocCols;
+        unsigned col = colIdx + i % numAllocCols;
+        core.setBit(row, col, val);
+      }
+    } else {
+      assert(0);
+    }
+  } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    unsigned bitsPerElement = objSrc.getBitsPerElement();
+    unsigned byteOfst = index * objSrc.getMaxElementsPerRegion() * bitsPerElement / 8;
+    void* ptr = (void*)((char*)m_ptr + byteOfst);
+    pimUtils::writeBitsToHost(ptr, bits);
+  } else {
+    assert(0);
+  }
+
+  return true;
+}
+
+//! @brief  PIM Data Copy - update stats
+bool
+pimCmdCopy::updateStats() const
+{
+   if (m_cmdType == PimCmdEnum::COPY_H2D) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    unsigned numElements = objDest.getNumElements();
+    unsigned bitsPerElement = objDest.getBitsPerElement();
+    pimSim::get()->getStatsMgr()->recordCopyMainToDevice((uint64_t)numElements * bitsPerElement);
+
+    #if defined(DEBUG)
+    std::printf("PIM-Info: Copied %u elements of %u bits from host to PIM obj %d\n",
+                numElements, bitsPerElement, m_dest);
+    #endif
+
+  } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    unsigned numElements = objSrc.getNumElements();
+    unsigned bitsPerElement = objSrc.getBitsPerElement();
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain((uint64_t)numElements * bitsPerElement);
+
+    #if defined(DEBUG)
+    std::printf("PIM-Info: Copied %u elements of %u bits from PIM obj %d to host\n",
+                numElements, bitsPerElement, m_src);
+    #endif
+
+  } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    unsigned numElements = objSrc.getNumElements();
+    unsigned bitsPerElement = objSrc.getBitsPerElement();
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice((uint64_t)numElements * bitsPerElement);
+
+    #if defined(DEBUG)
+    std::printf("PIM-Info: Copied %u elements of %u bits from PIM obj %d to PIM obj %d\n",
+                numElements, bitsPerElement, m_src, m_dest);
+    #endif
+
+  } else {
+    assert(0);
+  }
+  return true;
+}
+
+
 //! @brief  PIM CMD: Functional 1-operand
 bool
 pimCmdFunc1::execute()

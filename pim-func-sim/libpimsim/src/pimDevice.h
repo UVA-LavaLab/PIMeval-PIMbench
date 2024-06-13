@@ -48,6 +48,7 @@ public:
   bool pimCopyDeviceToMain(PimObjId src, void* dest);
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
 
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
@@ -55,8 +56,6 @@ public:
 
 private:
   bool adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
-  std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
-  bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
 
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
   unsigned m_numRanks = 0;
