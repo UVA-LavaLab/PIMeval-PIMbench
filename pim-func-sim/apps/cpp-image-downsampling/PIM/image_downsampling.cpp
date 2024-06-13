@@ -160,8 +160,8 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   PimObjId lr = pimAllocAssociated(32, ul, PIM_INT32);
   assert(-1 != lr);
 
-  PimObjId divisor_4 = pimAllocAssociated(32, ul, PIM_INT32);
-  assert(-1 != divisor_4);
+  // PimObjId divisor_4 = pimAllocAssociated(32, ul, PIM_INT32);
+  // assert(-1 != divisor_4);
 
   PimStatus ul_status = pimCopyHostToDevice(upper_left.data(), ul);
   assert(PIM_OK == ul_status);
@@ -175,8 +175,8 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   PimStatus lr_status = pimCopyHostToDevice(lower_right.data(), lr);
   assert(PIM_OK == lr_status);
 
-  PimStatus divisor_4_status = pimBroadcast(divisor_4, 4);
-  assert(PIM_OK == divisor_4_status);
+  // PimStatus divisor_4_status = pimBroadcast(divisor_4, 4);
+  // assert(PIM_OK == divisor_4_status);
 
   PimStatus upper_sum_status = pimAdd(ul, ur, ur);
   assert(PIM_OK == upper_sum_status);
@@ -187,8 +187,11 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   PimStatus result_sum_status = pimAdd(ur, lr, lr);
   assert(PIM_OK == result_sum_status);
 
-  PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
-  assert(PIM_OK == lr_div_status);
+  // PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
+  // assert(PIM_OK == lr_div_status);
+
+  PimStatus right_shift_status = pimShiftBitsRight(lr, lr, 2);
+  assert(PIM_OK == right_shift_status);
 
   vector<uint32_t> tmp;
   tmp.resize(sz);
@@ -373,7 +376,7 @@ int main(int argc, char* argv[])
   
   uint64_t numCol = 8192, numRow = 8192, numCore = 4096;
   uint64_t totalAvailableBits = numCol*numCore;
-  int pim_rows = numCol*numCore;
+  int pim_rows = 128*16*8192;
 
   if(!createDevice(params.configFile)) {
     return 1;
