@@ -42,11 +42,15 @@ pimSim::pimSim()
   m_paramsDram = new pimParamsDram();
   m_paramsPerf = new pimParamsPerf(m_paramsDram);
   m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+
+  m_numThreads = std::thread::hardware_concurrency();
+  m_threadPool = new pimUtils::threadPool(m_numThreads);
 }
 
 //! @brief  pimSim dtor
 pimSim::~pimSim()
 {
+  delete m_threadPool;
   delete m_statsMgr;
   delete m_paramsDram;
   delete m_paramsPerf;
@@ -54,7 +58,7 @@ pimSim::~pimSim()
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
   if (m_device != nullptr) {
@@ -68,7 +72,7 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSu
               pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
 
   m_device = new pimDevice();
-  m_device->init(deviceType, numBanks, numSubarrayPerBank, numRows, numCols);
+  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
@@ -139,6 +143,56 @@ PimDeviceEnum
 pimSim::getSimTarget() const
 {
   return m_paramsPerf->getSimTarget();
+}
+
+//! @brief  Get number of ranks
+unsigned
+pimSim::getNumRanks() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumRanks();
+  }
+  return 0;
+}
+
+//! @brief  Get number of banks per rank
+unsigned
+pimSim::getNumBankPerRank() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumBankPerRank();
+  }
+  return 0;
+}
+
+//! @brief  Get number of subarrays per bank
+unsigned
+pimSim::getNumSubarrayPerBank() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumSubarrayPerBank();
+  }
+  return 0;
+}
+
+//! @brief  Get number of rows per subarray
+unsigned
+pimSim::getNumRowPerSubarray() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumRowPerSubarray();
+  }
+  return 0;
+}
+
+//! @brief  Get number of cols per subarray
+unsigned
+pimSim::getNumColPerSubarray() const
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getNumColPerSubarray();
+  }
+  return 0;
 }
 
 //! @brief  Get number of PIM cores
@@ -422,38 +476,56 @@ pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* s
 }
 
 bool
-pimSim::pimRotateR(PimObjId src)
+pimSim::pimRotateElementsRight(PimObjId src)
 {
-  pimPerfMon perfMon("pimRotateR");
+  pimPerfMon perfMon("pimRotateElementsRight");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_R, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimRotateL(PimObjId src)
+pimSim::pimRotateElementsLeft(PimObjId src)
 {
-  pimPerfMon perfMon("pimRotateL");
+  pimPerfMon perfMon("pimRotateElementsLeft");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_L, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimShiftR(PimObjId src)
+pimSim::pimShiftElementsRight(PimObjId src)
 {
-  pimPerfMon perfMon("pimShiftR");
+  pimPerfMon perfMon("pimShiftElementsRight");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_R, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEMENTS_RIGHT, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimShiftL(PimObjId src)
+pimSim::pimShiftElementsLeft(PimObjId src)
 {
-  pimPerfMon perfMon("pimShiftL");
+  pimPerfMon perfMon("pimShiftElementsLeft");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_L, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEMENTS_LEFT, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  pimPerfMon perfMon("pimShiftBitsRight");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_RIGHT, src, dest, shiftAmount);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  pimPerfMon perfMon("pimShiftBitsLeft");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_LEFT, src, dest, shiftAmount);
   return m_device->executeCmd(std::move(cmd));
 }
 

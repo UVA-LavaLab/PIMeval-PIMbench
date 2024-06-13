@@ -12,6 +12,7 @@
 
 #include "../util.h"
 #include "libpimsim.h"
+#include <cassert>
 
 using namespace std;
 
@@ -78,60 +79,29 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
-  if (obj1 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert(obj1 != -1);
 
   PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
-  if (obj1 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert(obj2 != -1);
 
   PimStatus status = pimCopyHostToDevice((void *)X.data(), obj1);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert (status == PIM_OK);
 
   status = pimBroadcast(obj2, A);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert (status == PIM_OK);
 
   status = pimMul(obj1, obj2, obj1);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert (status == PIM_OK);
 
   status = pimCopyHostToDevice((void *)Y.data(), obj2);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert (status == PIM_OK);
 
   status = pimAdd(obj1, obj2, obj2);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+  assert (status == PIM_OK);
 
   dst.resize(vectorLength);
   status = pimCopyDeviceToHost(obj2, (void *)dst.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-  }
+  assert (status == PIM_OK);
 
   pimFree(obj1);
   pimFree(obj2);

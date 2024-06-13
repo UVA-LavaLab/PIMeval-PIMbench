@@ -1,4 +1,6 @@
 !*.c
 !Makefile
 *.txt
-cpu
+*.err
+*.out
+build/

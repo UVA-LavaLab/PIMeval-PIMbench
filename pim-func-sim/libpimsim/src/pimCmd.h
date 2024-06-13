@@ -43,8 +43,11 @@ enum class PimCmdEnum {
   BROADCAST,
   ROTATE_R,
   ROTATE_L,
-  SHIFT_R,
-  SHIFT_L,
+  SHIFT_ELEMENTS_RIGHT,
+  SHIFT_ELEMENTS_LEFT,
+  SHIFT_BITS_RIGHT,
+  SHIFT_BITS_LEFT,
+
   // BitSIMD v-layout commands
   ROW_R,
   ROW_W,
@@ -72,7 +75,8 @@ public:
   pimCmd(PimCmdEnum cmdType) : m_cmdType(cmdType) {}
   virtual ~pimCmd() {}
 
-  virtual bool execute(pimDevice* device) = 0;
+  void setDevice(pimDevice* device) { m_device = device; }
+  virtual bool execute() = 0;
 
   std::string getName() const {
     return getName(m_cmdType, "");
@@ -87,8 +91,15 @@ public:
 protected:
   bool isValidObjId(pimResMgr* resMgr, PimObjId objId) const;
   bool isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+  bool isCompatibleType(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+  bool isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const;
 
   unsigned getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const;
+
+  virtual bool sanityCheck() const { return false; }
+  virtual bool computeRegion(unsigned index) { return false; }
+  virtual bool updateStats() const { return false; }
+  bool computeAllRegions(unsigned numRegions);
 
   //! @brief  Utility: Locate nth B32 in region
   inline std::pair<unsigned, unsigned> locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const
@@ -129,6 +140,21 @@ protected:
   }
 
   PimCmdEnum m_cmdType;
+  pimDevice* m_device = nullptr;
+
+  //! @class  pimCmd::regionWorker
+  //! @brief  Thread worker to process regions in parallel
+  class regionWorker : public pimUtils::threadWorker {
+  public:
+    regionWorker(pimCmd* cmd, unsigned regionIdx) : m_cmd(cmd), m_regionIdx(regionIdx) {}
+    virtual ~regionWorker() {}
+    virtual void execute() {
+      m_cmd->computeRegion(m_regionIdx);
+    }
+  private:
+    pimCmd* m_cmd = nullptr;
+    unsigned m_regionIdx = 0;
+  };
 };
 
 //! @class  pimCmdFunc1
@@ -136,13 +162,17 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
-    : pimCmd(cmdType), m_src(src), m_dest(dest) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue = 0)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
   virtual ~pimCmdFunc1() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
   PimObjId m_dest;
+  unsigned m_immediateValue;
 };
 
 //! @class  pimCmdFunc2
@@ -153,7 +183,10 @@ public:
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
   virtual ~pimCmdFunc2() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
@@ -176,10 +209,14 @@ public:
     assert(cmdType == PimCmdEnum::REDSUM_RANGE);
   }
   virtual ~pimCmdRedSum() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
   int* m_result;
+  std::vector<int> m_regionSum;
   unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
 };
@@ -195,7 +232,10 @@ public:
     assert(cmdType == PimCmdEnum::BROADCAST);
   }
   virtual ~pimCmdBroadcast() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
   unsigned m_val;
@@ -210,12 +250,16 @@ public:
     : pimCmd(cmdType), m_src(src)
   {
     assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
-           cmdType == PimCmdEnum::SHIFT_R || cmdType == PimCmdEnum::SHIFT_L);
+           cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT || cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT);
   }
   virtual ~pimCmdRotate() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
+  std::vector<unsigned> m_regionBoundary;
 };
 
 //! @class  pimCmdReadRowToSa
@@ -226,7 +270,7 @@ public:
   pimCmdReadRowToSa(PimCmdEnum cmdType, PimObjId objId, unsigned ofst)
     : pimCmd(cmdType), m_objId(objId), m_ofst(ofst) {}
   virtual ~pimCmdReadRowToSa() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
 protected:
   PimObjId m_objId;
   unsigned m_ofst;
@@ -240,7 +284,7 @@ public:
   pimCmdWriteSaToRow(PimCmdEnum cmdType, PimObjId objId, unsigned ofst)
     : pimCmd(cmdType), m_objId(objId), m_ofst(ofst) {}
   virtual ~pimCmdWriteSaToRow() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
 protected:
   PimObjId m_objId;
   unsigned m_ofst;
@@ -271,7 +315,7 @@ public:
     assert(cmdType == PimCmdEnum::RREG_MAJ || cmdType == PimCmdEnum::RREG_SEL);
   }
   virtual ~pimCmdRRegOp() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
 protected:
   PimObjId m_objId;
   PimRowReg m_dest;
@@ -289,7 +333,7 @@ public:
   pimCmdRRegRotate(PimCmdEnum cmdType, PimObjId objId, PimRowReg dest)
     : pimCmd(cmdType), m_objId(objId), m_dest(dest) {}
   virtual ~pimCmdRRegRotate() {}
-  virtual bool execute(pimDevice* device) override;
+  virtual bool execute() override;
 protected:
   PimObjId m_objId;
   PimRowReg m_dest;
