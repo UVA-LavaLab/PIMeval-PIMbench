@@ -229,7 +229,8 @@ pimDevice::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void*
 bool
 pimDevice::pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
 {
-  PimCopyEnum copyType = PIM_COPY_V; // not used
+  const pimObjInfo& obj = m_resMgr->getObjInfo(src);
+  PimCopyEnum copyType = obj.isVLayout() ? PIM_COPY_V : PIM_COPY_H;
   std::unique_ptr<pimCmd> cmd =
     std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2D, copyType, src, dest);
   return executeCmd(std::move(cmd));

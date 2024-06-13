@@ -19,6 +19,9 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
 {
   static const std::unordered_map<PimCmdEnum, std::string> cmdNames = {
     { PimCmdEnum::NOOP, "noop" },
+    { PimCmdEnum::COPY_H2D, "copy_h2d" },
+    { PimCmdEnum::COPY_D2H, "copy_d2h" },
+    { PimCmdEnum::COPY_D2D, "copy_d2d" },
     { PimCmdEnum::ABS, "abs" },
     { PimCmdEnum::POPCOUNT, "popcount" },
     { PimCmdEnum::BROADCAST, "broadcast" },
