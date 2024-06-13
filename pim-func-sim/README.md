@@ -10,6 +10,14 @@
   * `make perf`: Build with `-O3` for performance measurement
   * `make debug`: Build with `-g` and `-DDEBUG` for debugging and printing verbose messages
   * `make dramsim3_integ`: Enable DRAMsim3 related code with `-DDRAMSIM3_INTEG`
+* Multi-threaded building
+  * `make -j10`
+* Specify simulation target
+  * `make PIM_SIM_TARGET=PIM_DEVICE_FULCRUM`
+  * `make PIM_SIM_TARGET=PIM_DEVICE_BANK_LEVEL`
+* Build with OpenMP
+  * `make USE_OPENMP=1`
+  * Guard any `-fopenmp` with this flag in Makefile
 
 ### Code Architecture
 * libpimsim

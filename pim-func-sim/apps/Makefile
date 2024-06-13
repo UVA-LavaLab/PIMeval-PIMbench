@@ -6,6 +6,8 @@ SUBDIRS := $(wildcard */.)
 .PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
 .DEFAULT_GOAL := perf
 
+USE_OPENMP ?= 0
+
 debug: $(SUBDIRS)
 	@echo "INFO: apps target = debug"
 
@@ -18,5 +20,5 @@ dramsim3_integ: $(SUBDIRS)
 clean: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)
 

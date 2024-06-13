@@ -22,13 +22,18 @@ public:
   static void destroy();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, unsigned numBanks, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
 
   PimDeviceEnum getDeviceType() const;
   PimDeviceEnum getSimTarget() const;
+  unsigned getNumRanks() const;
+  unsigned getNumBankPerRank() const;
+  unsigned getNumSubarrayPerBank() const;
+  unsigned getNumRowPerSubarray() const;
+  unsigned getNumColPerSubarray() const;
   unsigned getNumCores() const;
   unsigned getNumRows() const;
   unsigned getNumCols() const;
@@ -37,6 +42,8 @@ public:
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
   pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
+  pimUtils::threadPool* getThreadPool() { return m_threadPool; }
+  unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -68,10 +75,12 @@ public:
   bool pimRedSum(PimObjId src, int* sum);
   bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
   bool pimBroadcast(PimObjId dest, unsigned value);
-  bool pimRotateR(PimObjId src);
-  bool pimRotateL(PimObjId src);
-  bool pimShiftR(PimObjId src);
-  bool pimShiftL(PimObjId src);
+  bool pimRotateElementsRight(PimObjId src);
+  bool pimRotateElementsLeft(PimObjId src);
+  bool pimShiftElementsRight(PimObjId src);
+  bool pimShiftElementsLeft(PimObjId src);
+  bool pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
+  bool pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
   // BitSIMD-V micro ops
   bool pimOpReadRowToSa(PimObjId src, unsigned ofst);
@@ -104,6 +113,8 @@ private:
   pimParamsDram* m_paramsDram = nullptr;
   pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
+  pimUtils::threadPool* m_threadPool = nullptr;
+  unsigned m_numThreads = 1;
 };
 
 #endif

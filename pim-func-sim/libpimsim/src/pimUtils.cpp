@@ -61,9 +61,63 @@ std::string
 pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 {
   switch (dataType) {
-  case PIM_INT32: return "INT32";
-  case PIM_INT64: return "INT64";
+  case PIM_INT32: return "int32";
+  case PIM_INT64: return "int64";
+  case PIM_FP32: return "fp32";
   }
   return "Unknown";
+}
+
+//! @brief  Thread pool ctor
+pimUtils::threadPool::threadPool(size_t numThreads)
+  : m_terminate(false),
+    m_workersRemaining(0)
+{
+  // reserve one thread for main program
+  for (size_t i = 1; i < numThreads; ++i) {
+    m_threads.emplace_back([this] { workerThread(); });
+  }
+  std::printf("PIM-Info: Created thread pool with %lu threads.\n", m_threads.size());
+}
+
+//! @brief  Entry to process workers in MT
+void
+pimUtils::threadPool::doWork(const std::vector<pimUtils::threadWorker*>& workers)
+{
+  {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    for (auto& worker : workers) {
+      m_workers.push(worker);
+    }
+    m_workersRemaining = workers.size();
+  }
+  m_cond.notify_all();
+
+  // Wait for all workers to be done
+  std::unique_lock<std::mutex> lock(m_mutex);
+  m_cond.wait(lock, [this] { return m_workersRemaining == 0; });
+}
+
+//! @brief  Worker thread that process workers
+void
+pimUtils::threadPool::workerThread() {
+  while (true) {
+    threadWorker* worker;
+    {
+      std::unique_lock<std::mutex> lock(m_mutex);
+      m_cond.wait(lock, [this] { return m_terminate || !m_workers.empty(); });
+      if (m_terminate && m_workers.empty()) {
+        return;
+      }
+      worker = m_workers.front();
+      m_workers.pop();
+    }
+    worker->execute();
+    {
+      std::unique_lock<std::mutex> lock(m_mutex);
+      --m_workersRemaining;
+    }
+    m_cond.notify_all();
+  }
 }
 

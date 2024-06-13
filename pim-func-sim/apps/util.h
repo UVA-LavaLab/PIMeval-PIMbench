@@ -11,6 +11,7 @@
 #include <vector>
 #include <iomanip>
 #include <chrono>
+#include <random>
 
 #include "libpimsim.h"
 using namespace std;
@@ -23,6 +24,23 @@ void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
   for (int i = 0; i < vectorLength; ++i)
   {
     srcVector[i] = (rand() % (i + 1) + 1);
+  }
+}
+
+void getVectorFP32(uint64_t vectorLength, std::vector<float> &srcVector, bool nonZero)
+{
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dist(-1e10, 1e10);
+
+  srcVector.resize(vectorLength);
+  #pragma omp parallel for
+  for (int i = 0; i < vectorLength; ++i) {
+    float val = 0.0;
+    do {
+      val = dist(gen);
+      srcVector[i] = dist(gen);
+    } while (nonZero && val == 0.0);
   }
 }
 
@@ -72,12 +90,13 @@ bool createDevice(char *configFile)
   if (configFile == nullptr)
   {
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
-    unsigned numBanks = 128; // 8 chips * 16 banks
+    unsigned numRanks = 1;
+    unsigned numBankPerRank = 128; // 8 chips * 16 banks
     unsigned numSubarrayPerBank = 32;
     unsigned numRows = 8192;
     unsigned numCols = 8192;
-    
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numBanks, numSubarrayPerBank, numRows, numCols);
+
+    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
