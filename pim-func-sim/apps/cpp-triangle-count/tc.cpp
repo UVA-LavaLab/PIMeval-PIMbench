@@ -262,18 +262,22 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 #pragma omp parallel for reduction(+:host_time_if, words) 
 #endif
                 for (int k = 0; k < wordsPerMatrixRow; ++k) {
-                    auto ifstart = std::chrono::high_resolution_clock::now();
-                    if(optimized && (!bitAdjMatrix[i][k] || !bitAdjMatrix[j][k]))
-                    {
+                    unsigned int op1 = bitAdjMatrix[i][k];
+                    unsigned int op2 = bitAdjMatrix[j][k];
+                    if(optimized){
+                        auto ifstart = std::chrono::high_resolution_clock::now();
+                        if ((op1 & op2) == 0)
+                        {
+                            auto ifend = std::chrono::high_resolution_clock::now();
+                            auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                            host_time_if += ifelapsedTime.count();
+                            // skippedWords++;
+                            continue;
+                        }
                         auto ifend = std::chrono::high_resolution_clock::now();
                         auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                         host_time_if += ifelapsedTime.count();
-                        // skippedWords++;
-                        continue;
                     }
-                    auto ifend = std::chrono::high_resolution_clock::now();
-                    auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
-                    host_time_if += ifelapsedTime.count();
                     // transferredWords++;
 #ifdef ENABLE_PARALLEL
                     #pragma omp atomic
@@ -283,8 +287,8 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                     #pragma omp critical
 #endif
                     {
-                        src1.push_back(bitAdjMatrix[i][k]);
-                        src2.push_back(bitAdjMatrix[j][k]);
+                        src1.push_back(op1);
+                        src2.push_back(op2);
                     }
                 }
                 auto end = std::chrono::high_resolution_clock::now();
@@ -313,8 +317,10 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
         }
     }
-    cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
-    cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
+    if(optimized){
+        cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
+        cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
+    }
     // cout << "oneCount: " << oneCount << ", skippedWords: " << skippedWords << ", transferredWords: " << transferredWords << endl;
     cout << "TriangleCount: " << count / 6 << endl;
     // Each triangle is counted three times (once at each vertex), so divide the count by 3
@@ -339,9 +345,11 @@ int main(int argc, char** argv) {
         // Convert edge list to adjacency matrix
         vector<vector<bool>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
         cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
+        cout << "-----------convertToBitwiseAdjMatrix-----------" << endl;
 
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
 
+        cout << "-----------createDevice-----------" << endl;
         if (!createDevice(params.configFile))
             return 1;
         //run simulation
