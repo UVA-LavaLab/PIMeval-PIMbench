@@ -257,7 +257,7 @@ pimCmdFunc1::updateStats() const
   bool isVLayout = objSrc.isVLayout();
 
 
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc, m_immediateValue);
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }

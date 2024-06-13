@@ -6,7 +6,7 @@
 #include "pimSim.h"
 
 //! @brief  pimParamsPerf ctor
-pimParamsPerf::pimParamsPerf(pimParamsDram *paramsDram)
+pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
     : m_paramsDram(paramsDram)
 {
   m_tR = m_paramsDram->getNsRowRead() / 1000000.0;
@@ -102,7 +102,7 @@ pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
 
 //! @brief  Get ms runtime for func1
 double
-pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj, unsigned immediateValue) const
+pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj) const
 {
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
@@ -128,7 +128,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj, u
       {
         // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
         unsigned bitsPerElement = obj.getBitsPerElement();
-        msRuntime = (m_tR + m_tW) * (bitsPerElement - immediateValue);
+        msRuntime = (m_tR + m_tW) * bitsPerElement;
       }
       break;
       default:
@@ -159,7 +159,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo &obj, u
       {
         // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. 
         unsigned bitsPerElement = obj.getBitsPerElement();
-        msRuntime = (m_tR + m_tW) * (bitsPerElement - immediateValue);
+        msRuntime = (m_tR + m_tW) * bitsPerElement;
       }
       break;
       default:
