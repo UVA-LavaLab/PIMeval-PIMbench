@@ -263,10 +263,11 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
       }
     }
     pixels_in_it += 2 * avg_out.scanline_size;
-    if(upper_left.size() != 0) {
-      // Average any leftover pixels
-      pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
-    }
+  }
+
+  if(upper_left.size() != 0) {
+    // Average any leftover pixels
+    pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
   }
 
   return avg_out.new_img;
@@ -369,7 +370,10 @@ int main(int argc, char* argv[])
   input_file = "../Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
   // numCols * numCores
-  int pim_rows = 8192*16;
+  
+  uint64_t numCol = 8192, numRow = 8192, numCore = 4096;
+  uint64_t totalAvailableBits = numCol*numCore;
+  int pim_rows = numCol*numCore;
 
   if(!createDevice(params.configFile)) {
     return 1;
