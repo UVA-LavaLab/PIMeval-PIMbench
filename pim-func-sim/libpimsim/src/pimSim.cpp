@@ -295,6 +295,15 @@ pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* de
   return m_device->pimCopyDeviceToMainWithType(copyType, src, dest);
 }
 
+// @brief  Copy data from PIM device to device
+bool
+pimSim::pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCopyDeviceToDevice");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyDeviceToDevice(src, dest);
+}
+
 // @brief  Load vector with a scalar value
 bool
 pimSim::pimBroadcast(PimObjId dest, unsigned value)
