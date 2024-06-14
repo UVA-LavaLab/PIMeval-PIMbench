@@ -47,8 +47,10 @@ public:
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId obj);
+  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateDualContactRef(PimObjId refId);
 
   // Data transfer
   bool pimCopyMainToDevice(void* src, PimObjId dest);
@@ -97,6 +99,10 @@ public:
   bool pimOpSel(PimObjId objId, PimRowReg cond, PimRowReg src1, PimRowReg src2, PimRowReg dest);
   bool pimOpRotateRH(PimObjId objId, PimRowReg src);
   bool pimOpRotateLH(PimObjId objId, PimRowReg src);
+
+  // SIMDRAM micro ops
+  bool pimOpAP(int numSrc, ...);
+  bool pimOpAAP(int numDest, int numSrc, ...);
 
 private:
   pimSim();

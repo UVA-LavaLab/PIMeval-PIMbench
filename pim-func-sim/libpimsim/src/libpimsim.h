@@ -6,6 +6,12 @@
 #define LAVA_LIB_PIM_SIM_H
 
 #ifdef __cplusplus
+#include <cstdarg>
+#else
+#include <stdarg.h>
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -21,6 +27,7 @@ extern "C" {
     PIM_FUNCTIONAL,
     PIM_DEVICE_BITSIMD_V,
     PIM_DEVICE_BITSIMD_V_AP,
+    PIM_DEVICE_SIMDRAM,
     PIM_DEVICE_BITSIMD_H,
     PIM_DEVICE_FULCRUM,
     PIM_DEVICE_BANK_LEVEL,
@@ -59,9 +66,10 @@ extern "C" {
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   PimStatus pimFree(PimObjId obj);
-  PimObjId pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateDualContactRef(PimObjId refId);
 
   // Data transfer
   PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
@@ -122,6 +130,22 @@ extern "C" {
   PimStatus pimOpRotateRH(PimObjId objId, PimRowReg src);
   PimStatus pimOpRotateLH(PimObjId objId, PimRowReg src);
 
+  // SIMDRAM micro ops
+  // AP:
+  //   - Functionality: {srcRows} = MAJ(srcRows)
+  //   - Action: Activate srcRows simultaneously, followed by a precharge
+  //   - Example: pimOpAP(3, T0, 0, T1, 0, T2, 0) // T0, T1, T2 = MAJ(T0, T1, T2)
+  // AAP:
+  //   - Functionality: {srcRows, destRows} = MAJ(srcRows)
+  //   - Action: Activate srcRows simultaneously, copy result to all destRows, followed by a precharge 
+  //   - Example: pimOpAAP(2, 1, T0, 0, T3, 0, DCC0N, 0) // T0, T3 = DCC0N
+  // Requirements:
+  //   - numSrc must be odd (1 or 3) to perform MAJ operation
+  //   - Number of var args must be 2*numSrc for AP and 2*(numDest+numSrc) for AAP
+  //   - Var args must be a list of (PimObjId, int ofst) pairs
+  PimStatus pimOpAP(int numSrc, ...);
+  PimStatus pimOpAAP(int numDest, int numSrc, ...);
+  
 #ifdef __cplusplus
 }
 #endif

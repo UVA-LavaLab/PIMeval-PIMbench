@@ -177,9 +177,9 @@ pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 PimObjId
-pimDevice::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimDevice::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
 {
-  return m_resMgr->pimAllocAssociated(bitsPerElement, ref, dataType);
+  return m_resMgr->pimAllocAssociated(bitsPerElement, assocId, dataType);
 }
 
 //! @brief  Free a PIM object
@@ -187,6 +187,20 @@ bool
 pimDevice::pimFree(PimObjId obj)
 {
   return m_resMgr->pimFree(obj);
+}
+
+//! @brief  Create an obj referencing to a range of an existing obj
+PimObjId
+pimDevice::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+{
+  return m_resMgr->pimCreateRangedRef(refId, idxBegin, idxEnd);
+}
+
+//! @brief  Create an obj referencing to negation of an existing obj based on dual-contact memory cells
+PimObjId
+pimDevice::pimCreateDualContactRef(PimObjId refId)
+{
+  return m_resMgr->pimCreateDualContactRef(refId);
 }
 
 //! @brief  Copy data from host to PIM

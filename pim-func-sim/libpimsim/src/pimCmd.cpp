@@ -76,7 +76,7 @@ pimCmd::isValidObjId(pimResMgr* resMgr, PimObjId objId) const
 bool
 pimCmd::isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const
 {
-  if (obj1.getRefObjId() != obj2.getRefObjId()) {
+  if (obj1.getAssocObjId() != obj2.getAssocObjId()) {
     std::printf("PIM-Error: Object id %d and %d are not associated\n", obj1.getObjId(), obj2.getObjId());
     return false;
   }

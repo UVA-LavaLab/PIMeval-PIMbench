@@ -241,13 +241,13 @@ pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerE
   return m_device->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
-//! @brief  Allocate a PIM object that is associated with a reference ojbect
+//! @brief  Allocate a PIM object that is associated with an existing ojbect
 PimObjId
-pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(bitsPerElement, ref, dataType);
+  return m_device->pimAllocAssociated(bitsPerElement, assocId, dataType);
 }
 
 // @brief  Free a PIM object
@@ -257,6 +257,24 @@ pimSim::pimFree(PimObjId obj)
   pimPerfMon perfMon("pimFree");
   if (!isValidDevice()) { return false; }
   return m_device->pimFree(obj);
+}
+
+//! @brief  Create an obj referencing to a range of an existing obj
+PimObjId
+pimSim::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+{
+  pimPerfMon perfMon("pimCreateRangedRef");
+  if (!isValidDevice()) { return -1; }
+  return m_device->pimCreateRangedRef(refId, idxBegin, idxEnd);
+}
+
+//! @brief  Create an obj referencing to negation of an existing obj based on dual-contact memory cells
+PimObjId
+pimSim::pimCreateDualContactRef(PimObjId refId)
+{
+  pimPerfMon perfMon("pimCreateDualContactRef");
+  if (!isValidDevice()) { return -1; }
+  return m_device->pimCreateDualContactRef(refId);
 }
 
 // @brief  Copy data from main memory to PIM device
@@ -653,3 +671,16 @@ pimSim::pimOpRotateLH(PimObjId objId, PimRowReg src)
   return m_device->executeCmd(std::move(cmd));
 }
 
+bool
+pimSim::pimOpAP(int numSrc, ...)
+{
+  pimPerfMon perfMon("pimOpAP");
+  return false;
+}
+
+bool
+pimSim::pimOpAAP(int numDest, int numSrc, ...)
+{
+  pimPerfMon perfMon("pimOpAAP");
+  return false;
+}

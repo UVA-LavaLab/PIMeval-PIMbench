@@ -126,7 +126,9 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
       std::printf("PIM-Error: Obj requires %u regions among %u cores. Abort.\n", numRegions, numCores);
       return -1;
     } else {
+      #if defined(DEBUG)
       std::printf("PIM-Warning: Obj requires %u regions among %u cores. Wrapping up is needed.\n", numRegions, numCores);
+      #endif
     }
   }
 
@@ -165,39 +167,39 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   return objId;
 }
 
-//! @brief  Alloc a PIM object assiciated to a reference object
+//! @brief  Alloc a PIM object assiciated to an existing object
 //!         For V layout, expect same number of elements, while bits per element may be different
 //!         For H layout, expect exact same number of elements and bits per elements
 PimObjId
-pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId refId, PimDataType dataType)
+pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
 {
-  // check if ref obj is valid
-  if (m_objMap.find(refId) == m_objMap.end()) {
-    std::printf("PIM-Error: Invalid ref object ID %d for PIM allocation\n", refId);
+  // check if assoc obj is valid
+  if (m_objMap.find(assocId) == m_objMap.end()) {
+    std::printf("PIM-Error: Invalid associated object ID %d for PIM allocation\n", assocId);
     return -1;
   }
 
-  // get regions of the ref obj
-  const pimObjInfo& refObj = m_objMap.at(refId);
+  // get regions of the assoc obj
+  const pimObjInfo& assocObj = m_objMap.at(assocId);
 
   // check if the request can be associated with ref
-  PimAllocEnum allocType = refObj.getAllocType();
-  unsigned numElements = refObj.getNumElements();
+  PimAllocEnum allocType = assocObj.getAllocType();
+  unsigned numElements = assocObj.getNumElements();
   if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
-    if (bitsPerElement != refObj.getBitsPerElement()) {
-      std::printf("PIM-Error: Cannot allocate elements of %u bits associated with ref object ID %d with %u bits in H1 style\n",
-                  bitsPerElement, refId, refObj.getBitsPerElement());
+    if (bitsPerElement != assocObj.getBitsPerElement()) {
+      std::printf("PIM-Error: Cannot allocate elements of %u bits associated with object ID %d with %u bits in H1 style\n",
+                  bitsPerElement, assocId, assocObj.getBitsPerElement());
       return -1;
     }
   }
-  assert(allocType == refObj.getAllocType());
+  assert(allocType == assocObj.getAllocType());
 
   // allocate regions
   pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
   std::vector<std::pair<unsigned, unsigned>> newAlloc;
-  for ( const pimRegion& region : refObj.getRegions()) {
+  for ( const pimRegion& region : assocObj.getRegions()) {
     PimCoreId coreId = region.getCoreId();
     unsigned numAllocRows = region.getNumAllocRows();
     unsigned numAllocCols = region.getNumAllocCols();
@@ -226,7 +228,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId refId, PimDataTy
     objId = newObj.getObjId();
     newObj.finalize();
     newObj.print();
-    newObj.setRefObjId(refObj.getRefObjId());
+    newObj.setAssocObjId(assocObj.getAssocObjId());
     // update new object to resource mgr
     m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
   }
@@ -242,15 +244,62 @@ pimResMgr::pimFree(PimObjId objId)
     return false;
   }
   const pimObjInfo& obj = m_objMap.at(objId);
-  for (const pimRegion& region : obj.getRegions()) {
-    PimCoreId coreId = region.getCoreId();
-    unsigned rowIdx = region.getRowIdx();
-    unsigned numAllocRows = region.getNumAllocRows();
-    m_coreUsage[coreId].erase(std::make_pair(rowIdx, numAllocRows));
+
+  if (!obj.isDualContactRef()) {
+    for (const pimRegion &region : obj.getRegions()) {
+      PimCoreId coreId = region.getCoreId();
+      unsigned rowIdx = region.getRowIdx();
+      unsigned numAllocRows = region.getNumAllocRows();
+      m_coreUsage[coreId].erase(std::make_pair(rowIdx, numAllocRows));
+    }
   }
   m_objMap.erase(objId);
 
+  // free all reference as well
+  if (m_refMap.find(objId) != m_refMap.end()) {
+    for (auto refId : m_refMap.at(objId)) {
+      m_objMap.erase(refId);
+    }
+  }
+
   return true;
+}
+
+//! @brief  Create an obj referencing to a range of an existing obj
+PimObjId
+pimResMgr::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+{
+  assert(0); // todo
+  return -1;
+}
+
+//! @brief  Create an obj referencing to negation of an existing obj based on dual-contact memory cells
+PimObjId
+pimResMgr::pimCreateDualContactRef(PimObjId refId)
+{
+  // check if ref obj is valid
+  if (m_objMap.find(refId) == m_objMap.end()) {
+    std::printf("PIM-Error: Invalid ref object ID %d for PIM dual contact ref\n", refId);
+    return -1;
+  }
+
+  const pimObjInfo& refObj = m_objMap.at(refId);
+  if (refObj.isDualContactRef()) {
+    std::printf("PIM-Error: Cannot create dual contact ref of dual contact ref %d\n", refId);
+    return -1;
+  }
+
+  // The dual-contact ref has exactly same regions as the ref object.
+  // The refObjId field points to the ref object.
+  // The isDualContactRef field indicates that values need to be negated during read/write.
+  pimObjInfo newObj = refObj;
+  PimObjId objId = m_availObjId++;
+  newObj.setObjId(objId);
+  newObj.setRefObjId(refObj.getObjId());
+  m_refMap[refObj.getObjId()].insert(objId);
+  newObj.setIsDualContactRef(true);
+
+  return objId;
 }
 
 //! @brief  Alloc resource on a specific core. Perform row allocation for now.
