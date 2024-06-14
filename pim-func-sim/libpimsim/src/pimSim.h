@@ -75,10 +75,12 @@ public:
   bool pimRedSum(PimObjId src, int* sum);
   bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
   bool pimBroadcast(PimObjId dest, unsigned value);
-  bool pimRotateR(PimObjId src);
-  bool pimRotateL(PimObjId src);
-  bool pimShiftR(PimObjId src);
-  bool pimShiftL(PimObjId src);
+  bool pimRotateElementsRight(PimObjId src);
+  bool pimRotateElementsLeft(PimObjId src);
+  bool pimShiftElementsRight(PimObjId src);
+  bool pimShiftElementsLeft(PimObjId src);
+  bool pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
+  bool pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
   // BitSIMD-V micro ops
   bool pimOpReadRowToSa(PimObjId src, unsigned ofst);
