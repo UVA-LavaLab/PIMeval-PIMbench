@@ -92,10 +92,9 @@ pimCmd::isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const
 bool
 pimCmd::isCompatibleType(const pimObjInfo& obj1, const pimObjInfo& obj2) const
 {
-
-  // TODO: Type conversion eg. 32-bit and 64-bit should be compatible 
+  // TODO: Type conversion eg. 32-bit and 64-bit should be compatible
   if (obj1.getDataType() != obj2.getDataType()) {
-    std::printf("PIM-Error: Type mismatch between object %d and %d\n", obj1, obj2);
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", obj1.getObjId(), obj2.getObjId());
     return false;
   }
   return true;
@@ -105,8 +104,7 @@ pimCmd::isCompatibleType(const pimObjInfo& obj1, const pimObjInfo& obj2) const
 bool
 pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
 {
-
-  // TODO: Type conversion 
+  // TODO: Type conversion
   if (src.getDataType() != dest.getDataType()) {
     std::printf("PIM-Error: Cannot convert from %s to %s\n", src.getDataTypeName().c_str(), dest.getDataTypeName().c_str());
     return false;
