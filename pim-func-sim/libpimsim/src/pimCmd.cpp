@@ -42,8 +42,10 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::ROTATE_R, "rotate_r" },
     { PimCmdEnum::ROTATE_L, "rotate_l" },
-    { PimCmdEnum::SHIFT_R, "shift_r" },
-    { PimCmdEnum::SHIFT_L, "shift_l" },
+    { PimCmdEnum::SHIFT_ELEMENTS_RIGHT, "shift_elements_r" },
+    { PimCmdEnum::SHIFT_ELEMENTS_LEFT, "shift_elements_l" },
+    { PimCmdEnum::SHIFT_BITS_RIGHT, "shift_bits_r" },
+    { PimCmdEnum::SHIFT_BITS_LEFT, "shift_bits_l" },
     { PimCmdEnum::ROW_R, "row_r" },
     { PimCmdEnum::ROW_W, "row_w" },
     { PimCmdEnum::RREG_MOV, "rreg.mov" },
@@ -81,6 +83,32 @@ pimCmd::isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const
 {
   if (obj1.getRefObjId() != obj2.getRefObjId()) {
     std::printf("PIM-Error: Object id %d and %d are not associated\n", obj1.getObjId(), obj2.getObjId());
+    return false;
+  }
+  return true;
+}
+
+//! @brief  Check if two objects have compatible type.
+bool
+pimCmd::isCompatibleType(const pimObjInfo& obj1, const pimObjInfo& obj2) const
+{
+
+  // TODO: Type conversion eg. 32-bit and 64-bit should be compatible 
+  if (obj1.getDataType() != obj2.getDataType()) {
+    std::printf("PIM-Error: Type mismatch between object %d and %d\n", obj1, obj2);
+    return false;
+  }
+  return true;
+}
+
+//! @brief  Check if src type can be converted to dest type.
+bool
+pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
+{
+
+  // TODO: Type conversion 
+  if (src.getDataType() != dest.getDataType()) {
+    std::printf("PIM-Error: Cannot convert from %s to %s\n", src.getDataTypeName().c_str(), dest.getDataTypeName().c_str());
     return false;
   }
   return true;
@@ -365,7 +393,7 @@ pimCmdFunc1::sanityCheck() const
   }
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
-  if (!isAssociated(objSrc, objDest)) {
+  if (!isAssociated(objSrc, objDest) || !isConvertibleType(objSrc, objDest)) {
     return false;
   }
   return true;
@@ -412,6 +440,25 @@ pimCmdFunc1::computeRegion(unsigned index)
                *reinterpret_cast<unsigned *>(&result));
       }
       break;
+      case PimCmdEnum::SHIFT_BITS_RIGHT:
+      {
+        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+        int operand = *reinterpret_cast<int*>(&operandBits);
+        // TODO: logical right shift
+        int result = operand >> m_immediateValue;
+        setB32(core, isVLayout, locDest.first, locDest.second,
+                 *reinterpret_cast<unsigned *>(&result));
+      }
+      break;
+      case PimCmdEnum::SHIFT_BITS_LEFT:
+      {
+        auto operandBits = getB32(core, isVLayout, locSrc.first, locSrc.second);
+        int operand = *reinterpret_cast<int*>(&operandBits);
+        int result = operand << m_immediateValue;
+        setB32(core, isVLayout, locDest.first, locDest.second,
+                 *reinterpret_cast<unsigned *>(&result));
+      }
+      break;
       default:
         std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
         assert(0);
@@ -431,11 +478,11 @@ pimCmdFunc1::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
+
   double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
-
 
 //! @brief  PIM CMD: Functional 2-operand
 bool
@@ -468,17 +515,7 @@ pimCmdFunc2::sanityCheck() const
   const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
-  if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest)) {
-    return false;
-  }
-
-  if (objSrc1.getDataType() != objSrc2.getDataType()) {
-    std::printf("PIM-Error: Type mismatch between object %d and %d\n", m_src1, m_src2);
-    return false;
-  }
-
-  if (objSrc1.getDataType() != objDest.getDataType()) {
-    std::printf("PIM-Error: Cannot convert from %s to %s\n", objSrc1.getDataTypeName().c_str(), objDest.getDataTypeName().c_str());
+  if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest) || !isCompatibleType(objSrc1, objSrc2) || !isConvertibleType(objSrc1, objDest)) {
     return false;
   }
   return true;
@@ -755,7 +792,7 @@ pimCmdRotate::execute()
   // handle region boundaries
   bool isVLayout = objSrc.isVLayout();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
-  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_R) {
+  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT) {
     for (unsigned i = 0; i < numRegions; ++i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
@@ -769,7 +806,7 @@ pimCmdRotate::execute()
       }
       setB32(core, isVLayout, locSrc.first, locSrc.second, val);
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_L) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT) {
     for (unsigned i = 0; i < numRegions; ++i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
@@ -824,7 +861,7 @@ pimCmdRotate::computeRegion(unsigned index)
   }
 
   // perform rotation
-  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_R) {
+  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT) {
     m_regionBoundary[index] = regionVector[numElementsInRegion - 1];
     unsigned carry = 0;
     for (unsigned j = 0; j < numElementsInRegion; ++j) {
@@ -832,7 +869,7 @@ pimCmdRotate::computeRegion(unsigned index)
       regionVector[j] = carry;
       carry = temp;
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_L) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT) {
     m_regionBoundary[index] = regionVector[0];
     unsigned carry = 0;
     for (int j = numElementsInRegion - 1; j >= 0; --j) {
