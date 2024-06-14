@@ -105,6 +105,14 @@ pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Copy data from PIM device to device
+PimStatus
+pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCopyDeviceToDevice(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Load vector with a scalar value
 PimStatus
 pimBroadcast(PimObjId dest, unsigned value)
@@ -251,36 +259,51 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
 
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus
-pimRotateR(PimObjId src)
+pimRotateElementsRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateR(src);
+  bool ok = pimSim::get()->pimRotateElementsRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Rotate all elements of an obj by one step to the left
 PimStatus
-pimRotateL(PimObjId src)
+pimRotateElementsLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateL(src);
+  bool ok = pimSim::get()->pimRotateElementsLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the right and fill zero
 PimStatus
-pimShiftR(PimObjId src)
+pimShiftElementsRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftR(src);
+  bool ok = pimSim::get()->pimShiftElementsRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the left and fill zero
 PimStatus
-pimShiftL(PimObjId src)
+pimShiftElementsLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftL(src);
+  bool ok = pimSim::get()->pimShiftElementsLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Shift bits of each elements of an obj by shiftAmount to the right. This currently implements arithmetic shift.
+PimStatus
+pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  bool ok = pimSim::get()->pimShiftBitsRight(src, dest, shiftAmount);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Shift bits of each elements of an obj by shiftAmount to the left.
+PimStatus
+pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  bool ok = pimSim::get()->pimShiftBitsLeft(src, dest, shiftAmount);
+  return ok ? PIM_OK : PIM_ERROR;
+}
 
 //! @brief  BitSIMD-V: Read a row to SA
 PimStatus

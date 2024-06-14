@@ -76,6 +76,7 @@ extern "C" {
   PimStatus pimCopyDeviceToHost(PimObjId src, void* dest);
   PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
   PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
 
   // Logic and Arithmetic Operation
   PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -96,10 +97,12 @@ extern "C" {
   PimStatus pimRedSum(PimObjId src, int* sum);
   PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
   PimStatus pimBroadcast(PimObjId dest, unsigned value);
-  PimStatus pimRotateR(PimObjId src);
-  PimStatus pimRotateL(PimObjId src);
-  PimStatus pimShiftR(PimObjId src);
-  PimStatus pimShiftL(PimObjId src);
+  PimStatus pimRotateElementsRight(PimObjId src);
+  PimStatus pimRotateElementsLeft(PimObjId src);
+  PimStatus pimShiftElementsRight(PimObjId src);
+  PimStatus pimShiftElementsLeft(PimObjId src);
+  PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
+  PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
   // BitSIMD-V: Row-wide bit registers per subarray
   enum PimRowReg {

@@ -109,6 +109,14 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
       switch (cmdType) {
       case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break;
       case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL; break;
+      case PimCmdEnum::SHIFT_BITS_RIGHT:
+      case PimCmdEnum::SHIFT_BITS_LEFT:
+      {
+        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. Set #immValue bits to either 0 or 1. 
+        unsigned bitsPerElement = obj.getBitsPerElement();
+        msRuntime = (m_tR + m_tW) * bitsPerElement;
+      }
+      break;
       default:
         assert(0);
       }
@@ -124,6 +132,14 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
       switch (cmdType) {
       case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 320 * m_tL; break;
       case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 318 * m_tL; break;
+      case PimCmdEnum::SHIFT_BITS_RIGHT:
+      case PimCmdEnum::SHIFT_BITS_LEFT:
+      {
+        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. Set #immValue bits to either 0 or 1. 
+        unsigned bitsPerElement = obj.getBitsPerElement();
+        msRuntime = (m_tR + m_tW) * bitsPerElement;
+      }
+      break;
       default:
         assert(0);
       }

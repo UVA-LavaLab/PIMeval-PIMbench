@@ -20,6 +20,9 @@ class pimResMgr;
 
 enum class PimCmdEnum {
   NOOP = 0,
+  COPY_H2D,
+  COPY_D2H,
+  COPY_D2D,
   // Functional 1-operand
   ABS,
   POPCOUNT,
@@ -43,8 +46,11 @@ enum class PimCmdEnum {
   BROADCAST,
   ROTATE_R,
   ROTATE_L,
-  SHIFT_R,
-  SHIFT_L,
+  SHIFT_ELEMENTS_RIGHT,
+  SHIFT_ELEMENTS_LEFT,
+  SHIFT_BITS_RIGHT,
+  SHIFT_BITS_LEFT,
+
   // BitSIMD v-layout commands
   ROW_R,
   ROW_W,
@@ -88,6 +94,8 @@ public:
 protected:
   bool isValidObjId(pimResMgr* resMgr, PimObjId objId) const;
   bool isAssociated(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+  bool isCompatibleType(const pimObjInfo& obj1, const pimObjInfo& obj2) const;
+  bool isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const;
 
   unsigned getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const;
 
@@ -152,13 +160,36 @@ protected:
   };
 };
 
+//! @class  pimCmdDataTransfer
+//! @brief  Data transfer. Not tracked as a regular Pim CMD
+class pimCmdCopy : public pimCmd
+{
+public:
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, void* src, PimObjId dest)
+    : pimCmd(PimCmdEnum::COPY_H2D), m_copyType(copyType), m_ptr(src), m_dest(dest) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, void* dest)
+    : pimCmd(PimCmdEnum::COPY_D2H), m_copyType(copyType), m_ptr(dest), m_src(src) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, PimObjId dest)
+    : pimCmd(PimCmdEnum::COPY_D2D), m_copyType(copyType), m_src(src), m_dest(dest) {}
+  virtual ~pimCmdCopy() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected:
+  PimCopyEnum m_copyType;
+  void* m_ptr = nullptr;
+  PimObjId m_src = -1;
+  PimObjId m_dest = -1;
+};
+
 //! @class  pimCmdFunc1
 //! @brief  Pim CMD: Functional 1-operand
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
-    : pimCmd(cmdType), m_src(src), m_dest(dest) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue = 0)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -167,6 +198,7 @@ public:
 protected:
   PimObjId m_src;
   PimObjId m_dest;
+  unsigned m_immediateValue;
 };
 
 //! @class  pimCmdFunc2
@@ -244,7 +276,7 @@ public:
     : pimCmd(cmdType), m_src(src)
   {
     assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
-           cmdType == PimCmdEnum::SHIFT_R || cmdType == PimCmdEnum::SHIFT_L);
+           cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT || cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT);
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute() override;

@@ -93,11 +93,13 @@ pimStatsMgr::showCopyStats() const
   std::printf("Data Copy Stats:\n");
   uint64_t bytesCopiedMainToDevice = m_bitsCopiedMainToDevice / 8;
   uint64_t bytesCopiedDeviceToMain = m_bitsCopiedDeviceToMain / 8;
+  uint64_t bytesCopiedDeviceToDevice = m_bitsCopiedDeviceToDevice / 8;
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
   double totalMsRuntime = m_paramsPerf->getMsRuntimeForBytesTransfer(totalBytes);
   std::printf(" %30s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
   std::printf(" %30s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
   std::printf(" %30s : %llu bytes %14f ms Estimated Runtime\n", "TOTAL ---------", totalBytes, totalMsRuntime);
+  std::printf(" %30s : %llu bytes\n", "Device to Device", bytesCopiedDeviceToDevice);
 }
 
 //! @brief  Show PIM cmd and perf stats
