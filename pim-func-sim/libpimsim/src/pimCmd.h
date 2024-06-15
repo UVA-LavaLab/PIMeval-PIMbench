@@ -105,8 +105,8 @@ protected:
   virtual bool updateStats() const { return false; }
   bool computeAllRegions(unsigned numRegions);
 
-  //! @brief  Utility: Locate nth bit in region
-  inline std::pair<unsigned, unsigned> locateNthBit(const pimRegion& region, bool isVLayout, unsigned nth, unsigned numBits) const
+  //! @brief  Utility: Locate nth element in region
+  inline std::pair<unsigned, unsigned> locateNthElement(const pimRegion& region, bool isVLayout, unsigned nth, unsigned numBits) const
   {
     unsigned colIdx = region.getColIdx();
     unsigned numAllocCols = region.getNumAllocCols();
@@ -115,7 +115,7 @@ protected:
     unsigned r = 0;
     unsigned c = 0;
 
-    // TODO: Decide if numBits is always going to be power of 2. If so, replace '/' & '%' with shift and bit-wise operation
+    // TODO: Decide if numBits is always going to be power of 2. If so, replace '/' & '%' with shift and bit-wise operation.
     if (isVLayout) {
       assert(numAllocRows % numBits == 0);
       r = rowIdx + (nth / numAllocCols) * numBits;

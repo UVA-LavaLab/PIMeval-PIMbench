@@ -417,8 +417,8 @@ pimCmdFunc1::computeRegion(unsigned index)
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElementSrc);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     if (dataType == PIM_INT32) {
-      auto locSrc = locateNthBit(srcRegion, isVLayout, j, bitsPerElementSrc);
-      auto locDest = locateNthBit(destRegion, isVLayout, j, bitsPerElementDest);
+      auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
+      auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementDest);
 
       switch (m_cmdType) {
       case PimCmdEnum::ABS:
@@ -554,9 +554,9 @@ pimCmdFunc2::computeRegion(unsigned index)
   // perform the computation
   unsigned numElementsInRegion = getNumElementsInRegion(src1Region, bitsPerElementSrc1);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locSrc1 = locateNthBit(src1Region, isVLayout, j, bitsPerElementSrc1);
-    auto locSrc2 = locateNthBit(src2Region, isVLayout, j, bitsPerElementSrc2);
-    auto locDest = locateNthBit(destRegion, isVLayout, j, bitsPerElementdest);
+    auto locSrc1 = locateNthElement(src1Region, isVLayout, j, bitsPerElementSrc1);
+    auto locSrc2 = locateNthElement(src2Region, isVLayout, j, bitsPerElementSrc2);
+    auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementdest);
 
     if (dataType == PIM_INT32) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
@@ -690,7 +690,7 @@ pimCmdRedSum::computeRegion(unsigned index)
   unsigned currIdx = numElementsInRegion * index;
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
-      auto locSrc = locateNthBit(srcRegion, isVLayout, j, bitsPerElement);
+      auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
       auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElement);
       int operand = *reinterpret_cast<int*>(&operandBits);
       m_regionSum[index] += operand;
@@ -762,7 +762,7 @@ pimCmdBroadcast::computeRegion(unsigned index)
 
   unsigned val = *reinterpret_cast<unsigned *>(&m_val);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locDest = locateNthBit(destRegion, isVLayout, j, bitsPerElement);
+    auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElement);
     setBits(core, isVLayout, locDest.first, locDest.second, val, bitsPerElement);
   }
   return true;
@@ -808,7 +808,7 @@ pimCmdRotate::execute()
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
-      auto locSrc = locateNthBit(srcRegion, isVLayout, 0, bitsPerElement);
+      auto locSrc = locateNthElement(srcRegion, isVLayout, 0, bitsPerElement);
       unsigned val = 0;
       if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_R) {
         val = m_regionBoundary[numRegions - 1];
@@ -823,7 +823,7 @@ pimCmdRotate::execute()
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
       unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-      auto locSrc = locateNthBit(srcRegion, isVLayout, numElementsInRegion - 1, bitsPerElement);
+      auto locSrc = locateNthElement(srcRegion, isVLayout, numElementsInRegion - 1, bitsPerElement);
       unsigned val = 0;
       if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_R) {
         val = m_regionBoundary[0];
@@ -867,7 +867,7 @@ pimCmdRotate::computeRegion(unsigned index)
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
   std::vector<unsigned> regionVector(numElementsInRegion);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locSrc = locateNthBit(srcRegion, isVLayout, j, bitsPerElement);
+    auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
     regionVector[j] = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElement);
   }
 
@@ -894,7 +894,7 @@ pimCmdRotate::computeRegion(unsigned index)
 
   // write back values
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locSrc = locateNthBit(srcRegion, isVLayout, j, bitsPerElement);
+    auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
     setBits(core, isVLayout, locSrc.first, locSrc.second, regionVector[j], bitsPerElement);
   }
   return true;
