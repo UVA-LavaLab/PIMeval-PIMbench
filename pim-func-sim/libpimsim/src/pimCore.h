@@ -57,39 +57,43 @@ public:
     assert(rowIdx < m_numRows && colIdx < m_numCols);
     return m_array[rowIdx][colIdx];
   }
-  //! @brief  Directly set #bitCount bits for V-layout functional simulation
-  inline void setBitsV(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned bitCount) {
-    assert(rowIdx + (bitCount - 1) < m_numRows && colIdx < m_numCols);
-    for (int i = 0; i < bitCount; ++i) {
+  //! @brief  Directly set #numBits bits for V-layout functional simulation
+  inline void setBitsV(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx + (numBits - 1) < m_numRows && colIdx < m_numCols);
+    for (int i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx + i, colIdx, bitVal);
       val = val >> 1;
     }
   }
-  //! @brief  Directly get #bitCount bits for V-layout functional simulation
-  inline uint64_t getBitsV(unsigned rowIdx, unsigned colIdx, unsigned bitCount) const {
-    assert(rowIdx + (bitCount - 1) < m_numRows && colIdx < m_numCols);
-    unsigned val = 0;
-    for (int i = (bitCount - 1); i >= 0; --i) {
+  //! @brief  Directly get #numBits bits for V-layout functional simulation
+  inline uint64_t getBitsV(unsigned rowIdx, unsigned colIdx, unsigned numBits) const {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx + (numBits - 1) < m_numRows && colIdx < m_numCols);
+    uint64_t val = 0;
+    for (int i = (numBits - 1); i >= 0; --i) {
       bool bitVal = getBit(rowIdx + i, colIdx);
       val = (val << 1) | bitVal;
     }
     return val;
   }
-  //! @brief  Directly set #bitCount bits for H-layout functional simulation
-  inline void setBitsH(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned bitCount) {
-    assert(rowIdx < m_numRows && colIdx + (bitCount - 1) < m_numCols);
-    for (int i = 0; i < bitCount; ++i) {
+  //! @brief  Directly set #numBits bits for H-layout functional simulation
+  inline void setBitsH(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx < m_numRows && colIdx + (numBits - 1) < m_numCols);
+    for (int i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx, colIdx + i, bitVal);
       val = val >> 1;
     }
   }
-  //! @brief  Directly get #bitCount bits for H-layout functional simulation
-  inline uint64_t getBitsH(unsigned rowIdx, unsigned colIdx, unsigned bitCount) const {
-    assert(rowIdx < m_numRows && colIdx + (bitCount - 1) < m_numCols);
-    unsigned val = 0;
-    for (int i = (bitCount - 1); i >= 0; --i) {
+  //! @brief  Directly get #numBits bits for H-layout functional simulation
+  inline uint64_t getBitsH(unsigned rowIdx, unsigned colIdx, unsigned numBits) const {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx < m_numRows && colIdx + (numBits - 1) < m_numCols);
+    uint64_t val = 0;
+    for (int i = (numBits - 1); i >= 0; --i) {
       bool bitVal = getBit(rowIdx, colIdx + i);
       val = (val << 1) | bitVal;
     }

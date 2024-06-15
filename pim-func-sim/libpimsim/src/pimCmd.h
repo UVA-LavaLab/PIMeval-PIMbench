@@ -106,7 +106,7 @@ protected:
   bool computeAllRegions(unsigned numRegions);
 
   //! @brief  Utility: Locate nth bit in region
-  inline std::pair<unsigned, unsigned> locateNthBit(const pimRegion& region, bool isVLayout, unsigned nth, unsigned bitCount) const
+  inline std::pair<unsigned, unsigned> locateNthBit(const pimRegion& region, bool isVLayout, unsigned nth, unsigned numBits) const
   {
     unsigned colIdx = region.getColIdx();
     unsigned numAllocCols = region.getNumAllocCols();
@@ -114,32 +114,34 @@ protected:
     unsigned numAllocRows = region.getNumAllocRows();
     unsigned r = 0;
     unsigned c = 0;
+
+    // TODO: Decide if numBits is always going to be power of 2. If so, replace '/' & '%' with shift and bit-wise operation
     if (isVLayout) {
-      assert(numAllocRows % bitCount == 0);
-      r = rowIdx + (nth / numAllocCols) * bitCount;
+      assert(numAllocRows % numBits == 0);
+      r = rowIdx + (nth / numAllocCols) * numBits;
       c = colIdx + nth % numAllocCols;
     } else {
-      assert(numAllocCols % bitCount == 0);
-      unsigned numBitsPerRow = numAllocCols / bitCount;
+      assert(numAllocCols % numBits == 0);
+      unsigned numBitsPerRow = numAllocCols / numBits;
       r = rowIdx + nth / numBitsPerRow;
-      c = colIdx + (nth % numBitsPerRow) * bitCount;
+      c = colIdx + (nth % numBitsPerRow) * numBits;
     }
     return std::make_pair(r, c);
   }
 
   //! @brief  Utility: Get a value from a region
-  inline uint64_t getBits(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned bitCount) const
+  inline uint64_t getBits(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned numBits) const
   {
-    return isVLayout ? core.getBitsV(rowLoc, colLoc, bitCount) : core.getBitsH(rowLoc, colLoc, bitCount);
+    return isVLayout ? core.getBitsV(rowLoc, colLoc, numBits) : core.getBitsH(rowLoc, colLoc, numBits);
   }
 
   //! @brief  Utility: Set a value to a region
-  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t val, unsigned bitCount) const
+  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t val, unsigned numBits) const
   {
     if (isVLayout) {
-      core.setBitsV(rowLoc, colLoc, val, bitCount);
+      core.setBitsV(rowLoc, colLoc, val, numBits);
     } else {
-      core.setBitsH(rowLoc, colLoc, val, bitCount);
+      core.setBitsH(rowLoc, colLoc, val, numBits);
     }
   }
   
