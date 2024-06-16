@@ -14,6 +14,7 @@
 #include <bit>
 #include <limits>
 #include <cassert>
+#include <bitset>
 
 class pimDevice;
 class pimResMgr;
@@ -104,8 +105,8 @@ protected:
   virtual bool updateStats() const { return false; }
   bool computeAllRegions(unsigned numRegions);
 
-  //! @brief  Utility: Locate nth B32 in region
-  inline std::pair<unsigned, unsigned> locateNthB32(const pimRegion& region, bool isVLayout, unsigned nth) const
+  //! @brief  Utility: Locate nth element in region
+  inline std::pair<unsigned, unsigned> locateNthElement(const pimRegion& region, bool isVLayout, unsigned nth, unsigned numBits) const
   {
     unsigned colIdx = region.getColIdx();
     unsigned numAllocCols = region.getNumAllocCols();
@@ -113,35 +114,37 @@ protected:
     unsigned numAllocRows = region.getNumAllocRows();
     unsigned r = 0;
     unsigned c = 0;
+
+    // TODO: Decide if numBits is always going to be power of 2. If so, replace '/' & '%' with shift and bit-wise operation.
     if (isVLayout) {
-      assert(numAllocRows % 32 == 0);
-      r = rowIdx + (nth / numAllocCols) * 32;
+      assert(numAllocRows % numBits == 0);
+      r = rowIdx + (nth / numAllocCols) * numBits;
       c = colIdx + nth % numAllocCols;
     } else {
-      assert(numAllocCols % 32 == 0);
-      unsigned numB32PerRow = numAllocCols / 32;
-      r = rowIdx + nth / numB32PerRow;
-      c = colIdx + (nth % numB32PerRow) * 32;
+      assert(numAllocCols % numBits == 0);
+      unsigned numBitsPerRow = numAllocCols / numBits;
+      r = rowIdx + nth / numBitsPerRow;
+      c = colIdx + (nth % numBitsPerRow) * numBits;
     }
     return std::make_pair(r, c);
   }
 
-  //! @brief  Utility: Get a B32 value from a region
-  inline unsigned getB32(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc) const
+  //! @brief  Utility: Get a value from a region
+  inline uint64_t getBits(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned numBits) const
   {
-    return isVLayout ? core.getB32V(rowLoc, colLoc) : core.getB32H(rowLoc, colLoc);
+    return isVLayout ? core.getBitsV(rowLoc, colLoc, numBits) : core.getBitsH(rowLoc, colLoc, numBits);
   }
 
-  //! @brief  Utility: Set a B32 value from a region
-  inline void setB32(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned val) const
+  //! @brief  Utility: Set a value to a region
+  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t val, unsigned numBits) const
   {
     if (isVLayout) {
-      core.setB32V(rowLoc, colLoc, val);
+      core.setBitsV(rowLoc, colLoc, val, numBits);
     } else {
-      core.setB32H(rowLoc, colLoc, val);
+      core.setBitsH(rowLoc, colLoc, val, numBits);
     }
   }
-
+  
   PimCmdEnum m_cmdType;
   pimDevice* m_device = nullptr;
 
