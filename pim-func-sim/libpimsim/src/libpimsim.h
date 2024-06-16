@@ -69,7 +69,6 @@ extern "C" {
   PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   PimStatus pimFree(PimObjId obj);
   PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
-  PimObjId pimCreateDualContactRef(PimObjId refId);
 
   // Data transfer
   PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
@@ -146,6 +145,7 @@ extern "C" {
   //   - numSrc must be odd (1 or 3) to perform MAJ operation
   //   - Number of var args must be 2*numSrc for AP and 2*(numDest+numSrc) for AAP
   //   - Var args must be a list of (PimObjId, int ofst) pairs
+  PimObjId pimCreateDualContactRef(PimObjId refId);
   PimStatus pimOpAP(int numSrc, ...);
   PimStatus pimOpAAP(int numDest, int numSrc, ...);
   
