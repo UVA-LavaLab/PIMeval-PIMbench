@@ -39,6 +39,7 @@ public:
   unsigned getNumCols() const;
 
   void showStats() const;
+  void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
   pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
