@@ -43,7 +43,8 @@ extern "C" {
 
   //! @brief  PIM datatypes
   enum PimDataType {
-    PIM_INT32 = 0,
+    PIM_INT8 = 0,
+    PIM_INT32,
     PIM_INT64,
     PIM_FP32,
   };
