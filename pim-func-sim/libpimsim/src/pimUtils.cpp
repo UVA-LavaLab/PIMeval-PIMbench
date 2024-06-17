@@ -61,6 +61,7 @@ std::string
 pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 {
   switch (dataType) {
+  case PIM_INT8: return "int8";
   case PIM_INT32: return "int32";
   case PIM_INT64: return "int64";
   case PIM_FP32: return "fp32";
