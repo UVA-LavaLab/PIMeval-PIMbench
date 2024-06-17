@@ -416,7 +416,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   // perform the computation
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElementSrc);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT32 || dataType == PIM_INT64) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
       auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementDest);
 
