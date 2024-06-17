@@ -1,11 +1,11 @@
 // Bit-Serial Performance Modeling - BitSIMD_V
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#include "bsBitsimd.h"
+#include "bitSerialBitsimd.h"
 #include <iostream>
 
 void
-bsBitsimd::bsInt32Add(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimOpSet(src1, PIM_RREG_R1, 0);
   for (int i = 0; i < 32; ++i) {
@@ -19,7 +19,7 @@ bsBitsimd::bsInt32Add(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialSub(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimOpSet(src1, PIM_RREG_R1, 0);
   for (int i = 0; i < 32; ++i) {
@@ -33,19 +33,19 @@ bsBitsimd::bsInt32Sub(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Mul(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialMul(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bsInt32MulHelper4Reg(32, src1, src2, dest);
+  bitSerialIntMulHelper4Reg(32, src1, src2, dest);
 }
 
 void
-bsBitsimd::bsInt32Div(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  bsInt32DivRemHelper(32, src1, src2, dest);
+  bitSerialIntDivRemHelper(32, src1, src2, dest);
 }
 
 void
-bsBitsimd::bsInt32Abs(PimObjId src, PimObjId dest)
+bitSerialBitsimd::bitSerialAbs(PimObjId src, PimObjId dest)
 {
   pimOpReadRowToSa(src, 31);
   pimOpMove(src, PIM_RREG_SA, PIM_RREG_R1);
@@ -61,7 +61,7 @@ bsBitsimd::bsInt32Abs(PimObjId src, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32And(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialAnd(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   for (int i = 0; i < 32; ++i) {
     pimOpReadRowToSa(src1, i);
@@ -73,7 +73,7 @@ bsBitsimd::bsInt32And(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Or(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialOr(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   for (int i = 0; i < 32; ++i) {
     pimOpReadRowToSa(src1, i);
@@ -85,7 +85,7 @@ bsBitsimd::bsInt32Or(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialXor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   for (int i = 0; i < 32; ++i) {
     pimOpReadRowToSa(src1, i);
@@ -97,7 +97,7 @@ bsBitsimd::bsInt32Xor(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Xnor(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialXnor(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   for (int i = 0; i < 32; ++i) {
     pimOpReadRowToSa(src1, i);
@@ -110,7 +110,7 @@ bsBitsimd::bsInt32Xnor(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32GT(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialGT(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   // 32-bit uint gt
   pimOpSet(src1, PIM_RREG_R1, 0);
@@ -137,7 +137,7 @@ bsBitsimd::bsInt32GT(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32LT(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialLT(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   // 32-bit uint lt
   pimOpSet(src1, PIM_RREG_R1, 0);
@@ -164,7 +164,7 @@ bsBitsimd::bsInt32LT(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32EQ(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialEQ(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   pimOpSet(src1, PIM_RREG_R2, 0);
   for (int i = 0; i < 32; ++i) {
@@ -185,7 +185,7 @@ bsBitsimd::bsInt32EQ(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Min(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialMin(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   // 32-bit int lt
   pimOpSet(src1, PIM_RREG_R1, 0);
@@ -213,7 +213,7 @@ bsBitsimd::bsInt32Min(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32Max(PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialMax(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   // 32-bit int gt
   pimOpSet(src1, PIM_RREG_R1, 0);
@@ -241,7 +241,7 @@ bsBitsimd::bsInt32Max(PimObjId src1, PimObjId src2, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32PopCount(PimObjId src, PimObjId dest)
+bitSerialBitsimd::bitSerialPopCount(PimObjId src, PimObjId dest)
 {
   // 2 bits -> 2-bit count
   for (int i = 0; i < 32; i += 2) {
@@ -280,7 +280,7 @@ bsBitsimd::bsInt32PopCount(PimObjId src, PimObjId dest)
 }
 
 void
-bsBitsimd::bsInt32MulHelper3Reg(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialIntMulHelper3Reg(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
 {
   assert(nBit <= 32);
   std::cout << "BS-INFO: Allocate 32 temporary rows" << std::endl;
@@ -322,7 +322,7 @@ bsBitsimd::bsInt32MulHelper3Reg(int nBit, PimObjId src1, PimObjId src2, PimObjId
 }
 
 void
-bsBitsimd::bsInt32MulHelper4Reg(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialIntMulHelper4Reg(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
 {
   assert(nBit <= 32);
   // cond copy the first
@@ -356,17 +356,17 @@ bsBitsimd::bsInt32MulHelper4Reg(int nBit, PimObjId src1, PimObjId src2, PimObjId
 }
 
 void
-bsBitsimd::bsInt32DivRemHelper(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialIntDivRemHelper(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
 {
   // compute abs
   std::cout << "BS-INFO: Allocate 64 temporary rows" << std::endl;
   PimObjId abs1 = pimAllocAssociated(32, src1, PIM_INT32);
   PimObjId abs2 = pimAllocAssociated(32, src2, PIM_INT32);
-  bsInt32Abs(src1, abs1);
-  bsInt32Abs(src2, abs2);
+  bitSerialAbs(src1, abs1);
+  bitSerialAbs(src2, abs2);
 
   // 31-bit uint div rem
-  bsUint32DivRemHelper(31, abs1, abs2, dest);
+  bitSerialUintDivRemHelper(31, abs1, abs2, dest);
   pimOpSet(src1, PIM_RREG_SA, 0);
   pimOpWriteSaToRow(dest, 31);
 
@@ -392,7 +392,7 @@ bsBitsimd::bsInt32DivRemHelper(int nBit, PimObjId src1, PimObjId src2, PimObjId 
 }
 
 void
-bsBitsimd::bsUint32DivRemHelper(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
+bitSerialBitsimd::bitSerialUintDivRemHelper(int nBit, PimObjId src1, PimObjId src2, PimObjId dest)
 {
   assert(nBit <= 32);
   // quotient and remainder

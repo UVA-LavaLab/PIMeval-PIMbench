@@ -4,13 +4,13 @@
 #ifndef BIT_SERIAL_MAIN_H
 #define BIT_SERIAL_MAIN_H
 
-//! @class  bsMain
+//! @class  bitSerialMain
 //! @brief  Bit-serial performance tests main entry
-class bsMain
+class bitSerialMain
 {
 public:
-  bsMain() {}
-  ~bsMain() {}
+  bitSerialMain() {}
+  ~bitSerialMain() {}
 
   bool runAllTests();
 

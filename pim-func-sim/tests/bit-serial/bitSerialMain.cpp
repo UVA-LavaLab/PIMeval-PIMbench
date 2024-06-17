@@ -1,61 +1,59 @@
 // Bit-Serial Performance Modeling - Main
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#include "bsMain.h"
-#include "bsBase.h"
-#include "bsBitsimd.h"
-#include "bsBitsimdAp.h"
-#include "bsSimdram.h"
+#include "bitSerialMain.h"
+#include "bitSerialBase.h"
+#include "bitSerialBitsimd.h"
+#include "bitSerialBitsimdAp.h"
+#include "bitSerialSimdram.h"
 #include <iostream>
 
 bool
-bsMain::testBitsimd()
+bitSerialMain::testBitsimd()
 {
   std::cout << "========== PIM_DEVICE_BITSIMD_V ==========" << std::endl;
-  bsBase* bs = new bsBitsimd;
-  bool ok = bs->runTests();
-  delete bs;
+  bitSerialBase* model = new bitSerialBitsimd;
+  bool ok = model->runTests();
+  delete model;
   std::cout << (ok ? "Passed" : "Failed") << std::endl;
   return ok;
 }
 
 bool
-bsMain::testBitsimdAp()
+bitSerialMain::testBitsimdAp()
 {
   std::cout << "========== PIM_DEVICE_BITSIMD_V_AP ==========" << std::endl;
-  bsBase* bs = new bsBitsimdAp;
-  bool ok = bs->runTests();
-  delete bs;
+  bitSerialBase* model = new bitSerialBitsimdAp;
+  bool ok = model->runTests();
+  delete model;
   std::cout << (ok ? "Passed" : "Failed") << std::endl;
   return ok;
 }
 
 bool
-bsMain::testSimdram()
+bitSerialMain::testSimdram()
 {
   std::cout << "========== PIM_DEVICE_SIMDRAM ==========" << std::endl;
-  bsBase* bs = new bsSimdram;
-  bool ok = bs->runTests();
-  delete bs;
+  bitSerialBase* model = new bitSerialSimdram;
+  bool ok = model->runTests();
+  delete model;
   std::cout << (ok ? "Passed" : "Failed") << std::endl;
   return ok;
 }
 
 bool
-bsMain::runAllTests()
+bitSerialMain::runAllTests()
 {
   std::cout << "Bit Serial Performance Modeling" << std::endl;
   bool ok = true;
   ok &= testBitsimd();
-  //ok &= testBitsimdAp();
-  //ok &= testSimdram();
   return ok;
 }
 
 int main()
 {
-  bsMain bs;
-  bool ok = bs.runAllTests();
+  bitSerialMain app;
+  bool ok = app.runAllTests();
   std::cout << (ok ? "All passed!" : "Some failed!") << std::endl;
   return 0;
 }

@@ -1,7 +1,7 @@
 // Bit-Serial Performance Modeling - Base
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#include "bsBase.h"
+#include "bitSerialBase.h"
 #include <vector>
 #include <random>
 #include <iostream>
@@ -9,7 +9,7 @@
 
 //! @brief  Create device
 void
-bsBase::bsCreateDevice()
+bitSerialBase::createDevice()
 {
   // create with any v-layout PIM device
   PimDeviceEnum deviceType = getDeviceType();
@@ -19,7 +19,7 @@ bsBase::bsCreateDevice()
 
 //! @brief  Delete device
 void
-bsBase::bsDeleteDevice()
+bitSerialBase::deleteDevice()
 {
   PimStatus status = pimDeleteDevice();
   assert(status == PIM_OK);
@@ -27,7 +27,7 @@ bsBase::bsDeleteDevice()
 
 //! @brief  Generate random int
 std::vector<int>
-bsBase::getRandInt(int numElements, int min, int max, bool allowZero)
+bitSerialBase::getRandInt(int numElements, int min, int max, bool allowZero)
 {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -45,22 +45,22 @@ bsBase::getRandInt(int numElements, int min, int max, bool allowZero)
 
 //! @brief  Run tests
 bool
-bsBase::runTests()
+bitSerialBase::runTests()
 {
   bool ok = true;
 
-  bsCreateDevice();
+  createDevice();
 
   ok &= testInt32();
 
-  bsDeleteDevice();
+  deleteDevice();
 
   return ok;
 }
 
 //! @brief  Test PIM_INT32
 bool
-bsBase::testInt32()
+bitSerialBase::testInt32()
 {
   bool ok = true;
   std::cout << "[INT32] Run tests ..." << std::endl;
@@ -82,7 +82,7 @@ bsBase::testInt32()
   // create EQ cases
   vec2[100] = vec1[100];
   vec2[3000] = vec1[3000];
-  
+
   // allocate PIM objects
   PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 32, PIM_INT32);
   PimObjId src2 = pimAllocAssociated(32, src1, PIM_INT32);
@@ -129,21 +129,21 @@ bsBase::testInt32()
     pimResetStats();
 
     switch (i) {
-    case 0: bsInt32Add(src1, src2, dest2); break;
-    case 1: bsInt32Sub(src1, src2, dest2); break;
-    case 2: bsInt32Mul(src1, src2, dest2); break;
-    case 3: bsInt32Div(src1, src3, dest2); break;
-    case 4: bsInt32Abs(src1, dest2); break;
-    case 5: bsInt32And(src1, src2, dest2); break;
-    case 6: bsInt32Or(src1, src2, dest2); break;
-    case 7: bsInt32Xor(src1, src2, dest2); break;
-    case 8: bsInt32Xnor(src1, src2, dest2); break;
-    case 9: bsInt32GT(src1, src2, dest2); break;
-    case 10: bsInt32LT(src1, src2, dest2); break;
-    case 11: bsInt32EQ(src1, src2, dest2); break;
-    case 12: bsInt32Min(src1, src2, dest2); break;
-    case 13: bsInt32Max(src1, src2, dest2); break;
-    case 14: bsInt32PopCount(src1, dest2); break;
+    case 0: bitSerialAdd(src1, src2, dest2); break;
+    case 1: bitSerialSub(src1, src2, dest2); break;
+    case 2: bitSerialMul(src1, src2, dest2); break;
+    case 3: bitSerialDiv(src1, src3, dest2); break;
+    case 4: bitSerialAbs(src1, dest2); break;
+    case 5: bitSerialAnd(src1, src2, dest2); break;
+    case 6: bitSerialOr(src1, src2, dest2); break;
+    case 7: bitSerialXor(src1, src2, dest2); break;
+    case 8: bitSerialXnor(src1, src2, dest2); break;
+    case 9: bitSerialGT(src1, src2, dest2); break;
+    case 10: bitSerialLT(src1, src2, dest2); break;
+    case 11: bitSerialEQ(src1, src2, dest2); break;
+    case 12: bitSerialMin(src1, src2, dest2); break;
+    case 13: bitSerialMax(src1, src2, dest2); break;
+    case 14: bitSerialPopCount(src1, dest2); break;
     default:
       assert(0);
     }
@@ -170,7 +170,7 @@ bsBase::testInt32()
       }
     } else {
       // For capturing PIM command stats. Do not count above two data copy
-      pimShowStats(); 
+      pimShowStats();
     }
 
     pimCopyDeviceToHost(src1, (void *)vec1a.data());
@@ -182,7 +182,7 @@ bsBase::testInt32()
       std::cout << "[INT32] Error: Test " << i << " input modified !!!!!" << std::endl;
     }
   }
-  
+
   return ok;
 }
 

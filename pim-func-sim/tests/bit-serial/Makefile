@@ -1,9 +1,9 @@
-# Makefile: BitSIMD-V basic tests
+# Makefile: Bit-serial Performance Modeling
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
 
-EXEC := bs.out
+EXEC := bitSerial.out
 SRCS = $(wildcard *.cpp)
 HEADERS = $(wildcard *.h)
 
