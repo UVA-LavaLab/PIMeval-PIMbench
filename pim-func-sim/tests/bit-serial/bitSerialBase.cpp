@@ -129,21 +129,21 @@ bitSerialBase::testInt32()
     pimResetStats();
 
     switch (i) {
-    case 0: bitSerialAdd(src1, src2, dest2); break;
-    case 1: bitSerialSub(src1, src2, dest2); break;
-    case 2: bitSerialMul(src1, src2, dest2); break;
-    case 3: bitSerialDiv(src1, src3, dest2); break;
-    case 4: bitSerialAbs(src1, dest2); break;
-    case 5: bitSerialAnd(src1, src2, dest2); break;
-    case 6: bitSerialOr(src1, src2, dest2); break;
-    case 7: bitSerialXor(src1, src2, dest2); break;
-    case 8: bitSerialXnor(src1, src2, dest2); break;
-    case 9: bitSerialGT(src1, src2, dest2); break;
-    case 10: bitSerialLT(src1, src2, dest2); break;
-    case 11: bitSerialEQ(src1, src2, dest2); break;
-    case 12: bitSerialMin(src1, src2, dest2); break;
-    case 13: bitSerialMax(src1, src2, dest2); break;
-    case 14: bitSerialPopCount(src1, dest2); break;
+    case 0: bitSerialIntAdd(32, src1, src2, dest2); break;
+    case 1: bitSerialIntSub(32, src1, src2, dest2); break;
+    case 2: bitSerialIntMul(32, src1, src2, dest2); break;
+    case 3: bitSerialIntDiv(32, src1, src3, dest2); break;
+    case 4: bitSerialIntAbs(32, src1, dest2); break;
+    case 5: bitSerialIntAnd(32, src1, src2, dest2); break;
+    case 6: bitSerialIntOr(32, src1, src2, dest2); break;
+    case 7: bitSerialIntXor(32, src1, src2, dest2); break;
+    case 8: bitSerialIntXnor(32, src1, src2, dest2); break;
+    case 9: bitSerialIntGT(32, src1, src2, dest2); break;
+    case 10: bitSerialIntLT(32, src1, src2, dest2); break;
+    case 11: bitSerialIntEQ(32, src1, src2, dest2); break;
+    case 12: bitSerialIntMin(32, src1, src2, dest2); break;
+    case 13: bitSerialIntMax(32, src1, src2, dest2); break;
+    case 14: bitSerialIntPopCount(32, src1, dest2); break;
     default:
       assert(0);
     }

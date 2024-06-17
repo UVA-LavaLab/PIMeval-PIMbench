@@ -23,21 +23,21 @@ protected:
   virtual PimDeviceEnum getDeviceType() = 0;
 
   // virtual: high-level APIs to evaluate
-  virtual void bitSerialAdd(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialSub(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialMul(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialDiv(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialAbs(PimObjId src, PimObjId dest) {}
-  virtual void bitSerialAnd(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialOr(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialXor(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialXnor(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialGT(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialLT(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialEQ(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialMin(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialMax(PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialPopCount(PimObjId src, PimObjId dest) {}
+  virtual void bitSerialIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntAbs(int numBits, PimObjId src, PimObjId dest) {}
+  virtual void bitSerialIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntGT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntLT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
 
   // helper functions
   void createDevice();
