@@ -3,7 +3,8 @@
 
 include ../Makefile.common
 
-CXXFLAGS += -O3
+CXXFLAGS += -O3 
+# CXXFLAGS += -DENABLE_PARALLEL -fopenmp  
 EXEC := tc.out
 SRC := tc.cpp
 

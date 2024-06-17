@@ -99,6 +99,14 @@ pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Copy data from PIM device to device
+PimStatus
+pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCopyDeviceToDevice(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Load vector with a scalar value
 PimStatus
 pimBroadcast(PimObjId dest, unsigned value)

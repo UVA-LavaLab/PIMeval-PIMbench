@@ -55,6 +55,7 @@ public:
   bool pimCopyDeviceToMain(PimObjId src, void* dest);
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
