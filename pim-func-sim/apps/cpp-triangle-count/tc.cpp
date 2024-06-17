@@ -236,7 +236,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     return sum;
 }
 
-int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix, bool optimized = false) {
+int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
@@ -264,20 +264,18 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 for (int k = 0; k < wordsPerMatrixRow; ++k) {
                     unsigned int op1 = bitAdjMatrix[i][k];
                     unsigned int op2 = bitAdjMatrix[j][k];
-                    if(optimized){
-                        auto ifstart = std::chrono::high_resolution_clock::now();
-                        if ((op1 & op2) == 0)
-                        {
-                            auto ifend = std::chrono::high_resolution_clock::now();
-                            auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
-                            host_time_if += ifelapsedTime.count();
-                            // skippedWords++;
-                            continue;
-                        }
+                    auto ifstart = std::chrono::high_resolution_clock::now();
+                    if ((op1 & op2) == 0)
+                    {
                         auto ifend = std::chrono::high_resolution_clock::now();
                         auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                         host_time_if += ifelapsedTime.count();
+                        // skippedWords++;
+                        continue;
                     }
+                    auto ifend = std::chrono::high_resolution_clock::now();
+                    auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                    host_time_if += ifelapsedTime.count();
                     // transferredWords++;
 #ifdef ENABLE_PARALLEL
                     #pragma omp atomic
@@ -317,11 +315,64 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
         }
     }
-    if(optimized){
-        cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
-        cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
-    }
+    cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
+    cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
     // cout << "oneCount: " << oneCount << ", skippedWords: " << skippedWords << ", transferredWords: " << transferredWords << endl;
+    cout << "TriangleCount: " << count / 6 << endl;
+    // Each triangle is counted three times (once at each vertex), so divide the count by 3
+    return count / 6;
+}
+
+int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+    int count = 0;
+    int V = bitAdjMatrix.size();
+    uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
+    cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
+    cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
+    assert(wordsPerMatrixRow <=  (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
+    int oneCount = 0;
+    uint64_t words = 0;
+    std::vector<unsigned int> src1;
+    std::vector<unsigned int> src2;
+    int step = V / 10; // Each 10 percent of the total iterations
+    uint16_t iterations = 0;
+
+    for (int i = 0; i < V; ++i) {
+        for (int j = 0; j < V; ++j) {
+            if (adjMatrix[i][j]) 
+            { // If there's an edge between i and j
+                ++oneCount;
+                for (int k = 0; k < wordsPerMatrixRow; ++k) {
+                    unsigned int op1 = bitAdjMatrix[i][k];
+                    unsigned int op2 = bitAdjMatrix[j][k];
+                    ++words;
+                    src1.push_back(op1);
+                    src2.push_back(op2);
+                }
+            }
+            if((words + wordsPerMatrixRow > (WORDS_PER_RANK / (4*2))) || ((i == V - 1) && (j == V - 1) && words > 0)){
+                cout << "words: " << words << endl;
+                cout << "-------------itr[" << iterations << "]-------------" << endl;
+                std::vector<unsigned int> dst(words);
+                std::vector<unsigned int> popCountSrc(words);
+                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dst, popCountSrc);
+           
+                if(sum < 0)
+                    return -1;
+                words = 0;
+                iterations++;
+                src1.clear();
+                src2.clear();
+                dst.clear();
+                count += sum;
+            }
+
+        }
+        if (i % step == 0) {
+            std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
+        }
+    }
+    cout << "oneCount: " << oneCount << endl;
     cout << "TriangleCount: " << count / 6 << endl;
     // Each triangle is counted three times (once at each vertex), so divide the count by 3
     return count / 6;
@@ -353,7 +404,7 @@ int main(int argc, char** argv) {
         if (!createDevice(params.configFile))
             return 1;
         //run simulation
-        run_rowmaxusage(adjMatrix, bitAdjMatrix, true);
+        run_rowmaxusage(adjMatrix, bitAdjMatrix);
 
         //stats
         pimShowStats();
