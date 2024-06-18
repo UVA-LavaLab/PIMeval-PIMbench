@@ -416,7 +416,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   // perform the computation
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElementSrc);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    if (dataType == PIM_INT8 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
       auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementDest);
 
@@ -558,7 +558,7 @@ pimCmdFunc2::computeRegion(unsigned index)
     auto locSrc2 = locateNthElement(src2Region, isVLayout, j, bitsPerElementSrc2);
     auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementdest);
 
-    if (dataType == PIM_INT8 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
       int64_t operand1 = getOperand(operandBits1, dataType);

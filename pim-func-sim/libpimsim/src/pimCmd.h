@@ -149,6 +149,7 @@ protected:
   inline int64_t getOperand(uint64_t operandBits, PimDataType dataType) {
     switch (dataType) {
     case PIM_INT8: return *reinterpret_cast<int8_t*>(&operandBits);
+    case PIM_INT16: return *reinterpret_cast<int16_t*>(&operandBits);
     case PIM_INT32: return *reinterpret_cast<int32_t*>(&operandBits);
     case PIM_INT64: return *reinterpret_cast<int64_t*>(&operandBits);
     default:
