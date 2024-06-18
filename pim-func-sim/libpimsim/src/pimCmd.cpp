@@ -424,16 +424,16 @@ pimCmdFunc1::computeRegion(unsigned index)
       case PimCmdEnum::ABS:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int operand = *reinterpret_cast<int*>(&operandBits);
-        int result = std::abs(operand);
+        int64_t operand = getOperand(operandBits, dataType);
+        int64_t result = std::abs(operand);
         setBits(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<unsigned *>(&result), bitsPerElementDest);
+               *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
       }
       break;
       case PimCmdEnum::POPCOUNT:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int result = 0;
+        int64_t result = 0;
         switch (bitsPerElementSrc) {
         case 8: result =  std::bitset<8>(operandBits).count(); break;
         case 16: result = std::bitset<16>(operandBits).count(); break;
@@ -446,26 +446,26 @@ pimCmdFunc1::computeRegion(unsigned index)
         }
         }
         setBits(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<unsigned *>(&result), bitsPerElementDest);
+               *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
       }
       break;
       case PimCmdEnum::SHIFT_BITS_RIGHT:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int operand = *reinterpret_cast<int*>(&operandBits);
+        int64_t operand = getOperand(operandBits, dataType);
         // TODO: logical right shift
-        int result = operand >> m_immediateValue;
+        int64_t result = operand >> m_immediateValue;
         setBits(core, isVLayout, locDest.first, locDest.second,
-                 *reinterpret_cast<unsigned *>(&result), bitsPerElementDest);
+                 *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
       }
       break;
       case PimCmdEnum::SHIFT_BITS_LEFT:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int operand = *reinterpret_cast<int*>(&operandBits);
-        int result = operand << m_immediateValue;
+        int64_t operand = getOperand(operandBits, dataType);
+        int64_t result = operand << m_immediateValue;
         setBits(core, isVLayout, locDest.first, locDest.second,
-                 *reinterpret_cast<unsigned *>(&result), bitsPerElementDest);
+                 *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
       }
       break;
       default:
