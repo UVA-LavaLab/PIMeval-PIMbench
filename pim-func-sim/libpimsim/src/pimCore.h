@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <cassert>
+#include <cstdint>
 
 
 //! @class  pimCore

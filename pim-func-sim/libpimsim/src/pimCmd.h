@@ -149,10 +149,12 @@ protected:
   inline int64_t getOperand(uint64_t operandBits, PimDataType dataType) {
     switch (dataType) {
     case PIM_INT8: return *reinterpret_cast<int8_t*>(&operandBits);
+    case PIM_INT16: return *reinterpret_cast<int16_t*>(&operandBits);
     case PIM_INT32: return *reinterpret_cast<int32_t*>(&operandBits);
     case PIM_INT64: return *reinterpret_cast<int64_t*>(&operandBits);
     default:
         std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
+        return 0;
     }
   }
   
@@ -238,12 +240,12 @@ protected:
 class pimCmdRedSum : public pimCmd
 {
 public:
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int* result)
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int64_t* result)
     : pimCmd(cmdType), m_src(src), m_result(result)
   {
     assert(cmdType == PimCmdEnum::REDSUM);
   }
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int* result, unsigned idxBegin, unsigned idxEnd)
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int64_t* result, unsigned idxBegin, unsigned idxEnd)
     : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
   {
     assert(cmdType == PimCmdEnum::REDSUM_RANGE);
@@ -255,7 +257,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
-  int* m_result;
+  int64_t* m_result;
   std::vector<int> m_regionSum;
   unsigned m_idxBegin = 0;
   unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
@@ -266,7 +268,7 @@ protected:
 class pimCmdBroadcast : public pimCmd
 {
 public:
-  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, unsigned val)
+  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, int64_t val)
     : pimCmd(cmdType), m_dest(dest), m_val(val)
   {
     assert(cmdType == PimCmdEnum::BROADCAST);
@@ -278,7 +280,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
-  unsigned m_val;
+  int64_t m_val;
 };
 
 //! @class  pimCmdRotate

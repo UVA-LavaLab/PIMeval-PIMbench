@@ -39,6 +39,7 @@ public:
   unsigned getNumCols() const;
 
   void showStats() const;
+  void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
   pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
@@ -73,8 +74,8 @@ public:
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  bool pimRedSum(PimObjId src, int* sum);
-  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
+  bool pimRedSum(PimObjId src, int64_t* sum);
+  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
   bool pimBroadcast(PimObjId dest, unsigned value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);

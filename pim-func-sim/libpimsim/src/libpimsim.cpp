@@ -37,6 +37,13 @@ pimShowStats()
   pimSim::get()->showStats();
 }
 
+//! @brief  Reset PIM command stats
+void
+pimResetStats()
+{
+  pimSim::get()->resetStats();
+}
+
 //! @brief  Allocate a PIM resource
 PimObjId
 pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType)
@@ -109,7 +116,7 @@ pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
 
 //! @brief  Load vector with a scalar value
 PimStatus
-pimBroadcast(PimObjId dest, unsigned value)
+pimBroadcast(PimObjId dest, int64_t value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -237,7 +244,7 @@ pimPopCount(PimObjId src, PimObjId dest)
 
 //! @brief  PIM reduction sum. Result returned to a host variable
 PimStatus
-pimRedSum(PimObjId src, int* sum)
+pimRedSum(PimObjId src, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -245,7 +252,7 @@ pimRedSum(PimObjId src, int* sum)
 
 //! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
 PimStatus
-pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
+pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;

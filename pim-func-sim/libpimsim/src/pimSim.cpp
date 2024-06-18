@@ -232,6 +232,13 @@ pimSim::showStats() const
   m_statsMgr->showStats();
 }
 
+//! @brief  Reset PIM command stats
+void
+pimSim::resetStats() const
+{
+  m_statsMgr->resetStats();
+}
+
 //! @brief  Allocate a PIM object
 PimObjId
 pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
@@ -465,7 +472,7 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 }
 
 bool
-pimSim::pimRedSum(PimObjId src, int* sum)
+pimSim::pimRedSum(PimObjId src, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
@@ -475,7 +482,7 @@ pimSim::pimRedSum(PimObjId src, int* sum)
 }
 
 bool
-pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
+pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }

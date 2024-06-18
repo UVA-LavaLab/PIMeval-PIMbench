@@ -2,6 +2,8 @@
 // PIM Functional Simulator Library Interface
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
+#include <stdint.h>
+
 #ifndef LAVA_LIB_PIM_SIM_H
 #define LAVA_LIB_PIM_SIM_H
 
@@ -44,6 +46,7 @@ extern "C" {
   //! @brief  PIM datatypes
   enum PimDataType {
     PIM_INT8 = 0,
+    PIM_INT16,
     PIM_INT32,
     PIM_INT64,
     PIM_FP32,
@@ -57,6 +60,7 @@ extern "C" {
   PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   PimStatus pimDeleteDevice();
   void pimShowStats();
+  void pimResetStats();
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -87,9 +91,9 @@ extern "C" {
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
-  PimStatus pimRedSum(PimObjId src, int* sum);
-  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
-  PimStatus pimBroadcast(PimObjId dest, unsigned value);
+  PimStatus pimRedSum(PimObjId src, int64_t* sum);
+  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
+  PimStatus pimBroadcast(PimObjId dest, int64_t value);
   PimStatus pimRotateElementsRight(PimObjId src);
   PimStatus pimRotateElementsLeft(PimObjId src);
   PimStatus pimShiftElementsRight(PimObjId src);
