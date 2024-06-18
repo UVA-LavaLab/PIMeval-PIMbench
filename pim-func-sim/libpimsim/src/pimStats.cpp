@@ -116,6 +116,30 @@ pimStatsMgr::showCmdStats() const
     totalMsRuntime += it.second.second;
   }
   std::printf(" %30s : %10d %14f\n", "TOTAL ---------", totalCmd, totalMsRuntime);
+
+  // analyze micro-ops
+  int numR = 0;
+  int numW = 0;
+  int numL = 0;
+  int numActivate = 0;
+  int numPrecharge = 0;
+  for (const auto& it : m_cmdPerf) {
+    if (it.first == "row_r") {
+      numR += it.second.first;
+      numActivate += it.second.first;
+      numPrecharge += it.second.first;
+    } else if (it.first == "row_w") {
+      numW += it.second.first;
+      numActivate += it.second.first;
+      numPrecharge += it.second.first;
+    } else if (it.first.find("rreg.") == 0) {
+      numL += it.second.first;
+    }
+  }
+  if (numR > 0 || numW > 0 || numL > 0) {
+    std::printf(" %30s : %d, %d, %d\n", "Num Read, Write, Logic", numR, numW, numL);
+    std::printf(" %30s : %d, %d\n", "Num Activate, Precharge", numActivate, numPrecharge);
+  }
 }
 
 //! @brief  Reset PIM stats
@@ -126,6 +150,7 @@ pimStatsMgr::resetStats()
   m_msElapsed.clear();
   m_bitsCopiedMainToDevice = 0;
   m_bitsCopiedDeviceToMain = 0;
+  m_bitsCopiedDeviceToDevice = 0;
 }
 
 //! @brief pimPerfMon ctor
