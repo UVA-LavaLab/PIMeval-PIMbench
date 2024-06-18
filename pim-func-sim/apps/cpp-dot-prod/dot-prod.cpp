@@ -76,7 +76,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, int &result)
+void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, int64_t &result)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
   if (!createDevice(params.configFile))
     return 1;
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  int deviceValue = 0;
+  int64_t deviceValue = 0;
   dotProduct(params.vectorLength, src1, src2, deviceValue);
   if (params.shouldVerify)
   {
