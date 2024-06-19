@@ -20,8 +20,8 @@
 
 #define BITS_PER_INT 32
 
-#define NUM_SUBARRAY 4096
-#define ROW_SIZE 8192
+#define NUM_SUBARRAY 2048
+#define ROW_SIZE 16384
 #define COL_SIZE 8192
 
 uint64_t WORDS_PER_RANK = (uint64_t) NUM_SUBARRAY * (uint64_t) ROW_SIZE * (uint64_t) COL_SIZE / (uint64_t) BITS_PER_INT;
@@ -170,26 +170,28 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-    if (srcObj2 == -1)
-    {
-        std::cout << "src2: pimAllocAssociated" << std::endl;
-        return -1;
-    }
+    // PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    // if (srcObj2 == -1)
+    // {
+    //     std::cout << "src2: pimAllocAssociated" << std::endl;
+    //     return -1;
+    // }
 
-    PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-    if (dstObj == -1)
-    {
-        std::cout << "dst: pimAllocAssociated" << std::endl;
-        return -1;
-    }
+    // PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    // if (dstObj == -1)
+    // {
+    //     std::cout << "dst: pimAllocAssociated" << std::endl;
+    //     return -1;
+    // }
 
-    PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-    if (popCountSrcObj == -1)
-    {
-        std::cout << "popCountSrc: pimAllocAssociated" << std::endl;
-        return -1;
-    }
+    // PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    // if (popCountSrcObj == -1)
+    // {
+    //     std::cout << "popCountSrc: pimAllocAssociated" << std::endl;
+    //     return -1;
+    // }
+
+    cout << "src1 size: " << src1.size() << endl;
 
     PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
     if (status != PIM_OK)
@@ -198,42 +200,110 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
+    // status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
+    // if (status != PIM_OK)
+    // {
+    //     std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
+    //     return -1;
+    // }
+    vector<unsigned int> devSrc1(numElements);
+    // vector<unsigned int> devSrc2(numElements);
+    status = pimCopyDeviceToHost(srcObj1, (void *)devSrc1.data());
     if (status != PIM_OK)
     {
-        std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
+        std::cout << "dev src1: pimCopyDeviceToHost Abort" << std::endl;
         return -1;
     }
+       for (int i = 0; i < numElements; ++i) {
+        if (i > 1000000000 && src1[i] != 0) {
+            cout << "---------------i---------------" << endl;
+            std::bitset<32> src1Bin(src1[i]);
+            std::bitset<32> devSrc1Bin(devSrc1[i]);
+            cout << src1Bin << endl;
+            cout << devSrc1Bin << endl;
+            break;
+        }
+    }// debug
+    return -1;
+    // // status = pimCopyDeviceToHost(srcObj2, (void *)devSrc2.data());
+    // // if (status != PIM_OK)
+    // // {
+    // //     std::cout << "dev src2: pimCopyDeviceToHost Abort" << std::endl;
+    // //     return -1;
+    // // }
+    // return -1;
+    // status = pimAnd(srcObj1, srcObj2, dstObj);
+    // if (status != PIM_OK)
+    // {
+    //     std::cout << "pimAnd Abort" << std::endl;
+    //     return -1;
+    // }
+
+    // // debug
+    // cout << "<<<<<<<<<<<<<<<<<<<and result>>>>>>>>>>>>>>>>>>>";
+    // status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
+    // if (status != PIM_OK)
+    // {
+    //     std::cout << "dst: pimCopyDeviceToHost Abort" << std::endl;
+    //     return -1;
+    // }
+    // int index = 0;
     
-    status = pimAnd(srcObj1, srcObj2, dstObj);
-    if (status != PIM_OK)
-    {
-        std::cout << "pimAnd Abort" << std::endl;
-        return -1;
-    }
+    // for (int i = 0; i < numElements; ++i) {
+    //     if (i > 1000000000 && src1[i] & src2[i] != 0) {
+    //         cout << "---------------i---------------" << endl;
+    //         std::bitset<32> src1Bin(src1[i]);
+    //         std::bitset<32> src2Bin(src2[i]);
+    //         std::bitset<32> dstBin(dst[i]);
+    //         std::bitset<32> devSrc1Bin(devSrc1[i]);
+    //         std::bitset<32> devSrc2Bin(devSrc2[i]);
+    //         cout << src1Bin << endl;
+    //         cout << src2Bin << endl;
+    //         cout << dstBin << endl;
+    //         cout << devSrc1Bin << endl;
+    //         cout << devSrc2Bin << endl;
+    //         index = i;
+    //         break;
+    //     }
+    // }// debug
 
-    status = pimPopCount(dstObj, popCountSrcObj);
-    if (status != PIM_OK)
-    {
-        std::cout << "pimPopCount Abort" << std::endl;
-        return -1;
-    }
+    // status = pimPopCount(dstObj, popCountSrcObj);
+    // if (status != PIM_OK)
+    // {
+    //     std::cout << "pimPopCount Abort" << std::endl;
+    //     return -1;
+    // }
 
+    // vector<unsigned int> popCountDst(numElements);
+    // // debug
+    // status = pimCopyDeviceToHost(popCountSrcObj, (void *)popCountDst.data());
+    // if (status != PIM_OK)
+    // {
+    //     std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
+    //     return -1;
+    // }
+    // cout << "<<<<<<<<<<<<<<<<<<<pop result>>>>>>>>>>>>>>>>>>>";
+    // cout << "i = " << index << endl;
+    // std::bitset<32> dstBin(dst[index]);
+    // std::bitset<32> popCountDstBin(popCountDst[index]);
+    // cout << dstBin << endl;
+    // cout << popCountDstBin << endl;
+    // // debug
 
-    int sum = 0;
-    status = pimRedSum(popCountSrcObj, &sum);
-    if (status != PIM_OK)
-    {
-        std::cout << "pimRedSum Abort" << std::endl;
-        return -1;
-    }
+    // int sum = 0;
+    // status = pimRedSum(popCountSrcObj, &sum);
+    // if (status != PIM_OK)
+    // {
+    //     std::cout << "pimRedSum Abort" << std::endl;
+    //     return -1;
+    // }
 
-    pimFree(srcObj1);
-    pimFree(srcObj2);
-    pimFree(dstObj);
-    pimFree(popCountSrcObj);
+    // pimFree(srcObj1);
+    // pimFree(srcObj2);
+    // pimFree(dstObj);
+    // pimFree(popCountSrcObj);
 
-    return sum;
+    // return sum;
 }
 
 int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
@@ -356,15 +426,19 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 std::vector<unsigned int> dst(words);
                 std::vector<unsigned int> popCountSrc(words);
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dst, popCountSrc);
-           
+
                 if(sum < 0)
                     return -1;
+                
                 words = 0;
                 iterations++;
                 src1.clear();
                 src2.clear();
                 dst.clear();
                 count += sum;
+                cout << "src1Size: " << src1.size() << ", dstSize: " << dst.size() << "popCountSrcSize: " << popCountSrc.size() << endl;
+                cout << "sum: " << sum << ", count: " << count << endl;
+                return -1;// debug
             }
 
         }
