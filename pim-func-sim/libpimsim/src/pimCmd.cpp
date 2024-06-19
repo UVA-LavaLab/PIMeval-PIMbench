@@ -469,7 +469,7 @@ pimCmdFunc1::computeRegion(unsigned index)
       }
       break;
       default:
-        std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
         assert(0);
       }
     } else {
@@ -608,7 +608,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         result = operand1 / operand2;
         break;
       default:
-        std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", m_cmdType);
+        std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", static_cast<int>(m_cmdType));
         assert(0);
       }
       setBits(core, isVLayout, locDest.first, locDest.second,
@@ -1055,7 +1055,7 @@ pimCmdRRegOp::execute()
         break;
       }
       default:
-        std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
         assert(0);
       }
     }

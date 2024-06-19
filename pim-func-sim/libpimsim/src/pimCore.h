@@ -62,7 +62,7 @@ public:
   inline void setBitsV(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
     assert(numBits > 0 && numBits <= 64);
     assert(rowIdx + (numBits - 1) < m_numRows && colIdx < m_numCols);
-    for (int i = 0; i < numBits; ++i) {
+    for (unsigned i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx + i, colIdx, bitVal);
       val = val >> 1;
@@ -83,7 +83,7 @@ public:
   inline void setBitsH(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
     assert(numBits > 0 && numBits <= 64);
     assert(rowIdx < m_numRows && colIdx + (numBits - 1) < m_numCols);
-    for (int i = 0; i < numBits; ++i) {
+    for (unsigned i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx, colIdx + i, bitVal);
       val = val >> 1;
