@@ -1,7 +1,13 @@
-# Makefile: C++ version of vector add
+# Makefile: C++ version of matrix matrix multiplication
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
+
+# make USE_OPENMP=1
+USE_OPENMP ?= 0
+ifeq ($(USE_OPENMP),1)
+	CXXFLAGS += -fopenmp
+endif
 
 EXEC := gemm.out
 SRC := gemm.cpp

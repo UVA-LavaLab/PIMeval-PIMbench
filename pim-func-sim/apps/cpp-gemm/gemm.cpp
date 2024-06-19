@@ -1,4 +1,4 @@
-// Test: C++ version of matrix vector multiplication
+// Test: C++ version of matrix matrix multiplication
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -27,9 +27,9 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./gemm [options]"
           "\n"
-          "\n    -r    matrix1 row (default=8M elements)"
-          "\n    -d    matrix1 column (default=8M elements)"
-          "\n    -z    matrix2 column (default=8M elements)"
+          "\n    -r    matrix1 row (default=65536 elements)"
+          "\n    -d    matrix1 column (default=65536 elements)"
+          "\n    -z    matrix2 column (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -112,7 +112,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  for (int i = 0; i < col; ++i)
+  for (uint64_t i = 0; i < col; ++i)
   {
     status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
     if (status != PIM_OK)
@@ -154,13 +154,58 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   pimFree(dstObj);
 }
 
+void transposeMatrix(uint64_t row, uint64_t col, std::vector<std::vector<int>> &srcMatrix, std::vector<std::vector<int>> &dstMatrix)
+{
+#pragma omp parallel for
+  for (uint64_t i = 0; i < col; ++i)
+  {
+    for (uint64_t j = 0; j < row; ++j)
+    {
+      dstMatrix[i][j] = srcMatrix[j][i];
+    }
+  }
+}
+
 void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<int>> &srcMatrixA, std::vector<std::vector<int>> &srcMatrixB, std::vector<std::vector<int>> &dstMatrix, bool shouldVerify)
 {
-  //the result matrix is saved in transformed way
-  dstMatrix.resize(colB, std::vector<int>(row, 0));
-  for (int i = 0; i < colA; ++i)
+  dstMatrix.resize(row, std::vector<int>(colB, 0));
+  std::vector<std::vector<int>> transposedDstMat(colB, std::vector<int>(row, 0));
+  vector<std::vector<int>> srcMatrixAT(colA, std::vector<int>(row, 0)), srcMatrixBT(colB, std::vector<int>(colA, 0));
+  // TODO: Do we actually need to transpose matrices
+  transposeMatrix(row, colA, srcMatrixA, srcMatrixAT);
+  transposeMatrix(colA, colB, srcMatrixB, srcMatrixBT);
+  for (uint64_t i = 0; i < colB; ++i)
   {
-    gemv(row, colA, srcMatrixB[i], srcMatrixA, dstMatrix[i]);
+    gemv(row, colA, srcMatrixBT[i], srcMatrixAT, transposedDstMat[i]);
+  }
+  transposeMatrix(colB, row, transposedDstMat, dstMatrix);
+  if (shouldVerify)
+  {
+    cout << "Starting verification......\n";
+    std::vector<std::vector<int>> C(row, std::vector<int>(colB, 0));
+    for (uint64_t i = 0; i < row; ++i)
+    {
+      for (uint64_t j = 0; j < colB; ++j)
+      {
+        for (uint64_t k = 0; k < colA; ++k)
+        {
+          C[i][j] += srcMatrixAT[k][i] * srcMatrixBT[j][k];
+        }
+      }
+    }
+    bool shouldContinue = true;
+    for (uint64_t i = 0; i < row && shouldContinue; ++i)
+    {
+      for (uint64_t j = 0; j < colB; ++j)
+      {
+        if (C[i][j] != dstMatrix[i][j])
+        {
+          std::cout << "Error: Incorrect Result.\nHost: " << C[i][j] << "\t PIM: " << dstMatrix[i][j] << "\n";
+          shouldContinue = false;
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -170,11 +215,11 @@ int main(int argc, char *argv[])
   std::cout << "Row: " << params.row << " Column: " << params.columnA << "\n";
 
   std::vector<int> srcVector, resultVector;
-  std::vector<std::vector<int>> srcMatrixA, srcMatrixB, dstMatrix; // matrix should lay out in colXrow format for bitserial PIM
+  std::vector<std::vector<int>> srcMatrixA, srcMatrixB, dstMatrix;
   if (params.inputFile == nullptr)
   {
-    getMatrix(params.columnA, params.row, 0, srcMatrixA);
-    getMatrix(params.columnB, params.columnA, 0, srcMatrixB);
+    getMatrix(params.row, params.columnA, 0, srcMatrixA);
+    getMatrix(params.columnA, params.columnB, 0, srcMatrixB);
   }
   else
   {
