@@ -53,9 +53,9 @@ pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements,
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
+pimAllocAssociated(unsigned bitsPerElements, PimObjId assocId, PimDataType dataType)
 {
-  return pimSim::get()->pimAllocAssociated(bitsPerElements, ref, dataType);
+  return pimSim::get()->pimAllocAssociated(bitsPerElements, assocId, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -66,12 +66,18 @@ pimFree(PimObjId obj)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Create a obj referencing to a range of an existing obj
+//! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd)
+pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
 {
-  bool ok = false;
-  return ok ? PIM_OK : PIM_ERROR;
+  return pimSim::get()->pimCreateRangedRef(refId, idxBegin, idxEnd);
+}
+
+//! @brief  Create an obj referencing to negation of an existing obj based on dual-contact memory cells
+PimObjId
+pimCreateDualContactRef(PimObjId refId)
+{
+  return pimSim::get()->pimCreateDualContactRef(refId);
 }
 
 //! @brief  Copy data from main to PIM device
@@ -431,6 +437,28 @@ PimStatus
 pimOpRotateLH(PimObjId objId, PimRowReg src)
 {
   bool ok = pimSim::get()->pimOpRotateLH(objId, src);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+// @brief  SIMDRAM: AP operation
+PimStatus
+pimOpAP(int numSrc, ...)
+{
+  va_list args;
+  va_start(args, numSrc);
+  bool ok = pimSim::get()->pimOpAP(numSrc, args);
+  va_end(args);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+// @brief  SIMDRAM: AAP operation
+PimStatus
+pimOpAAP(int numSrc, int numDest, ...)
+{
+  va_list args;
+  va_start(args, numDest);
+  bool ok = pimSim::get()->pimOpAAP(numSrc, numDest, args);
+  va_end(args);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
