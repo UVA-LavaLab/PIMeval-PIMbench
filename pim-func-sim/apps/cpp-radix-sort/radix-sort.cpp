@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     //array used to check result
     std::vector<int> sorted_array(numElements);
     //counting table in host
-    std::vector<int> count_table(radix);
+    std::vector<int64_t> count_table(radix);
     
     //Assign random initial values to the input array
     getVector(numElements, src1);

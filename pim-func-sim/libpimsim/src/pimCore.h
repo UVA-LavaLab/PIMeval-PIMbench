@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <cassert>
+#include <cstdint>
 
 
 //! @class  pimCore
@@ -26,14 +27,14 @@ public:
 
   // Row-based operations
   bool readRow(unsigned rowIndex);
-  bool readTripleRows(unsigned rowIndex1, unsigned rowIndex2, unsigned rowIndex3);
   bool writeRow(unsigned rowIndex);
   std::vector<bool>& getSenseAmpRow() { return m_rowRegs[PIM_RREG_SA]; }
   bool setSenseAmpRow(const std::vector<bool>& vals);
+  bool readMultiRows(const std::vector<std::pair<unsigned, bool>>& rowIdxs);
+  bool writeMultiRows(const std::vector<std::pair<unsigned, bool>>& rowIdxs);
 
   // Column-based operations
   bool readCol(unsigned colIndex);
-  bool readTripleCols(unsigned colIndex1, unsigned colIndex2, unsigned colIndex3);
   bool writeCol(unsigned colIndex);
   std::vector<bool>& getSenseAmpCol() { return m_senseAmpCol; }
   bool setSenseAmpCol(const std::vector<bool>& vals);
@@ -57,39 +58,43 @@ public:
     assert(rowIdx < m_numRows && colIdx < m_numCols);
     return m_array[rowIdx][colIdx];
   }
-  //! @brief  Directly set 32 bits for V-layout functional simulation
-  inline void setB32V(unsigned rowIdx, unsigned colIdx, unsigned val) {
-    assert(rowIdx + 31 < m_numRows && colIdx < m_numCols);
-    for (int i = 0; i < 32; ++i) {
+  //! @brief  Directly set #numBits bits for V-layout functional simulation
+  inline void setBitsV(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx + (numBits - 1) < m_numRows && colIdx < m_numCols);
+    for (unsigned i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx + i, colIdx, bitVal);
       val = val >> 1;
     }
   }
-  //! @brief  Directly get 32 bits for V-layout functional simulation
-  inline unsigned getB32V(unsigned rowIdx, unsigned colIdx) const {
-    assert(rowIdx + 31 < m_numRows && colIdx < m_numCols);
-    unsigned val = 0;
-    for (int i = 31; i >= 0; --i) {
+  //! @brief  Directly get #numBits bits for V-layout functional simulation
+  inline uint64_t getBitsV(unsigned rowIdx, unsigned colIdx, unsigned numBits) const {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx + (numBits - 1) < m_numRows && colIdx < m_numCols);
+    uint64_t val = 0;
+    for (int i = (numBits - 1); i >= 0; --i) {
       bool bitVal = getBit(rowIdx + i, colIdx);
       val = (val << 1) | bitVal;
     }
     return val;
   }
-  //! @brief  Directly set 32 bits for H-layout functional simulation
-  inline void setB32H(unsigned rowIdx, unsigned colIdx, unsigned val) {
-    assert(rowIdx < m_numRows && colIdx + 31 < m_numCols);
-    for (int i = 0; i < 32; ++i) {
+  //! @brief  Directly set #numBits bits for H-layout functional simulation
+  inline void setBitsH(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx < m_numRows && colIdx + (numBits - 1) < m_numCols);
+    for (unsigned i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx, colIdx + i, bitVal);
       val = val >> 1;
     }
   }
-  //! @brief  Directly get 32 bits for H-layout functional simulation
-  inline unsigned getB32H(unsigned rowIdx, unsigned colIdx) const {
-    assert(rowIdx < m_numRows && colIdx + 31 < m_numCols);
-    unsigned val = 0;
-    for (int i = 31; i >= 0; --i) {
+  //! @brief  Directly get #numBits bits for H-layout functional simulation
+  inline uint64_t getBitsH(unsigned rowIdx, unsigned colIdx, unsigned numBits) const {
+    assert(numBits > 0 && numBits <= 64);
+    assert(rowIdx < m_numRows && colIdx + (numBits - 1) < m_numCols);
+    uint64_t val = 0;
+    for (int i = (numBits - 1); i >= 0; --i) {
       bool bitVal = getBit(rowIdx, colIdx + i);
       val = (val << 1) | bitVal;
     }

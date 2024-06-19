@@ -75,7 +75,7 @@ int main()
 
   int min_diff = INT_MAX;
   int min_idx = -1;
-  int sum_abs_diff;
+  int64_t sum_abs_diff;
 
   for (int idx = 0; idx < subvectorLength; idx++) {
     status = pimSub(obj1, obj2, obj3);
@@ -104,7 +104,7 @@ int main()
       }
     }
 
-    status = pimRotateR(obj2);
+    status = pimRotateElementsRight(obj2);
     if (status != PIM_OK) {
       std::cout << "Abort" << std::endl;
       return 1;

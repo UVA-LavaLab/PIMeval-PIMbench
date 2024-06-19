@@ -9,11 +9,11 @@
 
 bool createPimDevice()
 {
-  unsigned numCores = 4;
+  unsigned numSubarrayPerBank = 8;
   unsigned numRows = 128;
   unsigned numCols = 256;
 
-  PimStatus status = pimCreateDevice(PIM_DEVICE_BITSIMD_V, 1, 1, numCores, numRows, numCols);
+  PimStatus status = pimCreateDevice(PIM_DEVICE_BITSIMD_V, 1, 1, numSubarrayPerBank, numRows, numCols);
   assert(status == PIM_OK);
   return true;
 }

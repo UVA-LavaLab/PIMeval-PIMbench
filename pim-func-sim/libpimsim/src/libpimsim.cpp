@@ -37,6 +37,13 @@ pimShowStats()
   pimSim::get()->showStats();
 }
 
+//! @brief  Reset PIM command stats
+void
+pimResetStats()
+{
+  pimSim::get()->resetStats();
+}
+
 //! @brief  Allocate a PIM resource
 PimObjId
 pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType)
@@ -46,9 +53,9 @@ pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements,
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(unsigned bitsPerElements, PimObjId ref, PimDataType dataType)
+pimAllocAssociated(unsigned bitsPerElements, PimObjId assocId, PimDataType dataType)
 {
-  return pimSim::get()->pimAllocAssociated(bitsPerElements, ref, dataType);
+  return pimSim::get()->pimAllocAssociated(bitsPerElements, assocId, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -59,12 +66,18 @@ pimFree(PimObjId obj)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Create a obj referencing to a range of an existing obj
+//! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimRangedRef(PimObjId ref, unsigned idxBegin, unsigned idxEnd)
+pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
 {
-  bool ok = false;
-  return ok ? PIM_OK : PIM_ERROR;
+  return pimSim::get()->pimCreateRangedRef(refId, idxBegin, idxEnd);
+}
+
+//! @brief  Create an obj referencing to negation of an existing obj based on dual-contact memory cells
+PimObjId
+pimCreateDualContactRef(PimObjId refId)
+{
+  return pimSim::get()->pimCreateDualContactRef(refId);
 }
 
 //! @brief  Copy data from main to PIM device
@@ -99,9 +112,17 @@ pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Copy data from PIM device to device
+PimStatus
+pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCopyDeviceToDevice(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Load vector with a scalar value
 PimStatus
-pimBroadcast(PimObjId dest, unsigned value)
+pimBroadcast(PimObjId dest, int64_t value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -229,7 +250,7 @@ pimPopCount(PimObjId src, PimObjId dest)
 
 //! @brief  PIM reduction sum. Result returned to a host variable
 PimStatus
-pimRedSum(PimObjId src, int* sum)
+pimRedSum(PimObjId src, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -237,7 +258,7 @@ pimRedSum(PimObjId src, int* sum)
 
 //! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
 PimStatus
-pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
+pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -245,36 +266,51 @@ pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
 
 //! @brief  Rotate all elements of an obj by one step to the right
 PimStatus
-pimRotateR(PimObjId src)
+pimRotateElementsRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateR(src);
+  bool ok = pimSim::get()->pimRotateElementsRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Rotate all elements of an obj by one step to the left
 PimStatus
-pimRotateL(PimObjId src)
+pimRotateElementsLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimRotateL(src);
+  bool ok = pimSim::get()->pimRotateElementsLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the right and fill zero
 PimStatus
-pimShiftR(PimObjId src)
+pimShiftElementsRight(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftR(src);
+  bool ok = pimSim::get()->pimShiftElementsRight(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the left and fill zero
 PimStatus
-pimShiftL(PimObjId src)
+pimShiftElementsLeft(PimObjId src)
 {
-  bool ok = pimSim::get()->pimShiftL(src);
+  bool ok = pimSim::get()->pimShiftElementsLeft(src);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Shift bits of each elements of an obj by shiftAmount to the right. This currently implements arithmetic shift.
+PimStatus
+pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  bool ok = pimSim::get()->pimShiftBitsRight(src, dest, shiftAmount);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Shift bits of each elements of an obj by shiftAmount to the left.
+PimStatus
+pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
+{
+  bool ok = pimSim::get()->pimShiftBitsLeft(src, dest, shiftAmount);
+  return ok ? PIM_OK : PIM_ERROR;
+}
 
 //! @brief  BitSIMD-V: Read a row to SA
 PimStatus
@@ -401,6 +437,28 @@ PimStatus
 pimOpRotateLH(PimObjId objId, PimRowReg src)
 {
   bool ok = pimSim::get()->pimOpRotateLH(objId, src);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+// @brief  SIMDRAM: AP operation
+PimStatus
+pimOpAP(int numSrc, ...)
+{
+  va_list args;
+  va_start(args, numSrc);
+  bool ok = pimSim::get()->pimOpAP(numSrc, args);
+  va_end(args);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+// @brief  SIMDRAM: AAP operation
+PimStatus
+pimOpAAP(int numSrc, int numDest, ...)
+{
+  va_list args;
+  va_start(args, numDest);
+  bool ok = pimSim::get()->pimOpAAP(numSrc, numDest, args);
+  va_end(args);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

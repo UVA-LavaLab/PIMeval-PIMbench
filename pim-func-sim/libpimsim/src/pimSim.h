@@ -11,6 +11,7 @@
 #include "pimParamsPerf.h"
 #include "pimStats.h"
 #include <vector>
+#include <cstdarg>
 
 
 //! @class  pimSim
@@ -39,6 +40,7 @@ public:
   unsigned getNumCols() const;
 
   void showStats() const;
+  void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
   pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
@@ -47,14 +49,17 @@ public:
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId obj);
+  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateDualContactRef(PimObjId refId);
 
   // Data transfer
   bool pimCopyMainToDevice(void* src, PimObjId dest);
   bool pimCopyDeviceToMain(PimObjId src, void* dest);
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -72,13 +77,15 @@ public:
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  bool pimRedSum(PimObjId src, int* sum);
-  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum);
+  bool pimRedSum(PimObjId src, int64_t* sum);
+  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
   bool pimBroadcast(PimObjId dest, unsigned value);
-  bool pimRotateR(PimObjId src);
-  bool pimRotateL(PimObjId src);
-  bool pimShiftR(PimObjId src);
-  bool pimShiftL(PimObjId src);
+  bool pimRotateElementsRight(PimObjId src);
+  bool pimRotateElementsLeft(PimObjId src);
+  bool pimShiftElementsRight(PimObjId src);
+  bool pimShiftElementsLeft(PimObjId src);
+  bool pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
+  bool pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
   // BitSIMD-V micro ops
   bool pimOpReadRowToSa(PimObjId src, unsigned ofst);
@@ -97,6 +104,10 @@ public:
   bool pimOpSel(PimObjId objId, PimRowReg cond, PimRowReg src1, PimRowReg src2, PimRowReg dest);
   bool pimOpRotateRH(PimObjId objId, PimRowReg src);
   bool pimOpRotateLH(PimObjId objId, PimRowReg src);
+
+  // SIMDRAM micro ops
+  bool pimOpAP(int numSrc, va_list args);
+  bool pimOpAAP(int numSrc, int numDest, va_list args);
 
 private:
   pimSim();

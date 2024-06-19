@@ -75,7 +75,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::vector<int> &Y, int &SX, int &SY, int &SXX, int &SXY, int &SYY)
+void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::vector<int> &Y, int64_t &SX, int64_t &SY, int64_t &SXX, int64_t &SXY, int64_t &SYY)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
 
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
   if (!createDevice(params.configFile))
     return 1;
 
-  int SX_device = 0, SY_device = 0, SXX_device = 0, SYY_device = 0, SXY_device = 0;
+  int64_t SX_device = 0, SY_device = 0, SXX_device = 0, SYY_device = 0, SXY_device = 0;
 
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
   linearRegression(params.dataSize, dataPointsX, dataPointsY, SX_device, SY_device, SXX_device, SXY_device, SYY_device);

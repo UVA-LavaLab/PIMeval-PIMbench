@@ -75,44 +75,62 @@ pimCore::readCol(unsigned colIndex)
   return true;
 }
 
-//! @brief  Read triple rows. Original contents of the three rows are replaced with majority values.
+//! @brief  Read multiple rows to SA. Original contents of these rows are replaced with majority values.
+//!         Input parameters: A list of (row-index, is-dual-contact-negated)
 bool
-pimCore::readTripleRows(unsigned rowIndex1, unsigned rowIndex2, unsigned rowIndex3)
+pimCore::readMultiRows(const std::vector<std::pair<unsigned, bool>>& rowIdxs)
 {
-  if (rowIndex1 >= m_numRows || rowIndex2 >= m_numRows || rowIndex3 >= m_numRows) {
-    std::printf("PIM-Error: Out-of-boundary subarray triple-row read: indices = (%u, %u, %u), numRows = %u\n", rowIndex1, rowIndex2, rowIndex3, m_numRows);
+  // sanity check
+  if (rowIdxs.size() % 2 == 0) {
+    std::printf("PIM-Error: Behavior of simultaneously reading even number of rows is undefined\n");
     return false;
   }
+  for (const auto& kv : rowIdxs) {
+    if (kv.first >= m_numRows) {
+      std::printf("PIM-Error: Out-of-boundary subarray multi-row read: idx = %u, numRows = %u\n", kv.first, m_numRows);
+      return false;
+    }
+  }
+  // compute majority
   for (unsigned col = 0; col < m_numCols; ++col) {
-    bool val1 = m_array[rowIndex1][col];
-    bool val2 = m_array[rowIndex2][col];
-    bool val3 = m_array[rowIndex3][col];
-    bool maj = (val1 && val2) || (val1 && val3) || (val2 && val3);
-    m_array[rowIndex1][col] = maj;
-    m_array[rowIndex2][col] = maj;
-    m_array[rowIndex3][col] = maj;
+    unsigned sum = 0;
+    for (const auto& kv : rowIdxs) {
+      unsigned idx = kv.first;
+      bool isDCCN = kv.second;
+      bool val = (isDCCN ? !m_array[idx][col] : m_array[idx][col]);
+      sum += val ? 1 : 0;
+    }
+    bool maj = (sum > rowIdxs.size() / 2);
+    for (const auto& kv : rowIdxs) {
+      unsigned idx = kv.first;
+      bool isDCCN = kv.second;
+      m_array[idx][col] = (isDCCN ? !maj : maj);
+    }
     m_rowRegs[PIM_RREG_SA][col] = maj;
   }
   return true;
 }
 
-//! @brief  Read triple columns. Original contents of the three columns are replaced with majority values.
+//! @brief  Write multiple rows. All rows are written with same values from SA.
+//!         Input parameters: A list of (row-index, is-dual-contact-negated)
 bool
-pimCore::readTripleCols(unsigned colIndex1, unsigned colIndex2, unsigned colIndex3)
+pimCore::writeMultiRows(const std::vector<std::pair<unsigned, bool>>& rowIdxs)
 {
-  if (colIndex1 >= m_numCols || colIndex2 >= m_numCols || colIndex3 >= m_numCols) {
-    std::printf("PIM-Error: Out-of-boundary subarray triple-col read: indices = (%u, %u, %u), numCols = %u\n", colIndex1, colIndex2, colIndex3, m_numCols);
-    return false;
+  // sanity check
+  for (const auto& kv : rowIdxs) {
+    if (kv.first >= m_numRows) {
+      std::printf("PIM-Error: Out-of-boundary subarray multi-row read: idx = %u, numRows = %u\n", kv.first, m_numRows);
+      return false;
+    }
   }
-  for (unsigned row = 0; row < m_numRows; ++row) {
-    bool val1 = m_array[colIndex1][row];
-    bool val2 = m_array[colIndex2][row];
-    bool val3 = m_array[colIndex3][row];
-    bool maj = (val1 && val2) || (val1 && val3) || (val2 && val3);
-    m_array[colIndex1][row] = maj;
-    m_array[colIndex2][row] = maj;
-    m_array[colIndex3][row] = maj;
-    m_senseAmpCol[row] = maj;
+  // write
+  for (unsigned col = 0; col < m_numCols; ++col) {
+    bool val = m_rowRegs[PIM_RREG_SA][col];
+    for (const auto& kv : rowIdxs) {
+      unsigned idx = kv.first;
+      bool isDCCN = kv.second;
+      m_array[idx][col] = (isDCCN ? !val :val);
+    }
   }
   return true;
 }
