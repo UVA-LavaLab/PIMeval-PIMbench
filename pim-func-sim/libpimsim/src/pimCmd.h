@@ -68,6 +68,9 @@ enum class PimCmdEnum {
   RREG_SEL,
   RREG_ROTATE_R,
   RREG_ROTATE_L,
+  // SIMDRAM
+  ROW_AP,
+  ROW_AAP,
 };
 
 
@@ -158,7 +161,7 @@ protected:
     }
     return operandValue;
   }
-  
+
   PimCmdEnum m_cmdType;
   pimDevice* m_device = nullptr;
 
@@ -382,6 +385,25 @@ protected:
   PimRowReg m_dest;
 };
 
+//! @class  pimCmdAnalogAAP
+//! @brief  Pim CMD: SIMDRAM: Analog based multi-row AP (activate-precharge) or AAP (activate-activate-precharge)
+class pimCmdAnalogAAP : public pimCmd
+{
+public:
+  pimCmdAnalogAAP(PimCmdEnum cmdType,
+                  const std::vector<std::pair<PimObjId, unsigned>>& srcRows,
+                  const std::vector<std::pair<PimObjId, unsigned>>& destRows = {})
+    : pimCmd(cmdType), m_srcRows(srcRows), m_destRows(destRows)
+  {
+    assert(cmdType == PimCmdEnum::ROW_AP || cmdType == PimCmdEnum::ROW_AAP);
+  }
+  virtual ~pimCmdAnalogAAP() {}
+  virtual bool execute() override;
+protected:
+  void printDebugInfo() const;
+  std::vector<std::pair<PimObjId, unsigned>> m_srcRows;
+  std::vector<std::pair<PimObjId, unsigned>> m_destRows;
+};
 
 #endif
 
