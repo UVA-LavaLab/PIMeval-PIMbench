@@ -232,6 +232,13 @@ pimSim::showStats() const
   m_statsMgr->showStats();
 }
 
+//! @brief  Reset PIM command stats
+void
+pimSim::resetStats() const
+{
+  m_statsMgr->resetStats();
+}
+
 //! @brief  Allocate a PIM object
 PimObjId
 pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)

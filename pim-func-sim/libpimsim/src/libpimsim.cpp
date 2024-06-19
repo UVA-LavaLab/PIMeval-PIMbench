@@ -37,6 +37,13 @@ pimShowStats()
   pimSim::get()->showStats();
 }
 
+//! @brief  Reset PIM command stats
+void
+pimResetStats()
+{
+  pimSim::get()->resetStats();
+}
+
 //! @brief  Allocate a PIM resource
 PimObjId
 pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType)
