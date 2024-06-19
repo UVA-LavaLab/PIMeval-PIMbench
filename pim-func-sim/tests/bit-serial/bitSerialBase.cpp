@@ -185,4 +185,3 @@ bitSerialBase::testInt32()
 
   return ok;
 }
-

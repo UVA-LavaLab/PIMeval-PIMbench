@@ -3,6 +3,7 @@
 
 #include "bitSerialBitsimd.h"
 #include <iostream>
+#include <cassert>
 
 void
 bitSerialBitsimd::bitSerialIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)

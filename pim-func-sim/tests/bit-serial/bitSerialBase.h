@@ -6,6 +6,7 @@
 
 #include "libpimsim.h"
 #include <vector>
+#include <cassert>
 
 //! @class  bitSerialBase
 //! @brief  Bit-serial perf base class
