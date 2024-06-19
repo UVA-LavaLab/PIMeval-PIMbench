@@ -4,6 +4,7 @@
 
 #include "pimParamsPerf.h"
 #include "pimSim.h"
+#include <cstdio>
 
 
 //! @brief  pimParamsPerf ctor
@@ -120,6 +121,9 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
       default:
         assert(0);
       }
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
@@ -152,6 +156,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_SIMDRAM:
   {
     // todo
+    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
     msRuntime *= numPass;
     break;
   }
@@ -217,6 +222,9 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
       default:
         assert(0);
       }
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
     } else if (dataType == PIM_FP32) {
       switch (cmdType) {
       case PimCmdEnum::ADD: msRuntime = 1331 * m_tR + 685 * m_tW + 1687 * m_tL; break;
@@ -270,6 +278,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_SIMDRAM:
   {
     // todo
+    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
     msRuntime *= numPass;
     break;
   }
@@ -323,12 +332,16 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
       msRuntime *= numPass;
       // reduction for all regions
       msRuntime += static_cast<double>(numRegions) / 3200000;
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
     break;
   case PIM_DEVICE_SIMDRAM:
     // todo
+    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
     break;
   case PIM_DEVICE_BITSIMD_H:
     // Sequentially process all elements per CPU cycle
