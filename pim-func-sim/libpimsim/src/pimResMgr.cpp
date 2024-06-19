@@ -35,8 +35,8 @@ pimObjInfo::print() const
   #endif
 }
 
-std::string 
-pimObjInfo::getDataTypeName() const 
+std::string
+pimObjInfo::getDataTypeName() const
 {
   switch (m_dataType)
   {
@@ -298,6 +298,7 @@ pimResMgr::pimCreateDualContactRef(PimObjId refId)
   newObj.setRefObjId(refObj.getObjId());
   m_refMap[refObj.getObjId()].insert(objId);
   newObj.setIsDualContactRef(true);
+  m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
 
   return objId;
 }

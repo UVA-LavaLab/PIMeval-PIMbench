@@ -37,7 +37,7 @@ extern "C" {
   enum PimAllocEnum {
     PIM_ALLOC_AUTO = 0, // Auto determine vertical or horizontal layout based on device type
     PIM_ALLOC_V,        // V layout, multiple regions per core
-    PIM_ALLOC_H,        // H layout, multiple regions per core 
+    PIM_ALLOC_H,        // H layout, multiple regions per core
     PIM_ALLOC_V1,       // V layout, at most 1 region per core
     PIM_ALLOC_H1,       // H layout, at most 1 region per core
   };
@@ -104,6 +104,8 @@ extern "C" {
   PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
   PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+  // BitSIMD micro ops
+  // Note: Below APIs are for low-level micro-ops programming but not for functional simulation
   // BitSIMD-V: Row-wide bit registers per subarray
   enum PimRowReg {
     PIM_RREG_NONE = 0,
@@ -140,16 +142,18 @@ extern "C" {
   //   - Example: pimOpAP(3, T0, 0, T1, 0, T2, 0) // T0, T1, T2 = MAJ(T0, T1, T2)
   // AAP:
   //   - Functionality: {srcRows, destRows} = MAJ(srcRows)
-  //   - Action: Activate srcRows simultaneously, copy result to all destRows, followed by a precharge 
-  //   - Example: pimOpAAP(2, 1, T0, 0, T3, 0, DCC0N, 0) // T0, T3 = DCC0N
+  //   - Action: Activate srcRows simultaneously, copy result to all destRows, followed by a precharge
+  //   - Example: pimOpAAP(1, 2, DCC0N, 0, T0, 0, T3, 0) // T0, T3 = DCC0N
   // Requirements:
   //   - numSrc must be odd (1 or 3) to perform MAJ operation
   //   - Number of var args must be 2*numSrc for AP and 2*(numDest+numSrc) for AAP
-  //   - Var args must be a list of (PimObjId, int ofst) pairs
+  //   - Var args must be a list of (PimObjId, unsigned ofst) pairs
+  // Dual contact ref:
+  //   - Warning: Dual contact ref is only supported by pimCopy/AP/AAP for now
   PimObjId pimCreateDualContactRef(PimObjId refId);
   PimStatus pimOpAP(int numSrc, ...);
-  PimStatus pimOpAAP(int numDest, int numSrc, ...);
-  
+  PimStatus pimOpAAP(int numSrc, int numDest, ...);
+
 #ifdef __cplusplus
 }
 #endif

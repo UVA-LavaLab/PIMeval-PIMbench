@@ -34,6 +34,7 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
+  case PIM_DEVICE_SIMDRAM:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_FULCRUM:
     std::printf("PIM-Info: Aggregate every two subarrays as a single core\n");

@@ -11,6 +11,7 @@
 #include "pimParamsPerf.h"
 #include "pimStats.h"
 #include <vector>
+#include <cstdarg>
 
 
 //! @class  pimSim
@@ -105,8 +106,8 @@ public:
   bool pimOpRotateLH(PimObjId objId, PimRowReg src);
 
   // SIMDRAM micro ops
-  bool pimOpAP(int numSrc, ...);
-  bool pimOpAAP(int numDest, int numSrc, ...);
+  bool pimOpAP(int numSrc, va_list args);
+  bool pimOpAAP(int numSrc, int numDest, va_list args);
 
 private:
   pimSim();

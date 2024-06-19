@@ -446,24 +446,19 @@ pimOpAP(int numSrc, ...)
 {
   va_list args;
   va_start(args, numSrc);
-  va_list args_copy;
-  va_copy(args_copy, args);
-  bool ok = pimSim::get()->pimOpAP(numSrc, args_copy);
-  va_end(args_copy);
+  bool ok = pimSim::get()->pimOpAP(numSrc, args);
   va_end(args);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 // @brief  SIMDRAM: AAP operation
 PimStatus
-pimOpAAP(int numDest, int numSrc, ...)
+pimOpAAP(int numSrc, int numDest, ...)
 {
   va_list args;
-  va_start(args, numSrc);
-  va_list args_copy;
-  va_copy(args_copy, args);
-  bool ok = pimSim::get()->pimOpAAP(numDest, numSrc, args_copy);
-  va_end(args_copy);
+  va_start(args, numDest);
+  bool ok = pimSim::get()->pimOpAAP(numSrc, numDest, args);
   va_end(args);
   return ok ? PIM_OK : PIM_ERROR;
 }
+

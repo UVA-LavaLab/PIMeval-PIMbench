@@ -706,15 +706,42 @@ pimSim::pimOpRotateLH(PimObjId objId, PimRowReg src)
 }
 
 bool
-pimSim::pimOpAP(int numSrc, ...)
+pimSim::pimOpAP(int numSrc, va_list args)
 {
   pimPerfMon perfMon("pimOpAP");
-  return false;
+  if (!isValidDevice()) { return false; }
+
+  std::vector<std::pair<PimObjId, unsigned>> srcRows;
+  for (int i = 0; i < numSrc; ++i) {
+    PimObjId objId = va_arg(args, PimObjId);
+    unsigned ofst = va_arg(args, unsigned);
+    srcRows.emplace_back(objId, ofst);
+  }
+
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AP, srcRows);
+  return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimOpAAP(int numDest, int numSrc, ...)
+pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
 {
   pimPerfMon perfMon("pimOpAAP");
-  return false;
+  if (!isValidDevice()) { return false; }
+
+  std::vector<std::pair<PimObjId, unsigned>> srcRows;
+  for (int i = 0; i < numSrc; ++i) {
+    PimObjId objId = va_arg(args, PimObjId);
+    int ofst = va_arg(args, unsigned);
+    srcRows.emplace_back(objId, ofst);
+  }
+  std::vector<std::pair<PimObjId, unsigned>> destRows;
+  for (int i = 0; i < numDest; ++i) {
+    PimObjId objId = va_arg(args, PimObjId);
+    int ofst = va_arg(args, unsigned);
+    destRows.emplace_back(objId, ofst);
+  }
+
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AAP, srcRows, destRows);
+  return m_device->executeCmd(std::move(cmd));
 }
+

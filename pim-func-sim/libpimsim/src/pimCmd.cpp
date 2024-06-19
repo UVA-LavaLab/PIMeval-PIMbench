@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cmath>
 #include <unordered_map>
+#include <unordered_set>
 
 
 //! @brief  Get PIM command name from command type enum
@@ -60,6 +61,8 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::RREG_SEL, "rreg.sel" },
     { PimCmdEnum::RREG_ROTATE_R, "rreg.rotate_r" },
     { PimCmdEnum::RREG_ROTATE_L, "rreg.rotate_l" },
+    { PimCmdEnum::ROW_AP, "row_ap" },
+    { PimCmdEnum::ROW_AAP, "row_aap" },
   };
   auto it = cmdNames.find(cmdType);
   return it != cmdNames.end() ? it->second + suffix : "unknown";
@@ -249,12 +252,14 @@ pimCmdCopy::computeRegion(unsigned index)
     unsigned numAllocCols = region.getNumAllocCols();
     PimCoreId coreId = region.getCoreId();
     pimCore& core = m_device->getCore(coreId);
+    bool isDCCN = objSrc.isDualContactRef();
     if (m_copyType == PIM_COPY_V) {
       for (unsigned c = 0; c < numAllocCols; ++c) {
         for (unsigned r = 0; r < numAllocRows; ++r) {
           unsigned row = rowIdx + r;
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
+          if (isDCCN) { val = !val; }
           bits.push_back(val);
         }
       }
@@ -264,6 +269,7 @@ pimCmdCopy::computeRegion(unsigned index)
           unsigned row = rowIdx + r;
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
+          if (isDCCN) { val = !val; }
           bits.push_back(val);
         }
       }
@@ -284,10 +290,12 @@ pimCmdCopy::computeRegion(unsigned index)
     unsigned numAllocCols = region.getNumAllocCols();
     PimCoreId coreId = region.getCoreId();
     pimCore& core = m_device->getCore(coreId);
+    bool isDCCN = objDest.isDualContactRef();
     if (m_copyType == PIM_COPY_V) {
       size_t bitIdx = 0;
       for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
         bool val = bits[bitIdx++];
+        if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i % numAllocRows;
         unsigned col = colIdx + i / numAllocRows;
         core.setBit(row, col, val);
@@ -296,6 +304,7 @@ pimCmdCopy::computeRegion(unsigned index)
       size_t bitIdx = 0;
       for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
         bool val = bits[bitIdx++];
+        if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i / numAllocCols;
         unsigned col = colIdx + i % numAllocCols;
         core.setBit(row, col, val);
@@ -1117,5 +1126,110 @@ pimCmdRRegRotate::execute()
   // Update stats
   pimSim::get()->getStatsMgr()->recordCmd(getName(), 0.0);
   return true;
+}
+
+//! @brief  Pim CMD: SIMDRAM: Analog based multi-row AP and AAP
+bool
+pimCmdAnalogAAP::execute()
+{
+  #if defined(DEBUG)
+  printDebugInfo();
+  #endif
+
+  if (m_srcRows.empty()) {
+    return false;
+  }
+
+  pimResMgr* resMgr = m_device->getResMgr();
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_srcRows[0].first);
+
+  // 1st activate: compute majority
+  std::unordered_set<unsigned> visitedRows;
+  for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+    const pimRegion& srcRegion = objSrc.getRegions()[i];
+    PimCoreId coreId = srcRegion.getCoreId();
+    pimCore &core = m_device->getCore(coreId);
+
+    std::vector<std::pair<unsigned, bool>> rowIdxs;
+    for (const auto& objOfst : m_srcRows) {
+      if (!isValidObjId(resMgr, objOfst.first)) {
+        return false;
+      }
+      const pimObjInfo& obj = resMgr->getObjInfo(objOfst.first);
+      if (!isAssociated(objSrc, obj)) {
+        return false;
+      }
+      unsigned ofst = objOfst.second;
+      unsigned idx = obj.getRegions()[i].getRowIdx() + ofst;
+      bool isDCCN = obj.isDualContactRef();
+      rowIdxs.emplace_back(idx, isDCCN);
+      if (i == 0) { // sanity check
+        if (visitedRows.find(idx) == visitedRows.end()) {
+          visitedRows.insert(idx);
+        } else {
+          std::printf("PIM-Error: Cannot access same src row multiple times during AP/AAP\n");
+          return false;
+        }
+      }
+    }
+    core.readMultiRows(rowIdxs);
+  }
+
+  // 2nd activate: write multiple rows
+  if (!m_destRows.empty()) {
+    for (unsigned i = 0; i < objSrc.getRegions().size(); ++i) {
+      const pimRegion& srcRegion = objSrc.getRegions()[i];
+      PimCoreId coreId = srcRegion.getCoreId();
+      pimCore &core = m_device->getCore(coreId);
+
+      std::vector<std::pair<unsigned, bool>> rowIdxs;
+      for (const auto& objOfst : m_destRows) {
+        if (!isValidObjId(resMgr, objOfst.first)) {
+          return false;
+        }
+        const pimObjInfo& obj = resMgr->getObjInfo(objOfst.first);
+        if (!isAssociated(objSrc, obj)) {
+          return false;
+        }
+        unsigned ofst = objOfst.second;
+        unsigned idx = obj.getRegions()[i].getRowIdx() + ofst;
+        bool isDCCN = obj.isDualContactRef();
+        rowIdxs.emplace_back(idx, isDCCN);
+        if (i == 0) { // sanity check
+          if (visitedRows.find(idx) == visitedRows.end()) {
+            visitedRows.insert(idx);
+          } else {
+            std::printf("PIM-Error: Cannot access same src/dest row multiple times during AP/AAP\n");
+            return false;
+          }
+        }
+      }
+      core.writeMultiRows(rowIdxs);
+    }
+  }
+
+  // Update stats
+  std::string cmdName = getName();
+  cmdName += "@" + std::to_string(m_srcRows.size()) + "," + std::to_string(m_destRows.size());
+  pimSim::get()->getStatsMgr()->recordCmd(cmdName, 0.0);
+  return true;
+}
+
+//! @brief  Pim CMD: SIMDRAM: AP/AAP debug info
+void
+pimCmdAnalogAAP::printDebugInfo() const
+{
+  std::string msg;
+  for (const auto &kv : m_srcRows) {
+    msg += " " + std::to_string(kv.first) + "[" + std::to_string(kv.second) + "]";
+  }
+  if (!m_destRows.empty()) {
+    msg += " ->";
+  }
+  for (const auto &kv : m_destRows) {
+    msg += " " + std::to_string(kv.first) + "[" + std::to_string(kv.second) + "]";
+  }
+  std::printf("PIM-Info: %s (#src = %lu, #dest = %lu, rows =%s)\n",
+              getName().c_str(), m_srcRows.size(), m_destRows.size(), msg.c_str());
 }
 
