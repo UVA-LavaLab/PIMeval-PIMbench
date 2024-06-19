@@ -490,7 +490,7 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 }
 
 bool
-pimSim::pimRedSum(PimObjId src, int* sum)
+pimSim::pimRedSum(PimObjId src, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
@@ -500,7 +500,7 @@ pimSim::pimRedSum(PimObjId src, int* sum)
 }
 
 bool
-pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
+pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }

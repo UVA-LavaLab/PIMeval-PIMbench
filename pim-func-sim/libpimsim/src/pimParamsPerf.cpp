@@ -159,11 +159,13 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    double numberOfALUOperation = 1;
+    unsigned bitsPerElement = obj.getBitsPerElement();
+    unsigned aluBits = 32; // 32-bit ALU
+    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
     if (cmdType == PimCmdEnum::POPCOUNT) {
-      numberOfALUOperation = 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+      numberOfALUOperationPerCycle *= 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
     }
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperation;
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle;
     msRuntime *= numPass;
     break;
   }
@@ -172,7 +174,10 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
     unsigned numALU = 2;
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency / numALU;
+    unsigned bitsPerElement = obj.getBitsPerElement();
+    unsigned aluBits = 32; // 32-bit ALU
+    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle / numALU;
     msRuntime *= numPass;
     break;
   }
@@ -272,7 +277,10 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency;
+    unsigned bitsPerElement = obj.getBitsPerElement();
+    unsigned aluBits = 32; // 32-bit ALU
+    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
     msRuntime *= numPass;
     break;
   }
@@ -281,7 +289,10 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
     unsigned numALU = 2;
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency / numALU;
+    unsigned bitsPerElement = obj.getBitsPerElement();
+    unsigned aluBits = 32; // 32-bit ALU
+    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle / numALU;
     msRuntime *= numPass;
     break;
   }
