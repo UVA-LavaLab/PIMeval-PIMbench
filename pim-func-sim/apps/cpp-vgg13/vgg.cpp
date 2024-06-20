@@ -75,7 +75,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   {
     for (int j = 0; j < filterMatrix[i].size(); ++j)
     {
-      PimStatus status = pimBroadcast(filterObjects[idx], filterMatrix[i][j]);
+      PimStatus status = pimBroadcastSignedInt(filterObjects[idx], filterMatrix[i][j]);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -436,7 +436,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  PimStatus status = pimBroadcast(dstObj, 0);
+  PimStatus status = pimBroadcastSignedInt(dstObj, 0);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -452,7 +452,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimBroadcast(srcObj2, srcVector[i]);
+    status = pimBroadcastSignedInt(srcObj2, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;

@@ -122,7 +122,7 @@ pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
 
 //! @brief  Load vector with a scalar value
 PimStatus
-pimBroadcast(PimObjId dest, int64_t value)
+pimBroadcastSignedInt(PimObjId dest, int64_t value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -258,7 +258,7 @@ pimRedSumSignedInt(PimObjId src, int64_t* sum)
 
 //! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
 PimStatus
-pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
+pimRedSumRangedSignedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;
