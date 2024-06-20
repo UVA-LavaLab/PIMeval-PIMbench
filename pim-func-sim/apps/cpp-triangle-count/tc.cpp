@@ -191,8 +191,6 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    cout << "src1 size: " << src1.size() << endl;
-
     PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
     if (status != PIM_OK)
     {
@@ -368,9 +366,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 src2.clear();
                 dst.clear();
                 count += sum;
-                cout << "src1Size: " << src1.size() << ", dstSize: " << dst.size() << "popCountSrcSize: " << popCountSrc.size() << endl;
-                cout << "sum: " << sum << ", count: " << count << endl;
-                return -1;// debug
+                // cout << "sum: " << sum << ", count: " << count << endl;
             }
 
         }
