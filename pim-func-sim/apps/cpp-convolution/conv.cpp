@@ -20,7 +20,7 @@ typedef vector<vector<vector<int>>> Image3D;
 typedef struct Params
 {
   int row, column, dim, stride, kernelSize, kernelDim, padding;
-  char *configFile;
+  char *kernelMatrixFile;
   char *inputFile;
   bool shouldVerify;
   bool moreDebugPrints;
