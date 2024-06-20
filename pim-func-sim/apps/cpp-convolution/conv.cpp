@@ -20,8 +20,8 @@ typedef vector<vector<vector<int>>> Image3D;
 typedef struct Params
 {
   int row, column, dim, stride, kernelSize, kernelDim, padding;
-  char *configFile;
-  char *inputFile;
+  char *kernelMatrixFile;
+  char *imageMatrixFile;
   bool shouldVerify;
   bool moreDebugPrints;
 } Params;
@@ -39,8 +39,8 @@ void usage()
           "\n    -z    kernel dimension (default=64)"
           "\n    -v    should verify result with CPU"
           "\n    -p    padding (default = 1)"
-          "\n    -f    input file containing matrices (default=generates matrix with random numbers)"
-          "\n    -i    input file containing matrices (default=generates matrix with random numbers)"
+          "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
+          "\n    -i    input file containing image matrices (default=generates matrix with random numbers)"
 	  "\n    -m    enable more debug prints (default = false)"
           "\n");
 }
@@ -53,8 +53,8 @@ struct Params getInputParams(int argc, char **argv)
   p.dim = 3;
   p.stride = 1;
   p.kernelSize = 3;
-  p.configFile = nullptr;
-  p.inputFile = nullptr;
+  p.kernelMatrixFile = nullptr;
+  p.imageMatrixFile = nullptr;
   p.shouldVerify = false;
   p.kernelDim = 64;
   p.padding = 1;
@@ -91,10 +91,10 @@ struct Params getInputParams(int argc, char **argv)
       p.padding = atoi(optarg);
       break;
     case 'f':
-      p.configFile = optarg;
+      p.kernelMatrixFile = optarg;
       break;
     case 'i':
-      p.inputFile = optarg;
+      p.imageMatrixFile = optarg;
       break;
     case 'v':
       p.shouldVerify = (*optarg == 't') ? true : false;
@@ -327,13 +327,21 @@ int main(int argc, char *argv[])
   std::vector<std::vector<std::vector<int>>> inputMatrix;
   std::vector<std::vector<std::vector<int>>> kernelMatrix;
 
-  if (params.inputFile == nullptr)
+  if (params.imageMatrixFile == nullptr)
   {
     inputMatrix.resize(params.dim);
     for (int i = 0; i < params.dim; i++)
     {
       getMatrix(params.row, params.column, params.padding, inputMatrix[i]);
     }
+  }
+  else
+  {
+    // TODO: read Image Matrix from file
+  }
+
+  if (params.kernelMatrixFile == nullptr)
+  {
     kernelMatrix.resize(params.kernelDim);
     for (auto &mat : kernelMatrix)
     {
@@ -342,10 +350,10 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // TODO: read Matrix from file
+    // TODO: read Kernel Matrix from file
   }
 
-  if (!createDevice(params.configFile))
+  if (!createDevice(params.kernelMatrixFile))
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
