@@ -240,7 +240,7 @@ pimCmdCopy::computeRegion(unsigned index)
     unsigned numAllocCols = region.getNumAllocCols();
     unsigned bitsPerElement = objDest.getBitsPerElement();
     unsigned numElementInCurRegion = numAllocRows * numAllocCols / bitsPerElement;
-    unsigned byteOfst = index * objDest.getMaxElementsPerRegion() * bitsPerElement / 8;
+    unsigned byteOfst = (uint64_t)index * objDest.getMaxElementsPerRegion() * bitsPerElement / 8;
     void* ptr = (void*)((char*)m_ptr + byteOfst);
     bits = pimUtils::readBitsFromHost(ptr, numElementInCurRegion, bitsPerElement);
   } else if (m_cmdType == PimCmdEnum::COPY_D2H || m_cmdType == PimCmdEnum::COPY_D2D) {
@@ -315,7 +315,7 @@ pimCmdCopy::computeRegion(unsigned index)
   } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    unsigned byteOfst = index * objSrc.getMaxElementsPerRegion() * bitsPerElement / 8;
+    unsigned byteOfst = (uint64_t)index * objSrc.getMaxElementsPerRegion() * bitsPerElement / 8;
     void* ptr = (void*)((char*)m_ptr + byteOfst);
     pimUtils::writeBitsToHost(ptr, bits);
   } else {
