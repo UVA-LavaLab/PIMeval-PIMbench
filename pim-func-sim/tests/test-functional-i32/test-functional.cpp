@@ -231,14 +231,14 @@ void testFunctional()
 
   // Test redsum
   {
-    int sum = 0;
-    status = pimRedSum(obj1, &sum);
+    int64_t sumDevice = 0;
+    status = pimRedSum(obj1, &sumDevice);
     assert(status == PIM_OK);
-    int sum2 = 0;
+    int64_t sumHost = 0;
     for (unsigned i = 0; i < numElements; ++i) {
-      sum2 += src1[i];
+      sumHost += src1[i];
     }
-    assert(sum == sum2);
+    assert(sumDevice == sumHost);
     std::cout << "[PASSED] pimRedSum" << std::endl;
   }
 
@@ -246,14 +246,14 @@ void testFunctional()
   {
     unsigned idxBegin = 100;
     unsigned idxEnd = 500;
-    int sum = 0;
-    status = pimRedSumRanged(obj1, idxBegin, idxEnd, &sum);
+    int64_t sumDevice = 0;
+    status = pimRedSumRanged(obj1, idxBegin, idxEnd, &sumDevice);
     assert(status == PIM_OK);
-    int sum2 = 0;
+    int64_t sumHost = 0;
     for (unsigned i = idxBegin; i < idxEnd; ++i) {
-      sum2 += src1[i];
+      sumHost += src1[i];
     }
-    assert(sum == sum2);
+    assert(sumDevice == sumHost);
     std::cout << "[PASSED] pimRedSumRanged" << std::endl;
   }
 

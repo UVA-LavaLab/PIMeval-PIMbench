@@ -214,89 +214,29 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "dev src1: pimCopyDeviceToHost Abort" << std::endl;
         return -1;
     }
-       for (int i = 0; i < numElements; ++i) {
-        if (i > 1000000000 && src1[i] != 0) {
-            cout << "---------------i---------------" << endl;
-            std::bitset<32> src1Bin(src1[i]);
-            std::bitset<32> devSrc1Bin(devSrc1[i]);
-            cout << src1Bin << endl;
-            cout << devSrc1Bin << endl;
-            break;
-        }
-    }// debug
-    return -1;
-    // // status = pimCopyDeviceToHost(srcObj2, (void *)devSrc2.data());
-    // // if (status != PIM_OK)
-    // // {
-    // //     std::cout << "dev src2: pimCopyDeviceToHost Abort" << std::endl;
-    // //     return -1;
-    // // }
-    // return -1;
-    // status = pimAnd(srcObj1, srcObj2, dstObj);
-    // if (status != PIM_OK)
-    // {
-    //     std::cout << "pimAnd Abort" << std::endl;
-    //     return -1;
-    // }
-
-    // // debug
-    // cout << "<<<<<<<<<<<<<<<<<<<and result>>>>>>>>>>>>>>>>>>>";
-    // status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
-    // if (status != PIM_OK)
-    // {
-    //     std::cout << "dst: pimCopyDeviceToHost Abort" << std::endl;
-    //     return -1;
-    // }
-    // int index = 0;
     
-    // for (int i = 0; i < numElements; ++i) {
-    //     if (i > 1000000000 && src1[i] & src2[i] != 0) {
-    //         cout << "---------------i---------------" << endl;
-    //         std::bitset<32> src1Bin(src1[i]);
-    //         std::bitset<32> src2Bin(src2[i]);
-    //         std::bitset<32> dstBin(dst[i]);
-    //         std::bitset<32> devSrc1Bin(devSrc1[i]);
-    //         std::bitset<32> devSrc2Bin(devSrc2[i]);
-    //         cout << src1Bin << endl;
-    //         cout << src2Bin << endl;
-    //         cout << dstBin << endl;
-    //         cout << devSrc1Bin << endl;
-    //         cout << devSrc2Bin << endl;
-    //         index = i;
-    //         break;
-    //     }
-    // }// debug
+    status = pimAnd(srcObj1, srcObj2, dstObj);
+    if (status != PIM_OK)
+    {
+        std::cout << "pimAnd Abort" << std::endl;
+        return -1;
+    }
 
-    // status = pimPopCount(dstObj, popCountSrcObj);
-    // if (status != PIM_OK)
-    // {
-    //     std::cout << "pimPopCount Abort" << std::endl;
-    //     return -1;
-    // }
+    status = pimPopCount(dstObj, popCountSrcObj);
+    if (status != PIM_OK)
+    {
+        std::cout << "pimPopCount Abort" << std::endl;
+        return -1;
+    }
 
-    // vector<unsigned int> popCountDst(numElements);
-    // // debug
-    // status = pimCopyDeviceToHost(popCountSrcObj, (void *)popCountDst.data());
-    // if (status != PIM_OK)
-    // {
-    //     std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
-    //     return -1;
-    // }
-    // cout << "<<<<<<<<<<<<<<<<<<<pop result>>>>>>>>>>>>>>>>>>>";
-    // cout << "i = " << index << endl;
-    // std::bitset<32> dstBin(dst[index]);
-    // std::bitset<32> popCountDstBin(popCountDst[index]);
-    // cout << dstBin << endl;
-    // cout << popCountDstBin << endl;
-    // // debug
 
-    // int sum = 0;
-    // status = pimRedSum(popCountSrcObj, &sum);
-    // if (status != PIM_OK)
-    // {
-    //     std::cout << "pimRedSum Abort" << std::endl;
-    //     return -1;
-    // }
+    int64_t sum = 0;
+    status = pimRedSum(popCountSrcObj, &sum);
+    if (status != PIM_OK)
+    {
+        std::cout << "pimRedSum Abort" << std::endl;
+        return -1;
+    }
 
     // pimFree(srcObj1);
     // pimFree(srcObj2);
