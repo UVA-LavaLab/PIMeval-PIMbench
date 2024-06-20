@@ -11,11 +11,11 @@
 
 //! @brief  Print info of a PIM region
 void
-pimRegion::print() const
+pimRegion::print(uint64_t regionId) const
 {
   #if defined(DEBUG)
-  std::printf("{ PIM-Region: CoreId = %d, Loc = (%u, %u), Size = (%u, %u) }\n",
-              m_coreId, m_rowIdx, m_colIdx, m_numAllocRows, m_numAllocCols);
+  std::printf("{ PIM-Region %lld: CoreId = %d, Loc = (%u, %u), Size = (%u, %u) }\n",
+              regionId, m_coreId, m_rowIdx, m_colIdx, m_numAllocRows, m_numAllocCols);
   #endif
 }
 
@@ -23,13 +23,12 @@ pimRegion::print() const
 void
 pimObjInfo::print() const
 {
-
   #if defined(DEBUG)
   std::printf("----------------------------------------\n");
   std::printf("PIM-Object: ObjId = %d, AllocType = %d, Regions =\n",
               m_objId, static_cast<int>(m_allocType));
-  for (const auto& region : m_regions) {
-    region.print();
+  for (size_t i = 0; i < m_regions.size(); ++i) {
+    m_regions[i].print(i);
   }
   std::printf("----------------------------------------\n");
   #endif
@@ -86,6 +85,11 @@ pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
 PimObjId
 pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
 {
+  #if defined(DEBUG)
+  std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %u elements %u bits per element %d data-type\n",
+              (int)allocType, numElements, bitsPerElement, (int)dataType);
+  #endif
+
   if (numElements <= 0 || bitsPerElement <= 0) {
     std::printf("PIM-Error: Invalid parameters to allocate %u elements of %u bits\n", numElements, bitsPerElement);
     return -1;
@@ -98,7 +102,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   unsigned numCores = m_device->getNumCores();
   unsigned numCols = m_device->getNumCols();
   unsigned numRowsToAlloc = 0;
-  unsigned numRegions = 0;
+  uint64_t numRegions = 0;
   unsigned numColsToAllocLast = 0;
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
@@ -111,8 +115,8 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
-    numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
-    numColsToAllocLast = (numElements * bitsPerElement) % numCols;
+    numRegions = ((uint64_t)numElements * bitsPerElement - 1) / numCols + 1;
+    numColsToAllocLast = ((uint64_t)numElements * bitsPerElement) % numCols;
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
     }
@@ -123,11 +127,11 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
 
   if (numRegions > numCores) {
     if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
-      std::printf("PIM-Error: Obj requires %u regions among %u cores. Abort.\n", numRegions, numCores);
+      std::printf("PIM-Error: Obj requires %llu regions among %u cores. Abort.\n", numRegions, numCores);
       return -1;
     } else {
       #if defined(DEBUG)
-      std::printf("PIM-Warning: Obj requires %u regions among %u cores. Wrapping up is needed.\n", numRegions, numCores);
+      std::printf("PIM-Warning: Obj requires %llu regions among %u cores. Wrapping up is needed.\n", numRegions, numCores);
       #endif
     }
   }
@@ -135,7 +139,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   // create regions
   std::vector<std::pair<unsigned, unsigned>> newAlloc;
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
-    for (unsigned i = 0; i < numRegions; ++i) {
+    for (uint64_t i = 0; i < numRegions; ++i) {
       PimCoreId coreId = sortedCoreId[i % numCores];
       unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
       pimRegion newRegion = findAvailRegionOnCore(coreId, numRowsToAlloc, numColsToAlloc);
@@ -164,6 +168,11 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
     // update new object to resource mgr
     m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
   }
+
+  #if defined(DEBUG)
+  std::printf("PIM-Debug: pimResMgr::pimAlloc allocated new object %d with %llu regions\n",
+              objId, newObj.getRegions().size());
+  #endif
   return objId;
 }
 
@@ -173,6 +182,11 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
 PimObjId
 pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
 {
+  #if defined(DEBUG)
+  std::printf("PIM-Debug: pimResMgr::pimAllocAssociated for %u bits per element %d data-type associated to object %d\n",
+              bitsPerElement, (int)dataType, assocId);
+  #endif
+
   // check if assoc obj is valid
   if (m_objMap.find(assocId) == m_objMap.end()) {
     std::printf("PIM-Error: Invalid associated object ID %d for PIM allocation\n", assocId);
@@ -232,6 +246,11 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
     // update new object to resource mgr
     m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
   }
+
+  #if defined(DEBUG)
+  std::printf("PIM-Debug: pimResMgr::pimAllocAssociated allocated new object %d with %llu regions\n",
+              objId, newObj.getRegions().size());
+  #endif
   return objId;
 }
 

@@ -50,7 +50,7 @@ int main()
 {
   std::cout << "PIM Regression Test: Functional" << std::endl;
 
-  unsigned numElements = 134217730;
+  unsigned numElements = 128 * 1024 * 1024 + 2;
   std::vector<int> src(numElements);
   for (unsigned i = 0; i < numElements; ++i) {
     src[i] = i;
