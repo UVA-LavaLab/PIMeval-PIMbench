@@ -40,7 +40,7 @@ void usage()
           "\n    -v    should verify result with CPU"
           "\n    -p    padding (default = 1)"
           "\n    -f    input file containing matrices (default=generates matrix with random numbers)"
-          "\n    -i    input file containing matrices (default=generates matrix with random numbers)"
+          "\n    -i    input file containing image matrices (default=generates matrix with random numbers)"
 	  "\n    -m    enable more debug prints (default = false)"
           "\n");
 }
