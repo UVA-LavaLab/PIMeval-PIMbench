@@ -53,9 +53,13 @@ extern "C" {
   //! @brief  PIM datatypes
   enum PimDataType {
     PIM_INT8 = 0,
+    PIM_UINT8,
     PIM_INT16,
+    PIM_UINT16,
     PIM_INT32,
+    PIM_UINT32,
     PIM_INT64,
+    PIM_UINT64,
     PIM_FP32,
   };
 
@@ -101,6 +105,8 @@ extern "C" {
   PimStatus pimRedSum(PimObjId src, int64_t* sum);
   PimStatus pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
   PimStatus pimRedSumSignedInt(PimObjId src, int64_t* sum);
+  PimStatus pimRedSumRangedSignedInt(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
+  PimStatus pimBroadcastSignedInt(PimObjId dest, int64_t value);
   PimStatus pimRedSumRangedSignedInt(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
   PimStatus pimBroadcastSignedInt(PimObjId dest, int64_t value);
   PimStatus pimRotateElementsRight(PimObjId src);
