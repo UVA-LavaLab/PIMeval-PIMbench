@@ -118,7 +118,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimRedSum(dstObj, &dst[i]);
+    status = pimRedSumSignedInt(dstObj, &dst[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;

@@ -250,7 +250,7 @@ pimPopCount(PimObjId src, PimObjId dest)
 
 //! @brief  PIM reduction sum. Result returned to a host variable
 PimStatus
-pimRedSum(PimObjId src, int64_t* sum)
+pimRedSumSignedInt(PimObjId src, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;

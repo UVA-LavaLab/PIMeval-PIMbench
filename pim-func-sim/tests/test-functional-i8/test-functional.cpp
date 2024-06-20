@@ -232,7 +232,7 @@ void testFunctional()
   // Test redsum
   {
     int64_t sumDevice = 0;
-    status = pimRedSum(obj1, &sumDevice);
+    status = pimRedSumSignedInt(obj1, &sumDevice);
     assert(status == PIM_OK);
     int64_t sumHost = 0;
     for (unsigned i = 0; i < numElements; ++i) {

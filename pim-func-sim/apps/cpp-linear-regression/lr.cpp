@@ -93,7 +93,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSum(srcObj1, &SX);
+  status = pimRedSumSignedInt(srcObj1, &SX);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -143,7 +143,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSum(srcObj1, &SXY);
+  status = pimRedSumSignedInt(srcObj1, &SXY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -164,14 +164,14 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSum(srcObj1, &SYY);
+  status = pimRedSumSignedInt(srcObj1, &SYY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimRedSum(srcObj2, &SY);
+  status = pimRedSumSignedInt(srcObj2, &SY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

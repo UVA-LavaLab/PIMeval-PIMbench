@@ -100,6 +100,8 @@ extern "C" {
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
   PimStatus pimRedSum(PimObjId src, int64_t* sum);
   PimStatus pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
+  PimStatus pimRedSumSignedInt(PimObjId src, int64_t* sum);
+  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
   PimStatus pimBroadcast(PimObjId dest, int64_t value);
   PimStatus pimRotateElementsRight(PimObjId src);
   PimStatus pimRotateElementsLeft(PimObjId src);
