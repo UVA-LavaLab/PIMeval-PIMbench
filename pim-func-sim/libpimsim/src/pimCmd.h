@@ -68,6 +68,9 @@ enum class PimCmdEnum {
   RREG_SEL,
   RREG_ROTATE_R,
   RREG_ROTATE_L,
+  // SIMDRAM
+  ROW_AP,
+  ROW_AAP,
 };
 
 
@@ -147,17 +150,18 @@ protected:
 
   //! @brief helper function to get the operand based on data type
   inline int64_t getOperand(uint64_t operandBits, PimDataType dataType) {
+    int64_t operandValue = 0;
     switch (dataType) {
-    case PIM_INT8: return *reinterpret_cast<int8_t*>(&operandBits);
-    case PIM_INT16: return *reinterpret_cast<int16_t*>(&operandBits);
-    case PIM_INT32: return *reinterpret_cast<int32_t*>(&operandBits);
-    case PIM_INT64: return *reinterpret_cast<int64_t*>(&operandBits);
+    case PIM_INT8: operandValue =  *reinterpret_cast<int8_t*>(&operandBits); break;
+    case PIM_INT16: operandValue =  *reinterpret_cast<int16_t*>(&operandBits); break;
+    case PIM_INT32: operandValue =  *reinterpret_cast<int32_t*>(&operandBits); break;
+    case PIM_INT64: operandValue =  *reinterpret_cast<int64_t*>(&operandBits); break;
     default:
         std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
-        return 0;
     }
+    return operandValue;
   }
-  
+
   PimCmdEnum m_cmdType;
   pimDevice* m_device = nullptr;
 
@@ -381,6 +385,25 @@ protected:
   PimRowReg m_dest;
 };
 
+//! @class  pimCmdAnalogAAP
+//! @brief  Pim CMD: SIMDRAM: Analog based multi-row AP (activate-precharge) or AAP (activate-activate-precharge)
+class pimCmdAnalogAAP : public pimCmd
+{
+public:
+  pimCmdAnalogAAP(PimCmdEnum cmdType,
+                  const std::vector<std::pair<PimObjId, unsigned>>& srcRows,
+                  const std::vector<std::pair<PimObjId, unsigned>>& destRows = {})
+    : pimCmd(cmdType), m_srcRows(srcRows), m_destRows(destRows)
+  {
+    assert(cmdType == PimCmdEnum::ROW_AP || cmdType == PimCmdEnum::ROW_AAP);
+  }
+  virtual ~pimCmdAnalogAAP() {}
+  virtual bool execute() override;
+protected:
+  void printDebugInfo() const;
+  std::vector<std::pair<PimObjId, unsigned>> m_srcRows;
+  std::vector<std::pair<PimObjId, unsigned>> m_destRows;
+};
 
 #endif
 

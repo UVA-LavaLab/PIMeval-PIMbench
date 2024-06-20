@@ -4,6 +4,7 @@
 
 #include "pimParamsPerf.h"
 #include "pimSim.h"
+#include <cstdio>
 
 
 //! @brief  pimParamsPerf ctor
@@ -44,6 +45,7 @@ pimParamsPerf::isVLayoutDevice() const
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V: return true;
   case PIM_DEVICE_BITSIMD_V_AP: return true;
+  case PIM_DEVICE_SIMDRAM: return true;
   case PIM_DEVICE_BITSIMD_H: return false;
   case PIM_DEVICE_FULCRUM: return false;
   case PIM_DEVICE_BANK_LEVEL: return false;
@@ -62,6 +64,7 @@ pimParamsPerf::isHLayoutDevice() const
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V: return false;
   case PIM_DEVICE_BITSIMD_V_AP: return false;
+  case PIM_DEVICE_SIMDRAM: return false;
   case PIM_DEVICE_BITSIMD_H: return true;
   case PIM_DEVICE_FULCRUM: return true;
   case PIM_DEVICE_BANK_LEVEL: return true;
@@ -118,6 +121,9 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
       default:
         assert(0);
       }
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
@@ -144,6 +150,13 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     } else {
       assert(0);
     }
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_SIMDRAM:
+  {
+    // todo
+    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
     msRuntime *= numPass;
     break;
   }
@@ -209,6 +222,9 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
       default:
         assert(0);
       }
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
     } else if (dataType == PIM_FP32) {
       switch (cmdType) {
       case PimCmdEnum::ADD: msRuntime = 1331 * m_tR + 685 * m_tW + 1687 * m_tL; break;
@@ -256,6 +272,13 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     } else {
       assert(0);
     }
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_SIMDRAM:
+  {
+    // todo
+    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
     msRuntime *= numPass;
     break;
   }
@@ -309,9 +332,16 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
       msRuntime *= numPass;
       // reduction for all regions
       msRuntime += static_cast<double>(numRegions) / 3200000;
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
+    break;
+  case PIM_DEVICE_SIMDRAM:
+    // todo
+    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
     break;
   case PIM_DEVICE_BITSIMD_H:
     // Sequentially process all elements per CPU cycle
@@ -351,6 +381,12 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   {
     // For one pass: For every bit: Set SA to bit value; Write SA to row;
     msRuntime = (m_tL + m_tW) * bitsPerElement;
+    msRuntime *= numPass;
+    break;
+  }
+  case PIM_DEVICE_SIMDRAM:
+  {
+    // todo
     msRuntime *= numPass;
     break;
   }
@@ -397,6 +433,9 @@ pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) 
     msRuntime *= numPass;
     // boundary handling
     msRuntime += 2 * getMsRuntimeForBytesTransfer(numRegions * bitsPerElement / 8);
+    break;
+  case PIM_DEVICE_SIMDRAM:
+    // todo
     break;
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_FULCRUM:
