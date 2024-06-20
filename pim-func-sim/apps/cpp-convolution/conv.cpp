@@ -21,7 +21,7 @@ typedef struct Params
 {
   int row, column, dim, stride, kernelSize, kernelDim, padding;
   char *kernelMatrixFile;
-  char *inputFile;
+  char *imageMatrixFile;
   bool shouldVerify;
   bool moreDebugPrints;
 } Params;
