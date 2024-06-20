@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <cassert>
+#include <cstdint>
 
 
 //! @class  pimCore
@@ -26,14 +27,14 @@ public:
 
   // Row-based operations
   bool readRow(unsigned rowIndex);
-  bool readTripleRows(unsigned rowIndex1, unsigned rowIndex2, unsigned rowIndex3);
   bool writeRow(unsigned rowIndex);
   std::vector<bool>& getSenseAmpRow() { return m_rowRegs[PIM_RREG_SA]; }
   bool setSenseAmpRow(const std::vector<bool>& vals);
+  bool readMultiRows(const std::vector<std::pair<unsigned, bool>>& rowIdxs);
+  bool writeMultiRows(const std::vector<std::pair<unsigned, bool>>& rowIdxs);
 
   // Column-based operations
   bool readCol(unsigned colIndex);
-  bool readTripleCols(unsigned colIndex1, unsigned colIndex2, unsigned colIndex3);
   bool writeCol(unsigned colIndex);
   std::vector<bool>& getSenseAmpCol() { return m_senseAmpCol; }
   bool setSenseAmpCol(const std::vector<bool>& vals);
@@ -61,7 +62,7 @@ public:
   inline void setBitsV(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
     assert(numBits > 0 && numBits <= 64);
     assert(rowIdx + (numBits - 1) < m_numRows && colIdx < m_numCols);
-    for (int i = 0; i < numBits; ++i) {
+    for (unsigned i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx + i, colIdx, bitVal);
       val = val >> 1;
@@ -82,7 +83,7 @@ public:
   inline void setBitsH(unsigned rowIdx, unsigned colIdx, uint64_t val, unsigned numBits) {
     assert(numBits > 0 && numBits <= 64);
     assert(rowIdx < m_numRows && colIdx + (numBits - 1) < m_numCols);
-    for (int i = 0; i < numBits; ++i) {
+    for (unsigned i = 0; i < numBits; ++i) {
       bool bitVal = val & 1;
       setBit(rowIdx, colIdx + i, bitVal);
       val = val >> 1;

@@ -24,6 +24,7 @@ pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType)
   case PIM_FUNCTIONAL: return "PIM_FUNCTIONAL";
   case PIM_DEVICE_BITSIMD_V: return "PIM_DEVICE_BITSIMD_V";
   case PIM_DEVICE_BITSIMD_V_AP: return "PIM_DEVICE_BITSIMD_V_AP";
+  case PIM_DEVICE_SIMDRAM: return "PIM_DEVICE_SIMDRAM";
   case PIM_DEVICE_BITSIMD_H: return "PIM_DEVICE_BITSIMD_H";
   case PIM_DEVICE_FULCRUM: return "PIM_DEVICE_FUMCRUM";
   case PIM_DEVICE_BANK_LEVEL: return "PIM_DEVICE_BANK_LEVEL";
@@ -61,6 +62,8 @@ std::string
 pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 {
   switch (dataType) {
+  case PIM_INT8: return "int8";
+  case PIM_INT16: return "int16";
   case PIM_INT32: return "int32";
   case PIM_INT64: return "int64";
   case PIM_FP32: return "fp32";

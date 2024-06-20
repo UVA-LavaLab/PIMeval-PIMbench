@@ -138,7 +138,7 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
   }
 }
 
-void copyCentroid(std::vector<int> &currCentroid, std::vector<PimObjId> &pimObjectList)
+void copyCentroid(std::vector<int64_t> &currCentroid, std::vector<PimObjId> &pimObjectList)
 {
   for (int i = 0; i < pimObjectList.size(); i++)
   {
@@ -151,7 +151,7 @@ void copyCentroid(std::vector<int> &currCentroid, std::vector<PimObjId> &pimObje
   }
 }
 
-void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const std::vector<std::vector<int>> &dataPoints, std::vector<std::vector<int>> &centroids)
+void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const std::vector<std::vector<int>> &dataPoints, std::vector<std::vector<int64_t>> &centroids)
 {
   std::vector<PimObjId> dataPointObjectList(dimension);
   allocatePimObject(numOfPoints, dimension, dataPointObjectList, -1);
@@ -243,7 +243,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         std::cout << "Abort" << std::endl;
         return;
       }
-      int totalNeighbors = 0; 
+      int64_t totalNeighbors = 0; 
 
       status = pimRedSum(resultObjectList[0], &totalNeighbors);
       if (status != PIM_OK)
@@ -269,38 +269,6 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         centroids[i][b] /= totalNeighbors;
       }
     }
-
-    // update the cluster in host
-    // TODO: check if PIM will be benificial. My assumption it won't
-
-    // auto start = std::chrono::high_resolution_clock::now();
-    // for (int i = 0; i < k; i++)
-    // {
-    //   std::fill(centroids[i].begin(), centroids[i].end(), 0);
-    // }
-    // for (int i = 0; i < k; ++i)
-    // {
-    //   for (int j = 0; j < numOfPoints; ++j)
-    //   {
-    //     if (distFlag[i][j] == 1)
-    //     {
-    //       ++clusterPointCount[i];
-    //       for (int d = 0; d < dimension; ++d)
-    //       {
-    //         centroids[i][d] += dataPoints[d][j];
-    //       }
-    //     }
-    //   }
-    // }
-    // for (int i = 0; i < k; i++)
-    // {
-    //   for (int j = 0; j < dimension; j++)
-    //   {
-    //     centroids[i][j] /= clusterPointCount[i];
-    //   }
-    // }
-    // auto end = std::chrono::high_resolution_clock::now();
-    // hostElapsedTime += (end - start);
   }
 
   pimFree(tempObj);
@@ -320,9 +288,9 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
   }
 }
 
-void initCentroids(int k, int dimension, int numOfPoints, std::vector<std::vector<int>> &centroids, const std::vector<std::vector<int>> &dataPoints)
+void initCentroids(int k, int dimension, int numOfPoints, std::vector<std::vector<int64_t>> &centroids, const std::vector<std::vector<int>> &dataPoints)
 {
-  centroids.resize(k, vector<int>(dimension));
+  centroids.resize(k, vector<int64_t>(dimension));
 
   for (int i = 0; i < k; i++)
   {
@@ -354,7 +322,7 @@ int main(int argc, char *argv[])
   if (!createDevice(params.configFile))
     return 1;
 
-  std::vector<std::vector<int>> centroids;
+  std::vector<std::vector<int64_t>> centroids;
   initCentroids(params.k, params.dimension, params.numPoints, centroids, dataPoints);
 
   runKmeans(params.numPoints, params.dimension, params.k, params.maxItr, dataPoints, centroids);
