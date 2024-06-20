@@ -170,26 +170,26 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    // PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-    // if (srcObj2 == -1)
-    // {
-    //     std::cout << "src2: pimAllocAssociated" << std::endl;
-    //     return -1;
-    // }
+    PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    if (srcObj2 == -1)
+    {
+        std::cout << "src2: pimAllocAssociated" << std::endl;
+        return -1;
+    }
 
-    // PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-    // if (dstObj == -1)
-    // {
-    //     std::cout << "dst: pimAllocAssociated" << std::endl;
-    //     return -1;
-    // }
+    PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    if (dstObj == -1)
+    {
+        std::cout << "dst: pimAllocAssociated" << std::endl;
+        return -1;
+    }
 
-    // PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-    // if (popCountSrcObj == -1)
-    // {
-    //     std::cout << "popCountSrc: pimAllocAssociated" << std::endl;
-    //     return -1;
-    // }
+    PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    if (popCountSrcObj == -1)
+    {
+        std::cout << "popCountSrc: pimAllocAssociated" << std::endl;
+        return -1;
+    }
 
     cout << "src1 size: " << src1.size() << endl;
 
@@ -200,18 +200,10 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    // status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
-    // if (status != PIM_OK)
-    // {
-    //     std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
-    //     return -1;
-    // }
-    vector<unsigned int> devSrc1(numElements);
-    // vector<unsigned int> devSrc2(numElements);
-    status = pimCopyDeviceToHost(srcObj1, (void *)devSrc1.data());
+    status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
     if (status != PIM_OK)
     {
-        std::cout << "dev src1: pimCopyDeviceToHost Abort" << std::endl;
+        std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
         return -1;
     }
     
@@ -238,12 +230,12 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         return -1;
     }
 
-    // pimFree(srcObj1);
-    // pimFree(srcObj2);
-    // pimFree(dstObj);
-    // pimFree(popCountSrcObj);
+    pimFree(srcObj1);
+    pimFree(srcObj2);
+    pimFree(dstObj);
+    pimFree(popCountSrcObj);
 
-    // return sum;
+    return sum;
 }
 
 int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
