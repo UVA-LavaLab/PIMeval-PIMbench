@@ -241,15 +241,15 @@ protected:
 
 //! @class  pimCmdedSum
 //! @brief  Pim CMD: RedSum non-ranged/ranged
-class pimCmdRedSum : public pimCmd
+template <typename T> class pimCmdRedSum : public pimCmd
 {
 public:
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int64_t* result)
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result)
     : pimCmd(cmdType), m_src(src), m_result(result)
   {
     assert(cmdType == PimCmdEnum::REDSUM);
   }
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int64_t* result, uint64_t idxBegin, uint64_t idxEnd)
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result, uint64_t idxBegin, uint64_t idxEnd)
     : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
   {
     assert(cmdType == PimCmdEnum::REDSUM_RANGE);
@@ -261,18 +261,18 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
-  int64_t* m_result;
-  std::vector<int> m_regionSum;
+  T* m_result;
+  std::vector<T> m_regionSum;
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements
-class pimCmdBroadcast : public pimCmd
+template <typename T> class pimCmdBroadcast : public pimCmd
 {
 public:
-  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, int64_t val)
+  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, T val)
     : pimCmd(cmdType), m_dest(dest), m_val(val)
   {
     assert(cmdType == PimCmdEnum::BROADCAST);
@@ -284,7 +284,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
-  int64_t m_val;
+  T m_val;
 };
 
 //! @class  pimCmdRotate

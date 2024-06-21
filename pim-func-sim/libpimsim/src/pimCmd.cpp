@@ -645,8 +645,8 @@ pimCmdFunc2::updateStats() const
 
 
 //! @brief  PIM CMD: redsum non-ranged/ranged
-bool
-pimCmdRedSum::execute()
+template <typename T> bool
+pimCmdRedSum<T>::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
@@ -674,8 +674,8 @@ pimCmdRedSum::execute()
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
-bool
-pimCmdRedSum::sanityCheck() const
+template <typename T> bool
+pimCmdRedSum<T>::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !m_result) {
@@ -685,8 +685,8 @@ pimCmdRedSum::sanityCheck() const
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - compute region
-bool
-pimCmdRedSum::computeRegion(unsigned index)
+template <typename T> bool
+pimCmdRedSum<T>::computeRegion(unsigned index)
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   bool isVLayout = objSrc.isVLayout();
@@ -711,8 +711,8 @@ pimCmdRedSum::computeRegion(unsigned index)
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - update stats
-bool
-pimCmdRedSum::updateStats() const
+template <typename T> bool
+pimCmdRedSum<T>::updateStats() const
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   PimDataType dataType = objSrc.getDataType();
@@ -724,8 +724,8 @@ pimCmdRedSum::updateStats() const
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements
-bool
-pimCmdBroadcast::execute()
+template <typename T> bool
+pimCmdBroadcast<T>::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d value %u)\n", getName().c_str(), m_dest, m_val);
@@ -744,8 +744,8 @@ pimCmdBroadcast::execute()
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements - sanity check
-bool
-pimCmdBroadcast::sanityCheck() const
+template <typename T> bool
+pimCmdBroadcast<T>::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_dest)) {
@@ -755,8 +755,8 @@ pimCmdBroadcast::sanityCheck() const
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements - compute region
-bool
-pimCmdBroadcast::computeRegion(unsigned index)
+template <typename T> bool
+pimCmdBroadcast<T>::computeRegion(unsigned index)
 {
   const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   bool isVLayout = objDest.isVLayout();
@@ -778,8 +778,8 @@ pimCmdBroadcast::computeRegion(unsigned index)
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements - update stats
-bool
-pimCmdBroadcast::updateStats() const
+template <typename T> bool
+pimCmdBroadcast<T>::updateStats() const
 {
   const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   PimDataType dataType = objDest.getDataType();
@@ -1233,3 +1233,8 @@ pimCmdAnalogAAP::printDebugInfo() const
               getName().c_str(), m_srcRows.size(), m_destRows.size(), msg.c_str());
 }
 
+// Explicit template instantiation
+template class pimCmdBroadcast<uint64_t>;
+template class pimCmdBroadcast<int64_t>;
+template class pimCmdRedSum<uint64_t>;
+template class pimCmdRedSum<int64_t>;
