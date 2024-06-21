@@ -43,6 +43,8 @@ void testLargeCopy(PimDeviceEnum deviceType, const std::vector<int>& src, unsign
   }
   std::printf("Total mismatch: %d\n", numError);
 
+  pimShowStats();
+  pimResetStats();
   pimDeleteDevice();
 }
 
