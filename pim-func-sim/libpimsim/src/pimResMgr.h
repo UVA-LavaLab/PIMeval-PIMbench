@@ -10,6 +10,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <set>
+#include <map>
 #include <string>
 
 class pimDevice;
@@ -124,11 +125,8 @@ private:
 class pimResMgr
 {
 public:
-  pimResMgr(pimDevice* device)
-    : m_device(device),
-      m_availObjId(0)
-  {}
-  ~pimResMgr() {}
+  pimResMgr(pimDevice* device);
+  ~pimResMgr();
 
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
   PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
@@ -146,12 +144,31 @@ public:
 private:
   pimRegion findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsigned numAllocCols) const;
   std::vector<PimCoreId> getCoreIdsSortedByLeastUsage() const;
-  unsigned getCoreUsage(PimCoreId coreId) const;
+
+  //! @class  coreUsage
+  //! @brief  Track row usage for allocation
+  class coreUsage {
+  public:
+    coreUsage(unsigned numRowsPerCore) : m_numRowsPerCore(numRowsPerCore) {}
+    ~coreUsage() {}
+    unsigned getNumRowsPerCore() const { return m_numRowsPerCore; }
+    unsigned getTotRowsInUse() const { return m_totRowsInUse; }
+    unsigned findAvailRange(unsigned numRowsToAlloc);
+    void addRange(std::pair<unsigned, unsigned> range, PimObjId objId);
+    void deleteRange(std::pair<unsigned, unsigned> range);
+    void newAllocStart();
+    void newAllocEnd(bool success);
+  private:
+    unsigned m_numRowsPerCore = 0;
+    unsigned m_totRowsInUse = 0;
+    std::map<std::pair<unsigned, unsigned>, PimObjId> m_rangesInUse;
+    std::set<std::pair<unsigned, unsigned>> m_newAlloc;
+  };
 
   pimDevice* m_device;
   PimObjId m_availObjId;
   std::unordered_map<PimObjId, pimObjInfo> m_objMap;
-  std::unordered_map<PimCoreId, std::set<std::pair<unsigned, unsigned>>> m_coreUsage; // track row usage only for now
+  std::unordered_map<PimCoreId, pimResMgr::coreUsage*> m_coreUsage;
   std::unordered_map<PimObjId, std::set<PimObjId>> m_refMap;
 };
 

@@ -80,6 +80,26 @@ pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
   return regions;
 }
 
+//! @brief  pimResMgr ctor
+pimResMgr::pimResMgr(pimDevice* device)
+  : m_device(device),
+    m_availObjId(0)
+{
+  unsigned numCores = m_device->getNumCores();
+  unsigned numRowsPerCore = m_device->getNumRows();
+  for (unsigned i = 0; i < numCores; ++i) {
+    m_coreUsage[i] = new coreUsage(numRowsPerCore);
+  }
+}
+
+//! @brief  pimResMgr dtor
+pimResMgr::~pimResMgr()
+{
+  unsigned numCores = m_device->getNumCores();
+  for (unsigned i = 0; i < numCores; ++i) {
+    delete m_coreUsage[i];
+  }
+}
 
 //! @brief  Alloc a PIM object
 PimObjId
@@ -137,7 +157,10 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   }
 
   // create regions
-  std::vector<std::pair<unsigned, unsigned>> newAlloc;
+  bool success = true;
+  for (unsigned i = 0; i < numCores; ++i) {
+    m_coreUsage[i]->newAllocStart();
+  }
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     for (uint64_t i = 0; i < numRegions; ++i) {
       PimCoreId coreId = sortedCoreId[i % numCores];
@@ -145,19 +168,22 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
       pimRegion newRegion = findAvailRegionOnCore(coreId, numRowsToAlloc, numColsToAlloc);
       if (!newRegion.isValid()) {
         std::printf("PIM-Error: Failed to allocate object with %u rows on core %d\n", numRowsToAlloc, coreId);
-        // rollback new alloc
-        for (const auto& alloc : newAlloc) {
-          m_coreUsage[coreId].erase(alloc);
-        }
-        return -1;
+        success = false;
+        break;
       }
       newObj.addRegion(newRegion);
 
       // add to core usage map
       auto alloc = std::make_pair(newRegion.getRowIdx(), numRowsToAlloc);
-      m_coreUsage[coreId].insert(alloc);
-      newAlloc.push_back(alloc);
+      m_coreUsage[coreId]->addRange(alloc, newObj.getObjId());
     }
+  }
+  for (unsigned i = 0; i < numCores; ++i) {
+    m_coreUsage[i]->newAllocEnd(success);
+  }
+
+  if (!success) {
+    return -1;
   }
 
   PimObjId objId = -1;
@@ -194,6 +220,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
   }
 
   // get regions of the assoc obj
+  unsigned numCores = m_device->getNumCores();
   const pimObjInfo& assocObj = m_objMap.at(assocId);
 
   // check if the request can be associated with ref
@@ -212,7 +239,10 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
   pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
-  std::vector<std::pair<unsigned, unsigned>> newAlloc;
+  bool success = true;
+  for (unsigned i = 0; i < numCores; ++i) {
+    m_coreUsage[i]->newAllocStart();
+  }
   for ( const pimRegion& region : assocObj.getRegions()) {
     PimCoreId coreId = region.getCoreId();
     unsigned numAllocRows = region.getNumAllocRows();
@@ -223,18 +253,21 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
     pimRegion newRegion = findAvailRegionOnCore(coreId, numAllocRows, numAllocCols);
     if (!newRegion.isValid()) {
       std::printf("PIM-Error: Failed to allocate associated object with %u rows on core %d\n", numAllocRows, coreId);
-      // rollback new alloc
-      for (const auto& alloc : newAlloc) {
-        m_coreUsage[coreId].erase(alloc);
-      }
-      return -1;
+      success = false;
+      break;
     }
     newObj.addRegion(newRegion);
 
     // add to core usage map
     auto alloc = std::make_pair(newRegion.getRowIdx(), numAllocRows);
-    m_coreUsage[coreId].insert(alloc);
-    newAlloc.push_back(alloc);
+    m_coreUsage[coreId]->addRange(alloc, newObj.getObjId());
+  }
+  for (unsigned i = 0; i < numCores; ++i) {
+    m_coreUsage[i]->newAllocEnd(success);
+  }
+
+  if (!success) {
+    return -1;
   }
 
   PimObjId objId = -1;
@@ -269,7 +302,7 @@ pimResMgr::pimFree(PimObjId objId)
       PimCoreId coreId = region.getCoreId();
       unsigned rowIdx = region.getRowIdx();
       unsigned numAllocRows = region.getNumAllocRows();
-      m_coreUsage[coreId].erase(std::make_pair(rowIdx, numAllocRows));
+      m_coreUsage[coreId]->deleteRange(std::make_pair(rowIdx, numAllocRows));
     }
   }
   m_objMap.erase(objId);
@@ -333,19 +366,7 @@ pimResMgr::findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsign
   region.setNumAllocCols(numAllocCols);
 
   // try to find an available slot
-  unsigned prevAvail = 0;
-  if (m_coreUsage.find(coreId) != m_coreUsage.end()) {
-    for (const auto& it : m_coreUsage.at(coreId)) {
-      unsigned rowIdx = it.first;
-      unsigned numRows = it.second;
-      if (rowIdx - prevAvail >= numAllocRows) {
-        region.setRowIdx(prevAvail);
-        region.setIsValid(true);
-        return region;
-      }
-      prevAvail = rowIdx + numRows;
-    }
-  }
+  unsigned prevAvail = m_coreUsage.at(coreId)->findAvailRange(numAllocRows);
   if (m_device->getNumRows() - prevAvail >= numAllocRows) {
     region.setRowIdx(prevAvail);
     region.setIsValid(true);
@@ -355,27 +376,13 @@ pimResMgr::findAvailRegionOnCore(PimCoreId coreId, unsigned numAllocRows, unsign
   return region;
 }
 
-//! @brief  Get number of allocated rows of a specific core
-unsigned
-pimResMgr::getCoreUsage(PimCoreId coreId) const
-{
-  if (m_coreUsage.find(coreId) == m_coreUsage.end()) {
-    return 0;
-  }
-  unsigned usage = 0;
-  for (const auto& it : m_coreUsage.at(coreId)) {
-    usage += it.second;
-  }
-  return usage;
-}
-
 //! @brief  Get a list of core IDs sorted by least usage
 std::vector<PimCoreId>
 pimResMgr::getCoreIdsSortedByLeastUsage() const
 {
   std::vector<std::pair<unsigned, unsigned>> usages;
   for (unsigned coreId = 0; coreId < m_device->getNumCores(); ++coreId) {
-    unsigned usage = getCoreUsage(coreId);
+    unsigned usage = m_coreUsage.at(coreId)->getTotRowsInUse();
     usages.emplace_back(usage, coreId);
   }
   std::sort(usages.begin(), usages.end());
@@ -384,6 +391,72 @@ pimResMgr::getCoreIdsSortedByLeastUsage() const
     result.push_back(it.second);
   }
   return result;
+}
+
+//! @brief  Find next available range of rows with a given size
+unsigned
+pimResMgr::coreUsage::findAvailRange(unsigned numRowsToAlloc)
+{
+  unsigned prevAvail = 0;
+  for (const auto& it : m_rangesInUse) {
+    unsigned rowIdx = it.first.first;
+    unsigned numRows = it.first.second;
+    if (rowIdx - prevAvail >= numRowsToAlloc) {
+      return prevAvail;
+    }
+    prevAvail = rowIdx + numRows;
+  }
+  return prevAvail;
+}
+
+//! @brief  Add a new range to core usage.
+//! The new range will be aggregated with previous adjacent ragne if they are from same object
+//! Returned range is after aggregation
+void
+pimResMgr::coreUsage::addRange(std::pair<unsigned, unsigned> range, PimObjId objId)
+{
+  // aggregate with the prev range
+  if (!m_rangesInUse.empty()) {
+    auto it = std::prev(m_rangesInUse.end());
+    unsigned lastIdx = it->first.first;
+    unsigned lastSize = it->first.second;
+    PimObjId lastObjId = it->second;
+    if (lastIdx + lastSize == range.first && lastObjId == objId) {
+      m_newAlloc.erase(it->first);
+      m_rangesInUse.erase(it);
+      range = std::make_pair(lastIdx, lastSize + range.second);
+    }
+  }
+  m_rangesInUse.insert(std::make_pair(range, objId));
+  m_newAlloc.insert(range);
+}
+
+//! @brief  Delete a range from core usage
+void
+pimResMgr::coreUsage::deleteRange(std::pair<unsigned, unsigned> range)
+{
+  if (m_rangesInUse.find(range) != m_rangesInUse.end()) {
+    m_rangesInUse.erase(range);
+  }
+}
+
+//! @brief  Start a new allocation. This is preparing for rollback
+void
+pimResMgr::coreUsage::newAllocStart()
+{
+  m_newAlloc.clear();
+}
+
+//! @brief  End a new allocation. If failed, rollback all regions
+void
+pimResMgr::coreUsage::newAllocEnd(bool success)
+{
+  if (!success) {
+    for (const auto &range : m_newAlloc) {
+      m_rangesInUse.erase(range);
+    }
+  }
+  m_newAlloc.clear();
 }
 
 //! @brief  If a PIM object uses vertical data layout
