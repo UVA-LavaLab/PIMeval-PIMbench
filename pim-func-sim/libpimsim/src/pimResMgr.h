@@ -45,7 +45,7 @@ public:
 
   bool isValid() const { return m_isValid && m_coreId >= 0 && m_numAllocRows > 0 && m_numAllocCols > 0; }
 
-  void print() const;
+  void print(uint64_t regionId) const;
 
 private:
   PimCoreId m_coreId;
