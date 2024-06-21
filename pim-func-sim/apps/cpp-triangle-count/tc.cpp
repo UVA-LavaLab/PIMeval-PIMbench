@@ -18,6 +18,8 @@
 #include "../util.h"
 #include "libpimsim.h"
 
+#define DEBUG 0
+
 #define BITS_PER_INT 32
 
 #define NUM_SUBARRAY 2048
@@ -169,6 +171,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "src1: pimAlloc" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "src1 allocated successfully!" << endl;
 
     PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
     if (srcObj2 == -1)
@@ -176,6 +179,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "src2: pimAllocAssociated" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "src2 allocated successfully!" << endl;
 
     PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
     if (dstObj == -1)
@@ -183,6 +187,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "dst: pimAllocAssociated" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "dst allocated successfully!" << endl;
 
     PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
     if (popCountSrcObj == -1)
@@ -190,6 +195,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "popCountSrc: pimAllocAssociated" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "popCountSrc allocated successfully!" << endl;
 
     PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
     if (status != PIM_OK)
@@ -197,6 +203,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "src1: pimCopyHostToDevice Abort" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "src1 copied successfully!" << endl;
 
     status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
     if (status != PIM_OK)
@@ -204,13 +211,15 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
         return -1;
     }
-    
+    if (DEBUG) cout << "src2 copied successfully!" << endl;
+
     status = pimAnd(srcObj1, srcObj2, dstObj);
     if (status != PIM_OK)
     {
         std::cout << "pimAnd Abort" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "pimAnd completed successfully!" << endl;
 
     status = pimPopCount(dstObj, popCountSrcObj);
     if (status != PIM_OK)
@@ -218,7 +227,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "pimPopCount Abort" << std::endl;
         return -1;
     }
-
+    if (DEBUG) cout << "pimPopCount completed successfully!" << endl;
 
     int64_t sum = 0;
     status = pimRedSum(popCountSrcObj, &sum);
@@ -227,6 +236,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
         std::cout << "pimRedSum Abort" << std::endl;
         return -1;
     }
+    if (DEBUG) cout << "pimRedSum completed successfully!" << endl;
 
     pimFree(srcObj1);
     pimFree(srcObj2);
