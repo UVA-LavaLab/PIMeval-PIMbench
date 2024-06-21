@@ -1,4 +1,4 @@
-// Test: C++ version of max pool. This works for vgg max pool. The code may not work if the matrix is not square.
+// Test: C++ version of max pool. 
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
