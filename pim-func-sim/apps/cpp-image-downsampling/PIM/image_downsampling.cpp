@@ -143,21 +143,21 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
   return res;
 }
 
-void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right, vector<uint32_t>& lower_left, vector<uint32_t>& lower_right, uint8_t* result)
+void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, vector<uint8_t>& lower_left, vector<uint8_t>& lower_right, uint8_t* result)
 {
   // Returns average of the four input vectors as a uint8_t array
   int sz = upper_left.size();
 
-  PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 32, PIM_INT32);
+  PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 8, PIM_INT8);
   assert(-1 != ul);
 
-  PimObjId ur = pimAllocAssociated(32, ul, PIM_INT32);
+  PimObjId ur = pimAllocAssociated(8, ul, PIM_INT8);
   assert(-1 != ur);
 
-  PimObjId ll = pimAllocAssociated(32, ul, PIM_INT32);
+  PimObjId ll = pimAllocAssociated(8, ul, PIM_INT8);
   assert(-1 != ll);
 
-  PimObjId lr = pimAllocAssociated(32, ul, PIM_INT32);
+  PimObjId lr = pimAllocAssociated(8, ul, PIM_INT8);
   assert(-1 != lr);
 
   // PimObjId divisor_4 = pimAllocAssociated(32, ul, PIM_INT32);
@@ -202,16 +202,16 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   // PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
   // assert(PIM_OK == lr_div_status);
 
-  vector<uint32_t> tmp;
-  tmp.resize(sz);
+  // vector<uint32_t> tmp;
+  // tmp.resize(sz);
 
-  PimStatus result_copy_status = pimCopyDeviceToHost(lr, (void*)tmp.data());
+  PimStatus result_copy_status = pimCopyDeviceToHost(lr, (void*) result);
   assert(PIM_OK == result_copy_status);
   
   // Transform output from uint32_t (supported by PIM simulator) to uint8_t (required for BMP output)
-  for(int i=0; i<sz; ++i) {
-    result[i] = (uint8_t) tmp[i];
-  }
+  // for(int i=0; i<sz; ++i) {
+  //   result[i] = (uint8_t) tmp[i];
+  // }
 
   pimFree(ul);
   pimFree(ur);
@@ -230,22 +230,22 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
   uint8_t* pixels_in_it = pixels_in;
 
   // Transform input bitmap to vectors of colors in CPU
-  vector<uint32_t> upper_left;
+  vector<uint8_t> upper_left;
   upper_left.reserve(pim_rows);
-  vector<uint32_t> upper_right;
+  vector<uint8_t> upper_right;
   upper_right.reserve(pim_rows);
-  vector<uint32_t> lower_left;
+  vector<uint8_t> lower_left;
   lower_left.reserve(pim_rows);
-  vector<uint32_t> lower_right;
+  vector<uint8_t> lower_right;
   lower_right.reserve(pim_rows);
   for (int y = 0; y < avg_out.new_height; ++y) {
     uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
     for(int x = 0; x < 6*avg_out.new_width; x += 6) {
       for(int i=0; i<3; ++i) {
-        upper_left.push_back((uint32_t) pixels_in_it[x+i]);
-        upper_right.push_back((uint32_t) pixels_in_it[x+i+3]);
-        lower_left.push_back((uint32_t) row2_it[x+i]);
-        lower_right.push_back((uint32_t) row2_it[x+3+i]);
+        upper_left.push_back(pixels_in_it[x+i]);
+        upper_right.push_back(pixels_in_it[x+i+3]);
+        lower_left.push_back(row2_it[x+i]);
+        lower_right.push_back(row2_it[x+3+i]);
         if((uint32_t) pim_rows == upper_left.size()) {
           // Perform PIM averaging when vectors at max capacity to maximize parallelism
           pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);

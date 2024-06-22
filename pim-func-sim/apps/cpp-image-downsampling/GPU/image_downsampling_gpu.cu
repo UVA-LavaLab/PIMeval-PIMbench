@@ -173,9 +173,9 @@ __global__ void imgDSAverage(char* pix_in , char* pix_out , int new_height , int
         Pixel curr_pix4 = *get_pixel(pix_in, old_scanline_size, 2*x + 1, 2*y + 1);
 
         Pixel new_pix;
-        new_pix.red = (((uint16_t) curr_pix1.red) + ((uint16_t) curr_pix2.red) + ((uint16_t) curr_pix3.red) + ((uint16_t) curr_pix4.red)) >> 2;
-        new_pix.blue = (((uint16_t) curr_pix1.blue) + ((uint16_t) curr_pix2.blue) + ((uint16_t) curr_pix3.blue) + ((uint16_t) curr_pix4.blue)) >> 2;
-        new_pix.green = (((uint16_t) curr_pix1.green) + ((uint16_t) curr_pix2.green) + ((uint16_t) curr_pix3.green) + ((uint16_t) curr_pix4.green)) >> 2;
+        new_pix.red = (curr_pix1.red>>2) + (curr_pix2.red>>2) + (curr_pix3.red>>2) + (curr_pix4.red>>2);
+        new_pix.blue = (curr_pix1.blue>>2) + (curr_pix2.blue>>2) + (curr_pix3.blue>>2) + (curr_pix4.blue>>2);
+        new_pix.green = (curr_pix1.green>>2) + (curr_pix2.green>>2) + (curr_pix3.green>>2) + (curr_pix4.green>>2);
 
         set_pixel(pix_out, &new_pix, new_scanline_size, x, y);
         if(x+1 == new_width) {
@@ -243,9 +243,9 @@ std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
       Pixel curr_pix4 = *get_pixel_cpu(pixels_in, avg_out.scanline_size, 2 * x + 1, 2 * y + 1);  // 4 + 4
 
       Pixel new_pix;
-      new_pix.red = (((uint16_t)curr_pix1.red) + ((uint16_t)curr_pix2.red) + ((uint16_t)curr_pix3.red) + ((uint16_t)curr_pix4.red)) >> 2;
-      new_pix.blue = (((uint16_t)curr_pix1.blue) + ((uint16_t)curr_pix2.blue) + ((uint16_t)curr_pix3.blue) + ((uint16_t)curr_pix4.blue)) >> 2;
-      new_pix.green = (((uint16_t)curr_pix1.green) + ((uint16_t)curr_pix2.green) + ((uint16_t)curr_pix3.green) + ((uint16_t)curr_pix4.green)) >> 2;
+      new_pix.red = (curr_pix1.red>>2) + (curr_pix2.red>>2) + (curr_pix3.red>>2) + (curr_pix4.red>>2);
+      new_pix.blue = (curr_pix1.blue>>2) + (curr_pix2.blue>>2) + (curr_pix3.blue>>2) + (curr_pix4.blue>>2);
+      new_pix.green = (curr_pix1.green>>2) + (curr_pix2.green>>2) + (curr_pix3.green>>2) + (curr_pix4.green>>2);
 
       set_pixel_cpu(pixels_out_averaged, &new_pix, avg_out.new_scanline_size, x, y);
     }
