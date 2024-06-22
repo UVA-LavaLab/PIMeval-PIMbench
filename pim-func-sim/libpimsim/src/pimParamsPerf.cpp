@@ -320,7 +320,7 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
-  unsigned numElements = obj.getNumElements();
+  uint64_t numElements = obj.getNumElements();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
 
   switch (m_simTarget) {
@@ -393,7 +393,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   case PIM_DEVICE_BITSIMD_H:
   {
     // For one pass: For every element: 1 tCCD per byte
-    unsigned maxBytesPerRegion = maxElementsPerRegion * (bitsPerElement / 8);
+    uint64_t maxBytesPerRegion = (uint64_t)maxElementsPerRegion * (bitsPerElement / 8);
     msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
     msRuntime *= numPass;
     break;

@@ -70,10 +70,10 @@ extern "C" {
   void pimResetStats();
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
   PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   PimStatus pimFree(PimObjId obj);
-  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
 
   // Data transfer
   PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
@@ -99,7 +99,7 @@ extern "C" {
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
   PimStatus pimRedSum(PimObjId src, int64_t* sum);
-  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
+  PimStatus pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
   PimStatus pimBroadcast(PimObjId dest, int64_t value);
   PimStatus pimRotateElementsRight(PimObjId src);
   PimStatus pimRotateElementsLeft(PimObjId src);

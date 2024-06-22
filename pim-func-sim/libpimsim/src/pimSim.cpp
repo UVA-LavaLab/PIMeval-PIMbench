@@ -241,7 +241,7 @@ pimSim::resetStats() const
 
 //! @brief  Allocate a PIM object
 PimObjId
-pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
+pimSim::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAlloc");
   if (!isValidDevice()) { return -1; }
@@ -268,7 +268,7 @@ pimSim::pimFree(PimObjId obj)
 
 //! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimSim::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+pimSim::pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimCreateRangedRef");
   if (!isValidDevice()) { return -1; }
@@ -500,7 +500,7 @@ pimSim::pimRedSum(PimObjId src, int64_t* sum)
 }
 
 bool
-pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
+pimSim::pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
