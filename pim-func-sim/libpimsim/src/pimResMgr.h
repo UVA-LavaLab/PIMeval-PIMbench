@@ -12,6 +12,7 @@
 #include <set>
 #include <map>
 #include <string>
+#include <memory>
 
 class pimDevice;
 
@@ -155,7 +156,7 @@ private:
     unsigned getTotRowsInUse() const { return m_totRowsInUse; }
     unsigned findAvailRange(unsigned numRowsToAlloc);
     void addRange(std::pair<unsigned, unsigned> range, PimObjId objId);
-    void deleteRange(std::pair<unsigned, unsigned> range);
+    void deleteObj(PimObjId objId);
     void newAllocStart();
     void newAllocEnd(bool success);
   private:
@@ -168,7 +169,7 @@ private:
   pimDevice* m_device;
   PimObjId m_availObjId;
   std::unordered_map<PimObjId, pimObjInfo> m_objMap;
-  std::unordered_map<PimCoreId, pimResMgr::coreUsage*> m_coreUsage;
+  std::unordered_map<PimCoreId, std::unique_ptr<pimResMgr::coreUsage>> m_coreUsage;
   std::unordered_map<PimObjId, std::set<PimObjId>> m_refMap;
 };
 
