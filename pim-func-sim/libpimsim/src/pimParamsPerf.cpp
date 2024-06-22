@@ -334,7 +334,7 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
       msRuntime += static_cast<double>(numRegions) / 3200000;
     } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
       // todo
-      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
+      std::printf("PIM-Warning: BitSIMD int & uint 8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
