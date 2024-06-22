@@ -91,7 +91,7 @@ int main()
     }
 
     for (int i = idx; i + subvectorLength - 1 < vectorLength; i += subvectorLength) {
-      status = pimRedSumRangedSignedInt(obj3, i, i + subvectorLength - 1, &sum_abs_diff);
+      status = pimRedSumRangedInt(obj3, i, i + subvectorLength - 1, &sum_abs_diff);
       if (status != PIM_OK) {
         std::cout << "Abort" << std::endl;
         return 1;

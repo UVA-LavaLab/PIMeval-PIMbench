@@ -232,7 +232,7 @@ void testFunctional()
   // Test redsum
   {
     int64_t sumDevice = 0;
-    status = pimRedSumSignedInt(obj1, &sumDevice);
+    status = pimRedSumInt(obj1, &sumDevice);
     assert(status == PIM_OK);
     int64_t sumHost = 0;
     for (unsigned i = 0; i < numElements; ++i) {
@@ -247,19 +247,19 @@ void testFunctional()
     unsigned idxBegin = 100;
     unsigned idxEnd = 500;
     int64_t sumDevice = 0;
-    status = pimRedSumRangedSignedInt(obj1, idxBegin, idxEnd, &sumDevice);
+    status = pimRedSumRangedInt(obj1, idxBegin, idxEnd, &sumDevice);
     assert(status == PIM_OK);
     int64_t sumHost = 0;
     for (unsigned i = idxBegin; i < idxEnd; ++i) {
       sumHost += src1[i];
     }
     assert(sumDevice == sumHost);
-    std::cout << "[PASSED] pimRedSumRangedSignedInt" << std::endl;
+    std::cout << "[PASSED] pimRedSumRangedInt" << std::endl;
   }
 
   // Test broadcast
   {
-    status = pimBroadcastSignedInt(obj3, 123456);
+    status = pimBroadcastInt(obj3, 123456);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);

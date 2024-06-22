@@ -53,12 +53,12 @@ extern "C" {
   //! @brief  PIM datatypes
   enum PimDataType {
     PIM_INT8 = 0,
-    PIM_UINT8,
     PIM_INT16,
-    PIM_UINT16,
     PIM_INT32,
-    PIM_UINT32,
     PIM_INT64,
+    PIM_UINT8,
+    PIM_UINT16,
+    PIM_UINT32,
     PIM_UINT64,
     PIM_FP32,
   };
@@ -102,14 +102,12 @@ extern "C" {
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
-  PimStatus pimRedSum(PimObjId src, int64_t* sum);
-  PimStatus pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
-  PimStatus pimRedSumSignedInt(PimObjId src, int64_t* sum);
-  PimStatus pimRedSumUnSignedInt(PimObjId src, uint64_t* sum);
-  PimStatus pimRedSumRangedSignedInt(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
-  PimStatus pimRedSumRangedUnSignedInt(PimObjId src, unsigned idxBegin, unsigned idxEnd, uint64_t* sum);
-  PimStatus pimBroadcastSignedInt(PimObjId dest, int64_t value);
-  PimStatus pimBroadcastUnSignedInt(PimObjId dest, uint64_t value);
+  PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
+  PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
+  PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
+  PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
+  PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
+  PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
   PimStatus pimRotateElementsRight(PimObjId src);
   PimStatus pimRotateElementsLeft(PimObjId src);
   PimStatus pimShiftElementsRight(PimObjId src);

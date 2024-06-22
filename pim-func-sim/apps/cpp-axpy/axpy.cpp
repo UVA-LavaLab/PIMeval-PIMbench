@@ -87,7 +87,7 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
   PimStatus status = pimCopyHostToDevice((void *)X.data(), obj1);
   assert (status == PIM_OK);
 
-  status = pimBroadcastSignedInt(obj2, A);
+  status = pimBroadcastInt(obj2, A);
   assert (status == PIM_OK);
 
   status = pimMul(obj1, obj2, obj1);

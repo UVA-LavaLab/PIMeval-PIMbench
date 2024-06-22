@@ -122,7 +122,7 @@ pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
 
 //! @brief  Load vector with a signed int value
 PimStatus
-pimBroadcastSignedInt(PimObjId dest, int64_t value)
+pimBroadcastInt(PimObjId dest, int64_t value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -130,7 +130,7 @@ pimBroadcastSignedInt(PimObjId dest, int64_t value)
 
 //! @brief  Load vector with an unsigned int value
 PimStatus
-pimBroadcastUnSignedInt(PimObjId dest, uint64_t value)
+pimBroadcastUInt(PimObjId dest, uint64_t value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -258,7 +258,7 @@ pimPopCount(PimObjId src, PimObjId dest)
 
 //! @brief  PIM reduction sum for signed int. Result returned to a host variable
 PimStatus
-pimRedSumSignedInt(PimObjId src, int64_t* sum)
+pimRedSumInt(PimObjId src, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -266,7 +266,7 @@ pimRedSumSignedInt(PimObjId src, int64_t* sum)
 
 //! @brief  PIM reduction sum for unsigned int. Result returned to a host variable
 PimStatus
-pimRedSumUnSignedInt(PimObjId src, uint64_t* sum)
+pimRedSumUInt(PimObjId src, uint64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -274,7 +274,7 @@ pimRedSumUnSignedInt(PimObjId src, uint64_t* sum)
 
 //! @brief  PIM reduction sum for a range of an signed int obj. Result returned to a host variable
 PimStatus
-pimRedSumRangedSignedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
+pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -282,7 +282,7 @@ pimRedSumRangedSignedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64
 
 //! @brief  PIM reduction sum for a range of an unsigned int obj. Result returned to a host variable
 PimStatus
-pimRedSumRangedUnSignedInt(PimObjId src, unsigned idxBegin, unsigned idxEnd, uint64_t* sum)
+pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;

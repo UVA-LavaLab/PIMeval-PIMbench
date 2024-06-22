@@ -221,10 +221,10 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
 
 
     int64_t sum = 0;
-    status = pimRedSumSignedInt(popCountSrcObj, &sum);
+    status = pimRedSumInt(popCountSrcObj, &sum);
     if (status != PIM_OK)
     {
-        std::cout << "pimRedSumSignedInt Abort" << std::endl;
+        std::cout << "pimRedSumInt Abort" << std::endl;
         return -1;
     }
 

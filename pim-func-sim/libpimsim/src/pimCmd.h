@@ -149,13 +149,17 @@ protected:
   }
 
   //! @brief helper function to get the operand based on data type
-  inline int64_t getOperand(uint64_t operandBits, PimDataType dataType) {
-    int64_t operandValue = 0;
+  inline uint64_t getOperand(uint64_t operandBits, PimDataType dataType) {
+    uint64_t operandValue = 0;
     switch (dataType) {
     case PIM_INT8: operandValue =  *reinterpret_cast<int8_t*>(&operandBits); break;
     case PIM_INT16: operandValue =  *reinterpret_cast<int16_t*>(&operandBits); break;
     case PIM_INT32: operandValue =  *reinterpret_cast<int32_t*>(&operandBits); break;
     case PIM_INT64: operandValue =  *reinterpret_cast<int64_t*>(&operandBits); break;
+    case PIM_UINT8: operandValue =  *reinterpret_cast<uint8_t*>(&operandBits); break;
+    case PIM_UINT16: operandValue =  *reinterpret_cast<uint16_t*>(&operandBits); break;
+    case PIM_UINT32: operandValue =  *reinterpret_cast<uint32_t*>(&operandBits); break;
+    case PIM_UINT64: operandValue =  *reinterpret_cast<uint64_t*>(&operandBits); break;
     default:
         std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
     }
@@ -208,7 +212,7 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue = 0)
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t immediateValue = 0)
     : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
@@ -218,7 +222,7 @@ public:
 protected:
   PimObjId m_src;
   PimObjId m_dest;
-  unsigned m_immediateValue;
+  uint64_t m_immediateValue;
 };
 
 //! @class  pimCmdFunc2
@@ -305,7 +309,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
-  std::vector<unsigned> m_regionBoundary;
+  std::vector<uint64_t> m_regionBoundary;
 };
 
 //! @class  pimCmdReadRowToSa
