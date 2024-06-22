@@ -100,15 +100,15 @@ pimResMgr::~pimResMgr()
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
+pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   #if defined(DEBUG)
-  std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %u elements %u bits per element %d data-type\n",
+  std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %llu elements %u bits per element %d data-type\n",
               (int)allocType, numElements, bitsPerElement, (int)dataType);
   #endif
 
-  if (numElements <= 0 || bitsPerElement <= 0) {
-    std::printf("PIM-Error: Invalid parameters to allocate %u elements of %u bits\n", numElements, bitsPerElement);
+  if (numElements == 0 || bitsPerElement == 0) {
+    std::printf("PIM-Error: Invalid parameters to allocate %llu elements of %u bits\n", numElements, bitsPerElement);
     return -1;
   }
 
@@ -132,8 +132,8 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
-    numRegions = ((uint64_t)numElements * bitsPerElement - 1) / numCols + 1;
-    numColsToAllocLast = ((uint64_t)numElements * bitsPerElement) % numCols;
+    numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
+    numColsToAllocLast = (numElements * bitsPerElement) % numCols;
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
     }
@@ -222,7 +222,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
 
   // check if the request can be associated with ref
   PimAllocEnum allocType = assocObj.getAllocType();
-  unsigned numElements = assocObj.getNumElements();
+  uint64_t numElements = assocObj.getNumElements();
   if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     if (bitsPerElement != assocObj.getBitsPerElement()) {
       std::printf("PIM-Error: Cannot allocate elements of %u bits associated with object ID %d with %u bits in H1 style\n",
@@ -314,7 +314,7 @@ pimResMgr::pimFree(PimObjId objId)
 
 //! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimResMgr::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+pimResMgr::pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd)
 {
   assert(0); // todo
   return -1;
