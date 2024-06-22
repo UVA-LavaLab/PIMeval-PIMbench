@@ -175,6 +175,18 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
   PimStatus lr_status = pimCopyHostToDevice(lower_right.data(), lr);
   assert(PIM_OK == lr_status);
 
+  PimStatus ul_right_shift_status = pimShiftBitsRight(ul, ul, 2);
+  assert(PIM_OK == ul_right_shift_status);
+
+  PimStatus ur_right_shift_status = pimShiftBitsRight(ur, ur, 2);
+  assert(PIM_OK == ur_right_shift_status);
+
+  PimStatus ll_right_shift_status = pimShiftBitsRight(ll, ll, 2);
+  assert(PIM_OK == ll_right_shift_status);
+
+  PimStatus lr_right_shift_status = pimShiftBitsRight(lr, lr, 2);
+  assert(PIM_OK == lr_right_shift_status);
+
   // PimStatus divisor_4_status = pimBroadcast(divisor_4, 4);
   // assert(PIM_OK == divisor_4_status);
 
@@ -189,9 +201,6 @@ void pimAverageRows(vector<uint32_t>& upper_left, vector<uint32_t>& upper_right,
 
   // PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
   // assert(PIM_OK == lr_div_status);
-
-  PimStatus right_shift_status = pimShiftBitsRight(lr, lr, 2);
-  assert(PIM_OK == right_shift_status);
 
   vector<uint32_t> tmp;
   tmp.resize(sz);
@@ -308,9 +317,9 @@ std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
       Pixel curr_pix4 = *get_pixel(pixels_in, avg_out.scanline_size, 2 * x + 1, 2 * y + 1);  // 4 + 4
 
       Pixel new_pix;
-      new_pix.red = (((uint16_t)curr_pix1.red) + ((uint16_t)curr_pix2.red) + ((uint16_t)curr_pix3.red) + ((uint16_t)curr_pix4.red)) >> 2;
-      new_pix.blue = (((uint16_t)curr_pix1.blue) + ((uint16_t)curr_pix2.blue) + ((uint16_t)curr_pix3.blue) + ((uint16_t)curr_pix4.blue)) >> 2;
-      new_pix.green = (((uint16_t)curr_pix1.green) + ((uint16_t)curr_pix2.green) + ((uint16_t)curr_pix3.green) + ((uint16_t)curr_pix4.green)) >> 2;
+      new_pix.red = (curr_pix1.red>>2) + (curr_pix2.red>>2) + (curr_pix3.red>>2) + (curr_pix4.red>>2);
+      new_pix.blue = (curr_pix1.blue>>2) + (curr_pix2.blue>>2) + (curr_pix3.blue>>2) + (curr_pix4.blue>>2);
+      new_pix.green = (curr_pix1.green>>2) + (curr_pix2.green>>2) + (curr_pix3.green>>2) + (curr_pix4.green>>2);
 
       set_pixel(pixels_out_averaged, &new_pix, avg_out.new_scanline_size, x, y);
     }
