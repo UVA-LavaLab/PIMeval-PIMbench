@@ -23,6 +23,9 @@ namespace pimUtils
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
 
+  std::vector<bool> readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement);
+  bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
+
   //! @class  threadWorker
   //! @brief  Thread worker base class
   class threadWorker {

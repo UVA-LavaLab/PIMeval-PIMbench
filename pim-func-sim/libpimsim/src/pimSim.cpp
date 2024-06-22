@@ -232,6 +232,13 @@ pimSim::showStats() const
   m_statsMgr->showStats();
 }
 
+//! @brief  Reset PIM command stats
+void
+pimSim::resetStats() const
+{
+  m_statsMgr->resetStats();
+}
+
 //! @brief  Allocate a PIM object
 PimObjId
 pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
@@ -241,13 +248,13 @@ pimSim::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerE
   return m_device->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
-//! @brief  Allocate a PIM object that is associated with a reference ojbect
+//! @brief  Allocate a PIM object that is associated with an existing ojbect
 PimObjId
-pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId ref, PimDataType dataType)
+pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(bitsPerElement, ref, dataType);
+  return m_device->pimAllocAssociated(bitsPerElement, assocId, dataType);
 }
 
 // @brief  Free a PIM object
@@ -257,6 +264,24 @@ pimSim::pimFree(PimObjId obj)
   pimPerfMon perfMon("pimFree");
   if (!isValidDevice()) { return false; }
   return m_device->pimFree(obj);
+}
+
+//! @brief  Create an obj referencing to a range of an existing obj
+PimObjId
+pimSim::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+{
+  pimPerfMon perfMon("pimCreateRangedRef");
+  if (!isValidDevice()) { return -1; }
+  return m_device->pimCreateRangedRef(refId, idxBegin, idxEnd);
+}
+
+//! @brief  Create an obj referencing to negation of an existing obj based on dual-contact memory cells
+PimObjId
+pimSim::pimCreateDualContactRef(PimObjId refId)
+{
+  pimPerfMon perfMon("pimCreateDualContactRef");
+  if (!isValidDevice()) { return -1; }
+  return m_device->pimCreateDualContactRef(refId);
 }
 
 // @brief  Copy data from main memory to PIM device
@@ -293,6 +318,15 @@ pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* de
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
   return m_device->pimCopyDeviceToMainWithType(copyType, src, dest);
+}
+
+// @brief  Copy data from PIM device to device
+bool
+pimSim::pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCopyDeviceToDevice");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyDeviceToDevice(src, dest);
 }
 
 // @brief  Load vector with a scalar value
@@ -456,7 +490,7 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 }
 
 bool
-pimSim::pimRedSum(PimObjId src, int* sum)
+pimSim::pimRedSum(PimObjId src, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
@@ -466,7 +500,7 @@ pimSim::pimRedSum(PimObjId src, int* sum)
 }
 
 bool
-pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int* sum)
+pimSim::pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
@@ -668,6 +702,46 @@ pimSim::pimOpRotateLH(PimObjId objId, PimRowReg src)
   pimPerfMon perfMon("pimOpRotateLH");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRRegRotate>(PimCmdEnum::RREG_ROTATE_L, objId, src);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpAP(int numSrc, va_list args)
+{
+  pimPerfMon perfMon("pimOpAP");
+  if (!isValidDevice()) { return false; }
+
+  std::vector<std::pair<PimObjId, unsigned>> srcRows;
+  for (int i = 0; i < numSrc; ++i) {
+    PimObjId objId = va_arg(args, PimObjId);
+    unsigned ofst = va_arg(args, unsigned);
+    srcRows.emplace_back(objId, ofst);
+  }
+
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AP, srcRows);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
+{
+  pimPerfMon perfMon("pimOpAAP");
+  if (!isValidDevice()) { return false; }
+
+  std::vector<std::pair<PimObjId, unsigned>> srcRows;
+  for (int i = 0; i < numSrc; ++i) {
+    PimObjId objId = va_arg(args, PimObjId);
+    int ofst = va_arg(args, unsigned);
+    srcRows.emplace_back(objId, ofst);
+  }
+  std::vector<std::pair<PimObjId, unsigned>> destRows;
+  for (int i = 0; i < numDest; ++i) {
+    PimObjId objId = va_arg(args, PimObjId);
+    int ofst = va_arg(args, unsigned);
+    destRows.emplace_back(objId, ofst);
+  }
+
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AAP, srcRows, destRows);
   return m_device->executeCmd(std::move(cmd));
 }
 

@@ -2,7 +2,7 @@
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 CXX := g++
-CXXFLAGS := -std=c++17 -Wall -pthread
+CXXFLAGS := -std=c++17 -Wall
 
 # Setup libpimsim library
 LIBPIMSIM_PATH ?= ../../libpimsim

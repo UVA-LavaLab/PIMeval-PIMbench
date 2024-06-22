@@ -45,7 +45,7 @@ public:
 
   bool isValid() const { return m_isValid && m_coreId >= 0 && m_numAllocRows > 0 && m_numAllocCols > 0; }
 
-  void print() const;
+  void print(uint64_t regionId) const;
 
 private:
   PimCoreId m_coreId;
@@ -67,7 +67,7 @@ class pimObjInfo
 public:
   pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement)
     : m_objId(objId),
-      m_refObjId(objId),
+      m_assocObjId(objId),
       m_dataType(dataType),
       m_allocType(allocType),
       m_numElements(numElements),
@@ -76,11 +76,16 @@ public:
   ~pimObjInfo() {}
 
   void addRegion(pimRegion region) { m_regions.push_back(region); }
+  void setObjId(PimObjId objId) { m_objId = objId; }
+  void setAssocObjId(PimObjId assocObjId) { m_assocObjId = assocObjId; }
   void setRefObjId(PimObjId refObjId) { m_refObjId = refObjId; }
+  void setIsDualContactRef(bool val) { m_isDualContactRef = val; }
   void finalize();
 
   PimObjId getObjId() const { return m_objId; }
+  PimObjId getAssocObjId() const { return m_assocObjId; }
   PimObjId getRefObjId() const { return m_refObjId; }
+  bool isDualContactRef() const { return m_isDualContactRef; }
   PimAllocEnum getAllocType() const { return m_allocType; }
   PimDataType getDataType() const { return m_dataType; }
   unsigned getNumElements() const { return m_numElements; }
@@ -99,16 +104,18 @@ public:
   void print() const;
 
 private:
-  PimObjId m_objId;
-  PimObjId m_refObjId;
+  PimObjId m_objId = -1;
+  PimObjId m_assocObjId = -1;
+  PimObjId m_refObjId = -1;
   PimDataType m_dataType;
   PimAllocEnum m_allocType;
-  unsigned m_numElements;
-  unsigned m_bitsPerElement;
+  unsigned m_numElements = 0;
+  unsigned m_bitsPerElement = 0;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
   unsigned m_maxNumRegionsPerCore = 0;
   unsigned m_numCoresUsed = 0;
   unsigned m_maxElementsPerRegion = 0;
+  bool m_isDualContactRef = false;
 };
 
 
@@ -124,8 +131,10 @@ public:
   ~pimResMgr() {}
 
   PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId refId, PimDataType dataType);
+  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId objId);
+  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateDualContactRef(PimObjId refId);
 
   bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }
   const pimObjInfo& getObjInfo(PimObjId objId) const { return m_objMap.at(objId); }
@@ -143,6 +152,7 @@ private:
   PimObjId m_availObjId;
   std::unordered_map<PimObjId, pimObjInfo> m_objMap;
   std::unordered_map<PimCoreId, std::set<std::pair<unsigned, unsigned>>> m_coreUsage; // track row usage only for now
+  std::unordered_map<PimObjId, std::set<PimObjId>> m_refMap;
 };
 
 #endif

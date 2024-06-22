@@ -24,6 +24,7 @@ pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType)
   case PIM_FUNCTIONAL: return "PIM_FUNCTIONAL";
   case PIM_DEVICE_BITSIMD_V: return "PIM_DEVICE_BITSIMD_V";
   case PIM_DEVICE_BITSIMD_V_AP: return "PIM_DEVICE_BITSIMD_V_AP";
+  case PIM_DEVICE_SIMDRAM: return "PIM_DEVICE_SIMDRAM";
   case PIM_DEVICE_BITSIMD_H: return "PIM_DEVICE_BITSIMD_H";
   case PIM_DEVICE_FULCRUM: return "PIM_DEVICE_FUMCRUM";
   case PIM_DEVICE_BANK_LEVEL: return "PIM_DEVICE_BANK_LEVEL";
@@ -61,11 +62,52 @@ std::string
 pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 {
   switch (dataType) {
+  case PIM_INT8: return "int8";
+  case PIM_INT16: return "int16";
   case PIM_INT32: return "int32";
   case PIM_INT64: return "int64";
   case PIM_FP32: return "fp32";
   }
   return "Unknown";
+}
+
+//! @brief  Read bits from host
+std::vector<bool>
+pimUtils::readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement)
+{
+  std::vector<bool> bits;
+  unsigned char* bytePtr = static_cast<unsigned char*>(src);
+
+  for (size_t i = 0; i < (size_t)numElements * bitsPerElement; i += 8) {
+    unsigned byteIdx = i / 8;
+    unsigned char byteVal = *(bytePtr + byteIdx);
+    for (int j = 0; j < 8; ++j) {
+      bits.push_back(byteVal & 1);
+      byteVal = byteVal >> 1;
+    }
+  }
+
+  return bits;
+}
+
+//! @brief  Write bits to host
+bool
+pimUtils::writeBitsToHost(void* dest, const std::vector<bool>& bits)
+{
+  unsigned char* bytePtr = static_cast<unsigned char*>(dest);
+  unsigned byteIdx = 0;
+
+  for (size_t i = 0; i < bits.size(); i += 8) {
+    unsigned char byteVal = 0;
+    for (int j = 7; j >= 0; --j) {
+      byteVal = byteVal << 1;
+      byteVal |= bits[i + j];
+    }
+    *(bytePtr + byteIdx) = byteVal;
+    byteIdx++;
+  }
+
+  return true;
 }
 
 //! @brief  Thread pool ctor
