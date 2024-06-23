@@ -27,6 +27,8 @@ enum class PimCmdEnum {
   // Functional 1-operand
   ABS,
   POPCOUNT,
+  SHIFT_BITS_R,
+  SHIFT_BITS_L,
   // Functional 2-operand
   ADD,
   SUB,
@@ -49,8 +51,6 @@ enum class PimCmdEnum {
   ROTATE_L,
   SHIFT_ELEMENTS_RIGHT,
   SHIFT_ELEMENTS_LEFT,
-  SHIFT_BITS_RIGHT,
-  SHIFT_BITS_LEFT,
 
   // BitSIMD v-layout commands
   ROW_R,

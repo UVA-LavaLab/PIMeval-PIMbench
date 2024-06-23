@@ -25,6 +25,8 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::COPY_D2D, "copy_d2d" },
     { PimCmdEnum::ABS, "abs" },
     { PimCmdEnum::POPCOUNT, "popcount" },
+    { PimCmdEnum::SHIFT_BITS_R, "shift_bits_r" },
+    { PimCmdEnum::SHIFT_BITS_L, "shift_bits_l" },
     { PimCmdEnum::BROADCAST, "broadcast" },
     { PimCmdEnum::ADD, "add" },
     { PimCmdEnum::SUB, "sub" },
@@ -45,8 +47,6 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::ROTATE_L, "rotate_l" },
     { PimCmdEnum::SHIFT_ELEMENTS_RIGHT, "shift_elements_r" },
     { PimCmdEnum::SHIFT_ELEMENTS_LEFT, "shift_elements_l" },
-    { PimCmdEnum::SHIFT_BITS_RIGHT, "shift_bits_r" },
-    { PimCmdEnum::SHIFT_BITS_LEFT, "shift_bits_l" },
     { PimCmdEnum::ROW_R, "row_r" },
     { PimCmdEnum::ROW_W, "row_w" },
     { PimCmdEnum::RREG_MOV, "rreg.mov" },
@@ -459,7 +459,7 @@ pimCmdFunc1::computeRegion(unsigned index)
                *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
       }
       break;
-      case PimCmdEnum::SHIFT_BITS_RIGHT:
+      case PimCmdEnum::SHIFT_BITS_R:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
         int64_t operand = getOperand(operandBits, dataType);
@@ -469,7 +469,7 @@ pimCmdFunc1::computeRegion(unsigned index)
                  *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
       }
       break;
-      case PimCmdEnum::SHIFT_BITS_LEFT:
+      case PimCmdEnum::SHIFT_BITS_L:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
         int64_t operand = getOperand(operandBits, dataType);

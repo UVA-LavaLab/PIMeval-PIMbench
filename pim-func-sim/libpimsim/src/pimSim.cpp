@@ -550,7 +550,7 @@ pimSim::pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount)
 {
   pimPerfMon perfMon("pimShiftBitsRight");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_RIGHT, src, dest, shiftAmount);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_R, src, dest, shiftAmount);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -559,7 +559,7 @@ pimSim::pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
 {
   pimPerfMon perfMon("pimShiftBitsLeft");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_LEFT, src, dest, shiftAmount);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_L, src, dest, shiftAmount);
   return m_device->executeCmd(std::move(cmd));
 }
 
