@@ -22,11 +22,13 @@
 
 #define BITS_PER_INT 32
 
-#define NUM_SUBARRAY 2048
-#define ROW_SIZE 16384
+#define NUM_RANKS 1
+#define NUM_BANK_PER_RANK 128
+#define NUM_SUBARRAY_PER_BANK 32
+#define ROW_SIZE 8192
 #define COL_SIZE 8192
 
-uint64_t WORDS_PER_RANK = (uint64_t) NUM_SUBARRAY * (uint64_t) ROW_SIZE * (uint64_t) COL_SIZE / (uint64_t) BITS_PER_INT;
+uint64_t WORDS_PER_RANK = (uint64_t) NUM_RANKS * (uint64_t) NUM_BANK_PER_RANK * (uint64_t) NUM_SUBARRAY_PER_BANK * (uint64_t) ROW_SIZE * (uint64_t) COL_SIZE / (uint64_t) BITS_PER_INT;
 
 typedef uint32_t UINT32;
 
@@ -247,12 +249,14 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
 }
 
 int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+    uint64_t operandsCount = 4; // src1, src2, dst, popCountSrc
+    uint64_t operandMaxNumberOfWords = WORDS_PER_RANK / operandsCount;
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
     cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
-    assert(wordsPerMatrixRow <=  (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
+    assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
     int oneCount = 0;
     uint64_t words = 0;
     std::vector<unsigned int> src1;
@@ -275,7 +279,7 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
                     unsigned int op1 = bitAdjMatrix[i][k];
                     unsigned int op2 = bitAdjMatrix[j][k];
                     auto ifstart = std::chrono::high_resolution_clock::now();
-                    if ((op1 & op2) == 0)
+                    if (op1 == 0 || op2 == 0)
                     {
                         auto ifend = std::chrono::high_resolution_clock::now();
                         auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
@@ -303,7 +307,7 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
                 auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
                 host_time_forloop += elapsedTime.count();
             }
-            if((words + wordsPerMatrixRow > (WORDS_PER_RANK / (4*2))) || ((i == V - 1) && (j == V - 1) && words > 0)){
+            if((words + wordsPerMatrixRow > operandMaxNumberOfWords) || ((i == V - 1) && (j == V - 1) && words > 0)){
                 cout << "words: " << words << endl;
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
                 std::vector<unsigned int> dst(words);
@@ -334,12 +338,14 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
 }
 
 int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+    uint64_t operandsCount = 4; // src1, src2, dst, popCountSrc
+    uint64_t operandMaxNumberOfWords = WORDS_PER_RANK / operandsCount;
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
     cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
-    assert(wordsPerMatrixRow <=  (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
+    assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
     int oneCount = 0;
     uint64_t words = 0;
     std::vector<unsigned int> src1;
@@ -360,7 +366,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                     src2.push_back(op2);
                 }
             }
-            if((words + wordsPerMatrixRow > (WORDS_PER_RANK / (4*2))) || ((i == V - 1) && (j == V - 1) && words > 0)){
+            if((words + wordsPerMatrixRow > operandMaxNumberOfWords) || ((i == V - 1) && (j == V - 1) && words > 0)){
                 cout << "words: " << words << endl;
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
                 std::vector<unsigned int> dst(words);
