@@ -11,6 +11,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <unordered_set>
+#include <climits>
 
 
 //! @brief  Get PIM command name from command type enum
@@ -331,34 +332,34 @@ pimCmdCopy::updateStats() const
 {
    if (m_cmdType == PimCmdEnum::COPY_H2D) {
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
-    unsigned numElements = objDest.getNumElements();
+    uint64_t numElements = objDest.getNumElements();
     unsigned bitsPerElement = objDest.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyMainToDevice((uint64_t)numElements * bitsPerElement);
+    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement);
 
     #if defined(DEBUG)
-    std::printf("PIM-Info: Copied %u elements of %u bits from host to PIM obj %d\n",
+    std::printf("PIM-Info: Copied %llu elements of %u bits from host to PIM obj %d\n",
                 numElements, bitsPerElement, m_dest);
     #endif
 
   } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    unsigned numElements = objSrc.getNumElements();
+    uint64_t numElements = objSrc.getNumElements();
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain((uint64_t)numElements * bitsPerElement);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement);
 
     #if defined(DEBUG)
-    std::printf("PIM-Info: Copied %u elements of %u bits from PIM obj %d to host\n",
+    std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to host\n",
                 numElements, bitsPerElement, m_src);
     #endif
 
   } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    unsigned numElements = objSrc.getNumElements();
+    uint64_t numElements = objSrc.getNumElements();
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice((uint64_t)numElements * bitsPerElement);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement);
 
     #if defined(DEBUG)
-    std::printf("PIM-Info: Copied %u elements of %u bits from PIM obj %d to PIM obj %d\n",
+    std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to PIM obj %d\n",
                 numElements, bitsPerElement, m_src, m_dest);
     #endif
 
@@ -696,7 +697,7 @@ pimCmdRedSum::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-  unsigned currIdx = numElementsInRegion * index;
+  uint64_t currIdx = (uint64_t)numElementsInRegion * index;
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);

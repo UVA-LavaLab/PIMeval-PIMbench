@@ -46,7 +46,7 @@ pimResetStats()
 
 //! @brief  Allocate a PIM resource
 PimObjId
-pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType)
+pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElements, PimDataType dataType)
 {
   return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElements, dataType);
 }
@@ -68,7 +68,7 @@ pimFree(PimObjId obj)
 
 //! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd)
 {
   return pimSim::get()->pimCreateRangedRef(refId, idxBegin, idxEnd);
 }
@@ -258,7 +258,7 @@ pimRedSum(PimObjId src, int64_t* sum)
 
 //! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
 PimStatus
-pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
+pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;

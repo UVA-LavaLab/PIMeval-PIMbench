@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <stdexcept>
+#include <memory>
 
 
 //! @brief  Print info of a PIM region
@@ -88,30 +89,26 @@ pimResMgr::pimResMgr(pimDevice* device)
   unsigned numCores = m_device->getNumCores();
   unsigned numRowsPerCore = m_device->getNumRows();
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage[i] = new coreUsage(numRowsPerCore);
+    m_coreUsage[i] = std::make_unique<coreUsage>(numRowsPerCore);
   }
 }
 
 //! @brief  pimResMgr dtor
 pimResMgr::~pimResMgr()
 {
-  unsigned numCores = m_device->getNumCores();
-  for (unsigned i = 0; i < numCores; ++i) {
-    delete m_coreUsage[i];
-  }
 }
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
+pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   #if defined(DEBUG)
-  std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %u elements %u bits per element %d data-type\n",
+  std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %llu elements %u bits per element %d data-type\n",
               (int)allocType, numElements, bitsPerElement, (int)dataType);
   #endif
 
-  if (numElements <= 0 || bitsPerElement <= 0) {
-    std::printf("PIM-Error: Invalid parameters to allocate %u elements of %u bits\n", numElements, bitsPerElement);
+  if (numElements == 0 || bitsPerElement == 0) {
+    std::printf("PIM-Error: Invalid parameters to allocate %llu elements of %u bits\n", numElements, bitsPerElement);
     return -1;
   }
 
@@ -135,8 +132,8 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
-    numRegions = ((uint64_t)numElements * bitsPerElement - 1) / numCols + 1;
-    numColsToAllocLast = ((uint64_t)numElements * bitsPerElement) % numCols;
+    numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
+    numColsToAllocLast = (numElements * bitsPerElement) % numCols;
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
     }
@@ -159,7 +156,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
   // create regions
   bool success = true;
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage[i]->newAllocStart();
+    m_coreUsage.at(i)->newAllocStart();
   }
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     for (uint64_t i = 0; i < numRegions; ++i) {
@@ -175,11 +172,11 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsP
 
       // add to core usage map
       auto alloc = std::make_pair(newRegion.getRowIdx(), numRowsToAlloc);
-      m_coreUsage[coreId]->addRange(alloc, newObj.getObjId());
+      m_coreUsage.at(coreId)->addRange(alloc, newObj.getObjId());
     }
   }
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage[i]->newAllocEnd(success);
+    m_coreUsage.at(i)->newAllocEnd(success);
   }
 
   if (!success) {
@@ -225,7 +222,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
 
   // check if the request can be associated with ref
   PimAllocEnum allocType = assocObj.getAllocType();
-  unsigned numElements = assocObj.getNumElements();
+  uint64_t numElements = assocObj.getNumElements();
   if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     if (bitsPerElement != assocObj.getBitsPerElement()) {
       std::printf("PIM-Error: Cannot allocate elements of %u bits associated with object ID %d with %u bits in H1 style\n",
@@ -241,7 +238,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
 
   bool success = true;
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage[i]->newAllocStart();
+    m_coreUsage.at(i)->newAllocStart();
   }
   for ( const pimRegion& region : assocObj.getRegions()) {
     PimCoreId coreId = region.getCoreId();
@@ -260,10 +257,10 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
 
     // add to core usage map
     auto alloc = std::make_pair(newRegion.getRowIdx(), numAllocRows);
-    m_coreUsage[coreId]->addRange(alloc, newObj.getObjId());
+    m_coreUsage.at(coreId)->addRange(alloc, newObj.getObjId());
   }
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage[i]->newAllocEnd(success);
+    m_coreUsage.at(i)->newAllocEnd(success);
   }
 
   if (!success) {
@@ -295,14 +292,12 @@ pimResMgr::pimFree(PimObjId objId)
     std::printf("PIM-Error: Cannot free non-exist object ID %d\n", objId);
     return false;
   }
+  unsigned numCores = m_device->getNumCores();
   const pimObjInfo& obj = m_objMap.at(objId);
 
   if (!obj.isDualContactRef()) {
-    for (const pimRegion &region : obj.getRegions()) {
-      PimCoreId coreId = region.getCoreId();
-      unsigned rowIdx = region.getRowIdx();
-      unsigned numAllocRows = region.getNumAllocRows();
-      m_coreUsage[coreId]->deleteRange(std::make_pair(rowIdx, numAllocRows));
+    for (unsigned i = 0; i < numCores; ++i) {
+      m_coreUsage.at(i)->deleteObj(objId);
     }
   }
   m_objMap.erase(objId);
@@ -319,7 +314,7 @@ pimResMgr::pimFree(PimObjId objId)
 
 //! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimResMgr::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+pimResMgr::pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd)
 {
   assert(0); // todo
   return -1;
@@ -431,12 +426,16 @@ pimResMgr::coreUsage::addRange(std::pair<unsigned, unsigned> range, PimObjId obj
   m_newAlloc.insert(range);
 }
 
-//! @brief  Delete a range from core usage
+//! @brief  Delete an object from core usage
 void
-pimResMgr::coreUsage::deleteRange(std::pair<unsigned, unsigned> range)
+pimResMgr::coreUsage::deleteObj(PimObjId objId)
 {
-  if (m_rangesInUse.find(range) != m_rangesInUse.end()) {
-    m_rangesInUse.erase(range);
+  for (auto it = m_rangesInUse.begin(); it != m_rangesInUse.end();) {
+    if (it->second == objId) {
+      it = m_rangesInUse.erase(it);
+    } else {
+      ++it;
+    }
   }
 }
 
