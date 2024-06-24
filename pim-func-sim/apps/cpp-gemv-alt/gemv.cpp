@@ -77,7 +77,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
+void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int64_t> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, col, bitsPerElement, PIM_INT32);
@@ -136,7 +136,8 @@ int main(int argc, char *argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Row: " << params.row << " Column: " << params.column << "\n";
 
-  std::vector<int> srcVector, resultVector;
+  std::vector<int> srcVector;
+  std::vector<int64_t> resultVector;
   std::vector<std::vector<int>> srcMatrix; // matrix should lay out in colXrow format for bitserial PIM
   if (params.inputFile == nullptr)
   {

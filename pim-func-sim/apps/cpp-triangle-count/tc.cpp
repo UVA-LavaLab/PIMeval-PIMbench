@@ -158,7 +158,7 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
     return edgeList;
 }
 
-int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2){
+int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2, std::vector<unsigned int> &dst, std::vector<unsigned int> &popCountSrc) {
     unsigned bitsPerElement = sizeof(int) * 8;
 
     cout << "numElements: " << numElements << endl;
@@ -166,105 +166,77 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
     if (srcObj1 == -1)
     {
-        std::cout << "orignal Abort" << std::endl;
+        std::cout << "src1: pimAlloc" << std::endl;
         return -1;
     }
 
     PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
     if (srcObj2 == -1)
     {
-        std::cout << "associated Abort" << std::endl;
+        std::cout << "src2: pimAllocAssociated" << std::endl;
+        return -1;
+    }
+
+    PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    if (dstObj == -1)
+    {
+        std::cout << "dst: pimAllocAssociated" << std::endl;
+        return -1;
+    }
+
+    PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    if (popCountSrcObj == -1)
+    {
+        std::cout << "popCountSrc: pimAllocAssociated" << std::endl;
         return -1;
     }
 
     PimStatus status = pimCopyHostToDevice((void *)src1.data(), srcObj1);
     if (status != PIM_OK)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "src1: pimCopyHostToDevice Abort" << std::endl;
         return -1;
     }
 
     status = pimCopyHostToDevice((void *)src2.data(), srcObj2);
     if (status != PIM_OK)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "src2: pimCopyHostToDevice Abort" << std::endl;
         return -1;
     }
     
-    status = pimAnd(srcObj1, srcObj2, srcObj1);
+    status = pimAnd(srcObj1, srcObj2, dstObj);
     if (status != PIM_OK)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "pimAnd Abort" << std::endl;
         return -1;
     }
 
-    status = pimPopCount(srcObj1, srcObj2);
+    status = pimPopCount(dstObj, popCountSrcObj);
     if (status != PIM_OK)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "pimPopCount Abort" << std::endl;
         return -1;
     }
 
-    std::vector<int> dst(numElements);
-    status = pimCopyDeviceToHost(srcObj2, (void *)dst.data());
-    if (status != PIM_OK)
-    {
-        std::cout << "Abort" << std::endl;
-        return -1;
-    }
 
-    int sum = 0;
-    status = pimRedSum(srcObj2, &sum);
+    int64_t sum = 0;
+    status = pimRedSum(popCountSrcObj, &sum);
     if (status != PIM_OK)
     {
-        std::cout << "Abort" << std::endl;
+        std::cout << "pimRedSum Abort" << std::endl;
         return -1;
     }
 
     pimFree(srcObj1);
     pimFree(srcObj2);
+    pimFree(dstObj);
+    pimFree(popCountSrcObj);
 
     return sum;
 }
 
-int run_naive(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
-    int count = 0;
-    int V = bitAdjMatrix.size();
-    // unsigned numElements = V;
-    int numElements = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
-    cout << "number of ndoes: " << V << endl;
-    cout << "numElem: " << numElements << endl;
-    cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
-    assert(numElements <= (WORDS_PER_RANK / 2) && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
-    int oneCount = 0;
-
-    #pragma omp parallel for reduction(+:count)
-    for (int i = 0; i < V; ++i) {
-        for (int j = 0; j < V; ++j) {
-            if (adjMatrix[i][j]) { // If there's an edge between i and j
-                oneCount++;
-                std::vector<unsigned int> src1(numElements);
-                std::vector<unsigned int> src2(numElements);
-                // cout << "i: " << i << ", j: " << j << endl;
-                for (int k = 0; k < numElements; ++k) {
-                    src1[k] = bitAdjMatrix[i][k];
-                    src2[k] = bitAdjMatrix[j][k];
-                } 
-                int sum = vectorAndPopCntRedSum((uint64_t) numElements, src1, src2);
-                if(sum < 0)
-                    return -1;
-                //redsum
-                count += sum;
-            }
-        }
-    }
-    cout << "oneCount: " << oneCount << endl;
-    cout << "bit32TriangleCount: " << count / 6 << endl;
-    // Each triangle is counted three times (once at each vertex), so divide the count by 3
-    return count / 6;
-}
-
-int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix, bool optimized = false) {
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
@@ -277,26 +249,58 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     std::vector<unsigned int> src2;
     int step = V / 10; // Each 10 percent of the total iterations
     uint16_t iterations = 0;
+    // uint32_t skippedWords = 0, transferredWords = 0;
+    double host_time_if = 0.0, host_time_forloop = 0.0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
             if (adjMatrix[i][j]) 
             { // If there's an edge between i and j
                 ++oneCount;
-                //TODO: check if we need to add timing for this
+                auto start = std::chrono::high_resolution_clock::now();
+#ifdef ENABLE_PARALLEL
+                // Parallelizing the loop with OpenMP
+                #pragma omp parallel for reduction(+:host_time_if, words) 
+#endif
                 for (int k = 0; k < wordsPerMatrixRow; ++k) {
+                    unsigned int op1 = bitAdjMatrix[i][k];
+                    unsigned int op2 = bitAdjMatrix[j][k];
+                    if(optimized){
+                        auto ifstart = std::chrono::high_resolution_clock::now();
+                        if ((op1 & op2) == 0)
+                        {
+                            auto ifend = std::chrono::high_resolution_clock::now();
+                            auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                            host_time_if += ifelapsedTime.count();
+                            // skippedWords++;
+                            continue;
+                        }
+                        auto ifend = std::chrono::high_resolution_clock::now();
+                        auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                        host_time_if += ifelapsedTime.count();
+                    }
+                    // transferredWords++;
+#ifdef ENABLE_PARALLEL
+                    #pragma omp atomic
+#endif
                     ++words;
-                    src1.push_back(bitAdjMatrix[i][k]);
-                    src2.push_back(bitAdjMatrix[j][k]);
+#ifdef ENABLE_PARALLEL
+                    #pragma omp critical
+#endif
+                    {
+                        src1.push_back(op1);
+                        src2.push_back(op2);
+                    }
                 }
+                auto end = std::chrono::high_resolution_clock::now();
+                auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                host_time_forloop += elapsedTime.count();
             }
-            if((words + wordsPerMatrixRow > (WORDS_PER_RANK / 2)) || ((i == V - 1) && (j == V - 1) && words > 0)){
+            if((words + wordsPerMatrixRow > (WORDS_PER_RANK / (4*2))) || ((i == V - 1) && (j == V - 1) && words > 0)){
                 cout << "words: " << words << endl;
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
-                auto start = std::chrono::high_resolution_clock::now();
-                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2);
-                auto end = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double, std::milli> elapsedTime = (end - start);
-                cout << "vectorAndPopCntRedSum time: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+                std::vector<unsigned int> dst(words);
+                std::vector<unsigned int> popCountSrc(words);
+                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dst, popCountSrc);
            
                 if(sum < 0)
                     return -1;
@@ -304,17 +308,21 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 iterations++;
                 src1.clear();
                 src2.clear();
+                dst.clear();
                 count += sum;
             }
 
         }
         if (i % step == 0) {
-            cout << "count : " << count << " oneCount: " << oneCount << endl;
             std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
         }
     }
-    cout << "oneCount: " << oneCount << endl;
-    cout << "bit32TriangleCount: " << count / 6 << endl;
+    if(optimized){
+        cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
+        cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
+    }
+    // cout << "oneCount: " << oneCount << ", skippedWords: " << skippedWords << ", transferredWords: " << transferredWords << endl;
+    cout << "TriangleCount: " << count / 6 << endl;
     // Each triangle is counted three times (once at each vertex), so divide the count by 3
     return count / 6;
 }
@@ -337,14 +345,15 @@ int main(int argc, char** argv) {
         // Convert edge list to adjacency matrix
         vector<vector<bool>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
         cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
+        cout << "-----------convertToBitwiseAdjMatrix-----------" << endl;
 
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
 
+        cout << "-----------createDevice-----------" << endl;
         if (!createDevice(params.configFile))
             return 1;
         //run simulation
-        // run_naive(adjMatrix, bitAdjMatrix);
-        run_rowmaxusage(adjMatrix, bitAdjMatrix);
+        run_rowmaxusage(adjMatrix, bitAdjMatrix, true);
 
         //stats
         pimShowStats();

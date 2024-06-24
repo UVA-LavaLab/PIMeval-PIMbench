@@ -75,7 +75,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void vectorRed(uint64_t vectorLength, std::vector<int> src, int &reductionValue)
+void vectorRed(uint64_t vectorLength, std::vector<int> src, int64_t &reductionValue)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
   if (!createDevice(params.configFile))
     return 1;
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  int reductionValue = 0;
+  int64_t reductionValue = 0;
   vectorRed(params.vectorLength, src, reductionValue);
   if (params.shouldVerify)
   {

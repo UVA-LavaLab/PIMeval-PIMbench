@@ -54,6 +54,7 @@ public:
 
   void recordCopyMainToDevice(uint64_t numBits) { m_bitsCopiedMainToDevice += numBits; }
   void recordCopyDeviceToMain(uint64_t numBits) { m_bitsCopiedDeviceToMain += numBits; }
+  void recordCopyDeviceToDevice(uint64_t numBits) { m_bitsCopiedDeviceToDevice += numBits; }
 
   void resetStats();
 
@@ -71,6 +72,7 @@ private:
 
   uint64_t m_bitsCopiedMainToDevice = 0;
   uint64_t m_bitsCopiedDeviceToMain = 0;
+  uint64_t m_bitsCopiedDeviceToDevice = 0;
 };
 
 #endif

@@ -21,7 +21,7 @@ void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
   srand((unsigned)time(NULL));
   srcVector.resize(vectorLength);
 #pragma omp parallel for
-  for (int i = 0; i < vectorLength; ++i)
+  for (uint64_t i = 0; i < vectorLength; ++i)
   {
     srcVector[i] = (rand() % (i + 1) + 1);
   }
@@ -35,7 +35,7 @@ void getVectorFP32(uint64_t vectorLength, std::vector<float> &srcVector, bool no
 
   srcVector.resize(vectorLength);
   #pragma omp parallel for
-  for (int i = 0; i < vectorLength; ++i) {
+  for (uint64_t i = 0; i < vectorLength; ++i) {
     float val = 0.0;
     do {
       val = dist(gen);
