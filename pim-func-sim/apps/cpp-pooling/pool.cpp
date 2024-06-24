@@ -14,7 +14,7 @@ using namespace std;
 typedef struct Params
 {
   int row, column, dim, stride, kernelHeight, kernelWidth;
-  char *kernelMatrixFile;
+  char *dramConfigFile;
   char *imageMatrixFile;
   bool shouldVerify;
   bool moreDebugPrints;
@@ -29,8 +29,8 @@ void usage()
           "\n    -c    column (default=224)"
           "\n    -d    dimension (default=64)"
           "\n    -s    stride (default=2)"
-          "\n    -kh   kernel height (default=2)"
-          "\n    -kw   kernel width (default=2)"
+          "\n    -h    kernel height (default=2)"
+          "\n    -w    kernel width (default=2)"
           "\n    -v    should verify result with CPU"
           "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
           "\n    -i    input image file containing matrices (default=generates matrix with random numbers)"
@@ -47,7 +47,7 @@ struct Params getInputParams(int argc, char **argv)
   p.stride = 2;
   p.kernelHeight = 2;
   p.kernelWidth = 2;
-  p.kernelMatrixFile = nullptr;
+  p.dramConfigFile = nullptr;
   p.imageMatrixFile = nullptr;
   p.shouldVerify = false;
   p.moreDebugPrints = false;
@@ -80,7 +80,7 @@ struct Params getInputParams(int argc, char **argv)
       p.kernelWidth = atoi(optarg);
       break; 
     case 'f':
-      p.kernelMatrixFile = optarg;
+      p.dramConfigFile = optarg;
       break;
     case 'i':
       p.imageMatrixFile = optarg;
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
     // TODO: read Matrix from file
   }
 
-  if (!createDevice(params.kernelMatrixFile))
+  if (!createDevice(params.dramConfigFile))
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
