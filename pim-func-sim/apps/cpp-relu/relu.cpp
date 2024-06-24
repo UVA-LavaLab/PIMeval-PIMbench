@@ -23,7 +23,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./pool [options]"
+          "\nUsage:  ./relu [options]"
           "\n"
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"
