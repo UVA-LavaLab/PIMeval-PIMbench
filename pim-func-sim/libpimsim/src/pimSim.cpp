@@ -479,6 +479,71 @@ pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+bool pimSim::pimAdd(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimSub(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimMul(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimDiv(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimAnd(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimOr(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimXor(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimXnor(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimGT(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimLT(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimEQ(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimMin(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
+bool pimSim::pimMax(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return false;
+}
+
 // @brief  PIM OP: popcount
 bool
 pimSim::pimPopCount(PimObjId src, PimObjId dest)

@@ -248,6 +248,71 @@ pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+PimStatus pimAddScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimSubScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimMulScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimDivScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimAndScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimOrScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimXorScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimXnorScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimGTScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimLTScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimEQScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimMinScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
+PimStatus pimMaxScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+{
+    return PimStatus();
+}
+
 //! @brief  PIM Pop Count
 PimStatus
 pimPopCount(PimObjId src, PimObjId dest)
