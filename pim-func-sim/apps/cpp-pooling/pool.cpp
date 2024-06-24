@@ -29,7 +29,7 @@ void usage()
           "\n    -c    column (default=224)"
           "\n    -d    dimension (default=64)"
           "\n    -s    stride (default=2)"
-          "\n    -h    kernel height (default=2)"
+          "\n    -l    kernel height (default=2)"
           "\n    -w    kernel width (default=2)"
           "\n    -v    should verify result with CPU"
           "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
