@@ -77,9 +77,9 @@ public:
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  bool pimRedSum(PimObjId src, int64_t* sum);
-  bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
-  bool pimBroadcast(PimObjId dest, unsigned value);
+  template <typename T> bool pimRedSum(PimObjId src, T* sum);
+  template <typename T> bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum);
+  template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);
   bool pimShiftElementsRight(PimObjId src);

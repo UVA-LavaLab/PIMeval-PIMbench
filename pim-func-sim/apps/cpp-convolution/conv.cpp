@@ -22,6 +22,7 @@ typedef struct Params
   int row, column, dim, stride, kernelSize, kernelDim, padding;
   char *kernelMatrixFile;
   char *imageMatrixFile;
+  char *dramConfigFile;
   bool shouldVerify;
   bool moreDebugPrints;
 } Params;
@@ -41,6 +42,7 @@ void usage()
           "\n    -p    padding (default = 1)"
           "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
           "\n    -i    input file containing image matrices (default=generates matrix with random numbers)"
+          "\n    -o    DRAM config file (default = false)"
 	  "\n    -m    enable more debug prints (default = false)"
           "\n");
 }
@@ -55,6 +57,7 @@ struct Params getInputParams(int argc, char **argv)
   p.kernelSize = 3;
   p.kernelMatrixFile = nullptr;
   p.imageMatrixFile = nullptr;
+  p.dramConfigFile = nullptr;
   p.shouldVerify = false;
   p.kernelDim = 64;
   p.padding = 1;
@@ -96,6 +99,9 @@ struct Params getInputParams(int argc, char **argv)
     case 'i':
       p.imageMatrixFile = optarg;
       break;
+    case 'o':
+      p.dramConfigFile = optarg;
+      break;  
     case 'v':
       p.shouldVerify = (*optarg == 't') ? true : false;
       break;
@@ -160,7 +166,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   {
     for (int j = 0; j < filterMatrix[i].size(); ++j)
     {
-      PimStatus status = pimBroadcast(filterObjects[idx++], filterMatrix[i][j]);
+      PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -353,7 +359,7 @@ int main(int argc, char *argv[])
     // TODO: read Kernel Matrix from file
   }
 
-  if (!createDevice(params.kernelMatrixFile))
+  if (!createDevice(params.dramConfigFile))
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.

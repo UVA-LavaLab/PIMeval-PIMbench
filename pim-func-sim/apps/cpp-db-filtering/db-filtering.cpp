@@ -146,7 +146,7 @@ int main(int argc, char **argv){
         return 1;
     }
 
-    status = pimBroadcast(srcObj2, key);
+    status = pimBroadcastInt(srcObj2, key);
     if (status != PIM_OK){
       std::cout << "Abort" << std::endl;
       return 1;

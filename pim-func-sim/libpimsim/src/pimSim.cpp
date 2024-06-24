@@ -330,12 +330,12 @@ pimSim::pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
 }
 
 // @brief  Load vector with a scalar value
-bool
-pimSim::pimBroadcast(PimObjId dest, unsigned value)
+template <typename T> bool
+pimSim::pimBroadcast(PimObjId dest, T value)
 {
   pimPerfMon perfMon("pimBroadcast");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast>(PimCmdEnum::BROADCAST, dest, value);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast<T>>(PimCmdEnum::BROADCAST, dest, value);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -489,23 +489,23 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool
-pimSim::pimRedSum(PimObjId src, int64_t* sum)
+template <typename T> bool
+pimSim::pimRedSum(PimObjId src, T* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(PimCmdEnum::REDSUM, src, sum);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM, src, sum);
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool
-pimSim::pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
+template <typename T> bool
+pimSim::pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum)
 {
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -744,4 +744,14 @@ pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AAP, srcRows, destRows);
   return m_device->executeCmd(std::move(cmd));
 }
+
+// Explicit template instantiations
+template bool pimSim::pimBroadcast<uint64_t>(PimObjId dest, uint64_t value);
+template bool pimSim::pimBroadcast<int64_t>(PimObjId dest, int64_t value);
+
+template bool pimSim::pimRedSum<uint64_t>(PimObjId src, uint64_t* sum);
+template bool pimSim::pimRedSum<int64_t>(PimObjId src, int64_t* sum);
+
+template bool pimSim::pimRedSumRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
+template bool pimSim::pimRedSumRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
 
