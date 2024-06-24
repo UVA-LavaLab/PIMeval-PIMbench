@@ -96,18 +96,6 @@ void testFunctional()
     std::cout << "[PASSED] pimDiv" << std::endl;
   }
 
-  // Test abs
-  {
-    status = pimAbs(obj2, obj3);
-    assert(status == PIM_OK);
-    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
-    assert(status == PIM_OK);
-    for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == src2[i]);
-    }
-    std::cout << "[PASSED] pimAbs" << std::endl;
-  }
-
   // Test and
   {
     status = pimAnd(obj1, obj2, obj3);

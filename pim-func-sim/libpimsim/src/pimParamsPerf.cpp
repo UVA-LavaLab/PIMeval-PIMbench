@@ -108,7 +108,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       switch (cmdType) {
-      case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break;
+      case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break; // TODO: this should not be executed for uint 
       case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL; break;
       case PimCmdEnum::SHIFT_BITS_RIGHT:
       case PimCmdEnum::SHIFT_BITS_LEFT:

@@ -440,11 +440,9 @@ pimCmdFunc1::computeRegion(unsigned index)
           setBits(core, isVLayout, locDest.first, locDest.second,
                *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
         } else {
-          auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-          uint64_t operand = getOperand(operandBits, dataType);
           // unsigned values don't need abs
-          setBits(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<uint64_t *>(&operand), bitsPerElementDest);
+          std::printf("PIM-Error: Unsupported API for %u\n", dataType);
+          return false;
         }
       }
       break;
