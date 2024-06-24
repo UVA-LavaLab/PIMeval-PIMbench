@@ -43,10 +43,10 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::MAX, "max" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
-    { PimCmdEnum::ROTATE_R, "rotate_r" },
-    { PimCmdEnum::ROTATE_L, "rotate_l" },
-    { PimCmdEnum::SHIFT_ELEMENTS_R, "shift_elements_r" },
-    { PimCmdEnum::SHIFT_ELEMENTS_L, "shift_elements_l" },
+    { PimCmdEnum::ROTATE_ELEM_R, "rotate_elem_r" },
+    { PimCmdEnum::ROTATE_ELEM_L, "rotate_elem_l" },
+    { PimCmdEnum::SHIFT_ELEM_R, "shift_elem_r" },
+    { PimCmdEnum::SHIFT_ELEM_L, "shift_elem_l" },
     { PimCmdEnum::ROW_R, "row_r" },
     { PimCmdEnum::ROW_W, "row_w" },
     { PimCmdEnum::RREG_MOV, "rreg.mov" },
@@ -863,21 +863,21 @@ pimCmdRotate::execute()
   // handle region boundaries
   bool isVLayout = objSrc.isVLayout();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
-  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_R) {
+  if (m_cmdType == PimCmdEnum::ROTATE_ELEM_R || m_cmdType == PimCmdEnum::SHIFT_ELEM_R) {
     for (unsigned i = 0; i < numRegions; ++i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
       auto locSrc = locateNthElement(srcRegion, isVLayout, 0, bitsPerElement);
       uint64_t val = 0;
-      if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_R) {
+      if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
         val = m_regionBoundary[numRegions - 1];
       } else if (i > 0) {
         val = m_regionBoundary[i - 1];
       }
       setBits(core, isVLayout, locSrc.first, locSrc.second, val, bitsPerElement);
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_L) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_ELEM_L || m_cmdType == PimCmdEnum::SHIFT_ELEM_L) {
     for (unsigned i = 0; i < numRegions; ++i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
@@ -885,7 +885,7 @@ pimCmdRotate::execute()
       unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
       auto locSrc = locateNthElement(srcRegion, isVLayout, numElementsInRegion - 1, bitsPerElement);
       uint64_t val = 0;
-      if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_R) {
+      if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
         val = m_regionBoundary[0];
       } else if (i < numRegions - 1) {
         val = m_regionBoundary[i + 1];
@@ -932,7 +932,7 @@ pimCmdRotate::computeRegion(unsigned index)
   }
 
   // perform rotation
-  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_R) {
+  if (m_cmdType == PimCmdEnum::ROTATE_ELEM_R || m_cmdType == PimCmdEnum::SHIFT_ELEM_R) {
     m_regionBoundary[index] = regionVector[numElementsInRegion - 1];
     unsigned carry = 0;
     for (unsigned j = 0; j < numElementsInRegion; ++j) {
@@ -940,7 +940,7 @@ pimCmdRotate::computeRegion(unsigned index)
       regionVector[j] = carry;
       carry = temp;
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_L) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_ELEM_L || m_cmdType == PimCmdEnum::SHIFT_ELEM_L) {
     m_regionBoundary[index] = regionVector[0];
     unsigned carry = 0;
     for (int j = numElementsInRegion - 1; j >= 0; --j) {
