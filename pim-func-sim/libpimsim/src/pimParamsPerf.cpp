@@ -386,7 +386,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   {
     // assume taking 1 ALU latency to write an element
     double aluLatency = 0.000005; // 5ns
-    msRuntime = aluLatency * maxElementsPerRegion;
+    msRuntime = m_tW * aluLatency * maxElementsPerRegion;
     msRuntime *= numPass;
     break;
   }
