@@ -217,7 +217,6 @@ void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, con
   allocatePimObject(numOfPoints, adjusted_dim, testPointObjectList, dataPointObjectList[0]);
   allocatePimObject(numOfPoints, adjusted_dim, resultObjectList, dataPointObjectList[0]);
 
-  cout << "done with alloc\n";
 
   vector<vector<int>> distMat(numOfTests, vector<int>(numOfPoints));
   

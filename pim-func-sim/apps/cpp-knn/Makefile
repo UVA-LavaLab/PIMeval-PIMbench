@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := knn
+EXEC := knn.out
 SRC := knn.cpp
 
 debug perf dramsim3_integ: $(EXEC)
