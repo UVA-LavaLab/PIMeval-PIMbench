@@ -45,8 +45,8 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::ROTATE_R, "rotate_r" },
     { PimCmdEnum::ROTATE_L, "rotate_l" },
-    { PimCmdEnum::SHIFT_ELEMENTS_RIGHT, "shift_elements_r" },
-    { PimCmdEnum::SHIFT_ELEMENTS_LEFT, "shift_elements_l" },
+    { PimCmdEnum::SHIFT_ELEMENTS_R, "shift_elements_r" },
+    { PimCmdEnum::SHIFT_ELEMENTS_L, "shift_elements_l" },
     { PimCmdEnum::ROW_R, "row_r" },
     { PimCmdEnum::ROW_W, "row_w" },
     { PimCmdEnum::RREG_MOV, "rreg.mov" },
@@ -863,7 +863,7 @@ pimCmdRotate::execute()
   // handle region boundaries
   bool isVLayout = objSrc.isVLayout();
   unsigned bitsPerElement = objSrc.getBitsPerElement();
-  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT) {
+  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_R) {
     for (unsigned i = 0; i < numRegions; ++i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
@@ -877,7 +877,7 @@ pimCmdRotate::execute()
       }
       setBits(core, isVLayout, locSrc.first, locSrc.second, val, bitsPerElement);
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_L) {
     for (unsigned i = 0; i < numRegions; ++i) {
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
@@ -932,7 +932,7 @@ pimCmdRotate::computeRegion(unsigned index)
   }
 
   // perform rotation
-  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT) {
+  if (m_cmdType == PimCmdEnum::ROTATE_R || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_R) {
     m_regionBoundary[index] = regionVector[numElementsInRegion - 1];
     unsigned carry = 0;
     for (unsigned j = 0; j < numElementsInRegion; ++j) {
@@ -940,7 +940,7 @@ pimCmdRotate::computeRegion(unsigned index)
       regionVector[j] = carry;
       carry = temp;
     }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT) {
+  } else if (m_cmdType == PimCmdEnum::ROTATE_L || m_cmdType == PimCmdEnum::SHIFT_ELEMENTS_L) {
     m_regionBoundary[index] = regionVector[0];
     unsigned carry = 0;
     for (int j = numElementsInRegion - 1; j >= 0; --j) {

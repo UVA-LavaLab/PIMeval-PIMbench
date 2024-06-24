@@ -532,7 +532,7 @@ pimSim::pimShiftElementsRight(PimObjId src)
 {
   pimPerfMon perfMon("pimShiftElementsRight");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEMENTS_RIGHT, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEMENTS_R, src);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -541,7 +541,7 @@ pimSim::pimShiftElementsLeft(PimObjId src)
 {
   pimPerfMon perfMon("pimShiftElementsLeft");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEMENTS_LEFT, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEMENTS_L, src);
   return m_device->executeCmd(std::move(cmd));
 }
 

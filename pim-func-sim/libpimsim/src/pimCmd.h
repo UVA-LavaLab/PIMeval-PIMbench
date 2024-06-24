@@ -49,8 +49,8 @@ enum class PimCmdEnum {
   BROADCAST,
   ROTATE_R,
   ROTATE_L,
-  SHIFT_ELEMENTS_RIGHT,
-  SHIFT_ELEMENTS_LEFT,
+  SHIFT_ELEMENTS_R,
+  SHIFT_ELEMENTS_L,
 
   // BitSIMD v-layout commands
   ROW_R,
@@ -300,7 +300,7 @@ public:
     : pimCmd(cmdType), m_src(src)
   {
     assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
-           cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT || cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT);
+           cmdType == PimCmdEnum::SHIFT_ELEMENTS_R || cmdType == PimCmdEnum::SHIFT_ELEMENTS_L);
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute() override;
