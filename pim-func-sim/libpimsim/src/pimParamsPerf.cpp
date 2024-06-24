@@ -157,64 +157,49 @@ pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
   return totalMsRuntime;
 }
 
-//! @brief  Get ms runtime for BitSIMD bit-serial operations
-double
-pimParamsPerf::getMsRuntimeBitsimd(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const
-{
-  bool ok = false;
-  double msRuntime = 0.0;
-
-  if (deviceType == PIM_DEVICE_BITSIMD_H) {
-    deviceType = PIM_DEVICE_BITSIMD_V; // reuse result table for now
-  }
-
-  auto it1 = s_bitsimdPerfTable.find(deviceType);
-  if (it1 != s_bitsimdPerfTable.end()) {
-    auto it2 = it1->second.find(dataType);
-    if (it2 != it1->second.end()) {
-      auto it3 = it2->second.find(cmdType);
-      if (it3 != it2->second.end()) {
-        const auto& [numR, numW, numL] = it3->second;
-        msRuntime = m_tR * numR + m_tW * numW + m_tL * numL;
-        ok = true;
-      }
-    }
-  }
-  msRuntime *= numPass;
-  if (!ok) {
-    std::printf("PIM-Warning: Unsupported bit-serial runtime estimation for device %s cmd %s data type %s\n",
-            pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
-            pimCmd::getName(cmdType, "").c_str(),
-            pimUtils::pimDataTypeEnumToStr(dataType).c_str());
-  }
-  return msRuntime;
-}
-
-//! @brief  Get ms runtime for SIMDRAM bit-serial operations
-double
-pimParamsPerf::getMsRuntimeSimdram(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const
-{
-  std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
-  return 0.0;
-}
-
 //! @brief  Get ms runtime for bit-serial PIM devices
 //!         BitSIMD and SIMDRAM need different fields
 double
 pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const
 {
+  bool ok = false;
   double msRuntime = 0.0;
   switch (deviceType) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
-    return getMsRuntimeBitsimd(deviceType, cmdType, dataType, numPass);
+  {
+    if (deviceType == PIM_DEVICE_BITSIMD_H) {
+      deviceType = PIM_DEVICE_BITSIMD_V; // reuse result table for now
+    }
+    auto it1 = s_bitsimdPerfTable.find(deviceType);
+    if (it1 != s_bitsimdPerfTable.end()) {
+      auto it2 = it1->second.find(dataType);
+      if (it2 != it1->second.end()) {
+        auto it3 = it2->second.find(cmdType);
+        if (it3 != it2->second.end()) {
+          const auto& [numR, numW, numL] = it3->second;
+          msRuntime = m_tR * numR + m_tW * numW + m_tL * numL;
+          ok = true;
+        }
+      }
+    }
+    break;
+  }
   case PIM_DEVICE_SIMDRAM:
-    return getMsRuntimeSimdram(deviceType, cmdType, dataType, numPass);
+  {
+    break;
+  }
   default:
-    std::printf("PIM-Warning: Unsupported bit-serial runtime estimation for device %s\n", pimUtils::pimDeviceEnumToStr(deviceType).c_str());
     assert(0);
   }
+  if (!ok) {
+    std::printf("PIM-Warning: Unimplemented bit-serial runtime estimation for device=%s cmd=%s dataType=%s\n",
+            pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
+            pimCmd::getName(cmdType, "").c_str(),
+            pimUtils::pimDataTypeEnumToStr(dataType).c_str());
+  }
+  msRuntime *= numPass;
   return msRuntime;
 }
 

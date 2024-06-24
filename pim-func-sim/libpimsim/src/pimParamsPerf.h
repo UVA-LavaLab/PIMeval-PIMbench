@@ -39,8 +39,6 @@ public:
 
 private:
   double getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const;
-  double getMsRuntimeBitsimd(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const;
-  double getMsRuntimeSimdram(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const;
 
   const pimParamsDram* m_paramsDram;
   PimDeviceEnum m_curDevice;
