@@ -426,24 +426,31 @@ pimCmdFunc1::computeRegion(unsigned index)
   // perform the computation
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElementSrc);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
       auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementDest);
 
       switch (m_cmdType) {
       case PimCmdEnum::ABS:
       {
-        auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int64_t operand = getOperand(operandBits, dataType);
-        int64_t result = std::abs(operand);
-        setBits(core, isVLayout, locDest.first, locDest.second,
+        if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+          auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
+          int64_t operand = getOperand(operandBits, dataType);
+          int64_t result = std::abs(operand);
+          setBits(core, isVLayout, locDest.first, locDest.second,
                *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
+        } else {
+          // unsigned values don't need abs
+          std::printf("PIM-Error: Unsupported API for %u\n", dataType);
+          return false;
+        }
       }
       break;
       case PimCmdEnum::POPCOUNT:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
         int64_t result = 0;
+        // does not have any effect based on the signed and unsigned
         switch (bitsPerElementSrc) {
         case 8: result =  std::bitset<8>(operandBits).count(); break;
         case 16: result = std::bitset<16>(operandBits).count(); break;
@@ -462,20 +469,32 @@ pimCmdFunc1::computeRegion(unsigned index)
       case PimCmdEnum::SHIFT_BITS_RIGHT:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int64_t operand = getOperand(operandBits, dataType);
-        // TODO: logical right shift
-        int64_t result = operand >> m_immediateValue;
-        setBits(core, isVLayout, locDest.first, locDest.second,
+        if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+          int64_t operand = getOperand(operandBits, dataType);
+          // TODO: logical right shift
+          int64_t result = operand >> m_immediateValue;
+          setBits(core, isVLayout, locDest.first, locDest.second,
                  *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
+        } else {
+          uint64_t operand = getOperand(operandBits, dataType);
+          uint64_t result = operand >> m_immediateValue;
+          setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
+        }
       }
       break;
       case PimCmdEnum::SHIFT_BITS_LEFT:
       {
         auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        int64_t operand = getOperand(operandBits, dataType);
-        int64_t result = operand << m_immediateValue;
-        setBits(core, isVLayout, locDest.first, locDest.second,
+        if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+          int64_t operand = getOperand(operandBits, dataType);
+          int64_t result = operand << m_immediateValue;
+          setBits(core, isVLayout, locDest.first, locDest.second,
                  *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
+        } else {
+          uint64_t operand = getOperand(operandBits, dataType);
+          uint64_t result = operand << m_immediateValue;
+          setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
+        }
       }
       break;
       default:
@@ -568,38 +587,70 @@ pimCmdFunc2::computeRegion(unsigned index)
     auto locSrc2 = locateNthElement(src2Region, isVLayout, j, bitsPerElementSrc2);
     auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementdest);
 
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
-      int64_t operand1 = getOperand(operandBits1, dataType);
-      int64_t operand2 = getOperand(operandBits2, dataType);
-      int64_t result = 0;
-      switch (m_cmdType) {
-      case PimCmdEnum::ADD: result = operand1 + operand2; break;
-      case PimCmdEnum::SUB: result = operand1 - operand2; break;
-      case PimCmdEnum::MUL: result = operand1 * operand2; break;
-      case PimCmdEnum::DIV:
-        if (operand2 == 0) {
-          std::printf("PIM-Error: Division by zero\n");
-          return false;
+      // The following if-else block is the perfect example of where a Template would have been much more cleaner and efficient and less error prone
+      if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+        int64_t operand1 = getOperand(operandBits1, dataType);
+        int64_t operand2 = getOperand(operandBits2, dataType);
+        int64_t result = 0;
+        switch (m_cmdType) {
+        case PimCmdEnum::ADD: result = operand1 + operand2; break;
+        case PimCmdEnum::SUB: result = operand1 - operand2; break;
+        case PimCmdEnum::MUL: result = operand1 * operand2; break;
+        case PimCmdEnum::DIV:
+          if (operand2 == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+          }
+          result = operand1 / operand2;
+          break;
+        case PimCmdEnum::AND: result = operand1 & operand2; break;
+        case PimCmdEnum::OR: result = operand1 | operand2; break;
+        case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
+        case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
+        case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
+        case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
+        case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+        case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
+        case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
+        default:
+          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+          assert(0);
         }
-        result = operand1 / operand2;
-        break;
-      case PimCmdEnum::AND: result = operand1 & operand2; break;
-      case PimCmdEnum::OR: result = operand1 | operand2; break;
-      case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
-      case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
-      case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
-      case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
-      case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
-      case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
-      case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-      default:
-        std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
-        assert(0);
-      }
-      setBits(core, isVLayout, locDest.first, locDest.second,
+        setBits(core, isVLayout, locDest.first, locDest.second,
              *reinterpret_cast<uint64_t *>(&result), bitsPerElementdest);
+      } else {
+        uint64_t operand1 = getOperand(operandBits1, dataType);
+        uint64_t operand2 = getOperand(operandBits2, dataType);
+        uint64_t result = 0;
+        switch (m_cmdType) {
+        case PimCmdEnum::ADD: result = operand1 + operand2; break;
+        case PimCmdEnum::SUB: result = operand1 - operand2; break;
+        case PimCmdEnum::MUL: result = operand1 * operand2; break;
+        case PimCmdEnum::DIV:
+          if (operand2 == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+          }
+          result = operand1 / operand2;
+          break;
+        case PimCmdEnum::AND: result = operand1 & operand2; break;
+        case PimCmdEnum::OR: result = operand1 | operand2; break;
+        case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
+        case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
+        case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
+        case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
+        case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+        case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
+        case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
+        default:
+          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+          assert(0);
+        }
+        setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementdest);
+      }
     } else if (dataType == PIM_FP32) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
@@ -645,8 +696,8 @@ pimCmdFunc2::updateStats() const
 
 
 //! @brief  PIM CMD: redsum non-ranged/ranged
-bool
-pimCmdRedSum::execute()
+template <typename T> bool
+pimCmdRedSum<T>::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
@@ -674,8 +725,8 @@ pimCmdRedSum::execute()
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
-bool
-pimCmdRedSum::sanityCheck() const
+template <typename T> bool
+pimCmdRedSum<T>::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !m_result) {
@@ -685,8 +736,8 @@ pimCmdRedSum::sanityCheck() const
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - compute region
-bool
-pimCmdRedSum::computeRegion(unsigned index)
+template <typename T> bool
+pimCmdRedSum<T>::computeRegion(unsigned index)
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   bool isVLayout = objSrc.isVLayout();
@@ -702,7 +753,7 @@ pimCmdRedSum::computeRegion(unsigned index)
     if (currIdx >= m_idxBegin) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
       auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElement);
-      int64_t operand = getOperand(operandBits, objSrc.getDataType());
+      T operand = getOperand(operandBits, objSrc.getDataType());
       m_regionSum[index] += operand;
     }
     currIdx += 1;
@@ -711,8 +762,8 @@ pimCmdRedSum::computeRegion(unsigned index)
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - update stats
-bool
-pimCmdRedSum::updateStats() const
+template <typename T> bool
+pimCmdRedSum<T>::updateStats() const
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   PimDataType dataType = objSrc.getDataType();
@@ -724,8 +775,8 @@ pimCmdRedSum::updateStats() const
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements
-bool
-pimCmdBroadcast::execute()
+template <typename T> bool
+pimCmdBroadcast<T>::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d value %u)\n", getName().c_str(), m_dest, m_val);
@@ -744,8 +795,8 @@ pimCmdBroadcast::execute()
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements - sanity check
-bool
-pimCmdBroadcast::sanityCheck() const
+template <typename T> bool
+pimCmdBroadcast<T>::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_dest)) {
@@ -755,8 +806,8 @@ pimCmdBroadcast::sanityCheck() const
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements - compute region
-bool
-pimCmdBroadcast::computeRegion(unsigned index)
+template <typename T> bool
+pimCmdBroadcast<T>::computeRegion(unsigned index)
 {
   const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   bool isVLayout = objDest.isVLayout();
@@ -778,8 +829,8 @@ pimCmdBroadcast::computeRegion(unsigned index)
 }
 
 //! @brief  PIM CMD: broadcast a value to all elements - update stats
-bool
-pimCmdBroadcast::updateStats() const
+template <typename T> bool
+pimCmdBroadcast<T>::updateStats() const
 {
   const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   PimDataType dataType = objDest.getDataType();
@@ -1233,3 +1284,8 @@ pimCmdAnalogAAP::printDebugInfo() const
               getName().c_str(), m_srcRows.size(), m_destRows.size(), msg.c_str());
 }
 
+// Explicit template instantiation
+template class pimCmdBroadcast<uint64_t>;
+template class pimCmdBroadcast<int64_t>;
+template class pimCmdRedSum<uint64_t>;
+template class pimCmdRedSum<int64_t>;

@@ -106,9 +106,9 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_H:
   {
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       switch (cmdType) {
-      case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break;
+      case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break; // TODO: this should not be executed for uint 
       case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL; break;
       case PimCmdEnum::SHIFT_BITS_RIGHT:
       case PimCmdEnum::SHIFT_BITS_LEFT:
@@ -132,7 +132,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   }
   case PIM_DEVICE_BITSIMD_V_AP:
   {
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       switch (cmdType) {
       case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 320 * m_tL; break;
       case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 318 * m_tL; break;
@@ -204,7 +204,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_H:
   {
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       switch (cmdType) {
       case PimCmdEnum::ADD: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
       case PimCmdEnum::SUB: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
@@ -222,9 +222,9 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
       default:
         assert(0);
       }
-    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT64) {
       // todo
-      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
+      std::printf("PIM-Warning: BitSIMD int & uint 8/16/64 performance stats not implemented yet.\n");
     } else if (dataType == PIM_FP32) {
       switch (cmdType) {
       case PimCmdEnum::ADD: msRuntime = 1331 * m_tR + 685 * m_tW + 1687 * m_tL; break;
@@ -242,7 +242,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   }
   case PIM_DEVICE_BITSIMD_V_AP:
   {
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       switch (cmdType) {
       case PimCmdEnum::ADD: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
       case PimCmdEnum::SUB: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
@@ -260,6 +260,9 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
       default:
         assert(0);
       }
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT64) {
+      // todo
+      std::printf("PIM-Warning: BitSIMD int & uint 8/16/64 performance stats not implemented yet.\n");
     } else if (dataType == PIM_FP32) {
       switch (cmdType) {
       case PimCmdEnum::ADD: msRuntime = 1597 * m_tR + 822 * m_tW + 2024 * m_tL; break;
@@ -326,15 +329,15 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       // Assume pop count reduction circut in tR runtime
       msRuntime = ((m_tR + m_tR) * bitsPerElement);
       msRuntime *= numPass;
       // reduction for all regions
       msRuntime += static_cast<double>(numRegions) / 3200000;
-    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT64) {
       // todo
-      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
+      std::printf("PIM-Warning: BitSIMD int & uint 8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
