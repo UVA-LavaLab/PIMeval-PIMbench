@@ -263,7 +263,6 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
     std::vector<unsigned int> src2;
     int step = V / 10; // Each 10 percent of the total iterations
     uint16_t iterations = 0;
-    // uint32_t skippedWords = 0, transferredWords = 0;
     double host_time_if = 0.0, host_time_forloop = 0.0;
     for (int i = 0; i < V; ++i) {
         for (int j = 0; j < V; ++j) {
@@ -284,13 +283,11 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
                         auto ifend = std::chrono::high_resolution_clock::now();
                         auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                         host_time_if += ifelapsedTime.count();
-                        // skippedWords++;
                         continue;
                     }
                     auto ifend = std::chrono::high_resolution_clock::now();
                     auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                     host_time_if += ifelapsedTime.count();
-                    // transferredWords++;
 #ifdef ENABLE_PARALLEL
                     #pragma omp atomic
 #endif
@@ -331,9 +328,8 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
     }
     cout << "Host time (for loop): " << std::fixed << std::setprecision(3) << host_time_forloop << " ms." << endl;
     cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
-    // cout << "oneCount: " << oneCount << ", skippedWords: " << skippedWords << ", transferredWords: " << transferredWords << endl;
     cout << "TriangleCount: " << count / 6 << endl;
-    // Each triangle is counted three times (once at each vertex), so divide the count by 3
+    // Each triangle is counted 6 times (once at each vertex), so divide the count by 6
     return count / 6;
 }
 
@@ -367,8 +363,8 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 }
             }
             if((words + wordsPerMatrixRow > operandMaxNumberOfWords) || ((i == V - 1) && (j == V - 1) && words > 0)){
-                cout << "words: " << words << endl;
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
+                cout << "words in this itr: " << words << endl;
                 std::vector<unsigned int> dst(words);
                 std::vector<unsigned int> popCountSrc(words);
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dst, popCountSrc);
@@ -382,7 +378,6 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
                 src2.clear();
                 dst.clear();
                 count += sum;
-                // cout << "sum: " << sum << ", count: " << count << endl;
             }
 
         }
@@ -392,7 +387,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     }
     cout << "oneCount: " << oneCount << endl;
     cout << "TriangleCount: " << count / 6 << endl;
-    // Each triangle is counted three times (once at each vertex), so divide the count by 3
+    // Each triangle is counted 6 times (once at each vertex), so divide the count by 6
     return count / 6;
 }
 
