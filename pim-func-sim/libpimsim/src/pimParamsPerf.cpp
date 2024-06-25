@@ -261,7 +261,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R:   
+    case PimCmdEnum::SHIFT_BITS_R: break;   
     default: 
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
