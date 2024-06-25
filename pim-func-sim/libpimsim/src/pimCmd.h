@@ -27,6 +27,8 @@ enum class PimCmdEnum {
   // Functional 1-operand
   ABS,
   POPCOUNT,
+  SHIFT_BITS_R,
+  SHIFT_BITS_L,
   // Functional 2-operand
   ADD,
   SUB,
@@ -45,12 +47,10 @@ enum class PimCmdEnum {
   REDSUM,
   REDSUM_RANGE,
   BROADCAST,
-  ROTATE_R,
-  ROTATE_L,
-  SHIFT_ELEMENTS_RIGHT,
-  SHIFT_ELEMENTS_LEFT,
-  SHIFT_BITS_RIGHT,
-  SHIFT_BITS_LEFT,
+  ROTATE_ELEM_R,
+  ROTATE_ELEM_L,
+  SHIFT_ELEM_R,
+  SHIFT_ELEM_L,
 
   // BitSIMD v-layout commands
   ROW_R,
@@ -292,15 +292,15 @@ protected:
 };
 
 //! @class  pimCmdRotate
-//! @brief  Pim CMD: rotate right/left
+//! @brief  Pim CMD: rotate/shift elements right/left
 class pimCmdRotate : public pimCmd
 {
 public:
   pimCmdRotate(PimCmdEnum cmdType, PimObjId src)
     : pimCmd(cmdType), m_src(src)
   {
-    assert(cmdType == PimCmdEnum::ROTATE_R || cmdType == PimCmdEnum::ROTATE_L ||
-           cmdType == PimCmdEnum::SHIFT_ELEMENTS_RIGHT || cmdType == PimCmdEnum::SHIFT_ELEMENTS_LEFT);
+    assert(cmdType == PimCmdEnum::ROTATE_ELEM_R || cmdType == PimCmdEnum::ROTATE_ELEM_L ||
+           cmdType == PimCmdEnum::SHIFT_ELEM_R || cmdType == PimCmdEnum::SHIFT_ELEM_L);
   }
   virtual ~pimCmdRotate() {}
   virtual bool execute() override;
