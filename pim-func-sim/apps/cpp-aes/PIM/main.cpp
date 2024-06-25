@@ -1763,7 +1763,7 @@ void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
     assert(status == PIM_OK);
     
     // uint8_t returnValue = 0x1b;
-    status = pimBroadcast(returnValueObj->pimObjId, 0x1b);
+    status = pimBroadcastInt(returnValueObj->pimObjId, 0x1b);
     assert(status == PIM_OK);
 
 
@@ -1777,7 +1777,7 @@ void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
     // status = pimCopyHostToDevice((void*)const1Obj->array.data(), const1Obj->pimObjId);
     // assert(status == PIM_OK);
 
-    status = pimBroadcast(const1Obj->pimObjId, 0x80);
+    status = pimBroadcastInt(const1Obj->pimObjId, 0x80);
     assert(status == PIM_OK);
 
     // mask = mask & const1;

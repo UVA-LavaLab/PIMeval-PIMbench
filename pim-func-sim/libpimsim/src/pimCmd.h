@@ -149,13 +149,17 @@ protected:
   }
 
   //! @brief helper function to get the operand based on data type
-  inline int64_t getOperand(uint64_t operandBits, PimDataType dataType) {
-    int64_t operandValue = 0;
+  inline uint64_t getOperand(uint64_t operandBits, PimDataType dataType) {
+    uint64_t operandValue = 0;
     switch (dataType) {
     case PIM_INT8: operandValue =  *reinterpret_cast<int8_t*>(&operandBits); break;
     case PIM_INT16: operandValue =  *reinterpret_cast<int16_t*>(&operandBits); break;
     case PIM_INT32: operandValue =  *reinterpret_cast<int32_t*>(&operandBits); break;
     case PIM_INT64: operandValue =  *reinterpret_cast<int64_t*>(&operandBits); break;
+    case PIM_UINT8: operandValue =  *reinterpret_cast<uint8_t*>(&operandBits); break;
+    case PIM_UINT16: operandValue =  *reinterpret_cast<uint16_t*>(&operandBits); break;
+    case PIM_UINT32: operandValue =  *reinterpret_cast<uint32_t*>(&operandBits); break;
+    case PIM_UINT64: operandValue =  *reinterpret_cast<uint64_t*>(&operandBits); break;
     default:
         std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
     }
@@ -208,7 +212,7 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, unsigned immediateValue = 0)
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t immediateValue = 0)
     : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
@@ -218,7 +222,7 @@ public:
 protected:
   PimObjId m_src;
   PimObjId m_dest;
-  unsigned m_immediateValue;
+  uint64_t m_immediateValue;
 };
 
 //! @class  pimCmdFunc2
@@ -241,15 +245,15 @@ protected:
 
 //! @class  pimCmdedSum
 //! @brief  Pim CMD: RedSum non-ranged/ranged
-class pimCmdRedSum : public pimCmd
+template <typename T> class pimCmdRedSum : public pimCmd
 {
 public:
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int64_t* result)
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result)
     : pimCmd(cmdType), m_src(src), m_result(result)
   {
     assert(cmdType == PimCmdEnum::REDSUM);
   }
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, int64_t* result, unsigned idxBegin, unsigned idxEnd)
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result, uint64_t idxBegin, uint64_t idxEnd)
     : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
   {
     assert(cmdType == PimCmdEnum::REDSUM_RANGE);
@@ -261,18 +265,18 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
-  int64_t* m_result;
-  std::vector<int> m_regionSum;
-  unsigned m_idxBegin = 0;
-  unsigned m_idxEnd = std::numeric_limits<unsigned>::max();
+  T* m_result;
+  std::vector<T> m_regionSum;
+  uint64_t m_idxBegin = 0;
+  uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements
-class pimCmdBroadcast : public pimCmd
+template <typename T> class pimCmdBroadcast : public pimCmd
 {
 public:
-  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, int64_t val)
+  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, T val)
     : pimCmd(cmdType), m_dest(dest), m_val(val)
   {
     assert(cmdType == PimCmdEnum::BROADCAST);
@@ -284,7 +288,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
-  int64_t m_val;
+  T m_val;
 };
 
 //! @class  pimCmdRotate
@@ -305,7 +309,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
-  std::vector<unsigned> m_regionBoundary;
+  std::vector<uint64_t> m_regionBoundary;
 };
 
 //! @class  pimCmdReadRowToSa

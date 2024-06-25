@@ -164,7 +164,7 @@ pimDevice::uninit()
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimDevice::pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType)
+pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   if (allocType == PIM_ALLOC_AUTO) {
     if (pimSim::get()->getParamsPerf()->isVLayoutDevice()) {
@@ -194,7 +194,7 @@ pimDevice::pimFree(PimObjId obj)
 
 //! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimDevice::pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+pimDevice::pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd)
 {
   return m_resMgr->pimCreateRangedRef(refId, idxBegin, idxEnd);
 }
