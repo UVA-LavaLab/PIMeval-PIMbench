@@ -175,13 +175,15 @@ vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) 
     }
 
     vector<pair<int, int>> result;
+    result.reserve(k);
+    
     while (!maxHeap.empty()) {
         result.push_back(maxHeap.top());
         maxHeap.pop();
     }
 
     reverse(result.begin(), result.end());
-    return result;
+    return result;   
 }
 
 void genRandMatrix(vector<vector<int>> distMat, uint64_t numOfPoints, uint64_t numOfTests) {
