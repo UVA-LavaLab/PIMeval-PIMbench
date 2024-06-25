@@ -277,6 +277,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
+    msRuntime = 0.0;
     switch (cmdType)
     {
     case PimCmdEnum::POPCOUNT: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul  
@@ -312,6 +313,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
+    msRuntime = 0.0;
     switch (cmdType)
     {
     case PimCmdEnum::ADD_SCALAR:
