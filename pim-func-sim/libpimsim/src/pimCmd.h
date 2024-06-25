@@ -236,6 +236,59 @@ protected:
   PimObjId m_src;
   PimObjId m_dest;
   uint64_t m_scalerValue;
+private:
+  template<typename T>
+  inline bool computeResult(T operand, PimCmdEnum cmdType, T scalerValue, T& result, int bitsPerElementSrc) {
+    result = operand;
+    switch (cmdType) {
+    case PimCmdEnum::ADD_SCALAR: result += scalerValue; break;
+    case PimCmdEnum::SUB_SCALAR: result -= scalerValue; break;
+    case PimCmdEnum::MUL_SCALAR: result *= scalerValue; break;
+    case PimCmdEnum::DIV_SCALAR:
+        if (scalerValue == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+        }
+        result /= scalerValue;
+        break;
+    case PimCmdEnum::AND_SCALAR: result &= scalerValue; break;
+    case PimCmdEnum::OR_SCALAR: result |= scalerValue; break;
+    case PimCmdEnum::XOR_SCALAR: result ^= scalerValue; break;
+    case PimCmdEnum::XNOR_SCALAR: result = ~(operand ^ scalerValue); break;
+    case PimCmdEnum::GT_SCALAR: result = (operand > scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::LT_SCALAR: result = (operand < scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::EQ_SCALAR: result = (operand == scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::MIN_SCALAR: result = std::min(operand, scalerValue); break;
+    case PimCmdEnum::MAX_SCALAR: result = std::max(operand, scalerValue); break;
+    case PimCmdEnum::POPCOUNT:
+        switch (bitsPerElementSrc) {
+        case 8: result = std::bitset<8>(operand).count(); break;
+        case 16: result = std::bitset<16>(operand).count(); break;
+        case 32: result = std::bitset<32>(operand).count(); break;
+        case 64: result = std::bitset<64>(operand).count(); break;
+        default:
+            std::printf("PIM-Error: Unsupported bits per element %u\n", bitsPerElementSrc);
+            return false;
+        }
+        break;
+    case PimCmdEnum::SHIFT_BITS_R: result >>= static_cast<uint64_t>(scalerValue); break;
+    case PimCmdEnum::SHIFT_BITS_L: result <<= static_cast<uint64_t>(scalerValue); break;
+    case PimCmdEnum::ABS:
+    {
+        if (std::is_signed<T>::value) {
+          result = (operand < 0) ? -operand : operand;
+        } else {
+          std::printf("PIM-Error: Abs not supported for unsigned type.\n");
+          return false;
+        }
+        break;
+    }
+    default:
+        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(cmdType));
+        assert(0);
+    }
+    return true;
+  }
 };
 
 //! @class  pimCmdFunc2

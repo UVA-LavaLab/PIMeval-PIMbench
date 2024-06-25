@@ -216,7 +216,6 @@ void testFunctional()
     std::cout << "[PASSED] pimMax" << std::endl;
   }
 
-
   // Test add scaler
   {
     status = pimAddScalar(obj1, obj3, 9);

@@ -292,8 +292,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: 
-      msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
+    case PimCmdEnum::MAX_SCALAR: msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
     // FALLTHROUGH
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
