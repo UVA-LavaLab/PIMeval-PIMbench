@@ -4,8 +4,71 @@
 
 #include "pimParamsPerf.h"
 #include "pimSim.h"
+#include "pimCmd.h"
 #include <cstdio>
+#include <unordered_map>
+#include <tuple>
 
+
+//! @brief  BitSIMD performance table (Tuple: #R, #W, #L)
+const std::unordered_map<PimDeviceEnum, std::unordered_map<PimDataType,
+    std::unordered_map<PimCmdEnum, std::tuple<unsigned, unsigned, unsigned>>>>
+pimParamsPerf::s_bitsimdPerfTable = {
+  { PIM_DEVICE_BITSIMD_V, {
+    { PIM_INT32, {
+      { PimCmdEnum::ABS,          {   98,   66,  192 } },
+      { PimCmdEnum::POPCOUNT,     {  161,  105,  286 } },
+      { PimCmdEnum::SHIFT_BITS_R, {   31,   32,    1 } },
+      { PimCmdEnum::SHIFT_BITS_L, {   31,   32,    1 } },
+      { PimCmdEnum::ADD,          {   64,   33,  161 } },
+      { PimCmdEnum::SUB,          {   64,   33,  161 } },
+      { PimCmdEnum::MUL,          { 1940, 1095, 3606 } },
+      { PimCmdEnum::DIV,          { 3168, 1727, 4257 } },
+      { PimCmdEnum::AND,          {   64,   32,   64 } },
+      { PimCmdEnum::OR,           {   64,   32,   64 } },
+      { PimCmdEnum::XOR,          {   64,   32,   64 } },
+      { PimCmdEnum::XNOR,         {   64,   32,   64 } },
+      { PimCmdEnum::GT,           {   64,   32,   66 } },
+      { PimCmdEnum::LT,           {   64,   32,   66 } },
+      { PimCmdEnum::EQ,           {   64,   32,   66 } },
+      { PimCmdEnum::MIN,          {  164,   67,  258 } },
+      { PimCmdEnum::MAX,          {  164,   67,  258 } },
+    }},
+    { PIM_FP32, {
+      { PimCmdEnum::ADD,          { 1331,  685, 1687 } },
+      { PimCmdEnum::SUB,          { 1331,  685, 1687 } },
+      { PimCmdEnum::MUL,          { 1852, 1000, 3054 } },
+      { PimCmdEnum::DIV,          { 2744, 1458, 4187 } },
+    }}
+  }},
+  { PIM_DEVICE_BITSIMD_V_AP, {
+    { PIM_INT32, {
+      { PimCmdEnum::ABS,          {   98,   66,  320 } },
+      { PimCmdEnum::POPCOUNT,     {  161,  105,  318 } },
+      { PimCmdEnum::SHIFT_BITS_R, {   31,   32,    1 } },
+      { PimCmdEnum::SHIFT_BITS_L, {   31,   32,    1 } },
+      { PimCmdEnum::ADD,          {   64,   33,  161 } },
+      { PimCmdEnum::SUB,          {   64,   33,  161 } },
+      { PimCmdEnum::MUL,          { 4291, 1799, 7039 } },
+      { PimCmdEnum::DIV,          { 3728, 1744, 6800 } },
+      { PimCmdEnum::AND,          {   64,   32,   64 } },
+      { PimCmdEnum::OR,           {   64,   32,  128 } },
+      { PimCmdEnum::XOR,          {   64,   32,  128 } },
+      { PimCmdEnum::XNOR,         {   64,   32,   64 } },
+      { PimCmdEnum::GT,           {   64,   32,   66 } },
+      { PimCmdEnum::LT,           {   64,   32,   66 } },
+      { PimCmdEnum::EQ,           {   64,   32,   66 } },
+      { PimCmdEnum::MIN,          {  164,   67,  261 } },
+      { PimCmdEnum::MAX,          {  164,   67,  261 } },
+    }},
+    { PIM_FP32, {
+      { PimCmdEnum::ADD,          { 1597,  822, 2024 } },
+      { PimCmdEnum::SUB,          { 1597,  822, 2024 } },
+      { PimCmdEnum::MUL,          { 2222, 1200, 3664 } },
+      { PimCmdEnum::DIV,          { 3292, 1749, 5024 } },
+    }}
+  }},
+};
 
 //! @brief  pimParamsPerf ctor
 pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
@@ -94,6 +157,52 @@ pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
   return totalMsRuntime;
 }
 
+//! @brief  Get ms runtime for bit-serial PIM devices
+//!         BitSIMD and SIMDRAM need different fields
+double
+pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const
+{
+  bool ok = false;
+  double msRuntime = 0.0;
+  switch (deviceType) {
+  case PIM_DEVICE_BITSIMD_V:
+  case PIM_DEVICE_BITSIMD_V_AP:
+  case PIM_DEVICE_BITSIMD_H:
+  {
+    if (deviceType == PIM_DEVICE_BITSIMD_H) {
+      deviceType = PIM_DEVICE_BITSIMD_V; // reuse result table for now
+    }
+    auto it1 = s_bitsimdPerfTable.find(deviceType);
+    if (it1 != s_bitsimdPerfTable.end()) {
+      auto it2 = it1->second.find(dataType);
+      if (it2 != it1->second.end()) {
+        auto it3 = it2->second.find(cmdType);
+        if (it3 != it2->second.end()) {
+          const auto& [numR, numW, numL] = it3->second;
+          msRuntime = m_tR * numR + m_tW * numW + m_tL * numL;
+          ok = true;
+        }
+      }
+    }
+    break;
+  }
+  case PIM_DEVICE_SIMDRAM:
+  {
+    break;
+  }
+  default:
+    assert(0);
+  }
+  if (!ok) {
+    std::printf("PIM-Warning: Unimplemented bit-serial runtime estimation for device=%s cmd=%s dataType=%s\n",
+            pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
+            pimCmd::getName(cmdType, "").c_str(),
+            pimUtils::pimDataTypeEnumToStr(dataType).c_str());
+  }
+  msRuntime *= numPass;
+  return msRuntime;
+}
+
 //! @brief  Get ms runtime for func1
 double
 pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
@@ -104,62 +213,11 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_H:
-  {
-    if (dataType == PIM_INT32) {
-      switch (cmdType) {
-      case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 192 * m_tL; break;
-      case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 286 * m_tL; break;
-      case PimCmdEnum::SHIFT_BITS_RIGHT:
-      case PimCmdEnum::SHIFT_BITS_LEFT:
-      {
-        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. Set #immValue bits to either 0 or 1. 
-        unsigned bitsPerElement = obj.getBitsPerElement();
-        msRuntime = (m_tR + m_tW) * bitsPerElement;
-      }
-      break;
-      default:
-        assert(0);
-      }
-    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
-      // todo
-      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
-    } else {
-      assert(0);
-    }
-    msRuntime *= numPass;
-    break;
-  }
   case PIM_DEVICE_BITSIMD_V_AP:
-  {
-    if (dataType == PIM_INT32) {
-      switch (cmdType) {
-      case PimCmdEnum::ABS: msRuntime = 98 * m_tR + 66 * m_tW + 320 * m_tL; break;
-      case PimCmdEnum::POPCOUNT: msRuntime = 161 * m_tR + 105 * m_tW + 318 * m_tL; break;
-      case PimCmdEnum::SHIFT_BITS_RIGHT:
-      case PimCmdEnum::SHIFT_BITS_LEFT:
-      {
-        // For i-th bit read (i-immValue) (if right shift) or (i+immValue) (if left shift) bit and write it to dest i-th bit. Set #immValue bits to either 0 or 1. 
-        unsigned bitsPerElement = obj.getBitsPerElement();
-        msRuntime = (m_tR + m_tW) * bitsPerElement;
-      }
-      break;
-      default:
-        assert(0);
-      }
-    } else {
-      assert(0);
-    }
-    msRuntime *= numPass;
-    break;
-  }
+  case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-  {
-    // todo
-    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
-    msRuntime *= numPass;
+    msRuntime = getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, numPass);
     break;
-  }
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -202,86 +260,11 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_H:
-  {
-    if (dataType == PIM_INT32) {
-      switch (cmdType) {
-      case PimCmdEnum::ADD: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
-      case PimCmdEnum::SUB: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
-      case PimCmdEnum::MUL: msRuntime = 1940 * m_tR + 1095 * m_tW + 3606 * m_tL; break;
-      case PimCmdEnum::DIV: msRuntime = 3168 * m_tR + 1727 * m_tW + 4257 * m_tL; break;
-      case PimCmdEnum::AND: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-      case PimCmdEnum::OR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-      case PimCmdEnum::XOR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-      case PimCmdEnum::XNOR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-      case PimCmdEnum::GT: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-      case PimCmdEnum::LT: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-      case PimCmdEnum::EQ: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-      case PimCmdEnum::MIN: msRuntime = 164 * m_tR + 67 * m_tW + 258 * m_tL; break;
-      case PimCmdEnum::MAX: msRuntime = 164 * m_tR + 67 * m_tW + 258 * m_tL; break;
-      default:
-        assert(0);
-      }
-    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
-      // todo
-      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
-    } else if (dataType == PIM_FP32) {
-      switch (cmdType) {
-      case PimCmdEnum::ADD: msRuntime = 1331 * m_tR + 685 * m_tW + 1687 * m_tL; break;
-      case PimCmdEnum::SUB: msRuntime = 1331 * m_tR + 685 * m_tW + 1687 * m_tL; break;
-      case PimCmdEnum::MUL: msRuntime = 1852 * m_tR + 1000 * m_tW + 3054 * m_tL; break;
-      case PimCmdEnum::DIV: msRuntime = 2744 * m_tR + 1458 * m_tW + 4187 * m_tL; break;
-      default:
-        assert(0);
-      }
-    } else {
-      assert(0);
-    }
-    msRuntime *= numPass;
-    break;
-  }
   case PIM_DEVICE_BITSIMD_V_AP:
-  {
-    if (dataType == PIM_INT32) {
-      switch (cmdType) {
-      case PimCmdEnum::ADD: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
-      case PimCmdEnum::SUB: msRuntime = 64 * m_tR + 33 * m_tW + 161 * m_tL; break;
-      case PimCmdEnum::MUL: msRuntime = 4291 * m_tR + 1799 * m_tW + 7039 * m_tL; break;
-      case PimCmdEnum::DIV: msRuntime = 3728 * m_tR + 1744 * m_tW + 6800 * m_tL; break;
-      case PimCmdEnum::AND: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-      case PimCmdEnum::OR: msRuntime = 64 * m_tR + 32 * m_tW + 128 * m_tL; break;
-      case PimCmdEnum::XOR: msRuntime = 64 * m_tR + 32 * m_tW + 128 * m_tL; break;
-      case PimCmdEnum::XNOR: msRuntime = 64 * m_tR + 32 * m_tW + 64 * m_tL; break;
-      case PimCmdEnum::GT: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-      case PimCmdEnum::LT: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-      case PimCmdEnum::EQ: msRuntime = 64 * m_tR + 32 * m_tW + 66 * m_tL; break;
-      case PimCmdEnum::MIN: msRuntime = 164 * m_tR + 67 * m_tW + 261 * m_tL; break;
-      case PimCmdEnum::MAX: msRuntime = 164 * m_tR + 67 * m_tW + 261 * m_tL; break;
-      default:
-        assert(0);
-      }
-    } else if (dataType == PIM_FP32) {
-      switch (cmdType) {
-      case PimCmdEnum::ADD: msRuntime = 1597 * m_tR + 822 * m_tW + 2024 * m_tL; break;
-      case PimCmdEnum::SUB: msRuntime = 1597 * m_tR + 822 * m_tW + 2024 * m_tL; break;
-      case PimCmdEnum::MUL: msRuntime = 2222 * m_tR + 1200 * m_tW + 3664 * m_tL; break;
-      case PimCmdEnum::DIV: msRuntime = 3292 * m_tR + 1749 * m_tW + 5024 * m_tL; break;
-      default:
-        assert(0);
-      }
-    } else {
-      assert(0);
-    }
-    msRuntime *= numPass;
-    break;
-  }
+  case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-  {
-    // todo
-    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
-    msRuntime *= numPass;
+    msRuntime = getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, numPass);
     break;
-  }
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -320,21 +303,21 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
-  unsigned numElements = obj.getNumElements();
+  uint64_t numElements = obj.getNumElements();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
-    if (dataType == PIM_INT32) {
+    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
       // Assume pop count reduction circut in tR runtime
       msRuntime = ((m_tR + m_tR) * bitsPerElement);
       msRuntime *= numPass;
       // reduction for all regions
       msRuntime += static_cast<double>(numRegions) / 3200000;
-    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64) {
+    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT64) {
       // todo
-      std::printf("PIM-Warning: BitSIMD int8/16/64 performance stats not implemented yet.\n");
+      std::printf("PIM-Warning: BitSIMD int & uint 8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
@@ -393,7 +376,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   case PIM_DEVICE_BITSIMD_H:
   {
     // For one pass: For every element: 1 tCCD per byte
-    unsigned maxBytesPerRegion = maxElementsPerRegion * (bitsPerElement / 8);
+    uint64_t maxBytesPerRegion = (uint64_t)maxElementsPerRegion * (bitsPerElement / 8);
     msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
     msRuntime *= numPass;
     break;
