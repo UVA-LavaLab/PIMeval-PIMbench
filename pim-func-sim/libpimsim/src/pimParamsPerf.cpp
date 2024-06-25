@@ -328,8 +328,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: 
-      msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to POPCOUNT, ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
+    case PimCmdEnum::MAX_SCALAR: msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to POPCOUNT, ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
     // FALLTHROUGH
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
@@ -484,7 +483,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   {
     // assume taking 1 ALU latency to write an element
     double aluLatency = 0.000005; // 5ns
-    msRuntime = m_tW * aluLatency * maxElementsPerRegion;
+    msRuntime = m_tW + aluLatency * maxElementsPerRegion;
     msRuntime *= numPass;
     break;
   }
