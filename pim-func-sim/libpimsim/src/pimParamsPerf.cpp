@@ -225,12 +225,36 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
-    if (cmdType == PimCmdEnum::POPCOUNT) {
-      numberOfALUOperationPerCycle *= 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    switch (cmdType)
+    {
+    case PimCmdEnum::ADD_SCALAR:
+    case PimCmdEnum::SUB_SCALAR:
+    case PimCmdEnum::MUL_SCALAR:
+    case PimCmdEnum::DIV_SCALAR:
+    case PimCmdEnum::AND_SCALAR:
+    case PimCmdEnum::OR_SCALAR:
+    case PimCmdEnum::XOR_SCALAR: 
+    case PimCmdEnum::XNOR_SCALAR: 
+    case PimCmdEnum::GT_SCALAR: 
+    case PimCmdEnum::LT_SCALAR: 
+    case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::MIN_SCALAR:
+    case PimCmdEnum::MAX_SCALAR:
+    {
+      msRuntime = aluLatency * maxElementsPerRegion; // add scaler broadcast latency
     }
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle;
-    msRuntime *= numPass;
     break;
+    case PimCmdEnum::POPCOUNT: {numberOfALUOperationPerCycle *= 12;} break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    case PimCmdEnum::ABS:
+    case PimCmdEnum::SHIFT_BITS_L:
+    case PimCmdEnum::SHIFT_BITS_R:
+    default:
+    {
+      msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle;
+      msRuntime *= numPass;
+    }
+    break;
+    }
   }
   case PIM_DEVICE_BANK_LEVEL:
   {

@@ -216,6 +216,163 @@ void testFunctional()
     std::cout << "[PASSED] pimMax" << std::endl;
   }
 
+
+  // Test add scaler
+  {
+    status = pimAddScalar(obj1, obj3, 9);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(src1[i] + 9));
+    }
+    std::cout << "[PASSED] pimAddScaler" << std::endl;
+  }
+
+  // Test sub scaler
+  {
+    status = pimSubScalar(obj1, obj3, 126);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(src1[i] - 126));
+    }
+    std::cout << "[PASSED] pimSubScaler" << std::endl;
+  }
+
+  // Test mul scaler
+  {
+    status = pimMulScalar(obj1, obj3, 99);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(src1[i] * 99));
+    }
+    std::cout << "[PASSED] pimMulScaler" << std::endl;
+  }
+
+  // Test div scaler
+  {
+    status = pimDivScalar(obj1, obj3, 23);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(src1[i] / 23));
+    }
+    std::cout << "[PASSED] pimDivScaler" << std::endl;
+  }
+
+  // Test and scaler
+  {
+    status = pimAndScalar(obj1, obj3, 35);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>((src1[i] & 35)));
+    }
+    std::cout << "[PASSED] pimAndScaler" << std::endl;
+  }
+
+  // Test or scaler
+  {
+    status = pimOrScalar(obj1, obj3, 100);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(src1[i] | 100));
+    }
+    std::cout << "[PASSED] pimOrScaler" << std::endl;
+  }
+
+  // Test xor scaler
+  {
+    status = pimXorScalar(obj1, obj3, 60);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(src1[i] ^ 60));
+    }
+    std::cout << "[PASSED] pimXorScaler" << std::endl;
+  }
+
+  // Test xnor scaler
+  {
+    status = pimXnorScalar(obj1, obj3, 55);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>(~(src1[i] ^ 55)));
+    }
+    std::cout << "[PASSED] pimXnorScaler" << std::endl;
+  }
+
+  // Test GT scaler
+  {
+    status = pimGTScalar(obj1, obj3, 19);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == (src1[i] > 19 ? 1 : 0));
+    }
+    std::cout << "[PASSED] pimGTScaler" << std::endl;
+  }
+
+  // Test LT scaler
+  {
+    status = pimLTScalar(obj1, obj3, 23);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == (src1[i] < 23 ? 1 : 0));
+    }
+    std::cout << "[PASSED] pimLTScaler" << std::endl;
+  }
+
+  // Test EQ scaler
+  {
+    status = pimEQScalar(obj1, obj3, 123);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == (src1[i] == 123 ? 1 : 0));
+    }
+    std::cout << "[PASSED] pimEQScaler" << std::endl;
+  }
+
+  // Test min scaler
+  {
+    status = pimMinScalar(obj1, obj3, -1);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == std::min(src1[i], (int8_t)-1));
+    }
+    std::cout << "[PASSED] pimMinScaler" << std::endl;
+  }
+
+  // Test max scaler
+  {
+    status = pimMaxScalar(obj1, obj3, 127);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == std::max(src1[i], (int8_t)127));
+    }
+    std::cout << "[PASSED] pimMaxScaler" << std::endl;
+  }
+
   // Test popcount
   {
     status = pimPopCount(obj1, obj3);
@@ -238,7 +395,6 @@ void testFunctional()
     for (unsigned i = 0; i < numElements; ++i) {
       sumHost += src1[i];
     }
-    std::cout << "\n" << sumDevice << "\t" << sumHost << "\n";
     assert(sumDevice == sumHost);
     std::cout << "[PASSED] pimRedSum" << std::endl;
   }

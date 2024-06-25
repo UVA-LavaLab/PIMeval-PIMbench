@@ -248,69 +248,82 @@ pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimAddScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimAdd(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimSubScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimSub(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimMulScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimMul(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimDivScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimDiv(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimAndScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimAnd(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimOrScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimOr(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimXorScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimXor(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimXnorScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimXnor(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimGTScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimGT(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimLTScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimLT(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimEQScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimEQ(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimMinScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimMin(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimMaxScalar(PimObjId src, PimObjId dest, int64_t scalerValue)
+PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 {
-    return PimStatus();
+  bool ok = pimSim::get()->pimMax(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM Pop Count

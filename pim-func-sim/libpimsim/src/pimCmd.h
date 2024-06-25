@@ -225,8 +225,8 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t immediateValue = 0)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_immediateValue(immediateValue) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalerValue = 0)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalerValue(scalerValue) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -235,7 +235,7 @@ public:
 protected:
   PimObjId m_src;
   PimObjId m_dest;
-  uint64_t m_immediateValue;
+  uint64_t m_scalerValue;
 };
 
 //! @class  pimCmdFunc2

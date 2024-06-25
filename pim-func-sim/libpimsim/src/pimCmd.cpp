@@ -41,6 +41,19 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::EQ, "eq" },
     { PimCmdEnum::MIN, "min" },
     { PimCmdEnum::MAX, "max" },
+    { PimCmdEnum::ADD_SCALAR, "add_scaler" },
+    { PimCmdEnum::SUB_SCALAR, "sub_scaler" },
+    { PimCmdEnum::MUL_SCALAR, "mul_scaler" },
+    { PimCmdEnum::DIV_SCALAR, "div_scaler" },
+    { PimCmdEnum::AND_SCALAR, "and_scaler" },
+    { PimCmdEnum::OR_SCALAR, "or_scaler" },
+    { PimCmdEnum::XOR_SCALAR, "xor_scaler" },
+    { PimCmdEnum::XNOR_SCALAR, "xnor_scaler" },
+    { PimCmdEnum::GT_SCALAR, "gt_scaler" },
+    { PimCmdEnum::LT_SCALAR, "lt_scaler" },
+    { PimCmdEnum::EQ_SCALAR, "eq_scaler" },
+    { PimCmdEnum::MIN_SCALAR, "min_scaler" },
+    { PimCmdEnum::MAX_SCALAR, "max_scaler" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::ROTATE_ELEM_R, "rotate_elem_r" },
@@ -429,27 +442,33 @@ pimCmdFunc1::computeRegion(unsigned index)
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
       auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementDest);
-
-      switch (m_cmdType) {
-      case PimCmdEnum::ABS:
-      {
-        if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
-          auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-          int64_t operand = getOperand(operandBits, dataType);
-          int64_t result = std::abs(operand);
-          setBits(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
-        } else {
-          // unsigned values don't need abs
-          std::printf("PIM-Error: Unsupported API for %u\n", dataType);
-          return false;
-        }
-      }
-      break;
-      case PimCmdEnum::POPCOUNT:
-      {
-        auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
+      auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
+      if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+        int64_t operand = getOperand(operandBits, dataType);
         int64_t result = 0;
+        switch (m_cmdType) {
+        case PimCmdEnum::ADD_SCALAR: result = operand + (int64_t)m_scalerValue; break;
+        case PimCmdEnum::SUB_SCALAR: result = operand - (int64_t)m_scalerValue; break;
+        case PimCmdEnum::MUL_SCALAR: result = operand * (int64_t)m_scalerValue; break;
+        case PimCmdEnum::DIV_SCALAR:
+          if (m_scalerValue == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+          }
+          result = operand / (int64_t)m_scalerValue;
+          break;
+        case PimCmdEnum::AND_SCALAR: result = operand & (int64_t)m_scalerValue; break;
+        case PimCmdEnum::OR_SCALAR: result = operand | (int64_t)m_scalerValue; break;
+        case PimCmdEnum::XOR_SCALAR: result = operand ^ (int64_t)m_scalerValue; break;
+        case PimCmdEnum::XNOR_SCALAR: result = ~(operand ^ (int64_t)m_scalerValue); break;
+        case PimCmdEnum::GT_SCALAR: result = operand > (int64_t)m_scalerValue ? 1 : 0; break;
+        case PimCmdEnum::LT_SCALAR: result = operand < (int64_t)m_scalerValue ? 1 : 0; break;
+        case PimCmdEnum::EQ_SCALAR: result = operand == (int64_t)m_scalerValue ? 1 : 0; break;
+        case PimCmdEnum::MIN_SCALAR: result = (operand < (int64_t)m_scalerValue) ? operand : (int64_t)m_scalerValue; break;
+        case PimCmdEnum::MAX_SCALAR: result = (operand > (int64_t)m_scalerValue) ? operand : (int64_t)m_scalerValue; break;
+        case PimCmdEnum::ABS: result = std::abs(operand); break;
+        case PimCmdEnum::POPCOUNT:
+        {
         // does not have any effect based on the signed and unsigned
         switch (bitsPerElementSrc) {
         case 8: result =  std::bitset<8>(operandBits).count(); break;
@@ -462,44 +481,63 @@ pimCmdFunc1::computeRegion(unsigned index)
           return false;
         }
         }
+        break;
+        }
+        case PimCmdEnum::SHIFT_BITS_R: result = operand >> m_scalerValue; break;
+        case PimCmdEnum::SHIFT_BITS_L: result = operand << m_scalerValue; break;
+        default:
+          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+          assert(0);
+        }
         setBits(core, isVLayout, locDest.first, locDest.second,
-               *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
-      }
-      break;
-      case PimCmdEnum::SHIFT_BITS_R:
-      {
-        auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
-          int64_t operand = getOperand(operandBits, dataType);
-          // TODO: logical right shift
-          int64_t result = operand >> m_immediateValue;
-          setBits(core, isVLayout, locDest.first, locDest.second,
-                 *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
-        } else {
-          uint64_t operand = getOperand(operandBits, dataType);
-          uint64_t result = operand >> m_immediateValue;
-          setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
+             *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
+      } else {
+        uint64_t operand = getOperand(operandBits, dataType);
+        uint64_t result = 0;
+        switch (m_cmdType) {
+        case PimCmdEnum::ADD_SCALAR: result = operand + m_scalerValue; break;
+        case PimCmdEnum::SUB_SCALAR: result = operand - m_scalerValue; break;
+        case PimCmdEnum::MUL_SCALAR: result = operand * m_scalerValue; break;
+        case PimCmdEnum::DIV_SCALAR:
+          if (m_scalerValue == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+          }
+          result = operand / m_scalerValue;
+          break;
+        case PimCmdEnum::AND_SCALAR: result = operand & m_scalerValue; break;
+        case PimCmdEnum::OR_SCALAR: result = operand | m_scalerValue; break;
+        case PimCmdEnum::XOR_SCALAR: result = operand ^ m_scalerValue; break;
+        case PimCmdEnum::XNOR_SCALAR: result = ~(operand ^ m_scalerValue); break;
+        case PimCmdEnum::GT_SCALAR: result = operand > m_scalerValue ? 1 : 0; break;
+        case PimCmdEnum::LT_SCALAR: result = operand < m_scalerValue ? 1 : 0; break;
+        case PimCmdEnum::EQ_SCALAR: result = operand == m_scalerValue ? 1 : 0; break;
+        case PimCmdEnum::MIN_SCALAR: result = (operand < m_scalerValue) ? operand : m_scalerValue; break;
+        case PimCmdEnum::MAX_SCALAR: result = (operand > m_scalerValue) ? operand : m_scalerValue; break;
+        case PimCmdEnum::POPCOUNT:
+        {
+        // does not have any effect based on the signed and unsigned
+        switch (bitsPerElementSrc) {
+        case 8: result =  std::bitset<8>(operandBits).count(); break;
+        case 16: result = std::bitset<16>(operandBits).count(); break;
+        case 32: result = std::bitset<32>(operandBits).count(); break;
+        case 64: result = std::bitset<64>(operandBits).count(); break;
+        default:
+        {
+          std::printf("PIM-Error: Unsupported bits per element %u\n", bitsPerElementSrc);
+          return false;
         }
-      }
-      break;
-      case PimCmdEnum::SHIFT_BITS_L:
-      {
-        auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
-        if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
-          int64_t operand = getOperand(operandBits, dataType);
-          int64_t result = operand << m_immediateValue;
-          setBits(core, isVLayout, locDest.first, locDest.second,
-                 *reinterpret_cast<uint64_t *>(&result), bitsPerElementDest);
-        } else {
-          uint64_t operand = getOperand(operandBits, dataType);
-          uint64_t result = operand << m_immediateValue;
-          setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
         }
-      }
-      break;
-      default:
-        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
-        assert(0);
+        break;
+        }
+        case PimCmdEnum::SHIFT_BITS_R: result = operand >> m_scalerValue; break;
+        case PimCmdEnum::SHIFT_BITS_L: result = operand << m_scalerValue; break;
+        default:
+          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+          assert(0);
+        }
+
+        setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
       }
     } else {
       assert(0); // todo: data type
