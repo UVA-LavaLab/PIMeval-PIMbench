@@ -33,6 +33,20 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ,           {   64,   32,   66 } },
       { PimCmdEnum::MIN,          {  164,   67,  258 } },
       { PimCmdEnum::MAX,          {  164,   67,  258 } },
+      // TODO: Scalers need to be updated with proper numbers. They are currently considering same #write & #logic as the non-scaler ones. But #read has been divided by 2 
+      { PimCmdEnum::ADD_SCALAR,   {   32,   33,  161 } },
+      { PimCmdEnum::SUB_SCALAR,   {   32,   33,  161 } },
+      { PimCmdEnum::MUL_SCALAR,   {  970, 1095, 3606 } },
+      { PimCmdEnum::DIV_SCALAR,   { 1584, 1727, 4257 } },
+      { PimCmdEnum::AND_SCALAR,   {   32,   32,   64 } },
+      { PimCmdEnum::OR_SCALAR,    {   32,   32,   64 } },
+      { PimCmdEnum::XOR_SCALAR,   {   32,   32,   64 } },
+      { PimCmdEnum::XNOR_SCALAR,  {   32,   32,   64 } },
+      { PimCmdEnum::GT_SCALAR,    {   32,   32,   66 } },
+      { PimCmdEnum::LT_SCALAR,    {   32,   32,   66 } },
+      { PimCmdEnum::EQ_SCALAR,    {   32,   32,   66 } },
+      { PimCmdEnum::MIN_SCALAR,   {   82,   67,  258 } },
+      { PimCmdEnum::MAX_SCALAR,   {   82,   67,  258 } },
     }},
     { PIM_FP32, {
       { PimCmdEnum::ADD,          { 1331,  685, 1687 } },
@@ -60,6 +74,20 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ,           {   64,   32,   66 } },
       { PimCmdEnum::MIN,          {  164,   67,  261 } },
       { PimCmdEnum::MAX,          {  164,   67,  261 } },
+      // TODO: Scalers need to be updated with proper numbers. They are currently considering same #write & #logic as the non-scaler ones. But #read has been divided by 2 
+      { PimCmdEnum::ADD_SCALAR,   {   32,   33,  161 } },
+      { PimCmdEnum::SUB_SCALAR,   {   32,   33,  161 } },
+      { PimCmdEnum::MUL_SCALAR,   { 2146, 1799, 7039 } },
+      { PimCmdEnum::DIV_SCALAR,   { 1864, 1744, 6800 } },
+      { PimCmdEnum::AND_SCALAR,   {   32,   32,   64 } },
+      { PimCmdEnum::OR_SCALAR,    {   32,   32,  128 } },
+      { PimCmdEnum::XOR_SCALAR,   {   32,   32,  128 } },
+      { PimCmdEnum::XNOR_SCALAR,  {   32,   32,   64 } },
+      { PimCmdEnum::GT_SCALAR,    {   32,   32,   66 } },
+      { PimCmdEnum::LT_SCALAR,    {   32,   32,   66 } },
+      { PimCmdEnum::EQ_SCALAR,    {   32,   32,   66 } },
+      { PimCmdEnum::MIN_SCALAR,   {   82,   67,  261 } },
+      { PimCmdEnum::MAX_SCALAR,   {   82,   67,  261 } },
     }},
     { PIM_FP32, {
       { PimCmdEnum::ADD,          { 1597,  822, 2024 } },
@@ -210,21 +238,11 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   PimDataType dataType = obj.getDataType();
-
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
-  case PIM_DEVICE_SIMDRAM:
-    msRuntime = getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, numPass);
-    break;
-  case PIM_DEVICE_FULCRUM:
   {
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.000005; // 5ns
-    unsigned bitsPerElement = obj.getBitsPerElement();
-    unsigned aluBits = 32; // 32-bit ALU
-    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
     switch (cmdType)
     {
     case PimCmdEnum::ADD_SCALAR:
@@ -239,22 +257,53 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR:
-    {
-      msRuntime = aluLatency * maxElementsPerRegion; // add scaler broadcast latency
-    }
-    break;
-    case PimCmdEnum::POPCOUNT: {numberOfALUOperationPerCycle *= 12;} break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    case PimCmdEnum::MAX_SCALAR: msRuntime = m_tL * obj.getBitsPerElement(); break; // For scaler commands add the broadcast
+    case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R:
-    default:
-    {
-      msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle;
-      msRuntime *= numPass;
+    case PimCmdEnum::SHIFT_BITS_R:   
+    default: 
+       std::printf("PIM-Warning: Unsupported PIM command.\n");
+       break;
     }
+  }
+  case PIM_DEVICE_SIMDRAM:
+    msRuntime += getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, numPass);
     break;
+  case PIM_DEVICE_FULCRUM:
+  {
+    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+    double aluLatency = 0.000005; // 5ns
+    unsigned bitsPerElement = obj.getBitsPerElement();
+    unsigned aluBits = 32; // 32-bit ALU
+    double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
+    switch (cmdType)
+    {
+    case PimCmdEnum::POPCOUNT: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul  
+    case PimCmdEnum::ADD_SCALAR:
+    case PimCmdEnum::SUB_SCALAR:
+    case PimCmdEnum::MUL_SCALAR:
+    case PimCmdEnum::DIV_SCALAR:
+    case PimCmdEnum::AND_SCALAR:
+    case PimCmdEnum::OR_SCALAR:
+    case PimCmdEnum::XOR_SCALAR: 
+    case PimCmdEnum::XNOR_SCALAR: 
+    case PimCmdEnum::GT_SCALAR: 
+    case PimCmdEnum::LT_SCALAR: 
+    case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::MIN_SCALAR:
+    case PimCmdEnum::MAX_SCALAR: 
+      msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
+    // FALLTHROUGH
+    case PimCmdEnum::ABS:
+    case PimCmdEnum::SHIFT_BITS_L:
+    case PimCmdEnum::SHIFT_BITS_R: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle; break;
+    default: 
+       std::printf("PIM-Warning: Unsupported PIM command.\n");
+       break;
     }
+    msRuntime *= numPass;
+    break;
   }
   case PIM_DEVICE_BANK_LEVEL:
   {
@@ -263,8 +312,32 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned numALU = 2;
     unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
-    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
-    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle / numALU;
+    double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
+    switch (cmdType)
+    {
+    case PimCmdEnum::ADD_SCALAR:
+    case PimCmdEnum::SUB_SCALAR:
+    case PimCmdEnum::MUL_SCALAR:
+    case PimCmdEnum::DIV_SCALAR:
+    case PimCmdEnum::AND_SCALAR:
+    case PimCmdEnum::OR_SCALAR:
+    case PimCmdEnum::XOR_SCALAR: 
+    case PimCmdEnum::XNOR_SCALAR: 
+    case PimCmdEnum::GT_SCALAR: 
+    case PimCmdEnum::LT_SCALAR: 
+    case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::MIN_SCALAR:
+    case PimCmdEnum::MAX_SCALAR: 
+      msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to POPCOUNT, ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
+    // FALLTHROUGH
+    case PimCmdEnum::POPCOUNT:
+    case PimCmdEnum::ABS:
+    case PimCmdEnum::SHIFT_BITS_L:
+    case PimCmdEnum::SHIFT_BITS_R: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle / numALU; break;
+    default: 
+       std::printf("PIM-Warning: Unsupported PIM command.\n");
+       break;
+    }
     msRuntime *= numPass;
     break;
   }
