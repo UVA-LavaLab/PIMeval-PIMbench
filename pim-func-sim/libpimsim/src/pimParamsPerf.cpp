@@ -277,10 +277,9 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime = 0.0;
+    msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * numPass;
     switch (cmdType)
     {
-    case PimCmdEnum::POPCOUNT: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul  
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
@@ -293,16 +292,15 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
-    // FALLTHROUGH
+    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break;
+    case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul  
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle; break;
+    case PimCmdEnum::SHIFT_BITS_R: break;
     default: 
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
-    msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
@@ -313,7 +311,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime = 0.0;
+    msRuntime =  m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * numPass / numALU;
     switch (cmdType)
     {
     case PimCmdEnum::ADD_SCALAR:
@@ -328,17 +326,15 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime = aluLatency * maxElementsPerRegion; // Fall-through to POPCOUNT, ABS, SHIFT_BITS_L, SHIFT_BITS_R cases. This is intentional as these operations require both broadcast latency and computation latency.
-    // FALLTHROUGH
+    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; 
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R: msRuntime += m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle / numALU; break;
+    case PimCmdEnum::SHIFT_BITS_R: break;
     default: 
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
-    msRuntime *= numPass;
     break;
   }
   default:
