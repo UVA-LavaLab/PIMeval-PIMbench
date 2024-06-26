@@ -1,4 +1,4 @@
-// Test: C++ version of kmeans
+// Test: C++ version of K-Nearest Neighbor
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -165,7 +165,7 @@ void copyTestPoint(int &currPoint, vector<vector<int>> &testPoints, vector<PimOb
 
 vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) {
     priority_queue<pair<int, int>> maxHeap;
-    for (int i = 0; i < data.size(); ++i) {
+    for(int i = 0; i < data.size(); ++i) {
         if (maxHeap.size() < k) {
             maxHeap.push({data[i], i});
         } else if (data[i] < maxHeap.top().first) {
@@ -175,35 +175,14 @@ vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) 
     }
 
     vector<pair<int, int>> result;
-    result.reserve(k);
-    
-    while (!maxHeap.empty()) {
-        result.push_back(maxHeap.top());
+    result.resize(k);
+    int idx = k-1;
+    while(!maxHeap.empty() && idx >= 0) {
+        result[idx--] = maxHeap.top();
         maxHeap.pop();
     }
 
-    reverse(result.begin(), result.end());
     return result;   
-}
-
-void genRandMatrix(vector<vector<int>> distMat, uint64_t numOfPoints, uint64_t numOfTests) {
-  // Generate a random matrix of size num points X num tests
-  // Seed with a real random value, if available
-  random_device rd;
-
-  // Choose a random number generator
-  mt19937 gen(rd());
-
-  // Define the range of random numbers
-  uniform_int_distribution<> dis(0, 10000);
-
-  // Fill the matrix with random numbers
-  for (int i = 0; i < numOfTests; ++i) {
-      for (int j = 0; j < numOfPoints; ++j) {
-          distMat[i][j] = dis(gen);
-      }
-  }
-
 }
 
 void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, const vector<vector<int>> &dataPoints, vector<vector<int>> &testPoints, vector<int> &testPredictions)
@@ -357,8 +336,6 @@ vector<vector<int>> readCSV(const string& filename) {
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  //std::cout << "Number of points: " << params.numPoints << "\n";
-  // row = dimension, col = number of datapoints. this is done to simplify data movement.
   vector<vector<int>> dataPoints;
   vector<vector<int>> testPoints;
 

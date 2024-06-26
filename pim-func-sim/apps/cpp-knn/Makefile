@@ -1,4 +1,4 @@
-# Makefile: C++ version of vector addition
+# Makefile: C++ version of K-Nearest Neighbor
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
