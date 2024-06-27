@@ -2,10 +2,6 @@
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "bitSerialBase.h"
-#include <vector>
-#include <random>
-#include <iostream>
-#include <string>
 
 //! @brief  Create device
 void
@@ -25,24 +21,6 @@ bitSerialBase::deleteDevice()
   assert(status == PIM_OK);
 }
 
-//! @brief  Generate random int
-std::vector<int>
-bitSerialBase::getRandInt(int numElements, int min, int max, bool allowZero)
-{
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dis(min, max);
-  std::vector<int> vec(numElements);
-  for (int i = 0; i < numElements; ++i) {
-    int val = 0;
-    do {
-      val = dis(gen);
-    } while (val == 0 && !allowZero);
-    vec[i] = val;
-  }
-  return vec;
-}
-
 //! @brief  Run tests
 bool
 bitSerialBase::runTests()
@@ -58,6 +36,82 @@ bitSerialBase::runTests()
   return ok;
 }
 
+//! @brief  Test PIM_INT8
+bool
+bitSerialBase::testInt8()
+{
+  bool ok = true;
+  std::cout << "[INT8] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 126;
+  int minVal = -126;
+  std::vector<int8_t> vec1 = getRandInt<int8_t>(numElements, minVal, maxVal);
+  std::vector<int8_t> vec2 = getRandInt<int8_t>(numElements, minVal, maxVal);
+  std::vector<int8_t> vec3 = getRandInt<int8_t>(numElements, minVal, maxVal, false);
+  std::vector<int8_t> vec4 = getRandInt<int8_t>(numElements, minVal, maxVal);
+  std::vector<int8_t> vec5(numElements);
+  std::vector<int8_t> vec1a(numElements);
+  std::vector<int8_t> vec2a(numElements);
+  std::vector<int8_t> vec3a(numElements);
+  std::vector<int8_t> vec4a(numElements);
+  std::vector<int8_t> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 8, PIM_INT8);
+  PimObjId src2 = pimAllocAssociated(8, src1, PIM_INT8);
+  PimObjId src3 = pimAllocAssociated(8, src1, PIM_INT8);
+  PimObjId dest1 = pimAllocAssociated(8, src1, PIM_INT8);
+  PimObjId dest2 = pimAllocAssociated(8, src1, PIM_INT8);
+  PimObjId src4 = pimAllocAssociated(8, src1, PIM_INT8);  // oob check
+
+  // TODO
+
+  return false;
+}
+
+//! @brief  Test PIM_INT16
+bool
+bitSerialBase::testInt16()
+{
+  bool ok = true;
+  std::cout << "[INT16] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 100000;
+  int minVal = -100;
+  std::vector<int16_t> vec1 = getRandInt<int16_t>(numElements, minVal, maxVal);
+  std::vector<int16_t> vec2 = getRandInt<int16_t>(numElements, minVal, maxVal);
+  std::vector<int16_t> vec3 = getRandInt<int16_t>(numElements, minVal, maxVal, false);
+  std::vector<int16_t> vec4 = getRandInt<int16_t>(numElements, minVal, maxVal);
+  std::vector<int16_t> vec5(numElements);
+  std::vector<int16_t> vec1a(numElements);
+  std::vector<int16_t> vec2a(numElements);
+  std::vector<int16_t> vec3a(numElements);
+  std::vector<int16_t> vec4a(numElements);
+  std::vector<int16_t> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 16, PIM_INT16);
+  PimObjId src2 = pimAllocAssociated(16, src1, PIM_INT16);
+  PimObjId src3 = pimAllocAssociated(16, src1, PIM_INT16);
+  PimObjId dest1 = pimAllocAssociated(16, src1, PIM_INT16);
+  PimObjId dest2 = pimAllocAssociated(16, src1, PIM_INT16);
+  PimObjId src4 = pimAllocAssociated(16, src1, PIM_INT16);  // oob check
+
+  // TODO
+
+  return false;
+}
+
 //! @brief  Test PIM_INT32
 bool
 bitSerialBase::testInt32()
@@ -69,10 +123,10 @@ bitSerialBase::testInt32()
   int numElements = 4000;
   int maxVal = 100000;
   int minVal = -100000;
-  std::vector<int> vec1 = getRandInt(numElements, minVal, maxVal);
-  std::vector<int> vec2 = getRandInt(numElements, minVal, maxVal);
-  std::vector<int> vec3 = getRandInt(numElements, minVal, maxVal, false);
-  std::vector<int> vec4 = getRandInt(numElements, minVal, maxVal);
+  std::vector<int> vec1 = getRandInt<int>(numElements, minVal, maxVal);
+  std::vector<int> vec2 = getRandInt<int>(numElements, minVal, maxVal);
+  std::vector<int> vec3 = getRandInt<int>(numElements, minVal, maxVal, false);
+  std::vector<int> vec4 = getRandInt<int>(numElements, minVal, maxVal);
   std::vector<int> vec5(numElements);
   std::vector<int> vec1a(numElements);
   std::vector<int> vec2a(numElements);
@@ -184,4 +238,194 @@ bitSerialBase::testInt32()
   }
 
   return ok;
+}
+
+//! @brief  Test PIM_INT64
+bool
+bitSerialBase::testInt64()
+{
+  bool ok = true;
+  std::cout << "[INT64] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 10000000;
+  int minVal = -100000000;
+  std::vector<int64_t> vec1 = getRandInt<int64_t>(numElements, minVal, maxVal);
+  std::vector<int64_t> vec2 = getRandInt<int64_t>(numElements, minVal, maxVal);
+  std::vector<int64_t> vec3 = getRandInt<int64_t>(numElements, minVal, maxVal, false);
+  std::vector<int64_t> vec4 = getRandInt<int64_t>(numElements, minVal, maxVal);
+  std::vector<int64_t> vec5(numElements);
+  std::vector<int64_t> vec1a(numElements);
+  std::vector<int64_t> vec2a(numElements);
+  std::vector<int64_t> vec3a(numElements);
+  std::vector<int64_t> vec4a(numElements);
+  std::vector<int64_t> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 64, PIM_INT64);
+  PimObjId src2 = pimAllocAssociated(64, src1, PIM_INT64);
+  PimObjId src3 = pimAllocAssociated(64, src1, PIM_INT64);
+  PimObjId dest1 = pimAllocAssociated(64, src1, PIM_INT64);
+  PimObjId dest2 = pimAllocAssociated(64, src1, PIM_INT64);
+  PimObjId src4 = pimAllocAssociated(64, src1, PIM_INT64);  // oob check
+
+  // TODO
+
+  return false;
+}
+
+//! @brief  Test PIM_UINT8
+bool
+bitSerialBase::testUInt8()
+{
+  bool ok = true;
+  std::cout << "[UINT8] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 255;
+  int minVal = 0;
+  std::vector<uint8_t> vec1 = getRandInt<uint8_t>(numElements, minVal, maxVal);
+  std::vector<uint8_t> vec2 = getRandInt<uint8_t>(numElements, minVal, maxVal);
+  std::vector<uint8_t> vec3 = getRandInt<uint8_t>(numElements, minVal, maxVal, false);
+  std::vector<uint8_t> vec4 = getRandInt<uint8_t>(numElements, minVal, maxVal);
+  std::vector<uint8_t> vec5(numElements);
+  std::vector<uint8_t> vec1a(numElements);
+  std::vector<uint8_t> vec2a(numElements);
+  std::vector<uint8_t> vec3a(numElements);
+  std::vector<uint8_t> vec4a(numElements);
+  std::vector<uint8_t> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 8, PIM_UINT8);
+  PimObjId src2 = pimAllocAssociated(8, src1, PIM_UINT8);
+  PimObjId src3 = pimAllocAssociated(8, src1, PIM_UINT8);
+  PimObjId dest1 = pimAllocAssociated(8, src1, PIM_UINT8);
+  PimObjId dest2 = pimAllocAssociated(8, src1, PIM_UINT8);
+  PimObjId src4 = pimAllocAssociated(8, src1, PIM_UINT8);  // oob check
+
+  // TODO
+
+  return false;
+}
+
+//! @brief  Test PIM_UINT16
+bool
+bitSerialBase::testUInt16()
+{
+  bool ok = true;
+  std::cout << "[UINT16] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 100000;
+  int minVal = 100;
+  std::vector<uint16_t> vec1 = getRandInt<uint16_t>(numElements, minVal, maxVal);
+  std::vector<uint16_t> vec2 = getRandInt<uint16_t>(numElements, minVal, maxVal);
+  std::vector<uint16_t> vec3 = getRandInt<uint16_t>(numElements, minVal, maxVal, false);
+  std::vector<uint16_t> vec4 = getRandInt<uint16_t>(numElements, minVal, maxVal);
+  std::vector<uint16_t> vec5(numElements);
+  std::vector<uint16_t> vec1a(numElements);
+  std::vector<uint16_t> vec2a(numElements);
+  std::vector<uint16_t> vec3a(numElements);
+  std::vector<uint16_t> vec4a(numElements);
+  std::vector<uint16_t> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 16, PIM_UINT16);
+  PimObjId src2 = pimAllocAssociated(16, src1, PIM_UINT16);
+  PimObjId src3 = pimAllocAssociated(16, src1, PIM_UINT16);
+  PimObjId dest1 = pimAllocAssociated(16, src1, PIM_UINT16);
+  PimObjId dest2 = pimAllocAssociated(16, src1, PIM_UINT16);
+  PimObjId src4 = pimAllocAssociated(16, src1, PIM_UINT16);  // oob check
+
+  // TODO
+
+  return false;
+}
+
+//! @brief  Test PIM_UINT32
+bool
+bitSerialBase::testUInt32()
+{
+  bool ok = true;
+  std::cout << "[UINT32] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 100000;
+  int minVal = -100000;
+  std::vector<uint> vec1 = getRandInt<uint>(numElements, minVal, maxVal);
+  std::vector<uint> vec2 = getRandInt<uint>(numElements, minVal, maxVal);
+  std::vector<uint> vec3 = getRandInt<uint>(numElements, minVal, maxVal, false);
+  std::vector<uint> vec4 = getRandInt<uint>(numElements, minVal, maxVal);
+  std::vector<uint> vec5(numElements);
+  std::vector<uint> vec1a(numElements);
+  std::vector<uint> vec2a(numElements);
+  std::vector<uint> vec3a(numElements);
+  std::vector<uint> vec4a(numElements);
+  std::vector<uint> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 32, PIM_UINT32);
+  PimObjId src2 = pimAllocAssociated(32, src1, PIM_UINT32);
+  PimObjId src3 = pimAllocAssociated(32, src1, PIM_UINT32);
+  PimObjId dest1 = pimAllocAssociated(32, src1, PIM_UINT32);
+  PimObjId dest2 = pimAllocAssociated(32, src1, PIM_UINT32);
+  PimObjId src4 = pimAllocAssociated(32, src1, PIM_UINT32);  // oob check
+
+  // TODO
+
+  return false;
+}
+
+//! @brief  Test PIM_UINT64
+bool
+bitSerialBase::testUInt64()
+{
+  bool ok = true;
+  std::cout << "[UINT64] Run tests ..." << std::endl;
+
+  // create vectors
+  int numElements = 4000;
+  int maxVal = 10000000;
+  int minVal = -100000000;
+  std::vector<uint64_t> vec1 = getRandInt<uint64_t>(numElements, minVal, maxVal);
+  std::vector<uint64_t> vec2 = getRandInt<uint64_t>(numElements, minVal, maxVal);
+  std::vector<uint64_t> vec3 = getRandInt<uint64_t>(numElements, minVal, maxVal, false);
+  std::vector<uint64_t> vec4 = getRandInt<uint64_t>(numElements, minVal, maxVal);
+  std::vector<uint64_t> vec5(numElements);
+  std::vector<uint64_t> vec1a(numElements);
+  std::vector<uint64_t> vec2a(numElements);
+  std::vector<uint64_t> vec3a(numElements);
+  std::vector<uint64_t> vec4a(numElements);
+  std::vector<uint64_t> vec5a(numElements);
+  // create EQ cases
+  vec2[100] = vec1[100];
+  vec2[3000] = vec1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, 64, PIM_UINT64);
+  PimObjId src2 = pimAllocAssociated(64, src1, PIM_UINT64);
+  PimObjId src3 = pimAllocAssociated(64, src1, PIM_UINT64);
+  PimObjId dest1 = pimAllocAssociated(64, src1, PIM_UINT64);
+  PimObjId dest2 = pimAllocAssociated(64, src1, PIM_UINT64);
+  PimObjId src4 = pimAllocAssociated(64, src1, PIM_UINT64);  // oob check
+
+  // TODO
+
+  return false;
 }
