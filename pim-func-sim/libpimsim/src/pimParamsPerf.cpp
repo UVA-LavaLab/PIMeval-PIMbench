@@ -292,7 +292,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break;
+    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; // the broadcast value is being stored in the walker, hence no row write is needed.
     case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul  
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
@@ -314,6 +314,10 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     msRuntime =  m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * numPass / numALU;
     switch (cmdType)
     {
+    case PimCmdEnum::POPCOUNT:
+    case PimCmdEnum::ABS:
+    case PimCmdEnum::SHIFT_BITS_L:
+    case PimCmdEnum::SHIFT_BITS_R: break;  
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
@@ -326,11 +330,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR: 
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; 
-    case PimCmdEnum::POPCOUNT:
-    case PimCmdEnum::ABS:
-    case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R: break;
+    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; // the broadcast value is being stored in the V0 register, hence no row write is needed. 
     default: 
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
