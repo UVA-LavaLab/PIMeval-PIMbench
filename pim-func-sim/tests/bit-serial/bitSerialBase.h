@@ -62,6 +62,11 @@ protected:
   virtual void bitSerialUIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
 
+  virtual void bitSerialFp32Add(PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialFp32Sub(PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialFp32Mul(PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialFp32Div(PimObjId src1, PimObjId src2, PimObjId dest) {}
+
   // helper functions
   void createDevice();
   void deleteDevice();
@@ -344,7 +349,6 @@ bitSerialBase::testFp(const std::string& category, PimDataType dataType)
   unsigned numBits = sizeof(T) * 8;
   T maxVal = 0;
   T minVal = 0;
-  bool isSigned = true;
   switch (dataType) {
     case PIM_FP32:
         minVal = -10000.0;
@@ -409,22 +413,12 @@ bitSerialBase::testFp(const std::string& category, PimDataType dataType)
 
     pimResetStats();
 
-    if (isSigned) {
+    if (numBits == 32) {
       switch (testId) {
-      case 0: bitSerialIntAdd(numBits, src1, src2, dest2); break;
-      case 1: bitSerialIntSub(numBits, src1, src2, dest2); break;
-      case 2: bitSerialIntMul(numBits, src1, src2, dest2); break;
-      case 3: bitSerialIntDiv(numBits, src1, srcNonZero, dest2); break;
-      default:
-        std::cout << tag << " Error: Test ID not supported" << std::endl;
-        return false;
-      }
-    } else {
-      switch (testId) {
-      case 0: bitSerialUIntAdd(numBits, src1, src2, dest2); break;
-      case 1: bitSerialUIntSub(numBits, src1, src2, dest2); break;
-      case 2: bitSerialUIntMul(numBits, src1, src2, dest2); break;
-      case 3: bitSerialUIntDiv(numBits, src1, srcNonZero, dest2); break;
+      case 0: bitSerialFp32Add(src1, src2, dest2); break;
+      case 1: bitSerialFp32Sub(src1, src2, dest2); break;
+      case 2: bitSerialFp32Mul(src1, src2, dest2); break;
+      case 3: bitSerialFp32Div(src1, srcNonZero, dest2); break;
       default:
         std::cout << tag << " Error: Test ID not supported" << std::endl;
         return false;
