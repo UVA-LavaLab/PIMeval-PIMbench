@@ -24,6 +24,7 @@ bitSerialMain::bitSerialMain()
     "uint16",
     "uint32",
     "uint64",
+    "fp32",
   };
 }
 

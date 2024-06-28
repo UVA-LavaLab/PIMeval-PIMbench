@@ -46,6 +46,8 @@ bitSerialBase::runTests(const std::vector<std::string>& testList)
       ok &= testInt<uint32_t>(testName, PIM_UINT32);
     } else if (testName == "uint64") {
       ok &= testInt<uint64_t>(testName, PIM_UINT64);
+    } else if (testName == "fp32") {
+      ok &= testFp<float>(testName, PIM_FP32);
     } else {
       std::cout << "Error: Unknown test " << testName << std::endl;
     }
