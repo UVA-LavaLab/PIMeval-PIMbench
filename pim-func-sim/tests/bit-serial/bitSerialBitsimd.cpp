@@ -244,7 +244,7 @@ bitSerialBitsimd::bitSerialIntMax(int numBits, PimObjId src1, PimObjId src2, Pim
 void
 bitSerialBitsimd::bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest)
 {
-  assert(numBits == 32); // todo
+  if (numBits != 32) return; // todo
 
   // 2 bits -> 2-bit count
   for (int i = 0; i < 32; i += 2) {
@@ -369,7 +369,8 @@ bitSerialBitsimd::bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest
 void
 bitSerialBitsimd::bitSerialIntMulHelper3Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  assert(numBits <= 32);
+  if (numBits > 32) return; // todo
+
   std::cout << "BS-INFO: Allocate 32 temporary rows" << std::endl;
   PimObjId tmp = pimAllocAssociated(32, src1, PIM_INT32);
 
@@ -411,7 +412,8 @@ bitSerialBitsimd::bitSerialIntMulHelper3Reg(int numBits, PimObjId src1, PimObjId
 void
 bitSerialBitsimd::bitSerialIntMulHelper4Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  assert(numBits <= 32); // todo
+  if (numBits > 32) return; // todo
+
   // cond copy the first
   pimOpReadRowToSa(src1, 0);
   pimOpMove(src1, PIM_RREG_SA, PIM_RREG_R2);
@@ -457,7 +459,8 @@ bitSerialBitsimd::bitSerialUIntMulHelper4Reg(int numBits, PimObjId src1, PimObjI
 void
 bitSerialBitsimd::bitSerialIntDivRemHelper(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  assert(numBits <= 32); // todo
+  if (numBits > 32) return; // todo
+
   // compute abs
   std::cout << "BS-INFO: Allocate 64 temporary rows" << std::endl;
   PimObjId abs1 = pimAllocAssociated(32, src1, PIM_INT32);
@@ -494,7 +497,8 @@ bitSerialBitsimd::bitSerialIntDivRemHelper(int numBits, PimObjId src1, PimObjId 
 void
 bitSerialBitsimd::bitSerialUintDivRemHelper(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  assert(numBits <= 32); // todo
+  if (numBits > 32) return; // todo
+
   // quotient and remainder
   std::cout << "BS-INFO: Allocate 96 temporary rows" << std::endl;
   PimObjId qr = pimAllocAssociated(64, src1, PIM_INT64);
