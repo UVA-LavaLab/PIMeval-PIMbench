@@ -38,10 +38,26 @@ protected:
   virtual void bitSerialIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest) override;
+  virtual void bitSerialUIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntGT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntLT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest) override;
 
 private:
   void bitSerialIntMulHelper3Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest);
   void bitSerialIntMulHelper4Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest);
+  void bitSerialUIntMulHelper3Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest);
+  void bitSerialUIntMulHelper4Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest);
   void bitSerialIntDivRemHelper(int numBits, PimObjId src1, PimObjId src2, PimObjId dest);
   void bitSerialUintDivRemHelper(int numBits, PimObjId src1, PimObjId src2, PimObjId dest);
 };

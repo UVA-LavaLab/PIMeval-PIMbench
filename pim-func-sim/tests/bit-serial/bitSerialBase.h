@@ -5,8 +5,11 @@
 #define BIT_SERIAL_BASE_H
 
 #include "libpimsim.h"
-#include <vector>
 #include <cassert>
+#include <vector>
+#include <random>
+#include <iostream>
+#include <string>
 
 //! @class  bitSerialBase
 //! @brief  Bit-serial perf base class
@@ -39,12 +42,48 @@ protected:
   virtual void bitSerialIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
+  virtual void bitSerialUIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntAbs(int numBits, PimObjId src, PimObjId dest) {}
+  virtual void bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntGT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntLT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
 
   // helper functions
   void createDevice();
   void deleteDevice();
-  std::vector<int> getRandInt(int numElements, int min, int max, bool allowZero = true);
+  //! @brief  Generate random int
+  template <typename T> std::vector<T> getRandInt(int numElements, T min, T max, bool allowZero = true) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<T> dis(min, max);
+  std::vector<T> vec(numElements);
+  for (int i = 0; i < numElements; ++i) {
+    T val = 0;
+    do {
+      val = dis(gen);
+    } while (val == 0 && !allowZero);
+    vec[i] = val;
+  }
+  return vec;
+  }
+  bool testInt8();
+  bool testInt16();
   bool testInt32();
+  bool testInt64();
+  bool testUInt8();
+  bool testUInt16();
+  bool testUInt32();
+  bool testUInt64();
 
 };
 

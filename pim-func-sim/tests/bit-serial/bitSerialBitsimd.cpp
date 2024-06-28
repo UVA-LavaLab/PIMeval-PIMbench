@@ -283,6 +283,90 @@ bitSerialBitsimd::bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest)
 }
 
 void
+bitSerialBitsimd::bitSerialUIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntGT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntLT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest)
+{
+ // TODO
+}
+
+void
 bitSerialBitsimd::bitSerialIntMulHelper3Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
   assert(numBits <= 32);
@@ -356,6 +440,18 @@ bitSerialBitsimd::bitSerialIntMulHelper4Reg(int numBits, PimObjId src1, PimObjId
       pimOpWriteSaToRow(dest, i + j);
     }
   }
+}
+
+void
+bitSerialBitsimd::bitSerialUIntMulHelper3Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
+}
+
+void
+bitSerialBitsimd::bitSerialUIntMulHelper4Reg(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  // TODO
 }
 
 void
