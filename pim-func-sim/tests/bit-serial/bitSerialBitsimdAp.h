@@ -13,7 +13,7 @@
 class bitSerialBitsimdAp : public bitSerialBase
 {
 public:
-  bitSerialBitsimdAp() {}
+  bitSerialBitsimdAp() { m_deviceName = "bitsimd-v-ap"; }
   ~bitSerialBitsimdAp() {}
 
 protected:

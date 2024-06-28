@@ -10,6 +10,7 @@
 #include <random>
 #include <iostream>
 #include <string>
+#include <map>
 
 //! @class  bitSerialBase
 //! @brief  Bit-serial perf base class
@@ -19,7 +20,9 @@ public:
   bitSerialBase() {}
   virtual ~bitSerialBase() {}
 
-  bool runTests();
+  bool runTests(const std::vector<std::string>& testList);
+
+  const std::map<std::string, std::pair<int, int>>& getStats() const { return m_stats; }
 
 protected:
 
@@ -61,13 +64,27 @@ protected:
   // helper functions
   void createDevice();
   void deleteDevice();
-  //! @brief  Generate random int
-  template <typename T> std::vector<T> getRandInt(int numElements, T min, T max, bool allowZero = true) {
+
+  template <typename T> std::vector<T> getRandInt(uint64_t numElements, T min, T max, bool allowZero = true);
+  template <typename T> bool testInt(const std::string& category, PimDataType dataType);
+
+  std::map<std::string, std::pair<int, int>> m_stats;
+  std::string m_deviceName;
+};
+
+
+//! @brief  Generate a random vector of integer data type T
+template <typename T> std::vector<T>
+bitSerialBase::getRandInt(uint64_t numElements, T min, T max, bool allowZero)
+{
+  std::vector<T> vec(numElements);
+  if (min == 0 && max == 0 && !allowZero) {
+    return vec;
+  }
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<T> dis(min, max);
-  std::vector<T> vec(numElements);
-  for (int i = 0; i < numElements; ++i) {
+  for (uint64_t i = 0; i < numElements; ++i) {
     T val = 0;
     do {
       val = dis(gen);
@@ -75,16 +92,222 @@ protected:
     vec[i] = val;
   }
   return vec;
-  }
-  bool testInt8();
-  bool testInt16();
-  bool testInt32();
-  bool testInt64();
-  bool testUInt8();
-  bool testUInt16();
-  bool testUInt32();
-  bool testUInt64();
+}
 
-};
+//! @brief  Test integer bit-serial micro-programs
+template <typename T> bool
+bitSerialBase::testInt(const std::string& category, PimDataType dataType)
+{
+  const int numTests = 15;
+  int numPassed = 0;
+  int numElements = 4000;
+  unsigned numBits = sizeof(T) * 8;
+  T maxVal = 0;
+  T minVal = 0;
+  bool isSigned = true;
+  switch (dataType) {
+    case PIM_INT8:
+        minVal = static_cast<T>(-100);
+        maxVal = static_cast<T>(127);
+        break;
+    case PIM_INT16:
+        minVal = static_cast<T>(-10000);
+        maxVal = static_cast<T>(10000);
+        break;
+    case PIM_INT32:
+        minVal = static_cast<T>(-100000);
+        maxVal = static_cast<T>(100000);
+        break;
+    case PIM_INT64:
+        minVal = static_cast<T>(-40000000000LL);
+        maxVal = static_cast<T>(40000000000LL);
+        break;
+    case PIM_UINT8:
+        isSigned = false;
+        maxVal = static_cast<T>(256);
+        break;
+    case PIM_UINT16:
+        isSigned = false;
+        maxVal = static_cast<T>(40000);
+        break;
+    case PIM_UINT32:
+        isSigned = false;
+        maxVal = static_cast<T>(100000);
+        break;
+    case PIM_UINT64:
+        isSigned = false;
+        maxVal = static_cast<T>(40000000000LL);
+        break;
+    default:
+      std::cout << "Error: Unsupported data type." << std::endl;
+      return false;
+  };
+
+  std::cout << "================================================================" << std::endl;
+  std::cout << "INFO: Evaluating bit-serial micro-programs for [" << m_deviceName << ":" << category << "]" << std::endl;
+  std::cout << "================================================================" << std::endl;
+
+  // allocate host vectors
+  std::vector<T> vecSrc1 = getRandInt<T>(numElements, minVal, maxVal);
+  std::vector<T> vecSrc2 = getRandInt<T>(numElements, minVal, maxVal);
+  std::vector<T> vecSrcNonZero = getRandInt<T>(numElements, minVal, maxVal, false);
+  std::vector<T> vecSrc3 = getRandInt<T>(numElements, minVal, maxVal);
+  std::vector<T> vecDest(numElements);
+  std::vector<T> vecSrc1Verify(numElements);
+  std::vector<T> vecSrc2Verify(numElements);
+  std::vector<T> vecSrcNonZeroVerify(numElements);
+  std::vector<T> vecSrc3Verify(numElements);
+  std::vector<T> vecDestVerify(numElements);
+  // create EQ cases
+  vecSrc2[100] = vecSrc1[100];
+  vecSrc2[3000] = vecSrc1[3000];
+
+  // allocate PIM objects
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, numBits, dataType);
+  PimObjId src2 = pimAllocAssociated(numBits, src1, dataType);
+  PimObjId srcNonZero = pimAllocAssociated(numBits, src1, dataType);
+  PimObjId dest1 = pimAllocAssociated(numBits, src1, dataType);
+  PimObjId dest2 = pimAllocAssociated(numBits, src1, dataType);
+  PimObjId src3 = pimAllocAssociated(numBits, src1, dataType);  // alloc at last for oob check
+
+  // for printing. keep in sync with switch case below
+  const std::vector<std::string> testNames = {
+    "add", "sub", "mul", "div", "abs",
+    "and", "or", "xor", "xnor",
+    "gt", "lt", "eq",
+    "min", "max",
+    "popcount"
+  };
+
+  for (int testId = 0; testId < numTests; ++testId) {
+    std::string tag = "[" + m_deviceName + ":" + category + ":" + std::to_string(testId) + ":" + testNames[testId] + "]";
+    bool ok = true;
+    std::cout << tag << " Start" << std::endl;
+
+    pimCopyHostToDevice((void *)vecSrc1.data(), src1);
+    pimCopyHostToDevice((void *)vecSrc2.data(), src2);
+    pimCopyHostToDevice((void *)vecSrcNonZero.data(), srcNonZero);
+    pimCopyHostToDevice((void *)vecSrc3.data(), src3);
+
+    switch (testId) {
+    case 0: pimAdd(src1, src2, dest1); break;
+    case 1: pimSub(src1, src2, dest1); break;
+    case 2: pimMul(src1, src2, dest1); break;
+    case 3: pimDiv(src1, srcNonZero, dest1); break;
+    case 4: pimAbs(src1, dest1); break;
+    case 5: pimAnd(src1, src2, dest1); break;
+    case 6: pimOr(src1, src2, dest1); break;
+    case 7: pimXor(src1, src2, dest1); break;
+    case 8: pimXnor(src1, src2, dest1); break;
+    case 9: pimGT(src1, src2, dest1); break;
+    case 10: pimLT(src1, src2, dest1); break;
+    case 11: pimEQ(src1, src2, dest1); break;
+    case 12: pimMin(src1, src2, dest1); break;
+    case 13: pimMax(src1, src2, dest1); break;
+    case 14: pimPopCount(src1, dest1); break;
+    default:
+      std::cout << tag << " Error: Test ID not supported" << std::endl;
+      return false;
+    }
+
+    pimResetStats();
+
+    if (isSigned) {
+      switch (testId) {
+      case 0: bitSerialIntAdd(numBits, src1, src2, dest2); break;
+      case 1: bitSerialIntSub(numBits, src1, src2, dest2); break;
+      case 2: bitSerialIntMul(numBits, src1, src2, dest2); break;
+      case 3: bitSerialIntDiv(numBits, src1, srcNonZero, dest2); break;
+      case 4: bitSerialIntAbs(numBits, src1, dest2); break;
+      case 5: bitSerialIntAnd(numBits, src1, src2, dest2); break;
+      case 6: bitSerialIntOr(numBits, src1, src2, dest2); break;
+      case 7: bitSerialIntXor(numBits, src1, src2, dest2); break;
+      case 8: bitSerialIntXnor(numBits, src1, src2, dest2); break;
+      case 9: bitSerialIntGT(numBits, src1, src2, dest2); break;
+      case 10: bitSerialIntLT(numBits, src1, src2, dest2); break;
+      case 11: bitSerialIntEQ(numBits, src1, src2, dest2); break;
+      case 12: bitSerialIntMin(numBits, src1, src2, dest2); break;
+      case 13: bitSerialIntMax(numBits, src1, src2, dest2); break;
+      case 14: bitSerialIntPopCount(numBits, src1, dest2); break;
+      default:
+        std::cout << tag << " Error: Test ID not supported" << std::endl;
+        return false;
+      }
+    } else {
+      switch (testId) {
+      case 0: bitSerialUIntAdd(numBits, src1, src2, dest2); break;
+      case 1: bitSerialUIntSub(numBits, src1, src2, dest2); break;
+      case 2: bitSerialUIntMul(numBits, src1, src2, dest2); break;
+      case 3: bitSerialUIntDiv(numBits, src1, srcNonZero, dest2); break;
+      case 4: bitSerialUIntAbs(numBits, src1, dest2); break;
+      case 5: bitSerialUIntAnd(numBits, src1, src2, dest2); break;
+      case 6: bitSerialUIntOr(numBits, src1, src2, dest2); break;
+      case 7: bitSerialUIntXor(numBits, src1, src2, dest2); break;
+      case 8: bitSerialUIntXnor(numBits, src1, src2, dest2); break;
+      case 9: bitSerialUIntGT(numBits, src1, src2, dest2); break;
+      case 10: bitSerialUIntLT(numBits, src1, src2, dest2); break;
+      case 11: bitSerialUIntEQ(numBits, src1, src2, dest2); break;
+      case 12: bitSerialUIntMin(numBits, src1, src2, dest2); break;
+      case 13: bitSerialUIntMax(numBits, src1, src2, dest2); break;
+      case 14: bitSerialUIntPopCount(numBits, src1, dest2); break;
+      default:
+        std::cout << tag << " Error: Test ID not supported" << std::endl;
+        return false;
+      }
+    }
+
+    pimShowStats();
+
+    pimCopyDeviceToHost(dest1, (void*)vecDestVerify.data());
+    pimCopyDeviceToHost(dest2, (void*)vecDest.data());
+    if (vecDest != vecDestVerify) {
+      ok = false;
+      std::cout << tag << " Error: Incorrect results !!!!!" << std::endl;
+
+      if (1) { // debug
+        uint64_t numFailed = 0;
+        for (uint64_t i = 0; i < numElements; ++i) {
+          if (vecDest[i] != vecDestVerify[i]) {
+            numFailed++;
+            if (numFailed < 3) {
+              T val1 = vecSrc1[i];
+              T val2 = (testId == 3 ? vecSrcNonZero[i] : vecSrc2[i]);
+              std::cout << "  Idx " << i << " Operand1 " << val1 << " Operand2 " << val2
+                        << " Result " << vecDest[i] << " Expected " << vecDestVerify[i] << std::endl;
+            }
+          }
+        }
+        std::cout << "  Total " << numFailed << " out of " << numElements
+                  << " failed" << std::endl;
+      }
+    }
+
+    pimCopyDeviceToHost(src1, (void*)vecSrc1Verify.data());
+    pimCopyDeviceToHost(src2, (void*)vecSrc2Verify.data());
+    pimCopyDeviceToHost(srcNonZero, (void*)vecSrcNonZeroVerify.data());
+    pimCopyDeviceToHost(src3, (void*)vecSrc3Verify.data());
+    if (vecSrc1 != vecSrc1Verify || vecSrc2 != vecSrc2Verify || vecSrcNonZero != vecSrcNonZeroVerify || vecSrc3 != vecSrc3Verify) {
+      ok = false;
+      std::cout << tag << " Error: Input modified !!!!!" << std::endl;
+    }
+
+    std::cout << tag << " End " << (ok ? " -- Succeeded" : " -- Failed!") << std::endl;
+    if (ok) {
+      numPassed++;
+    }
+  }
+
+  pimFree(src3);
+  pimFree(dest2);
+  pimFree(dest1);
+  pimFree(srcNonZero);
+  pimFree(src2);
+  pimFree(src1);
+
+  std::cout << "INFO: Bit-serial micro-programs for [" << m_deviceName << ":" << category << "] " << numPassed << " / " << numTests << " passed" << std::endl;
+  m_stats[category] = std::make_pair(numPassed, numTests);
+  return numPassed == numTests;
+}
 
 #endif
+
