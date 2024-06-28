@@ -121,14 +121,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimBroadcastInt(srcObj2, srcVector[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-
-    status = pimMul(srcObj1, srcObj2, srcObj2);
+    status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
