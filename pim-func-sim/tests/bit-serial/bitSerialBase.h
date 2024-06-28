@@ -62,7 +62,7 @@ protected:
   void createDevice();
   void deleteDevice();
   //! @brief  Generate random int
-  template <typename T> std::vector<T> getRandInt(int numElements, int min, int max, bool allowZero = true) {
+  template <typename T> std::vector<T> getRandInt(int numElements, T min, T max, bool allowZero = true) {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<T> dis(min, max);
