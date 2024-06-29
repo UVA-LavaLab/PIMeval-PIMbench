@@ -38,7 +38,7 @@ public:
   double getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 
 private:
-  double getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const;
+  double getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass) const;
 
   const pimParamsDram* m_paramsDram;
   PimDeviceEnum m_curDevice;

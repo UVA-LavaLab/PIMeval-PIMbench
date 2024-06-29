@@ -52,8 +52,6 @@ pimParamsPerf::s_bitsimdPerfTable = {
     { PIM_INT32, {
       { PimCmdEnum::ABS,          {   33,   32,  130 } },
       { PimCmdEnum::POPCOUNT,     {  114,  114,  218 } },
-      { PimCmdEnum::SHIFT_BITS_R, {   31,   32,    1 } },
-      { PimCmdEnum::SHIFT_BITS_L, {   31,   32,    1 } },
       { PimCmdEnum::ADD,          {   64,   32,   97 } },
       { PimCmdEnum::SUB,          {   64,   32,   97 } },
       { PimCmdEnum::MUL,          { 1056,  528, 2080 } },
@@ -212,8 +210,6 @@ pimParamsPerf::s_bitsimdPerfTable = {
     { PIM_INT32, {
       { PimCmdEnum::ABS,          {   33,   32,  195 } },
       { PimCmdEnum::POPCOUNT,     {  114,  114,  317 } },
-      { PimCmdEnum::SHIFT_BITS_R, {   31,   32,    1 } },
-      { PimCmdEnum::SHIFT_BITS_L, {   31,   32,    1 } },
       { PimCmdEnum::ADD,          {   64,   32,   97 } },
       { PimCmdEnum::SUB,          {   64,   32,   97 } },
       { PimCmdEnum::MUL,          { 1056,  528, 2080 } },
@@ -426,18 +422,44 @@ pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
 //! @brief  Get ms runtime for bit-serial PIM devices
 //!         BitSIMD and SIMDRAM need different fields
 double
-pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned numPass) const
+pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass) const
 {
+  const std::unordered_map<PimCmdEnum, PimCmdEnum> scalarCmdMap = {
+    { PimCmdEnum::ADD_SCALAR, PimCmdEnum::ADD },
+    { PimCmdEnum::SUB_SCALAR, PimCmdEnum::SUB },
+    { PimCmdEnum::MUL_SCALAR, PimCmdEnum::MUL },
+    { PimCmdEnum::DIV_SCALAR, PimCmdEnum::DIV },
+    { PimCmdEnum::AND_SCALAR, PimCmdEnum::AND },
+    { PimCmdEnum::OR_SCALAR, PimCmdEnum::OR },
+    { PimCmdEnum::XOR_SCALAR, PimCmdEnum::XOR },
+    { PimCmdEnum::XNOR_SCALAR, PimCmdEnum::XNOR },
+    { PimCmdEnum::GT_SCALAR, PimCmdEnum::GT },
+    { PimCmdEnum::LT_SCALAR, PimCmdEnum::LT },
+    { PimCmdEnum::EQ_SCALAR, PimCmdEnum::EQ },
+    { PimCmdEnum::MIN_SCALAR, PimCmdEnum::MIN },
+    { PimCmdEnum::MAX_SCALAR, PimCmdEnum::MAX },
+  };
+
   bool ok = false;
   double msRuntime = 0.0;
+
+  // for scalar operand, add broadcast overhead for now
+  if (scalarCmdMap.find(cmdType) != scalarCmdMap.end()) {
+    msRuntime = (m_tL + m_tW) * bitsPerElement;
+    msRuntime *= numPass;
+    cmdType = scalarCmdMap.at(cmdType);
+  }
+
   switch (deviceType) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   {
+    // BitSIMD-H reuse BitISMD-V perf for now
     if (deviceType == PIM_DEVICE_BITSIMD_H) {
-      deviceType = PIM_DEVICE_BITSIMD_V; // reuse result table for now
+      deviceType = PIM_DEVICE_BITSIMD_V;
     }
+    // look up perf params from table
     auto it1 = s_bitsimdPerfTable.find(deviceType);
     if (it1 != s_bitsimdPerfTable.end()) {
       auto it2 = it1->second.find(dataType);
@@ -445,10 +467,15 @@ pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTyp
         auto it3 = it2->second.find(cmdType);
         if (it3 != it2->second.end()) {
           const auto& [numR, numW, numL] = it3->second;
-          msRuntime = m_tR * numR + m_tW * numW + m_tL * numL;
+          msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
           ok = true;
         }
       }
+    }
+    // handle bit-shift specially
+    if (cmdType == PimCmdEnum::SHIFT_BITS_L || cmdType == PimCmdEnum::SHIFT_BITS_R) {
+      msRuntime += m_tR * (bitsPerElement - 1) + m_tW * bitsPerElement + m_tL;
+      ok = true;
     }
     break;
   }
@@ -476,44 +503,19 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
 {
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
-  {
-    switch (cmdType)
-    {
-    case PimCmdEnum::ADD_SCALAR:
-    case PimCmdEnum::SUB_SCALAR:
-    case PimCmdEnum::MUL_SCALAR:
-    case PimCmdEnum::DIV_SCALAR:
-    case PimCmdEnum::AND_SCALAR:
-    case PimCmdEnum::OR_SCALAR:
-    case PimCmdEnum::XOR_SCALAR:
-    case PimCmdEnum::XNOR_SCALAR:
-    case PimCmdEnum::GT_SCALAR:
-    case PimCmdEnum::LT_SCALAR:
-    case PimCmdEnum::EQ_SCALAR:
-    case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime = m_tL * obj.getBitsPerElement(); break; // For scaler commands add the broadcast
-    case PimCmdEnum::POPCOUNT:
-    case PimCmdEnum::ABS:
-    case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R: break;
-    default:
-       std::printf("PIM-Warning: Unsupported PIM command.\n");
-       break;
-    }
-  }
   case PIM_DEVICE_SIMDRAM:
-    msRuntime += getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, numPass);
+    msRuntime += getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass);
     break;
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
     msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * numPass;
@@ -588,6 +590,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
 {
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
 
   switch (m_simTarget) {
@@ -595,13 +598,12 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-    msRuntime = getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, numPass);
+    msRuntime = getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass);
     break;
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double aluLatency = 0.000005; // 5ns
-    unsigned bitsPerElement = obj.getBitsPerElement();
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
     msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
