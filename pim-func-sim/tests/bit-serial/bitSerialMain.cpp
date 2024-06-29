@@ -11,8 +11,8 @@
 bitSerialMain::bitSerialMain()
 {
   m_deviceList = {
-    "bitsimd-v",
-    "bitsimd-v-ap",
+    "bitsimd_v",
+    "bitsimd_v_ap",
     "simdram",
   };
   m_testList = {
@@ -40,9 +40,9 @@ bitSerialMain::runTests(const std::vector<std::string>& deviceList, const std::v
   for (const auto& device : myDeviceList) {
     std::cout << "INFO: Bit Serial Performance Modeling for " << device << std::endl;
     std::unique_ptr<bitSerialBase> model;
-    if (device == "bitsimd-v") {
+    if (device == "bitsimd_v") {
       model = std::make_unique<bitSerialBitsimd>();
-    } else if (device == "bitsimd-v-ap") {
+    } else if (device == "bitsimd_v_ap") {
       model = std::make_unique<bitSerialBitsimdAp>();
     } else if (device == "simdram") {
       model = std::make_unique<bitSerialSimdram>();

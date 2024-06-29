@@ -17,7 +17,7 @@
 class bitSerialBitsimd : public bitSerialBase
 {
 public:
-  bitSerialBitsimd() { m_deviceName = "bitsimd-v"; }
+  bitSerialBitsimd() { m_deviceName = "bitsimd_v"; }
   ~bitSerialBitsimd() {}
 
 protected:

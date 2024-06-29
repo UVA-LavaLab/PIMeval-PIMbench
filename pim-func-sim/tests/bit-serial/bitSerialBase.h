@@ -203,11 +203,11 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
 
   // for printing. keep in sync with switch case below
   const std::vector<std::string> testNames = {
-    "add", "sub", "mul", "div", "abs",
+    "abs", "popcount",
+    "add", "sub", "mul", "div",
     "and", "or", "xor", "xnor",
     "gt", "lt", "eq",
     "min", "max",
-    "popcount"
   };
 
   for (int testId = 0; testId < numTests; ++testId) {
@@ -221,21 +221,21 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
     pimCopyHostToDevice((void *)vecSrc3.data(), src3);
 
     switch (testId) {
-    case 0: pimAdd(src1, src2, dest1); break;
-    case 1: pimSub(src1, src2, dest1); break;
-    case 2: pimMul(src1, src2, dest1); break;
-    case 3: pimDiv(src1, srcNonZero, dest1); break;
-    case 4: pimAbs(src1, dest1); break;
-    case 5: pimAnd(src1, src2, dest1); break;
-    case 6: pimOr(src1, src2, dest1); break;
-    case 7: pimXor(src1, src2, dest1); break;
-    case 8: pimXnor(src1, src2, dest1); break;
-    case 9: pimGT(src1, src2, dest1); break;
-    case 10: pimLT(src1, src2, dest1); break;
-    case 11: pimEQ(src1, src2, dest1); break;
-    case 12: pimMin(src1, src2, dest1); break;
-    case 13: pimMax(src1, src2, dest1); break;
-    case 14: pimPopCount(src1, dest1); break;
+    case 0: pimAbs(src1, dest1); break;
+    case 1: pimPopCount(src1, dest1); break;
+    case 2: pimAdd(src1, src2, dest1); break;
+    case 3: pimSub(src1, src2, dest1); break;
+    case 4: pimMul(src1, src2, dest1); break;
+    case 5: pimDiv(src1, srcNonZero, dest1); break;
+    case 6: pimAnd(src1, src2, dest1); break;
+    case 7: pimOr(src1, src2, dest1); break;
+    case 8: pimXor(src1, src2, dest1); break;
+    case 9: pimXnor(src1, src2, dest1); break;
+    case 10: pimGT(src1, src2, dest1); break;
+    case 11: pimLT(src1, src2, dest1); break;
+    case 12: pimEQ(src1, src2, dest1); break;
+    case 13: pimMin(src1, src2, dest1); break;
+    case 14: pimMax(src1, src2, dest1); break;
     default:
       std::cout << tag << " Error: Test ID not supported" << std::endl;
       return false;
@@ -245,42 +245,42 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
 
     if (isSigned) {
       switch (testId) {
-      case 0: bitSerialIntAdd(numBits, src1, src2, dest2); break;
-      case 1: bitSerialIntSub(numBits, src1, src2, dest2); break;
-      case 2: bitSerialIntMul(numBits, src1, src2, dest2); break;
-      case 3: bitSerialIntDiv(numBits, src1, srcNonZero, dest2); break;
-      case 4: bitSerialIntAbs(numBits, src1, dest2); break;
-      case 5: bitSerialIntAnd(numBits, src1, src2, dest2); break;
-      case 6: bitSerialIntOr(numBits, src1, src2, dest2); break;
-      case 7: bitSerialIntXor(numBits, src1, src2, dest2); break;
-      case 8: bitSerialIntXnor(numBits, src1, src2, dest2); break;
-      case 9: bitSerialIntGT(numBits, src1, src2, dest2); break;
-      case 10: bitSerialIntLT(numBits, src1, src2, dest2); break;
-      case 11: bitSerialIntEQ(numBits, src1, src2, dest2); break;
-      case 12: bitSerialIntMin(numBits, src1, src2, dest2); break;
-      case 13: bitSerialIntMax(numBits, src1, src2, dest2); break;
-      case 14: bitSerialIntPopCount(numBits, src1, dest2); break;
+      case 0: bitSerialIntAbs(numBits, src1, dest2); break;
+      case 1: bitSerialIntPopCount(numBits, src1, dest2); break;
+      case 2: bitSerialIntAdd(numBits, src1, src2, dest2); break;
+      case 3: bitSerialIntSub(numBits, src1, src2, dest2); break;
+      case 4: bitSerialIntMul(numBits, src1, src2, dest2); break;
+      case 5: bitSerialIntDiv(numBits, src1, srcNonZero, dest2); break;
+      case 6: bitSerialIntAnd(numBits, src1, src2, dest2); break;
+      case 7: bitSerialIntOr(numBits, src1, src2, dest2); break;
+      case 8: bitSerialIntXor(numBits, src1, src2, dest2); break;
+      case 9: bitSerialIntXnor(numBits, src1, src2, dest2); break;
+      case 10: bitSerialIntGT(numBits, src1, src2, dest2); break;
+      case 11: bitSerialIntLT(numBits, src1, src2, dest2); break;
+      case 12: bitSerialIntEQ(numBits, src1, src2, dest2); break;
+      case 13: bitSerialIntMin(numBits, src1, src2, dest2); break;
+      case 14: bitSerialIntMax(numBits, src1, src2, dest2); break;
       default:
         std::cout << tag << " Error: Test ID not supported" << std::endl;
         return false;
       }
     } else {
       switch (testId) {
-      case 0: bitSerialUIntAdd(numBits, src1, src2, dest2); break;
-      case 1: bitSerialUIntSub(numBits, src1, src2, dest2); break;
-      case 2: bitSerialUIntMul(numBits, src1, src2, dest2); break;
-      case 3: bitSerialUIntDiv(numBits, src1, srcNonZero, dest2); break;
-      case 4: bitSerialUIntAbs(numBits, src1, dest2); break;
-      case 5: bitSerialUIntAnd(numBits, src1, src2, dest2); break;
-      case 6: bitSerialUIntOr(numBits, src1, src2, dest2); break;
-      case 7: bitSerialUIntXor(numBits, src1, src2, dest2); break;
-      case 8: bitSerialUIntXnor(numBits, src1, src2, dest2); break;
-      case 9: bitSerialUIntGT(numBits, src1, src2, dest2); break;
-      case 10: bitSerialUIntLT(numBits, src1, src2, dest2); break;
-      case 11: bitSerialUIntEQ(numBits, src1, src2, dest2); break;
-      case 12: bitSerialUIntMin(numBits, src1, src2, dest2); break;
-      case 13: bitSerialUIntMax(numBits, src1, src2, dest2); break;
-      case 14: bitSerialUIntPopCount(numBits, src1, dest2); break;
+      case 0: bitSerialUIntAbs(numBits, src1, dest2); break;
+      case 1: bitSerialUIntPopCount(numBits, src1, dest2); break;
+      case 2: bitSerialUIntAdd(numBits, src1, src2, dest2); break;
+      case 3: bitSerialUIntSub(numBits, src1, src2, dest2); break;
+      case 4: bitSerialUIntMul(numBits, src1, src2, dest2); break;
+      case 5: bitSerialUIntDiv(numBits, src1, srcNonZero, dest2); break;
+      case 6: bitSerialUIntAnd(numBits, src1, src2, dest2); break;
+      case 7: bitSerialUIntOr(numBits, src1, src2, dest2); break;
+      case 8: bitSerialUIntXor(numBits, src1, src2, dest2); break;
+      case 9: bitSerialUIntXnor(numBits, src1, src2, dest2); break;
+      case 10: bitSerialUIntGT(numBits, src1, src2, dest2); break;
+      case 11: bitSerialUIntLT(numBits, src1, src2, dest2); break;
+      case 12: bitSerialUIntEQ(numBits, src1, src2, dest2); break;
+      case 13: bitSerialUIntMin(numBits, src1, src2, dest2); break;
+      case 14: bitSerialUIntMax(numBits, src1, src2, dest2); break;
       default:
         std::cout << tag << " Error: Test ID not supported" << std::endl;
         return false;
@@ -303,8 +303,13 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
             if (numFailed < 3) {
               T val1 = vecSrc1[i];
               T val2 = (testId == 3 ? vecSrcNonZero[i] : vecSrc2[i]);
-              std::cout << "  Idx " << i << " Operand1 " << val1 << " Operand2 " << val2
-                        << " Result " << vecDest[i] << " Expected " << vecDestVerify[i] << std::endl;
+              if (isSigned) {
+                std::cout << "  Idx " << i << " Operand1 " << static_cast<int64_t>(val1) << " Operand2 " << static_cast<int64_t>(val2)
+                          << " Result " << static_cast<int64_t>(vecDest[i]) << " Expected " << static_cast<int64_t>(vecDestVerify[i]) << std::endl;
+              } else {
+                std::cout << "  Idx " << i << " Operand1 " << static_cast<uint64_t>(val1) << " Operand2 " << static_cast<uint64_t>(val2)
+                          << " Result " << static_cast<uint64_t>(vecDest[i]) << " Expected " << static_cast<uint64_t>(vecDestVerify[i]) << std::endl;
+              }
             }
           }
         }

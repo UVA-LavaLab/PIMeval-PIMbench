@@ -15,38 +15,157 @@ const std::unordered_map<PimDeviceEnum, std::unordered_map<PimDataType,
     std::unordered_map<PimCmdEnum, std::tuple<unsigned, unsigned, unsigned>>>>
 pimParamsPerf::s_bitsimdPerfTable = {
   { PIM_DEVICE_BITSIMD_V, {
+    { PIM_INT8, {
+      { PimCmdEnum::ABS,          {    9,    8,   34 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   16,    8,   25 } },
+      { PimCmdEnum::SUB,          {   16,    8,   25 } },
+      { PimCmdEnum::MUL,          {   72,   36,  136 } },
+      { PimCmdEnum::DIV,          {  196,  137,  336 } },
+      { PimCmdEnum::AND,          {   16,    8,   16 } },
+      { PimCmdEnum::OR,           {   16,    8,   16 } },
+      { PimCmdEnum::XOR,          {   16,    8,   16 } },
+      { PimCmdEnum::XNOR,         {   16,    8,   24 } },
+      { PimCmdEnum::GT,           {   16,    8,   26 } },
+      { PimCmdEnum::LT,           {   16,    8,   26 } },
+      { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::MIN,          {   32,    8,   41 } },
+      { PimCmdEnum::MAX,          {   32,    8,   41 } },
+    }},
+    { PIM_INT16, {
+      { PimCmdEnum::ABS,          {   17,   16,   66 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   32,   16,   49 } },
+      { PimCmdEnum::SUB,          {   32,   16,   49 } },
+      { PimCmdEnum::MUL,          {  272,  136,  528 } },
+      { PimCmdEnum::DIV,          {  772,  469, 1176 } },
+      { PimCmdEnum::AND,          {   32,   16,   32 } },
+      { PimCmdEnum::OR,           {   32,   16,   32 } },
+      { PimCmdEnum::XOR,          {   32,   16,   32 } },
+      { PimCmdEnum::XNOR,         {   32,   16,   48 } },
+      { PimCmdEnum::GT,           {   32,   16,   50 } },
+      { PimCmdEnum::LT,           {   32,   16,   50 } },
+      { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::MIN,          {   64,   16,   81 } },
+      { PimCmdEnum::MAX,          {   64,   16,   81 } },
+    }},
     { PIM_INT32, {
-      { PimCmdEnum::ABS,          {   98,   66,  192 } },
-      { PimCmdEnum::POPCOUNT,     {  161,  105,  286 } },
+      { PimCmdEnum::ABS,          {   33,   32,  130 } },
+      { PimCmdEnum::POPCOUNT,     {  114,  114,  218 } },
       { PimCmdEnum::SHIFT_BITS_R, {   31,   32,    1 } },
       { PimCmdEnum::SHIFT_BITS_L, {   31,   32,    1 } },
-      { PimCmdEnum::ADD,          {   64,   33,  161 } },
-      { PimCmdEnum::SUB,          {   64,   33,  161 } },
-      { PimCmdEnum::MUL,          { 1940, 1095, 3606 } },
-      { PimCmdEnum::DIV,          { 3168, 1727, 4257 } },
+      { PimCmdEnum::ADD,          {   64,   32,   97 } },
+      { PimCmdEnum::SUB,          {   64,   32,   97 } },
+      { PimCmdEnum::MUL,          { 1056,  528, 2080 } },
+      { PimCmdEnum::DIV,          { 3076, 1709, 4392 } },
       { PimCmdEnum::AND,          {   64,   32,   64 } },
       { PimCmdEnum::OR,           {   64,   32,   64 } },
       { PimCmdEnum::XOR,          {   64,   32,   64 } },
-      { PimCmdEnum::XNOR,         {   64,   32,   64 } },
-      { PimCmdEnum::GT,           {   64,   32,   66 } },
-      { PimCmdEnum::LT,           {   64,   32,   66 } },
-      { PimCmdEnum::EQ,           {   64,   32,   66 } },
-      { PimCmdEnum::MIN,          {  164,   67,  258 } },
-      { PimCmdEnum::MAX,          {  164,   67,  258 } },
-      // TODO: Scalers need to be updated with proper numbers. They are currently considering same #write & #logic as the non-scaler ones. But #read has been divided by 2 
-      { PimCmdEnum::ADD_SCALAR,   {   32,   33,  161 } },
-      { PimCmdEnum::SUB_SCALAR,   {   32,   33,  161 } },
-      { PimCmdEnum::MUL_SCALAR,   {  970, 1095, 3606 } },
-      { PimCmdEnum::DIV_SCALAR,   { 1584, 1727, 4257 } },
-      { PimCmdEnum::AND_SCALAR,   {   32,   32,   64 } },
-      { PimCmdEnum::OR_SCALAR,    {   32,   32,   64 } },
-      { PimCmdEnum::XOR_SCALAR,   {   32,   32,   64 } },
-      { PimCmdEnum::XNOR_SCALAR,  {   32,   32,   64 } },
-      { PimCmdEnum::GT_SCALAR,    {   32,   32,   66 } },
-      { PimCmdEnum::LT_SCALAR,    {   32,   32,   66 } },
-      { PimCmdEnum::EQ_SCALAR,    {   32,   32,   66 } },
-      { PimCmdEnum::MIN_SCALAR,   {   82,   67,  258 } },
-      { PimCmdEnum::MAX_SCALAR,   {   82,   67,  258 } },
+      { PimCmdEnum::XNOR,         {   64,   32,   96 } },
+      { PimCmdEnum::GT,           {   64,   32,   98 } },
+      { PimCmdEnum::LT,           {   64,   32,   98 } },
+      { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::MIN,          {  128,   32,  161 } },
+      { PimCmdEnum::MAX,          {  128,   32,  161 } },
+      // TODO: Scalers need to be updated with proper numbers. They are currently considering same #write & #logic as the non-scaler ones. But #read has been divided by 2
+      //{ PimCmdEnum::ADD_SCALAR,   {   32,   33,  161 } },
+      //{ PimCmdEnum::SUB_SCALAR,   {   32,   33,  161 } },
+      //{ PimCmdEnum::MUL_SCALAR,   {  970, 1095, 3606 } },
+      //{ PimCmdEnum::DIV_SCALAR,   { 1584, 1727, 4257 } },
+      //{ PimCmdEnum::AND_SCALAR,   {   32,   32,   64 } },
+      //{ PimCmdEnum::OR_SCALAR,    {   32,   32,   64 } },
+      //{ PimCmdEnum::XOR_SCALAR,   {   32,   32,   64 } },
+      //{ PimCmdEnum::XNOR_SCALAR,  {   32,   32,   64 } },
+      //{ PimCmdEnum::GT_SCALAR,    {   32,   32,   66 } },
+      //{ PimCmdEnum::LT_SCALAR,    {   32,   32,   66 } },
+      //{ PimCmdEnum::EQ_SCALAR,    {   32,   32,   66 } },
+      //{ PimCmdEnum::MIN_SCALAR,   {   82,   67,  258 } },
+      //{ PimCmdEnum::MAX_SCALAR,   {   82,   67,  258 } },
+    }},
+    { PIM_INT64, {
+      { PimCmdEnum::ABS,          {   65,   64,  258 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {  128,   64,  193 } },
+      { PimCmdEnum::SUB,          {  128,   64,  193 } },
+      //{ PimCmdEnum::MUL,          {    0,    0,    0 } },
+      //{ PimCmdEnum::DIV,          {    0,    0,    0 } },
+      { PimCmdEnum::AND,          {  128,   64,  128 } },
+      { PimCmdEnum::OR,           {  128,   64,  128 } },
+      { PimCmdEnum::XOR,          {  128,   64,  128 } },
+      { PimCmdEnum::XNOR,         {  128,   64,  192 } },
+      { PimCmdEnum::GT,           {  128,   64,  194 } },
+      { PimCmdEnum::LT,           {  128,   64,  194 } },
+      { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::MIN,          {  256,   64,  321 } },
+      { PimCmdEnum::MAX,          {  256,   64,  321 } },
+    }},
+    { PIM_UINT8, {
+      { PimCmdEnum::ABS,          {    8,    8,    0 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   16,    8,   25 } },
+      { PimCmdEnum::SUB,          {   16,    8,   25 } },
+      { PimCmdEnum::MUL,          {   72,   36,  136 } },
+      { PimCmdEnum::DIV,          {  216,  140,  297 } },
+      { PimCmdEnum::AND,          {   16,    8,   16 } },
+      { PimCmdEnum::OR,           {   16,    8,   16 } },
+      { PimCmdEnum::XOR,          {   16,    8,   16 } },
+      { PimCmdEnum::XNOR,         {   16,    8,   24 } },
+      { PimCmdEnum::GT,           {   16,    8,   27 } },
+      { PimCmdEnum::LT,           {   16,    8,   27 } },
+      { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::MIN,          {   32,    8,   42 } },
+      { PimCmdEnum::MAX,          {   32,    8,   42 } },
+    }},
+    { PIM_UINT16, {
+      { PimCmdEnum::ABS,          {   16,   16,    0 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   32,   16,   49 } },
+      { PimCmdEnum::SUB,          {   32,   16,   49 } },
+      { PimCmdEnum::MUL,          {  272,  136,  528 } },
+      { PimCmdEnum::DIV,          {  816,  472, 1105 } },
+      { PimCmdEnum::AND,          {   32,   16,   32 } },
+      { PimCmdEnum::OR,           {   32,   16,   32 } },
+      { PimCmdEnum::XOR,          {   32,   16,   32 } },
+      { PimCmdEnum::XNOR,         {   32,   16,   48 } },
+      { PimCmdEnum::GT,           {   32,   16,   51 } },
+      { PimCmdEnum::LT,           {   32,   16,   51 } },
+      { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::MIN,          {   64,   16,   82 } },
+      { PimCmdEnum::MAX,          {   64,   16,   82 } },
+    }},
+    { PIM_UINT32, {
+      { PimCmdEnum::ABS,          {   32,   32,    0 } },
+      { PimCmdEnum::POPCOUNT,     {  114,  114,  218 } },
+      { PimCmdEnum::ADD,          {   64,   32,   97 } },
+      { PimCmdEnum::SUB,          {   64,   32,   97 } },
+      { PimCmdEnum::MUL,          { 1056,  528, 2080 } },
+      { PimCmdEnum::DIV,          { 3168, 1712, 4257 } },
+      { PimCmdEnum::AND,          {   64,   32,   64 } },
+      { PimCmdEnum::OR,           {   64,   32,   64 } },
+      { PimCmdEnum::XOR,          {   64,   32,   64 } },
+      { PimCmdEnum::XNOR,         {   64,   32,   96 } },
+      { PimCmdEnum::GT,           {   64,   32,   99 } },
+      { PimCmdEnum::LT,           {   64,   32,   99 } },
+      { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::MIN,          {  128,   32,  162 } },
+      { PimCmdEnum::MAX,          {  128,   32,  162 } },
+    }},
+    { PIM_UINT64, {
+      { PimCmdEnum::ABS,          {   64,   64,    0 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {  128,   64,  193 } },
+      { PimCmdEnum::SUB,          {  128,   64,  193 } },
+      //{ PimCmdEnum::MUL,          {    0,    0,    0 } },
+      //{ PimCmdEnum::DIV,          {    0,    0,    0 } },
+      { PimCmdEnum::AND,          {  128,   64,  128 } },
+      { PimCmdEnum::OR,           {  128,   64,  128 } },
+      { PimCmdEnum::XOR,          {  128,   64,  128 } },
+      { PimCmdEnum::XNOR,         {  128,   64,  192 } },
+      { PimCmdEnum::GT,           {  128,   64,  195 } },
+      { PimCmdEnum::LT,           {  128,   64,  195 } },
+      { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::MIN,          {  256,   64,  322 } },
+      { PimCmdEnum::MAX,          {  256,   64,  322 } },
     }},
     { PIM_FP32, {
       { PimCmdEnum::ADD,          { 1331,  685, 1687 } },
@@ -56,38 +175,157 @@ pimParamsPerf::s_bitsimdPerfTable = {
     }}
   }},
   { PIM_DEVICE_BITSIMD_V_AP, {
+    { PIM_INT8, {
+      { PimCmdEnum::ABS,          {    9,    8,   51 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   16,    8,   25 } },
+      { PimCmdEnum::SUB,          {   16,    8,   25 } },
+      { PimCmdEnum::MUL,          {   72,   36,  136 } },
+      { PimCmdEnum::DIV,          {  196,  137,  493 } },
+      { PimCmdEnum::AND,          {   16,    8,   16 } },
+      { PimCmdEnum::OR,           {   16,    8,   17 } },
+      { PimCmdEnum::XOR,          {   16,    8,   25 } },
+      { PimCmdEnum::XNOR,         {   16,    8,   16 } },
+      { PimCmdEnum::GT,           {   16,    8,   34 } },
+      { PimCmdEnum::LT,           {   16,    8,   34 } },
+      { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::MIN,          {   32,    8,   49 } },
+      { PimCmdEnum::MAX,          {   32,    8,   49 } },
+    }},
+    { PIM_INT16, {
+      { PimCmdEnum::ABS,          {   17,   16,   99 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   32,   16,   49 } },
+      { PimCmdEnum::SUB,          {   32,   16,   49 } },
+      { PimCmdEnum::MUL,          {  272,  136,  528 } },
+      { PimCmdEnum::DIV,          {  772,  469, 1741 } },
+      { PimCmdEnum::AND,          {   32,   16,   32 } },
+      { PimCmdEnum::OR,           {   32,   16,   33 } },
+      { PimCmdEnum::XOR,          {   32,   16,   49 } },
+      { PimCmdEnum::XNOR,         {   32,   16,   32 } },
+      { PimCmdEnum::GT,           {   32,   16,   66 } },
+      { PimCmdEnum::LT,           {   32,   16,   66 } },
+      { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::MIN,          {   64,   16,   97 } },
+      { PimCmdEnum::MAX,          {   64,   16,   97 } },
+    }},
     { PIM_INT32, {
-      { PimCmdEnum::ABS,          {   98,   66,  320 } },
-      { PimCmdEnum::POPCOUNT,     {  161,  105,  318 } },
+      { PimCmdEnum::ABS,          {   33,   32,  195 } },
+      { PimCmdEnum::POPCOUNT,     {  114,  114,  317 } },
       { PimCmdEnum::SHIFT_BITS_R, {   31,   32,    1 } },
       { PimCmdEnum::SHIFT_BITS_L, {   31,   32,    1 } },
-      { PimCmdEnum::ADD,          {   64,   33,  161 } },
-      { PimCmdEnum::SUB,          {   64,   33,  161 } },
-      { PimCmdEnum::MUL,          { 4291, 1799, 7039 } },
-      { PimCmdEnum::DIV,          { 3728, 1744, 6800 } },
+      { PimCmdEnum::ADD,          {   64,   32,   97 } },
+      { PimCmdEnum::SUB,          {   64,   32,   97 } },
+      { PimCmdEnum::MUL,          { 1056,  528, 2080 } },
+      { PimCmdEnum::DIV,          { 3076, 1709, 6541 } },
       { PimCmdEnum::AND,          {   64,   32,   64 } },
-      { PimCmdEnum::OR,           {   64,   32,  128 } },
-      { PimCmdEnum::XOR,          {   64,   32,  128 } },
+      { PimCmdEnum::OR,           {   64,   32,   65 } },
+      { PimCmdEnum::XOR,          {   64,   32,   97 } },
       { PimCmdEnum::XNOR,         {   64,   32,   64 } },
-      { PimCmdEnum::GT,           {   64,   32,   66 } },
-      { PimCmdEnum::LT,           {   64,   32,   66 } },
-      { PimCmdEnum::EQ,           {   64,   32,   66 } },
-      { PimCmdEnum::MIN,          {  164,   67,  261 } },
-      { PimCmdEnum::MAX,          {  164,   67,  261 } },
-      // TODO: Scalers need to be updated with proper numbers. They are currently considering same #write & #logic as the non-scaler ones. But #read has been divided by 2 
-      { PimCmdEnum::ADD_SCALAR,   {   32,   33,  161 } },
-      { PimCmdEnum::SUB_SCALAR,   {   32,   33,  161 } },
-      { PimCmdEnum::MUL_SCALAR,   { 2146, 1799, 7039 } },
-      { PimCmdEnum::DIV_SCALAR,   { 1864, 1744, 6800 } },
-      { PimCmdEnum::AND_SCALAR,   {   32,   32,   64 } },
-      { PimCmdEnum::OR_SCALAR,    {   32,   32,  128 } },
-      { PimCmdEnum::XOR_SCALAR,   {   32,   32,  128 } },
-      { PimCmdEnum::XNOR_SCALAR,  {   32,   32,   64 } },
-      { PimCmdEnum::GT_SCALAR,    {   32,   32,   66 } },
-      { PimCmdEnum::LT_SCALAR,    {   32,   32,   66 } },
-      { PimCmdEnum::EQ_SCALAR,    {   32,   32,   66 } },
-      { PimCmdEnum::MIN_SCALAR,   {   82,   67,  261 } },
-      { PimCmdEnum::MAX_SCALAR,   {   82,   67,  261 } },
+      { PimCmdEnum::GT,           {   64,   32,  130 } },
+      { PimCmdEnum::LT,           {   64,   32,  130 } },
+      { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::MIN,          {  128,   32,  193 } },
+      { PimCmdEnum::MAX,          {  128,   32,  193 } },
+      // TODO: Scalers need to be updated with proper numbers. They are currently considering same #write & #logic as the non-scaler ones. But #read has been divided by 2
+      //{ PimCmdEnum::ADD_SCALAR,   {   32,   33,  161 } },
+      //{ PimCmdEnum::SUB_SCALAR,   {   32,   33,  161 } },
+      //{ PimCmdEnum::MUL_SCALAR,   { 2146, 1799, 7039 } },
+      //{ PimCmdEnum::DIV_SCALAR,   { 1864, 1744, 6800 } },
+      //{ PimCmdEnum::AND_SCALAR,   {   32,   32,   64 } },
+      //{ PimCmdEnum::OR_SCALAR,    {   32,   32,  128 } },
+      //{ PimCmdEnum::XOR_SCALAR,   {   32,   32,  128 } },
+      //{ PimCmdEnum::XNOR_SCALAR,  {   32,   32,   64 } },
+      //{ PimCmdEnum::GT_SCALAR,    {   32,   32,   66 } },
+      //{ PimCmdEnum::LT_SCALAR,    {   32,   32,   66 } },
+      //{ PimCmdEnum::EQ_SCALAR,    {   32,   32,   66 } },
+      //{ PimCmdEnum::MIN_SCALAR,   {   82,   67,  261 } },
+      //{ PimCmdEnum::MAX_SCALAR,   {   82,   67,  261 } },
+    }},
+    { PIM_INT64, {
+      { PimCmdEnum::ABS,          {   65,   64,  387 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {  128,   64,  193 } },
+      { PimCmdEnum::SUB,          {  128,   64,  193 } },
+      //{ PimCmdEnum::MUL,          {    0,    0,    0 } },
+      //{ PimCmdEnum::DIV,          {    0,    0,    0 } },
+      { PimCmdEnum::AND,          {  128,   64,  128 } },
+      { PimCmdEnum::OR,           {  128,   64,  129 } },
+      { PimCmdEnum::XOR,          {  128,   64,  193 } },
+      { PimCmdEnum::XNOR,         {  128,   64,  128 } },
+      { PimCmdEnum::GT,           {  128,   64,  258 } },
+      { PimCmdEnum::LT,           {  128,   64,  258 } },
+      { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::MIN,          {  256,   64,  385 } },
+      { PimCmdEnum::MAX,          {  256,   64,  385 } },
+    }},
+    { PIM_UINT8, {
+      { PimCmdEnum::ABS,          {    8,    8,    0 } },
+      { PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   16,    8,   25 } },
+      { PimCmdEnum::SUB,          {   16,    8,   25 } },
+      { PimCmdEnum::MUL,          {   72,   36,  136 } },
+      { PimCmdEnum::DIV,          {  216,  140,  433 } },
+      { PimCmdEnum::AND,          {   16,    8,   16 } },
+      { PimCmdEnum::OR,           {   16,    8,   17 } },
+      { PimCmdEnum::XOR,          {   16,    8,   25 } },
+      { PimCmdEnum::XNOR,         {   16,    8,   16 } },
+      { PimCmdEnum::GT,           {   16,    8,   36 } },
+      { PimCmdEnum::LT,           {   16,    8,   36 } },
+      { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::MIN,          {   32,    8,   51 } },
+      { PimCmdEnum::MAX,          {   32,    8,   51 } },
+    }},
+    { PIM_UINT16, {
+      { PimCmdEnum::ABS,          {   16,   16,    0 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {   32,   16,   49 } },
+      { PimCmdEnum::SUB,          {   32,   16,   49 } },
+      { PimCmdEnum::MUL,          {  272,  136,  528 } },
+      { PimCmdEnum::DIV,          {  816,  472, 1633 } },
+      { PimCmdEnum::AND,          {   32,   16,   32 } },
+      { PimCmdEnum::OR,           {   32,   16,   33 } },
+      { PimCmdEnum::XOR,          {   32,   16,   49 } },
+      { PimCmdEnum::XNOR,         {   32,   16,   32 } },
+      { PimCmdEnum::GT,           {   32,   16,   68 } },
+      { PimCmdEnum::LT,           {   32,   16,   68 } },
+      { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::MIN,          {   64,   16,   99 } },
+      { PimCmdEnum::MAX,          {   64,   16,   99 } },
+    }},
+    { PIM_UINT32, {
+      { PimCmdEnum::ABS,          {   32,   32,    0 } },
+      { PimCmdEnum::POPCOUNT,     {  114,  114,  317 } },
+      { PimCmdEnum::ADD,          {   64,   32,   97 } },
+      { PimCmdEnum::SUB,          {   64,   32,   97 } },
+      { PimCmdEnum::MUL,          { 1056,  528, 2080 } },
+      { PimCmdEnum::DIV,          { 3168, 1712, 6337 } },
+      { PimCmdEnum::AND,          {   64,   32,   64 } },
+      { PimCmdEnum::OR,           {   64,   32,   65 } },
+      { PimCmdEnum::XOR,          {   64,   32,   97 } },
+      { PimCmdEnum::XNOR,         {   64,   32,   64 } },
+      { PimCmdEnum::GT,           {   64,   32,  132 } },
+      { PimCmdEnum::LT,           {   64,   32,  132 } },
+      { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::MIN,          {  128,   32,  195 } },
+      { PimCmdEnum::MAX,          {  128,   32,  195 } },
+    }},
+    { PIM_UINT64, {
+      { PimCmdEnum::ABS,          {   64,   64,    0 } },
+      //{ PimCmdEnum::POPCOUNT,     {    0,    0,    0 } },
+      { PimCmdEnum::ADD,          {  128,   64,  193 } },
+      { PimCmdEnum::SUB,          {  128,   64,  193 } },
+      //{ PimCmdEnum::MUL,          {    0,    0,    0 } },
+      //{ PimCmdEnum::DIV,          {    0,    0,    0 } },
+      { PimCmdEnum::AND,          {  128,   64,  128 } },
+      { PimCmdEnum::OR,           {  128,   64,  129 } },
+      { PimCmdEnum::XOR,          {  128,   64,  193 } },
+      { PimCmdEnum::XNOR,         {  128,   64,  128 } },
+      { PimCmdEnum::GT,           {  128,   64,  260 } },
+      { PimCmdEnum::LT,           {  128,   64,  260 } },
+      { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::MIN,          {  256,   64,  387 } },
+      { PimCmdEnum::MAX,          {  256,   64,  387 } },
     }},
     { PIM_FP32, {
       { PimCmdEnum::ADD,          { 1597,  822, 2024 } },
@@ -226,6 +464,7 @@ pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTyp
             pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
             pimCmd::getName(cmdType, "").c_str(),
             pimUtils::pimDataTypeEnumToStr(dataType).c_str());
+    msRuntime = 1000000;
   }
   msRuntime *= numPass;
   return msRuntime;
@@ -251,18 +490,18 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::AND_SCALAR:
     case PimCmdEnum::OR_SCALAR:
-    case PimCmdEnum::XOR_SCALAR: 
-    case PimCmdEnum::XNOR_SCALAR: 
-    case PimCmdEnum::GT_SCALAR: 
-    case PimCmdEnum::LT_SCALAR: 
+    case PimCmdEnum::XOR_SCALAR:
+    case PimCmdEnum::XNOR_SCALAR:
+    case PimCmdEnum::GT_SCALAR:
+    case PimCmdEnum::LT_SCALAR:
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
     case PimCmdEnum::MAX_SCALAR: msRuntime = m_tL * obj.getBitsPerElement(); break; // For scaler commands add the broadcast
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R: break;   
-    default: 
+    case PimCmdEnum::SHIFT_BITS_R: break;
+    default:
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
@@ -286,18 +525,18 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::AND_SCALAR:
     case PimCmdEnum::OR_SCALAR:
-    case PimCmdEnum::XOR_SCALAR: 
-    case PimCmdEnum::XNOR_SCALAR: 
-    case PimCmdEnum::GT_SCALAR: 
-    case PimCmdEnum::LT_SCALAR: 
+    case PimCmdEnum::XOR_SCALAR:
+    case PimCmdEnum::XNOR_SCALAR:
+    case PimCmdEnum::GT_SCALAR:
+    case PimCmdEnum::LT_SCALAR:
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
     case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; // the broadcast value is being stored in the walker, hence no row write is needed.
-    case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul  
+    case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R: break;
-    default: 
+    default:
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
@@ -317,21 +556,21 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R: break;  
+    case PimCmdEnum::SHIFT_BITS_R: break;
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::AND_SCALAR:
     case PimCmdEnum::OR_SCALAR:
-    case PimCmdEnum::XOR_SCALAR: 
-    case PimCmdEnum::XNOR_SCALAR: 
-    case PimCmdEnum::GT_SCALAR: 
-    case PimCmdEnum::LT_SCALAR: 
+    case PimCmdEnum::XOR_SCALAR:
+    case PimCmdEnum::XNOR_SCALAR:
+    case PimCmdEnum::GT_SCALAR:
+    case PimCmdEnum::LT_SCALAR:
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; // the broadcast value is being stored in the V0 register, hence no row write is needed. 
-    default: 
+    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; // the broadcast value is being stored in the V0 register, hence no row write is needed.
+    default:
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
