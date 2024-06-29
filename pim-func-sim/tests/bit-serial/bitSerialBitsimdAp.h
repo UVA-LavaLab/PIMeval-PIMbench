@@ -9,7 +9,11 @@
 #include <vector>
 
 //! @class  bsBitsimd
-//! @brief  Bit-serial perf for BitSIMD
+//! @brief  Bit-serial perf for BitSIMD-V-AP
+//!
+//! Instruction set: read/write/move/set + AND/XNOR/SEL
+//! Bit registers: SA, R1, R2, R3
+//!
 class bitSerialBitsimdAp : public bitSerialBase
 {
 public:
@@ -19,7 +23,7 @@ public:
 protected:
 
   // virtual: create device
-  virtual PimDeviceEnum getDeviceType() override { return PIM_DEVICE_BITSIMD_V; }
+  virtual PimDeviceEnum getDeviceType() override { return PIM_DEVICE_BITSIMD_V_AP; }
 
   // virtual: high-level APIs to evaluate
   virtual void bitSerialIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
@@ -41,6 +45,7 @@ protected:
   virtual void bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntAbs(int numBits, PimObjId src, PimObjId dest) override;
   virtual void bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
@@ -60,3 +65,4 @@ private:
 };
 
 #endif
+

@@ -9,8 +9,11 @@
 #include <vector>
 
 //! @class  bitSerialBitsimd
-//! @brief  Bit-serial perf for BitSIMD
-//!         Supported micro-ops: R/W/MOVE/SET + NOT/AND/OR/XOR/SEL
+//! @brief  Bit-serial perf for BitSIMD-V
+//!
+//! Instruction set: read/write/move/set + NOT/AND/OR/XOR/SEL
+//! Bit registers: SA, R1, R2, R3
+//!
 class bitSerialBitsimd : public bitSerialBase
 {
 public:
@@ -42,6 +45,7 @@ protected:
   virtual void bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
+  virtual void bitSerialUIntAbs(int numBits, PimObjId src, PimObjId dest) override;
   virtual void bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;
   virtual void bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) override;

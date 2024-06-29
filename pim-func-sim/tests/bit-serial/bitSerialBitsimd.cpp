@@ -285,85 +285,162 @@ bitSerialBitsimd::bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest)
 void
 bitSerialBitsimd::bitSerialUIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntAdd(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntSub(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntMulHelper4Reg(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialUintDivRemHelper(numBits, src1, src2, dest);
+}
+
+void
+bitSerialBitsimd::bitSerialUIntAbs(int numBits, PimObjId src, PimObjId dest)
+{
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src, i);
+    pimOpWriteSaToRow(dest, i);
+  }
 }
 
 void
 bitSerialBitsimd::bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntAnd(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntOr(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntXor(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntXnor(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntGT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  // n-bit uint gt
+  pimOpSet(src1, PIM_RREG_R1, 0);
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src2, i);
+    pimOpXor(src1, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R2);
+    pimOpReadRowToSa(src1, i);
+    pimOpNot(src1, PIM_RREG_R2, PIM_RREG_R2);
+    pimOpSel(src1, PIM_RREG_R2, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R1);
+  }
+  pimOpMove(src1, PIM_RREG_R1, PIM_RREG_SA);
+  pimOpWriteSaToRow(dest, 0);
+
+  // set other bits of dest to 0
+  pimOpSet(src1, PIM_RREG_SA, 0);
+  for (int i = 1; i < numBits; ++i) {
+    pimOpWriteSaToRow(dest, i);
+  }
 }
 
 void
 bitSerialBitsimd::bitSerialUIntLT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  // n-bit uint lt
+  pimOpSet(src1, PIM_RREG_R1, 0);
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src1, i);
+    pimOpXor(src1, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R2);
+    pimOpReadRowToSa(src2, i);
+    pimOpNot(src1, PIM_RREG_R2, PIM_RREG_R2);
+    pimOpSel(src1, PIM_RREG_R2, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R1);
+  }
+  pimOpMove(src1, PIM_RREG_R1, PIM_RREG_SA);
+  pimOpWriteSaToRow(dest, 0);
+
+  // set other bits of dest to 0
+  pimOpSet(src1, PIM_RREG_SA, 0);
+  for (int i = 1; i < numBits; ++i) {
+    pimOpWriteSaToRow(dest, i);
+  }
 }
 
 void
 bitSerialBitsimd::bitSerialUIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  bitSerialIntEQ(numBits, src1, src2, dest);
 }
 
 void
 bitSerialBitsimd::bitSerialUIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  // n-bit uint lt
+  pimOpSet(src1, PIM_RREG_R1, 0);
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src1, i);
+    pimOpXor(src1, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R2);
+    pimOpReadRowToSa(src2, i);
+    pimOpNot(src1, PIM_RREG_R2, PIM_RREG_R2);
+    pimOpSel(src1, PIM_RREG_R2, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R1);
+  }
+  pimOpMove(src1, PIM_RREG_R1, PIM_RREG_R2);
+
+  // if-else copy
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src1, i);
+    pimOpMove(src1, PIM_RREG_SA, PIM_RREG_R1);
+    pimOpReadRowToSa(src2, i);
+    pimOpSel(src1, PIM_RREG_R2, PIM_RREG_R1, PIM_RREG_SA, PIM_RREG_SA);
+    pimOpWriteSaToRow(dest, i);
+  }
 }
 
 void
 bitSerialBitsimd::bitSerialUIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest)
 {
-  // TODO
+  // n-bit uint gt
+  pimOpSet(src1, PIM_RREG_R1, 0);
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src2, i);
+    pimOpXor(src1, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R2);
+    pimOpReadRowToSa(src1, i);
+    pimOpNot(src1, PIM_RREG_R2, PIM_RREG_R2);
+    pimOpSel(src1, PIM_RREG_R2, PIM_RREG_SA, PIM_RREG_R1, PIM_RREG_R1);
+  }
+  pimOpMove(src1, PIM_RREG_R1, PIM_RREG_R2);
+
+  // if-else copy
+  for (int i = 0; i < numBits; ++i) {
+    pimOpReadRowToSa(src1, i);
+    pimOpMove(src1, PIM_RREG_SA, PIM_RREG_R1);
+    pimOpReadRowToSa(src2, i);
+    pimOpSel(src1, PIM_RREG_R2, PIM_RREG_R1, PIM_RREG_SA, PIM_RREG_SA);
+    pimOpWriteSaToRow(dest, i);
+  }
 }
 
 void
 bitSerialBitsimd::bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest)
 {
- // TODO
+  bitSerialIntPopCount(numBits, src, dest);
 }
 
 void
@@ -551,3 +628,4 @@ bitSerialBitsimd::bitSerialUintDivRemHelper(int numBits, PimObjId src1, PimObjId
   pimFree(qr);
   pimFree(tmp);
 }
+

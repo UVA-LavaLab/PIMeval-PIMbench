@@ -108,6 +108,7 @@ bitSerialBase::getRandFp(uint64_t numElements, T min, T max, bool allowZero)
 {
   std::vector<T> vec(numElements);
   if (min == 0 && max == 0 && !allowZero) {
+    assert(0);
     return vec;
   }
   std::random_device rd;
@@ -154,7 +155,7 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
         break;
     case PIM_UINT8:
         isSigned = false;
-        maxVal = static_cast<T>(256);
+        maxVal = static_cast<T>(255);
         break;
     case PIM_UINT16:
         isSigned = false;
@@ -210,7 +211,7 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
   };
 
   for (int testId = 0; testId < numTests; ++testId) {
-    std::string tag = "[" + m_deviceName + ":" + category + ":" + std::to_string(testId) + ":" + testNames[testId] + "]";
+    std::string tag = "[" + m_deviceName + ":" + category + ":" + testNames[testId] + ":" + std::to_string(testId) + "]";
     bool ok = true;
     std::cout << tag << " Start" << std::endl;
 
@@ -392,7 +393,7 @@ bitSerialBase::testFp(const std::string& category, PimDataType dataType)
   };
 
   for (int testId = 0; testId < numTests; ++testId) {
-    std::string tag = "[" + m_deviceName + ":" + category + ":" + std::to_string(testId) + ":" + testNames[testId] + "]";
+    std::string tag = "[" + m_deviceName + ":" + category + ":" + testNames[testId] + ":" + std::to_string(testId) + "]";
     bool ok = true;
     std::cout << tag << " Start" << std::endl;
 
