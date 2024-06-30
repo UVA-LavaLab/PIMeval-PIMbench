@@ -278,8 +278,7 @@ private:
         if (std::is_signed<T>::value) {
           result = (operand < 0) ? -operand : operand;
         } else {
-          std::printf("PIM-Error: Abs not supported for unsigned type.\n");
-          return false;
+          result = operand;
         }
         break;
     }
