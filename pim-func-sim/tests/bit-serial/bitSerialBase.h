@@ -31,11 +31,12 @@ protected:
   virtual PimDeviceEnum getDeviceType() = 0;
 
   // virtual: high-level APIs to evaluate
+  virtual void bitSerialIntAbs(int numBits, PimObjId src, PimObjId dest) {}
+  virtual void bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
   virtual void bitSerialIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialIntAbs(int numBits, PimObjId src, PimObjId dest) {}
   virtual void bitSerialIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
@@ -45,22 +46,48 @@ protected:
   virtual void bitSerialIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
-  virtual void bitSerialUIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialIntAddScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntSubScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntMulScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntDivScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntAndScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntOrScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntXorScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntXnorScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntGTScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntLTScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntEQScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntMinScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialIntMaxScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+
   virtual void bitSerialUIntAbs(int numBits, PimObjId src, PimObjId dest) {}
-  virtual void bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest) { bitSerialIntPopCount(numBits, src, dest); }
+  virtual void bitSerialUIntAdd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntAdd(numBits, src1, src2, dest); }
+  virtual void bitSerialUIntSub(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntSub(numBits, src1, src2, dest); }
+  virtual void bitSerialUIntMul(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntMul(numBits, src1, src2, dest); }
+  virtual void bitSerialUIntDiv(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntAnd(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntAnd(numBits, src1, src2, dest); }
+  virtual void bitSerialUIntOr(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntOr(numBits, src1, src2, dest); }
+  virtual void bitSerialUIntXor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntXor(numBits, src1, src2, dest); }
+  virtual void bitSerialUIntXnor(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntXnor(numBits, src1, src2, dest); }
   virtual void bitSerialUIntGT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialUIntLT(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
+  virtual void bitSerialUIntEQ(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) { bitSerialIntEQ(numBits, src1, src2, dest); }
   virtual void bitSerialUIntMin(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialUIntMax(int numBits, PimObjId src1, PimObjId src2, PimObjId dest) {}
-  virtual void bitSerialUIntPopCount(int numBits, PimObjId src, PimObjId dest) {}
+  virtual void bitSerialUIntAddScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntAddScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntSubScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntSubScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntMulScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntMulScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntDivScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialUIntAndScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntAndScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntOrScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntOrScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntXorScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntXorScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntXnorScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntXnorScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntGTScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialUIntLTScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialUIntEQScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) { bitSerialIntEQScalar(numBits, src1, dest, scalarVal); }
+  virtual void bitSerialUIntMinScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
+  virtual void bitSerialUIntMaxScalar(int numBits, PimObjId src1, PimObjId dest, uint64_t scalarVal) {}
 
   virtual void bitSerialFp32Add(PimObjId src1, PimObjId src2, PimObjId dest) {}
   virtual void bitSerialFp32Sub(PimObjId src1, PimObjId src2, PimObjId dest) {}
@@ -70,13 +97,14 @@ protected:
   // helper functions
   void createDevice();
   void deleteDevice();
+  bool getBit(uint64_t val, int nth) const { return (val >> nth) & 1; }
 
   template <typename T> std::vector<T> getRandInt(uint64_t numElements, T min, T max, bool allowZero = true);
   template <typename T> std::vector<T> getRandFp(uint64_t numElements, T min, T max, bool allowZero = true);
   template <typename T> bool testInt(const std::string& category, PimDataType dataType);
   template <typename T> bool testFp(const std::string& category, PimDataType dataType);
 
-  std::map<std::string, std::pair<int, int>> m_stats;
+  std::map<std::string, std::pair<int, int>> m_stats; // data type category -> (numPassed, numTests)
   std::string m_deviceName;
 };
 
@@ -129,7 +157,6 @@ bitSerialBase::getRandFp(uint64_t numElements, T min, T max, bool allowZero)
 template <typename T> bool
 bitSerialBase::testInt(const std::string& category, PimDataType dataType)
 {
-  const int numTests = 15;
   int numPassed = 0;
   uint64_t numElements = 4000;
   unsigned numBits = sizeof(T) * 8;
@@ -192,6 +219,10 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
   // create EQ cases
   vecSrc2[100] = vecSrc1[100];
   vecSrc2[3000] = vecSrc1[3000];
+  // scalar value uses this type to represent bits for now
+  uint64_t scalarVal = 123;
+  vecSrc1[500] = static_cast<T>(scalarVal); // cover scalar EQ
+  vecSrc1[501] = static_cast<T>(scalarVal - 1); // cover scalar LT
 
   // allocate PIM objects
   PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, numBits, dataType);
@@ -208,7 +239,12 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
     "and", "or", "xor", "xnor",
     "gt", "lt", "eq",
     "min", "max",
+    "add_scalar", "sub_scalar", "mul_scalar", "div_scalar",
+    "and_scalar", "or_scalar", "xor_scalar", "xnor_scalar",
+    "gt_scalar", "lt_scalar", "eq_scalar",
+    "min_scalar", "max_scalar",
   };
+  const int numTests = static_cast<int>(testNames.size());
 
   for (int testId = 0; testId < numTests; ++testId) {
     std::string tag = "[" + m_deviceName + ":" + category + ":" + testNames[testId] + ":" + std::to_string(testId) + "]";
@@ -236,6 +272,19 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
     case 12: pimEQ(src1, src2, dest1); break;
     case 13: pimMin(src1, src2, dest1); break;
     case 14: pimMax(src1, src2, dest1); break;
+    case 15: pimAddScalar(src1, dest1, scalarVal); break;
+    case 16: pimSubScalar(src1, dest1, scalarVal); break;
+    case 17: pimMulScalar(src1, dest1, scalarVal); break;
+    case 18: pimDivScalar(src1, dest1, scalarVal); break;
+    case 19: pimAndScalar(src1, dest1, scalarVal); break;
+    case 20: pimOrScalar(src1, dest1, scalarVal); break;
+    case 21: pimXorScalar(src1, dest1, scalarVal); break;
+    case 22: pimXnorScalar(src1, dest1, scalarVal); break;
+    case 23: pimGTScalar(src1, dest1, scalarVal); break;
+    case 24: pimLTScalar(src1, dest1, scalarVal); break;
+    case 25: pimEQScalar(src1, dest1, scalarVal); break;
+    case 26: pimMinScalar(src1, dest1, scalarVal); break;
+    case 27: pimMaxScalar(src1, dest1, scalarVal); break;
     default:
       std::cout << tag << " Error: Test ID not supported" << std::endl;
       return false;
@@ -260,6 +309,19 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
       case 12: bitSerialIntEQ(numBits, src1, src2, dest2); break;
       case 13: bitSerialIntMin(numBits, src1, src2, dest2); break;
       case 14: bitSerialIntMax(numBits, src1, src2, dest2); break;
+      case 15: bitSerialIntAddScalar(numBits, src1, dest2, scalarVal); break;
+      case 16: bitSerialIntSubScalar(numBits, src1, dest2, scalarVal); break;
+      case 17: bitSerialIntMulScalar(numBits, src1, dest2, scalarVal); break;
+      case 18: bitSerialIntDivScalar(numBits, src1, dest2, scalarVal); break;
+      case 19: bitSerialIntAndScalar(numBits, src1, dest2, scalarVal); break;
+      case 20: bitSerialIntOrScalar(numBits, src1, dest2, scalarVal); break;
+      case 21: bitSerialIntXorScalar(numBits, src1, dest2, scalarVal); break;
+      case 22: bitSerialIntXnorScalar(numBits, src1, dest2, scalarVal); break;
+      case 23: bitSerialIntGTScalar(numBits, src1, dest2, scalarVal); break;
+      case 24: bitSerialIntLTScalar(numBits, src1, dest2, scalarVal); break;
+      case 25: bitSerialIntEQScalar(numBits, src1, dest2, scalarVal); break;
+      case 26: bitSerialIntMinScalar(numBits, src1, dest2, scalarVal); break;
+      case 27: bitSerialIntMaxScalar(numBits, src1, dest2, scalarVal); break;
       default:
         std::cout << tag << " Error: Test ID not supported" << std::endl;
         return false;
@@ -281,6 +343,19 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
       case 12: bitSerialUIntEQ(numBits, src1, src2, dest2); break;
       case 13: bitSerialUIntMin(numBits, src1, src2, dest2); break;
       case 14: bitSerialUIntMax(numBits, src1, src2, dest2); break;
+      case 15: bitSerialUIntAddScalar(numBits, src1, dest2, scalarVal); break;
+      case 16: bitSerialUIntSubScalar(numBits, src1, dest2, scalarVal); break;
+      case 17: bitSerialUIntMulScalar(numBits, src1, dest2, scalarVal); break;
+      case 18: bitSerialUIntDivScalar(numBits, src1, dest2, scalarVal); break;
+      case 19: bitSerialUIntAndScalar(numBits, src1, dest2, scalarVal); break;
+      case 20: bitSerialUIntOrScalar(numBits, src1, dest2, scalarVal); break;
+      case 21: bitSerialUIntXorScalar(numBits, src1, dest2, scalarVal); break;
+      case 22: bitSerialUIntXnorScalar(numBits, src1, dest2, scalarVal); break;
+      case 23: bitSerialUIntGTScalar(numBits, src1, dest2, scalarVal); break;
+      case 24: bitSerialUIntLTScalar(numBits, src1, dest2, scalarVal); break;
+      case 25: bitSerialUIntEQScalar(numBits, src1, dest2, scalarVal); break;
+      case 26: bitSerialUIntMinScalar(numBits, src1, dest2, scalarVal); break;
+      case 27: bitSerialUIntMaxScalar(numBits, src1, dest2, scalarVal); break;
       default:
         std::cout << tag << " Error: Test ID not supported" << std::endl;
         return false;
@@ -349,7 +424,6 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
 template <typename T> bool
 bitSerialBase::testFp(const std::string& category, PimDataType dataType)
 {
-  const int numTests = 4;
   int numPassed = 0;
   uint64_t numElements = 4000;
   unsigned numBits = sizeof(T) * 8;
@@ -396,6 +470,7 @@ bitSerialBase::testFp(const std::string& category, PimDataType dataType)
   const std::vector<std::string> testNames = {
     "add", "sub", "mul", "div",
   };
+  const int numTests = static_cast<int>(testNames.size());
 
   for (int testId = 0; testId < numTests; ++testId) {
     std::string tag = "[" + m_deviceName + ":" + category + ":" + testNames[testId] + ":" + std::to_string(testId) + "]";
