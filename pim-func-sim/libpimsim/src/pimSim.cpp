@@ -119,8 +119,6 @@ pimSim::getDeviceProperties(PimDeviceProperties& deviceProperties) {
   deviceProperties.numSubarrayPerBank = m_device->getNumSubarrayPerBank();
   deviceProperties.numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties.numColPerSubarray = m_device->getNumColPerSubarray();
-  deviceProperties.numRows = m_device->getNumRows();
-  deviceProperties.numCols = m_device->getNumCols();
   return true;
 }
 
