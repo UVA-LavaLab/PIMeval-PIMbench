@@ -1,4 +1,4 @@
-// Test: C++ version of histogram
+// Test: C++ version of Histogram
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include <iostream>
@@ -10,8 +10,8 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <cmath>
 #include <cstring>
+#include <cassert>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
@@ -29,7 +29,7 @@ typedef struct Params
 {
   uint64_t dataSize;
   char *configFile;
-  char *inputFile;
+  std::string inputFile;
   bool shouldVerify;
 } Params;
 
@@ -40,7 +40,7 @@ void usage()
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
-          "\n    -i    input file containing 2D matrix (default=generates matrix with random numbers)"
+          "\n    -i    24-bit .bmp input file (default=uses 'small.bmp' from 'histogram_datafiles' directory)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
@@ -48,9 +48,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = NULL;
+  p.dataSize = 0; 
   p.configFile = nullptr;
-  p.inputFile = "sample1.bmp";
+  p.inputFile = "histogram_datafiles/small.bmp";
   p.shouldVerify = false;
 
   int opt;
@@ -83,248 +83,79 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-// void histogram(int imgdata_bytes, const std::vector<int> &imgData, std::vector<int> &red, std::vector<int> &green, 
-//                std::vector<int> &blue, const std::vector<int> &redMask, const std::vector<int> &greenMask, const std::vector<int> &blueMask) 
-// {
-//   unsigned bitsPerElement = sizeof(int) * 8;
-//   PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgdata_bytes, bitsPerElement, PIM_INT32);
-//   if (imgObj == -1)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   PimObjId keyObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT32);
-//   if (keyObj == -1)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   PimObjId redMaskObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT32);
-//   if (redMaskObj == -1)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   PimObjId greenMaskObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT32);
-//   if (greenMaskObj == -1)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   PimObjId blueMaskObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT32);
-//   if (blueMaskObj == -1)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   PimObjId tempResultObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT32);
-//   if (tempResultObj == -1)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-
-//   PimStatus status = pimCopyHostToDevice((void *) imgData.data(), imgObj);
-//   if (status != PIM_OK)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-
-//   // Start Mask setup
-//   status = pimCopyHostToDevice((void *) redMask.data(), redMaskObj);
-//   if (status != PIM_OK)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   status = pimCopyHostToDevice((void *) greenMask.data(), greenMaskObj);
-//   if (status != PIM_OK)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   status = pimCopyHostToDevice((void *) blueMask.data(), blueMaskObj);
-//   if (status != PIM_OK)
-//   {
-//     std::cout << "Abort" << std::endl;
-//     return;
-//   }
-//   // End Mask setup
-
-//   for (int i = 0; i < 256; ++i) 
-//   {
-//     status = pimBroadcast(keyObj, i);
-//     int temp;
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-
-//     status = pimEQ(keyObj, imgObj, keyObj);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-
-//     status = pimAnd(keyObj, blueMaskObj, tempResultObj);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-
-//     temp = blue[i];
-//     status = pimRedSumRanged(tempResultObj, 0, imgdata_bytes, &blue[i]);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-//     blue[i] += temp;
-
-//     status = pimAnd(keyObj, greenMaskObj, tempResultObj);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-
-//     temp = green[i];
-//     status = pimRedSumRanged(tempResultObj, 0, imgdata_bytes, &green[i]);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-//     green[i] += temp;
-
-//     status = pimAnd(keyObj, redMaskObj, tempResultObj);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-
-//     temp = red[i];
-//     status = pimRedSumRanged(tempResultObj, 0, imgdata_bytes, &red[i]);
-//     if (status != PIM_OK)
-//     {
-//       std::cout << "Abort" << std::endl;
-//       return;
-//     }
-//     red[i] += temp;
-//     std::cout << "Blue: '" << blue[i] << "' | Green: '" << green[i] << "' | Red: '" << red[i] << "'" << std::endl;
-//   }
-//   pimFree(imgObj);
-//   pimFree(keyObj);
-//   pimFree(blueMaskObj);
-//   pimFree(greenMaskObj);
-//   pimFree(redMaskObj);
-//   pimFree(tempResultObj);
-// }
-
-void histogram(int imgdata_bytes, const std::vector<int> &imgData, std::vector<int> &red, std::vector<int> &green, 
-               std::vector<int> &blue) 
+void orderData(std::vector<uint8_t> &orderedImgData, const std::vector<uint8_t> imgData, uint64_t idxBegin, uint64_t idxEnd)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgdata_bytes, bitsPerElement, PIM_INT32);
-  if (imgObj == -1)
+  for (int i = 0; i < 3; ++i)
   {
-    std::cout << "Abort" << std::endl;
-    return;
+    for (uint64_t j = idxBegin; j < idxEnd; j+=3)
+    {
+      orderedImgData.push_back(imgData[j + i]);
+    }
   }
-  PimObjId keyObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT32);
-  if (keyObj == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+}
+
+void histogram(uint64_t imgdata_bytes, const std::vector<uint8_t> &imgData, std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
+{
+  unsigned bitsPerElement = sizeof(uint8_t) * 8;
+  PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgdata_bytes, bitsPerElement, PIM_UINT8);
+  assert(imgObj != -1);
+  PimObjId tempObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_UINT8);
+  assert(tempObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) imgData.data(), imgObj);
-  if (status != PIM_OK)
+  assert(status == PIM_OK);
+
+  uint64_t temp;
+
+  for (uint64_t i = 0; i < 256; ++i) 
   {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
+    status = pimEQScalar(imgObj, tempObj, i);
+    assert(status == PIM_OK);
 
-  for (int i = 0; i < 256; ++i) 
-  {
-    status = pimBroadcast(keyObj, i);
-    int temp;
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
+    temp = blueCount[i];
+    status = pimRedSumRangedUInt(tempObj, 0, imgdata_bytes / 3, &blueCount[i]);
+    assert(status == PIM_OK);
+    blueCount[i] += temp;
 
-    status = pimEQ(keyObj, imgObj, keyObj);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
+    temp = greenCount[i];
+    status = pimRedSumRangedUInt(tempObj, imgdata_bytes / 3, imgdata_bytes / 3 * 2, &greenCount[i]);
+    assert(status == PIM_OK);
+    greenCount[i] += temp;
 
-    temp = blue[i];
-    status = pimRedSumRanged(keyObj, 0, imgdata_bytes / 3, &blue[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-    blue[i] += temp;
-
-    temp = green[i];
-    status = pimRedSumRanged(keyObj, imgdata_bytes / 3, imgdata_bytes / 3 * 2, &green[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-    green[i] += temp;
-
-    temp = red[i];
-    status = pimRedSumRanged(keyObj, imgdata_bytes / 3 * 2, imgdata_bytes, &red[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-    red[i] += temp;
-    std::cout << "Blue: '" << blue[i] << "' | Green: '" << green[i] << "' | Red: '" << red[i] << "'" << std::endl;
+    temp = redCount[i];
+    status = pimRedSumRangedUInt(tempObj, imgdata_bytes / 3 * 2, imgdata_bytes, &redCount[i]);
+    assert(status == PIM_OK);
+    redCount[i] += temp;
   }
   pimFree(imgObj);
-  pimFree(keyObj);
+  pimFree(tempObj);
 }
+
 
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::string fn = params.inputFile;
-  std::cout << "Input file name: '" << fn << "'\n";
+  std::cout << "Input file : '" << fn << "'" << std::endl;
   int fd;
   uint64_t imgdata_bytes;
   struct stat finfo;
   char* fdata;
-  // unsigned short* bitsperpixel; 
   unsigned short* data_pos;
+
+  // Start data parsing
   if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
   {
-    // TODO
-    // assuming inputs will always be 24-bit .bmp files
+    // TODO: Assuming inputs will be 24-bit .bmp files
     std::cout << "Need work reading in other file types" << std::endl;
     return 1;
   }
-
-  fd = open(params.inputFile, O_RDONLY);
+  fd = open(params.inputFile.c_str(), O_RDONLY);
   if (fd < 0) 
   {
     perror("Failed to open input file, or file doesn't exist");
     return 1;
   }
-  
   if (fstat(fd, &finfo) < 0) 
   {
     perror("Failed to get file info");
@@ -337,53 +168,35 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  // bitsperpixel = (unsigned short *)(&(fdata[BITS_PER_PIXEL_POS]));
-  // bitsperpixel = 24 by definition of a RGB .bmp file, unused as no need for endianess check 
-  // (.bmp files are always little endian) and input is assumed as 24-bit .bmp file
-
   data_pos = (unsigned short *)(&(fdata[IMG_DATA_OFFSET_POS]));
   imgdata_bytes = static_cast<uint64_t> (finfo.st_size) - static_cast<uint64_t>(*(data_pos));
-  printf("This file has %ld bytes of image data, %ld pixels\n", imgdata_bytes,
-                                                            imgdata_bytes / 3);
+  printf("This file has %ld bytes of image data, %ld pixels\n", imgdata_bytes, imgdata_bytes / 3);
+  // End data parsing
 
   if (!createDevice(params.configFile))
+  {
     return 1;
+  }
 
-  std::vector<int> red(256, 0), green(256, 0), blue(256, 0);
-
+  std::vector<uint64_t> redCount(256, 0), greenCount(256, 0), blueCount(256, 0);
   std::vector<uint8_t> imgData(fdata + *data_pos, fdata + finfo.st_size);
-  std::vector<int> imgDataToInt, orderedImgData;
 
-  for (uint64_t i = 0; i < imgdata_bytes; ++i) {
-    imgDataToInt.push_back(static_cast<int> (imgData[i]));
-  }
-
-  for (uint64_t i = 0; i < imgdata_bytes; i+=3) {
-    orderedImgData.push_back(imgDataToInt[i]);
-  }
-
-  for (uint64_t i = 1; i < imgdata_bytes; i+=3) {
-    orderedImgData.push_back(imgDataToInt[i]);
-  }
-
-  for (uint64_t i = 2; i < imgdata_bytes; i+=3) {
-    orderedImgData.push_back(imgDataToInt[i]);
-  }  
+  std::vector<uint8_t> orderedImgData;
 
   uint64_t numCol = 8192, numRow = 8192, numCore = 4096;
   uint64_t totalAvailableBits = numCol * numRow * numCore;
-  uint64_t requiredBitsforImage = (imgdata_bytes * 32) + 32;
-  std::cout << "reqdBitsForImage : " << requiredBitsforImage << std::endl;
-  int numItr = std::ceil(static_cast<double>(requiredBitsforImage) / totalAvailableBits);
-  std::cout << "numItr : " << numItr << std::endl;
+  uint64_t requiredBitsforImage = ((imgdata_bytes * 32) + 32);
+  int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
+  std::cout << "Required iterations for image: " << numItr << std::endl;
 
   if (numItr == 1)
   {
-    histogram(imgdata_bytes, orderedImgData, red, green, blue);
+    orderData(orderedImgData, imgData, 0, imgdata_bytes);
+    histogram(imgdata_bytes, orderedImgData, redCount, greenCount, blueCount);
   }
   else
   {
-    // TODO
+    //TODO: ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
     uint64_t bytesPerChunk = totalAvailableBits / 8;
 
     for (int itr = 0; itr < numItr; ++itr)
@@ -392,53 +205,58 @@ int main(int argc, char *argv[])
       uint64_t endByte = std::min(startByte + bytesPerChunk, imgdata_bytes);
       uint64_t chunkSize = endByte - startByte;
 
-      std::vector<int> imgDataChunk(imgDataToInt.begin() + startByte, imgDataToInt.begin() + endByte);
-      histogram(chunkSize, imgDataChunk, red, green, blue);
+      std::vector<uint8_t> imgDataChunk(imgData.begin() + startByte, imgData.begin() + endByte);
+      orderData(orderedImgData, imgDataChunk, startByte, endByte);
+
+      histogram(chunkSize, orderedImgData, redCount, greenCount, blueCount);
     }
   }
 
   if (params.shouldVerify)
   {
-    int red_cpu[256];
-    int green_cpu[256];
-    int blue_cpu[256];
+    uint64_t redCheck[256];
+    uint64_t greenCheck[256];
+    uint64_t blueCheck[256];
+    int errorFlag = 0;
 
-    memset(&(red_cpu[0]), 0, sizeof(int) * 256);
-    memset(&(green_cpu[0]), 0, sizeof(int) * 256);
-    memset(&(blue_cpu[0]), 0, sizeof(int) * 256);
+    memset(&(redCheck[0]), 0, sizeof(uint64_t) * 256);
+    memset(&(greenCheck[0]), 0, sizeof(uint64_t) * 256);
+    memset(&(blueCheck[0]), 0, sizeof(uint64_t) * 256);
    
-    for (int i=*data_pos; i < finfo.st_size; i+=3) {      
+    for (int i=*data_pos; i < finfo.st_size; i+=3) 
+    {      
       unsigned char *val = (unsigned char *)&(fdata[i]);
-      blue_cpu[*val]++;
+      blueCheck[*val]++;
       
       val = (unsigned char *)&(fdata[i+1]);
-      green_cpu[*val]++;
+      greenCheck[*val]++;
       
       val = (unsigned char *)&(fdata[i+2]);
-      red_cpu[*val]++;   
+      redCheck[*val]++;   
     }
 
-    int errorFlag = 0;
     for (int i = 0; i < 256; ++i)
     {
-      if (red_cpu[i] != red[i]) {
-        std::cout << "Wrong answer for red: " << red[i] << " | " << i << " (expected " << red_cpu[i] << ")" << std::endl;
+      if (redCheck[i] != redCount[i]) 
+      {
+        std::cout << "Index " << i << " | Wrong answer for red: " << redCount[i] << " (expected " << redCheck[i] << ")" << std::endl;
         errorFlag = 1;
       }
-      if (green_cpu[i] != green[i]) {
-        std::cout << "Wrong answer for green: " << green[i] << " | " << i << " (expected " << green_cpu[i] << ")" << std::endl;
+      if (greenCheck[i] != greenCount[i]) 
+      {
+        std::cout << "Index " << i << " | Wrong answer for green: " << greenCount[i] << " (expected " << greenCheck[i] << ")" << std::endl;
         errorFlag = 1;
       }
-      if (blue_cpu[i] != blue[i]) {
-        std::cout << "Wrong answer for blue: " << blue[i] << " | " << i << " (expected " << blue_cpu[i] << ")" << std::endl;
+      if (blueCheck[i] != blueCount[i]) 
+      {
+        std::cout << "Index " << i << " | Wrong answer for blue: " << blueCount[i] << " (expected " << blueCheck[i] << ")" << std::endl;
         errorFlag = 1;
       }
     }
-
-    if (errorFlag)
-      std::cout << "At least one wrong answer" << std::endl;
-    else
+    if (!errorFlag)
+    {
       std::cout << "Correct!" << std::endl;
+    }
   }
 
   pimShowStats();
