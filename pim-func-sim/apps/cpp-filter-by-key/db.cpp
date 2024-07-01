@@ -114,13 +114,13 @@ void keyValueSearch(std::vector<int> &dbVector, std::vector<int> &keyList, bool 
   for (int keyToSearch : keyList)
   {
     std::vector<int> bitMap(dbVector.size());
-    status = pimBroadcastInt(srcObj2, keyToSearch);
+    
+    status = pimEQScalar(srcObj1, srcObj2, keyToSearch);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
       return;
     }
-    status = pimEQ(srcObj1, srcObj2, srcObj2);
 
     status = pimCopyDeviceToHost(srcObj2, (void *)dbVector.data());
     if (status != PIM_OK)
