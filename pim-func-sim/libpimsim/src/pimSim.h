@@ -48,10 +48,10 @@ public:
   unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
   PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId obj);
-  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
   PimObjId pimCreateDualContactRef(PimObjId refId);
 
   // Data transfer
@@ -76,10 +76,23 @@ public:
   bool pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimAdd(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimSub(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimMul(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimDiv(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimAnd(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimOr(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimXor(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimXnor(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimGT(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimLT(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimEQ(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimMin(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimMax(PimObjId src, PimObjId dest, uint64_t scalerValue);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  bool pimRedSum(PimObjId src, int64_t* sum);
-  bool pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
-  bool pimBroadcast(PimObjId dest, unsigned value);
+  template <typename T> bool pimRedSum(PimObjId src, T* sum);
+  template <typename T> bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum);
+  template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);
   bool pimShiftElementsRight(PimObjId src);

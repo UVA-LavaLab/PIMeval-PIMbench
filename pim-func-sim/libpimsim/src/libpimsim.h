@@ -56,6 +56,10 @@ extern "C" {
     PIM_INT16,
     PIM_INT32,
     PIM_INT64,
+    PIM_UINT8,
+    PIM_UINT16,
+    PIM_UINT32,
+    PIM_UINT64,
     PIM_FP32,
   };
 
@@ -70,10 +74,10 @@ extern "C" {
   void pimResetStats();
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
   PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
   PimStatus pimFree(PimObjId obj);
-  PimObjId pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd);
+  PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
 
   // Data transfer
   PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
@@ -97,10 +101,26 @@ extern "C" {
   PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
+  PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
-  PimStatus pimRedSum(PimObjId src, int64_t* sum);
-  PimStatus pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum);
-  PimStatus pimBroadcast(PimObjId dest, int64_t value);
+  PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
+  PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
+  PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
+  PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
+  PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
+  PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
   PimStatus pimRotateElementsRight(PimObjId src);
   PimStatus pimRotateElementsLeft(PimObjId src);
   PimStatus pimShiftElementsRight(PimObjId src);

@@ -46,7 +46,7 @@ pimResetStats()
 
 //! @brief  Allocate a PIM resource
 PimObjId
-pimAlloc(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType)
+pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElements, PimDataType dataType)
 {
   return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElements, dataType);
 }
@@ -68,7 +68,7 @@ pimFree(PimObjId obj)
 
 //! @brief  Create an obj referencing to a range of an existing obj
 PimObjId
-pimCreateRangedRef(PimObjId refId, unsigned idxBegin, unsigned idxEnd)
+pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd)
 {
   return pimSim::get()->pimCreateRangedRef(refId, idxBegin, idxEnd);
 }
@@ -120,9 +120,17 @@ pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Load vector with a scalar value
+//! @brief  Load vector with a signed int value
 PimStatus
-pimBroadcast(PimObjId dest, int64_t value)
+pimBroadcastInt(PimObjId dest, int64_t value)
+{
+  bool ok = pimSim::get()->pimBroadcast(dest, value);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Load vector with an unsigned int value
+PimStatus
+pimBroadcastUInt(PimObjId dest, uint64_t value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -240,6 +248,84 @@ pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimAdd(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimSub(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimMul(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimDiv(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimAnd(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimOr(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimXor(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimXnor(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimGT(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimLT(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimEQ(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimMin(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
+{
+  bool ok = pimSim::get()->pimMax(src, dest, scalerValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM Pop Count
 PimStatus
 pimPopCount(PimObjId src, PimObjId dest)
@@ -248,17 +334,33 @@ pimPopCount(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM reduction sum. Result returned to a host variable
+//! @brief  PIM reduction sum for signed int. Result returned to a host variable
 PimStatus
-pimRedSum(PimObjId src, int64_t* sum)
+pimRedSumInt(PimObjId src, int64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  PIM reduction sum for a range of an obj. Result returned to a host variable
+//! @brief  PIM reduction sum for unsigned int. Result returned to a host variable
 PimStatus
-pimRedSumRanged(PimObjId src, unsigned idxBegin, unsigned idxEnd, int64_t* sum)
+pimRedSumUInt(PimObjId src, uint64_t* sum)
+{
+  bool ok = pimSim::get()->pimRedSum(src, sum);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM reduction sum for a range of an signed int obj. Result returned to a host variable
+PimStatus
+pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
+{
+  bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM reduction sum for a range of an unsigned int obj. Result returned to a host variable
+PimStatus
+pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;

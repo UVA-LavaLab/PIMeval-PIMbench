@@ -142,7 +142,7 @@ void copyCentroid(std::vector<int64_t> &currCentroid, std::vector<PimObjId> &pim
 {
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimBroadcast(pimObjectList[i], currCentroid[i]);
+    PimStatus status = pimBroadcastInt(pimObjectList[i], currCentroid[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -245,7 +245,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
       int64_t totalNeighbors = 0; 
 
-      status = pimRedSum(resultObjectList[0], &totalNeighbors);
+      status = pimRedSumInt(resultObjectList[0], &totalNeighbors);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -260,7 +260,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
           std::cout << "Abort" << std::endl;
           return;
         }
-        status = pimRedSum(resultObjectList[1], &centroids[i][b]);
+        status = pimRedSumInt(resultObjectList[1], &centroids[i][b]);
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;

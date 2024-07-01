@@ -66,6 +66,10 @@ pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
   case PIM_INT16: return "int16";
   case PIM_INT32: return "int32";
   case PIM_INT64: return "int64";
+  case PIM_UINT8: return "uint8";
+  case PIM_UINT16: return "uint16";
+  case PIM_UINT32: return "uint32";
+  case PIM_UINT64: return "uint64";
   case PIM_FP32: return "fp32";
   }
   return "Unknown";
@@ -73,13 +77,13 @@ pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 
 //! @brief  Read bits from host
 std::vector<bool>
-pimUtils::readBitsFromHost(void* src, unsigned numElements, unsigned bitsPerElement)
+pimUtils::readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement)
 {
   std::vector<bool> bits;
   unsigned char* bytePtr = static_cast<unsigned char*>(src);
 
-  for (size_t i = 0; i < (size_t)numElements * bitsPerElement; i += 8) {
-    unsigned byteIdx = i / 8;
+  for (uint64_t i = 0; i < numElements * bitsPerElement; i += 8) {
+    uint64_t byteIdx = i / 8;
     unsigned char byteVal = *(bytePtr + byteIdx);
     for (int j = 0; j < 8; ++j) {
       bits.push_back(byteVal & 1);
@@ -95,9 +99,9 @@ bool
 pimUtils::writeBitsToHost(void* dest, const std::vector<bool>& bits)
 {
   unsigned char* bytePtr = static_cast<unsigned char*>(dest);
-  unsigned byteIdx = 0;
+  uint64_t byteIdx = 0;
 
-  for (size_t i = 0; i < bits.size(); i += 8) {
+  for (uint64_t i = 0; i < bits.size(); i += 8) {
     unsigned char byteVal = 0;
     for (int j = 7; j >= 0; --j) {
       byteVal = byteVal << 1;

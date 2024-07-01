@@ -9,6 +9,8 @@
 #include "pimParamsDram.h"
 #include "pimCmd.h"
 #include "pimResMgr.h"
+#include <unordered_map>
+#include <tuple>
 
 
 //! @class  pimParamsPerf
@@ -36,12 +38,17 @@ public:
   double getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 
 private:
-  const pimParamsDram* m_paramsDram; 
+  double getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass) const;
+
+  const pimParamsDram* m_paramsDram;
   PimDeviceEnum m_curDevice;
   PimDeviceEnum m_simTarget;
   double m_tR; // Row read latency in ms
   double m_tW; // Row write latency in ms
   double m_tL; // Logic operation / tCCD in ms
+
+  static const std::unordered_map<PimDeviceEnum, std::unordered_map<PimDataType,
+      std::unordered_map<PimCmdEnum, std::tuple<unsigned, unsigned, unsigned>>>> s_bitsimdPerfTable;
 };
 
 #endif
