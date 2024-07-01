@@ -22,6 +22,14 @@ pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Get PIM device properties
+PimStatus
+pimGetDeviceProperties(PimDeviceProperties& deviceProperties)
+{
+  bool ok = pimSim::get()->getDeviceProperties(deviceProperties);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Delete a PIM device
 PimStatus
 pimDeleteDevice()
