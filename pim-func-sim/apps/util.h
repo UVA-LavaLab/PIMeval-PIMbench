@@ -14,6 +14,9 @@
 #include <random>
 
 #include "libpimsim.h"
+#include <map>
+#include <fstream>
+
 using namespace std;
 
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
@@ -90,7 +93,7 @@ bool createDevice(char *configFile)
   if (configFile == nullptr)
   {
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
-    unsigned numRanks = 1;
+    unsigned numRanks = 2;
     unsigned numBankPerRank = 128; // 8 chips * 16 banks
     unsigned numSubarrayPerBank = 32;
     unsigned numRows = 8192;
@@ -113,6 +116,57 @@ bool createDevice(char *configFile)
     }
   }
   return true;
+}
+
+// Function to print the dimensions of a 1D matrix
+void printMatrixDimensions (std::vector<int> &inputMatrix) {
+  std::cout << inputMatrix.size() << std::endl;
+}
+
+// Function to print the dimensions of a 2D matrix
+void printMatrixDimensions (std::vector<std::vector<int>> &inputMatrix) {     
+  std::cout << inputMatrix.size() << " x " 
+            << inputMatrix[0].size() 
+            << std::endl;
+}
+
+// Function to print the dimensions of a 3D matrix
+void printMatrixDimensions (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
+  std::cout << inputMatrix.size() << " x " 
+            << inputMatrix[0].size() << " x " 
+            << inputMatrix[0][0].size() 
+            << std::endl;   
+}
+
+// Function to print a 1D matrix
+void printMatrix(std::vector<int>& matrix) {
+  for (int val : matrix) {
+    std::cout << val << " ";
+  }
+  std::cout << std::endl;
+}
+
+// Function to print a 2D matrix
+void printMatrix(std::vector<std::vector<int>>& matrix) {
+  for (const auto& row : matrix) {
+    for (int val : row) {
+      std::cout << val << " ";
+    }
+    std::cout << std::endl;
+  }
+}
+
+// Function to print a 3D matrix
+void printMatrix(std::vector<std::vector<std::vector<int>>>& matrix) {
+  for (const auto& mat2D : matrix) {
+    for (const auto& row : mat2D) {
+      for (int val : row) {
+        std::cout << val << " ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "---" << std::endl; // Separator between 2D matrices
+  }
 }
 
 #endif

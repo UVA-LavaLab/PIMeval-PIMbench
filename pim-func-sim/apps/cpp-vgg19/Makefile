@@ -1,4 +1,4 @@
-# Makefile: C++ version of vgg
+# Makefile: C++ version of vgg19
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
@@ -10,12 +10,15 @@ ifeq ($(USE_OPENMP),1)
 endif
 
 EXEC := vgg19.out
-SRC := vgg.cpp
+SRC := vgg19.cpp
+
+# Add linker flags for libjpeg
+LDFLAGS += -ljpeg
 
 debug perf dramsim3_integ: $(EXEC)
 
 $(EXEC): $(SRC) $(DEPS)
-	$(CXX) $< $(CXXFLAGS) -o $@
+	$(CXX) $< $(CXXFLAGS) $(LDFLAGS) -o $@
 
 clean:
 	rm -rf $(EXEC) *.dSYM
