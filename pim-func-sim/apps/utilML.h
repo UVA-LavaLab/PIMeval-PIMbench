@@ -434,7 +434,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimAdd(srcVector[i], dstObj, dstObj);
+    status = pimAdd(srcObj2, dstObj, dstObj);
     if (status != PIM_OK)
     {
       std::cout << "Function: " << __func__ << ", Abort: pimAdd failed between srcVector and dstObj at i=" << i << std::endl;
@@ -589,6 +589,8 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
   {
     pimFree(elem);
   }
+  pimFree(RELUConstObj);
+
 }
 
 // Function executing RELU for a given 3D input matrix.
