@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
   struct stat finfo;
   char* fdata;
   unsigned short* dataPos;
-  int numChannels, imgDataOffsetPosition, minColorValue, maxColorValue;
+  int imgDataOffsetPosition, minColorValue, maxColorValue;
 
   // Start data parsing
   if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
@@ -163,7 +163,6 @@ int main(int argc, char *argv[])
     minColorValue = 0; // Sets the max value that any color channel can be in a given pixel
     maxColorValue = 255; // Sets the max value that any color channel can be in a given pixel
 
-    numChannels = 3; // Red, green, and blue color channels
     imgDataOffsetPosition = 10; // Start of image data, ignoring unneeded header data and info
     // Defined according to the assumed input file structure given
 
@@ -172,7 +171,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %ld bytes of image data, %ld pixels\n", imgDataBytes, imgDataBytes / numChannels);
+  printf("This file has %ld bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
 
   if (!createDevice(params.configFile))
   {
