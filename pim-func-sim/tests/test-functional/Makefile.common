@@ -1,0 +1,30 @@
+# Makefile common settings used by tests subdirs
+# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+
+CXX := g++
+CXXFLAGS := -std=c++17 -Wall
+
+# Setup libpimsim library
+LIBPIMSIM_PATH ?= ../../../../libpimsim
+INC_DIR := $(LIBPIMSIM_PATH)/include
+LIB_DIR := $(LIBPIMSIM_PATH)/lib
+CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimsim
+DEPS := $(INC_DIR)/libpimsim.h $(LIB_DIR)/libpimsim.a
+
+.PHONY: debug perf dramsim3_integ clean
+.DEFAULT_GOAL := perf
+
+# Setup build targets
+ifeq ($(MAKECMDGOALS),)
+	MAKECMDGOALS := $(.DEFAULT_GOAL)
+endif
+ifeq ($(MAKECMDGOALS),debug)
+	CXXFLAGS += -g -DDEBUG
+endif
+ifeq ($(MAKECMDGOALS),perf)
+	CXXFLAGS += -Ofast
+endif
+ifeq ($(MAKECMDGOALS),dramsim3_integ)
+	CXXFLAGS += -Ofast -DDRAMSIM3_INTEG
+endif
+

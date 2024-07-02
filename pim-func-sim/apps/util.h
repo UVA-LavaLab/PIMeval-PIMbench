@@ -90,7 +90,7 @@ bool createDevice(char *configFile)
   if (configFile == nullptr)
   {
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
-    unsigned numRanks = 1;
+    unsigned numRanks = 2;
     unsigned numBankPerRank = 128; // 8 chips * 16 banks
     unsigned numSubarrayPerBank = 32;
     unsigned numRows = 8192;

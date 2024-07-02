@@ -66,6 +66,10 @@ pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
   case PIM_INT16: return "int16";
   case PIM_INT32: return "int32";
   case PIM_INT64: return "int64";
+  case PIM_UINT8: return "uint8";
+  case PIM_UINT16: return "uint16";
+  case PIM_UINT32: return "uint32";
+  case PIM_UINT64: return "uint64";
   case PIM_FP32: return "fp32";
   }
   return "Unknown";

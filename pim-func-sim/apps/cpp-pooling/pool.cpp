@@ -1,4 +1,4 @@
-// Test: C++ version of max pool. This works for vgg max pool. The code may not work if the matrix is not square.
+// Test: C++ version of max pool. 
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #include "libpimsim.h"
@@ -10,22 +10,124 @@
 
 using namespace std;
 
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelSize, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+// Params ---------------------------------------------------------------------
+typedef struct Params
 {
+  int row, column, dim, stride, kernelHeight, kernelWidth;
+  char *dramConfigFile;
+  char *imageMatrixFile;
+  bool shouldVerify;
+  bool moreDebugPrints;
+} Params;
 
-  int numRows = kernelSize * kernelSize;
-  // The following won't work if the kernel is not square and if stride != kernel size
-  int numCols = matrixRow * matrixColumn / numRows;
+void usage()
+{
+  fprintf(stderr,
+          "\nUsage:  ./pool [options]"
+          "\n"
+          "\n    -r    row (default=224)"
+          "\n    -c    column (default=224)"
+          "\n    -d    dimension (default=64)"
+          "\n    -s    stride (default=2)"
+          "\n    -l    kernel height (default=2)"
+          "\n    -w    kernel width (default=2)"
+          "\n    -v    should verify result with CPU"
+          "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
+          "\n    -i    input image file containing matrices (default=generates matrix with random numbers)"
+	  "\n    -m    enable more debug prints (default = false)"          
+          "\n");
+}
+
+struct Params getInputParams(int argc, char **argv)
+{
+  struct Params p;
+  p.row = 224;
+  p.column = 224;
+  p.dim = 64;
+  p.stride = 2;
+  p.kernelHeight = 2;
+  p.kernelWidth = 2;
+  p.dramConfigFile = nullptr;
+  p.imageMatrixFile = nullptr;
+  p.shouldVerify = false;
+  p.moreDebugPrints = false;
+
+  int opt;
+  while ((opt = getopt(argc, argv, "h:r:c:d:s:l:w:v:f:i:m:")) >= 0)
+  {
+    switch (opt)
+    {
+    case 'h':
+      usage();
+      exit(0);
+      break;
+    case 'r':
+      p.row = atoi(optarg);
+      break;
+    case 'c':
+      p.column = atoi(optarg);
+      break;
+    case 'd':
+      p.dim = atoi(optarg);
+      break;
+    case 's':
+      p.stride = atoi(optarg);
+      break;
+    case 'l':
+      p.kernelHeight = atoi(optarg);
+      break;
+    case 'w':
+      p.kernelWidth = atoi(optarg);
+      break; 
+    case 'f':
+      p.dramConfigFile = optarg;
+      break;
+    case 'i':
+      p.imageMatrixFile = optarg;
+      break;
+    case 'v':
+      p.shouldVerify = (*optarg == 't') ? true : false;
+      break;
+    case 'm':
+      p.moreDebugPrints = (*optarg == 't') ? true : false;
+      break;  
+    default:
+      fprintf(stderr, "\nUnrecognized option!\n");
+      usage();
+      exit(0);
+    }
+  }
+  return p;
+}
+
+// Function to print a 3D matrix
+void print3DMatrix(const std::vector<std::vector<std::vector<int>>> &matrix) {
+    for (int i = 0; i < matrix.size(); ++i) {
+        std::cout << "Layer " << i << ":\n";
+        for (int j = 0; j < matrix[i].size(); ++j) {
+            for (int k = 0; k < matrix[i][j].size(); ++k) {
+                std::cout << matrix[i][j][k] << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }
+}
+
+void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+{
+  int numRows = kernelHeight * kernelWidth;
+  int numCols = matrixRow * matrixColumn;
   decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
   int colIdx = 0;
-  for (int i = 0; i < matrixRow - kernelSize + 1; i += stride)
+  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
   {
-    for (int j = 0; j < (matrixColumn - kernelSize + 1); j += stride)
+    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
     {
       int rowIDX = 0;
-      for (int k = i; k < i + kernelSize; k++)
+      for (int k = i; k < i + kernelHeight; k++)
       {
-        for (int l = j; l < j + kernelSize; l++)
+        for (int l = j; l < j + kernelWidth; l++)
         {
           decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
         }
@@ -40,7 +142,6 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelSize, int st
 */
 void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
-
   unsigned bitsPerElement = 32;
 
   if (inputMatrix.empty())
@@ -101,107 +202,60 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   }
 }
 
-// Params ---------------------------------------------------------------------
-typedef struct Params
+// Function to perform max pooling on CPU with configurable kernel size and stride
+std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<std::vector<std::vector<int>>> &PIMResult, int kernelHeight, int kernelWidth, int stride, bool moreDebugPrints)
 {
-  int row, column, dim, stride, kernelSize;
-  char *configFile;
-  char *inputFile;
-  bool shouldVerify;
-} Params;
-
-void usage()
-{
-  fprintf(stderr,
-          "\nUsage:  ./pool [options]"
-          "\n"
-          "\n    -r    row (default=224)"
-          "\n    -c    column (default=224)"
-          "\n    -d    dimension (default=64)"
-          "\n    -s    stride (default=2)"
-          "\n    -k    kernel size (default=2X2)"
-          "\n    -v    should verify result with CPU"
-          "\n    -f    input file containing dram config"
-          "\n    -i    input file containing matrices (default=generates matrix with random numbers)"
-          "\n");
-}
-
-struct Params getInputParams(int argc, char **argv)
-{
-  struct Params p;
-  p.row = 224;
-  p.column = 224;
-  p.dim = 64;
-  p.stride = 2;
-  p.kernelSize = 2;
-  p.configFile = nullptr;
-  p.inputFile = nullptr;
-  p.shouldVerify = false;
-
-  int opt;
-  while ((opt = getopt(argc, argv, "h:r:c:d:s:k:v:f:i")) >= 0)
-  {
-    switch (opt)
-    {
-    case 'h':
-      usage();
-      exit(0);
-      break;
-    case 'r':
-      p.row = atoi(optarg);
-      break;
-    case 'c':
-      p.column = atoi(optarg);
-      break;
-    case 'd':
-      p.dim = atoi(optarg);
-      break;
-    case 's':
-      p.stride = atoi(optarg);
-      break;
-    case 'k':
-      p.kernelSize = atoi(optarg);
-      break;
-    case 'f':
-      p.configFile = optarg;
-      break;
-    case 'i':
-      p.inputFile = optarg;
-      break;
-    case 'v':
-      p.shouldVerify = (*optarg == 't') ? true : false;
-      break;
-    default:
-      fprintf(stderr, "\nUnrecognized option!\n");
-      usage();
-      exit(0);
-    }
-  }
-  return p;
-}
-
-// Function to perform max pooling (VGG style) in cpu
-std::vector<std::vector<int>> maxPoolingVGG(const std::vector<std::vector<int>> &inputMatrix)
-{
-  int numRows = inputMatrix.size();
-  int numCols = inputMatrix[0].size();
+  int numDepth = inputMatrix.size();
+  int numRows = inputMatrix[0].size();
+  int numCols = inputMatrix[0][0].size();
+  
+  // Calculate the dimensions of the output matrix
+  int outputRows = (numRows - kernelHeight) / stride + 1;
+  int outputCols = (numCols - kernelWidth) / stride + 1;
 
   // Initialize the output matrix with zeros
-  std::vector<std::vector<int>> outputMatrix(numRows / 2, std::vector<int>(numCols / 2, 0));
-
-  // Perform max pooling (VGG style) with pool size 2x2 and stride 2
-  for (int i = 0; i < numRows; i += 2)
-  {
-    for (int j = 0; j < numCols; j += 2)
-    {
-      int maxVal = std::max(inputMatrix[i][j], std::max(inputMatrix[i][j + 1],
-                                                        std::max(inputMatrix[i + 1][j], inputMatrix[i + 1][j + 1])));
-
-      // Assign the maximum value to the corresponding position in the output matrix
-      outputMatrix[i / 2][j / 2] = maxVal;
+  std::vector<std::vector<std::vector<int>>> outputMatrix(numDepth, std::vector<std::vector<int>>(outputRows, std::vector<int>(outputCols, 0)));
+       
+  int mismatch_counter = 0;
+  // Perform max pooling with the specified kernel size and stride
+  for (int d = 0; d < numDepth; ++d) {
+    for (int i = 0; i < outputRows; ++i) {
+      for (int j = 0; j < outputCols; ++j) {
+        int maxVal = std::numeric_limits<int>::min();
+        for (int m = 0; m < kernelHeight; ++m) {
+          for (int n = 0; n < kernelWidth; ++n) {
+            int row = i * stride + m;
+            int col = j * stride + n;
+            if (row < numRows && col < numCols) {
+              maxVal = std::max(maxVal, inputMatrix[d][row][col]);
+            }
+          }
+        }
+        outputMatrix[d][i][j] = maxVal;
+        if (outputMatrix[d][i][j] != PIMResult[d][i][j]) {
+          std::cout << "Mismatch between PIM and CPU results at depth: " << d << ", row: " << i << ", column: " << j << std::endl;
+          mismatch_counter += 1;
+        }
+      }
     }
   }
 
+  if (mismatch_counter == 0) {
+    std::cout << "Success: PIM results match with CPU results" << std::endl; 
+  } else {
+    std::cout << "Failure: PIM results do not match with CPU results" << std::endl;
+  }
+
+  if (moreDebugPrints == true) {
+    std::cout << "Stride: " << stride << ", Kernel size: " << kernelHeight << "x" << kernelWidth << std::endl;
+    std::cout << "Input matrix:" << std::endl;
+    print3DMatrix(inputMatrix);
+    std::cout << "Output matrix from CPU:" << std::endl;
+    print3DMatrix(outputMatrix);
+    std::cout << "Output matrix from PIM:" << std::endl;
+    print3DMatrix(PIMResult);    
+  }
+  
   return outputMatrix;
 }
 
@@ -212,7 +266,7 @@ int main(int argc, char *argv[])
   std::vector<std::vector<std::vector<int>>> inputMatrix;
   inputMatrix.resize(params.dim, std::vector<std::vector<int>>(params.row, std::vector<int>(params.column)));
 
-  if (params.inputFile == nullptr)
+  if (params.imageMatrixFile == nullptr)
   {
     for (auto &mat : inputMatrix)
     {
@@ -224,21 +278,25 @@ int main(int argc, char *argv[])
     // TODO: read Matrix from file
   }
 
-  if (!createDevice(params.configFile))
+  if (!createDevice(params.dramConfigFile))
     return 1;
 
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
   unsigned numCols = 8192, numOfCore = 4096;
-  // TODO: currently considers square shape kernel. But it could be rectangle. In that case take kernel row and column as an input and modify this code accordingly.
-  int numOfPIMRow = params.kernelSize * params.kernelSize;
-  int numOfPIMColumn = params.row * params.column / numOfPIMRow;
+  
+  int numOfPIMRow = params.kernelHeight * params.kernelWidth;
+  int numOfPIMColumn = (params.row * params.column / numOfPIMRow);
   int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < params.dim ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : params.dim;
 
-  // TODO: this won't work for all the cases but will work for vgg
+  int inputHeight = inputMatrix[0].size();
+  int inputWidth = inputMatrix[0][0].size();
+  int outputHeight = (inputHeight - params.kernelHeight) / params.stride + 1;
+  int outputWidth = (inputWidth - params.kernelWidth) / params.stride + 1;
+  
   std::vector<std::vector<std::vector<int>>> resultMatrix;
-  resultMatrix.resize(params.dim, std::vector<std::vector<int>>(params.row / params.kernelSize, std::vector<int>(params.column / params.kernelSize)));
+  resultMatrix.resize(params.dim, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
 
-  for (int i = 0; i < params.dim; i += numOfMatPerRow)
+  for (int i = 0; i < params.dim; i += 1)
   {
     // This vector packs all the matrices that can be fit into one PIM iteration
     std::vector<std::vector<int>> mergedMat(numOfPIMRow);
@@ -246,13 +304,23 @@ int main(int argc, char *argv[])
     for (int j = i; j < matChunk; j++)
     {
       std::vector<std::vector<int>> tempMat;
-      getDecomposedMatrix(params.row, params.column, params.kernelSize, params.stride, inputMatrix[j], tempMat);
-      for (int idx = 0; idx < mergedMat.size(); idx++)
-        for (int idx = 0; idx < mergedMat.size(); idx++)
+      getDecomposedMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, inputMatrix[j], tempMat);
+      if (params.moreDebugPrints == true) { 
+        // Debug print
+        std::cout << "Decomposed Matrix:" << std::endl;
+        for (const auto &row : tempMat)
         {
-          mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-          mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+          for (const auto &val : row)
+          {
+            std::cout << val << " ";
+          }
+          std::cout << std::endl;
         }
+      }
+      for (int idx = 0; idx < mergedMat.size(); idx++) {
+        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+      }
     }
     std::vector<int> outMatrix;
     maxPool(mergedMat, outMatrix);
@@ -267,26 +335,14 @@ int main(int argc, char *argv[])
         }
       }
     }
-    if (params.shouldVerify)
-    {
-      for (int j = i; j < matChunk; ++j)
-      {
-        std::vector<std::vector<int>> cpuPoolMat = maxPoolingVGG(inputMatrix[j]);
-        for (size_t tdx = 0; tdx < cpuPoolMat.size(); ++tdx)
-        {
-          for (size_t cdx = 0; cdx < cpuPoolMat[tdx].size(); ++cdx)
-          {
-            if (cpuPoolMat[tdx][cdx] != resultMatrix[j][tdx][cdx])
-            {
-              std::cout << "Did not matched." << j << " Actual: " << cpuPoolMat[tdx][cdx] << "\tGot: " << resultMatrix[j][tdx][cdx] << "\n";
-            }
-          }
-        }
-      }
-      std::cout << "Matched\n\n";
-    }
   }
 
+  if (params.shouldVerify == true)
+  {
+    // Perform max pooling on CPU and compare results with PIM
+    verifyWithCPU(inputMatrix, resultMatrix, params.kernelHeight, params.kernelWidth, params.stride, params.moreDebugPrints);
+  }
+  
   pimShowStats();
 
   return 0;

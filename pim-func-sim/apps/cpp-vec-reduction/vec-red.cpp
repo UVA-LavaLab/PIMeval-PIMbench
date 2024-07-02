@@ -92,7 +92,7 @@ void vectorRed(uint64_t vectorLength, std::vector<int> src, int64_t &reductionVa
     return;
   }
 
-  status = pimRedSum(srcObj, &reductionValue);
+  status = pimRedSumInt(srcObj, &reductionValue);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

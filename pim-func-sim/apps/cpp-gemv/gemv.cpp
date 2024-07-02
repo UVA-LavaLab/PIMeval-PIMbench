@@ -27,8 +27,8 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./gemv [options]"
           "\n"
-          "\n    -r    matrix row (default=8M elements)"
-          "\n    -d    matrix column (default=8M elements)"
+          "\n    -r    matrix row (default=65536 elements)"
+          "\n    -d    matrix column (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -100,7 +100,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  PimStatus status = pimBroadcast(dstObj, 0);
+  PimStatus status = pimBroadcastInt(dstObj, 0);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -116,14 +116,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimBroadcast(srcObj2, srcVector[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-
-    status = pimMul(srcObj1, srcObj2, srcObj2);
+    status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
