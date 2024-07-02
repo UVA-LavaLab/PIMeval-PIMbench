@@ -63,12 +63,24 @@ extern "C" {
     PIM_FP32,
   };
 
+
+// Struct definition
+struct PimDeviceProperties {
+  PimDeviceEnum deviceType = PIM_DEVICE_NONE;
+  unsigned numRanks = 0;
+  unsigned numBankPerRank = 0;
+  unsigned numSubarrayPerBank = 0;
+  unsigned numRowPerSubarray = 0;
+  unsigned numColPerSubarray = 0;
+};
+
   typedef int PimCoreId;
   typedef int PimObjId;
 
   // Device creation and deletion
   PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
+  PimStatus pimGetDeviceProperties(PimDeviceProperties* deviceProperties);
   PimStatus pimDeleteDevice();
   void pimShowStats();
   void pimResetStats();
