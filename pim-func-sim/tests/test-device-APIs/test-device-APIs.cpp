@@ -21,7 +21,7 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   assert(status == PIM_OK);
 
   PimDeviceProperties deviceProp;
-  status = pimGetDeviceProperties(deviceProp);
+  status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
   assert(deviceProp.deviceType == deviceType);
   assert(deviceProp.numRanks = numRanks);

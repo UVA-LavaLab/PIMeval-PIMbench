@@ -24,7 +24,7 @@ pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName)
 
 //! @brief  Get PIM device properties
 PimStatus
-pimGetDeviceProperties(PimDeviceProperties& deviceProperties)
+pimGetDeviceProperties(PimDeviceProperties* deviceProperties)
 {
   bool ok = pimSim::get()->getDeviceProperties(deviceProperties);
   return ok ? PIM_OK : PIM_ERROR;
