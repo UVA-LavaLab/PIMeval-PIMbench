@@ -330,8 +330,6 @@ int main(int argc, char *argv[])
     vector<vector<int>> test_data = test_data_int;
     params.dimension = test_data.size();
     params.numTestPoints = test_data[0].size();
-
-
     testPoints = test_data;
   }
   if (params.inputDataFile == nullptr)
