@@ -219,10 +219,10 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   pimFree(lr);
 }
 
-std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
+std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
 {
   NewImgWrapper avg_out = createNewImage(img, true);
-  pim_rows = min(pim_rows, avg_out.new_height * avg_out.new_scanline_size);
+  size_t needed_elements = avg_out.new_height * avg_out.new_scanline_size;
   uint8_t* pixels_out_avg = (uint8_t*)avg_out.new_img.data() + avg_out.new_data_offset;
   uint8_t* pixels_in = (uint8_t*)img.data() + avg_out.data_offset;
 
@@ -231,13 +231,13 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
 
   // Transform input bitmap to vectors of colors in CPU
   vector<uint8_t> upper_left;
-  upper_left.reserve(pim_rows);
+  upper_left.reserve(needed_elements);
   vector<uint8_t> upper_right;
-  upper_right.reserve(pim_rows);
+  upper_right.reserve(needed_elements);
   vector<uint8_t> lower_left;
-  lower_left.reserve(pim_rows);
+  lower_left.reserve(needed_elements);
   vector<uint8_t> lower_right;
-  lower_right.reserve(pim_rows);
+  lower_right.reserve(needed_elements);
   for (int y = 0; y < avg_out.new_height; ++y) {
     uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
     for(int x = 0; x < 6*avg_out.new_width; x += 6) {
@@ -246,15 +246,6 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
         upper_right.push_back(pixels_in_it[x+i+3]);
         lower_left.push_back(row2_it[x+i]);
         lower_right.push_back(row2_it[x+3+i]);
-        if((uint32_t) pim_rows == upper_left.size()) {
-          // Perform PIM averaging when vectors at max capacity to maximize parallelism
-          pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
-          pixels_out_avg_it += pim_rows;
-          upper_left.clear();
-          upper_right.clear();
-          lower_left.clear();
-          lower_right.clear();
-        }
       }
     }
 
@@ -264,23 +255,11 @@ std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img, int pim_rows)
       upper_right.push_back(0);
       lower_left.push_back(0);
       lower_right.push_back(0);
-      if((uint32_t) pim_rows == upper_left.size()) {
-        // Perform PIM averaging when vectors at max capacity to maximize parallelism
-        pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
-        pixels_out_avg_it += pim_rows;
-        upper_left.clear();
-        upper_right.clear();
-        lower_left.clear();
-        lower_right.clear();
-      }
     }
     pixels_in_it += 2 * avg_out.scanline_size;
   }
 
-  if(upper_left.size() != 0) {
-    // Average any leftover pixels
-    pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
-  }
+  pimAverageRows(upper_left, upper_right, lower_left, lower_right, pixels_out_avg_it);
 
   return avg_out.new_img;
 }
@@ -381,11 +360,6 @@ int main(int argc, char* argv[])
   string input_file = params.inputFile;
   input_file = "../Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
-  // numCols * numCores
-  
-  uint64_t numCol = 8192, numRow = 8192, numCore = 4096;
-  uint64_t totalAvailableBits = numCol*numCore;
-  int pim_rows = 128*16*8192;
 
   if(!createDevice(params.configFile)) {
     return 1;
@@ -395,7 +369,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  vector<uint8_t> pim_averaged = avg_pim(img, pim_rows);
+  vector<uint8_t> pim_averaged = avg_pim(img);
 
   if(params.outputFile != nullptr) {
     write_img(pim_averaged, params.outputFile);
