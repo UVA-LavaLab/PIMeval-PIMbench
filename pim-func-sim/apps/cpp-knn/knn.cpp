@@ -150,19 +150,6 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
   }
 }
 
-void copyTestPoint(int &currPoint, vector<vector<int>> &testPoints, vector<PimObjId> &pimObjectList)
-{
-  for (int i = 0; i < pimObjectList.size(); i++)
-  {
-    PimStatus status = pimBroadcast(pimObjectList[i], testPoints[i][currPoint]);
-    if (status != PIM_OK)
-    {
-      cout << "Abort" << endl;
-      return;
-    }
-  }
-}
-
 vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) {
     priority_queue<pair<int, int>> maxHeap;
     for(int i = 0; i < data.size(); ++i) {
@@ -174,9 +161,9 @@ vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) 
         }
     }
 
-    vector<pair<int, int>> result;
-    result.resize(k);
+    vector<pair<int, int>> result(k);
     int idx = k-1;
+    
     while(!maxHeap.empty() && idx >= 0) {
         result[idx--] = maxHeap.top();
         maxHeap.pop();
@@ -193,20 +180,17 @@ void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, con
   allocatePimObject(numOfPoints, adjusted_dim, dataPointObjectList, -1);
   copyDataPoints(dataPoints, dataPointObjectList);
 
-  vector<PimObjId> testPointObjectList(adjusted_dim);
   vector<PimObjId> resultObjectList(adjusted_dim);
-  allocatePimObject(numOfPoints, adjusted_dim, testPointObjectList, dataPointObjectList[0]);
   allocatePimObject(numOfPoints, adjusted_dim, resultObjectList, dataPointObjectList[0]);
 
 
   vector<vector<int>> distMat(numOfTests, vector<int>(numOfPoints));
   
   for(int j = 0; j < numOfTests; ++j){
-    copyTestPoint(j, testPoints, testPointObjectList);
     for (int i = 0; i < adjusted_dim; ++i){
       // for each point calculate manhattan distance. Not using euclidean distance to avoid multiplication.
 
-      PimStatus status = pimSub(dataPointObjectList[i], testPointObjectList[i], resultObjectList[i]);
+      PimStatus status = pimSubScalar(dataPointObjectList[i], resultObjectList[i], testPoints[i][j]);
       if (status != PIM_OK)
       {
         cout << "Abort" << endl;
@@ -276,10 +260,6 @@ void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, con
     pimFree(dataPointObjectList[i]);
   }
 
-  for (int i = 0; i < testPointObjectList.size(); ++i) {
-    pimFree(testPointObjectList[i]);
-  }
-
 }
 
 vector<vector<int>> readCSV(const string& filename) {
@@ -330,8 +310,6 @@ vector<vector<int>> readCSV(const string& filename) {
 
   return transposedData;
 }
-
-// TODO: This implementation does not handle dimension that's large enough to fit into one column. As in, bitsperelement*dimension*2 has to be smaller than the number of rows in a subarray.
 
 int main(int argc, char *argv[])
 {
