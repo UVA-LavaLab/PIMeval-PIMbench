@@ -9,7 +9,7 @@ SRC := brightness.cpp
 debug perf dramsim3_integ: $(EXEC)
 
 $(EXEC): $(SRC) $(DEPS)
-    $(CXX) $< $(CXXFLAGS) -o $@
+	$(CXX) $< $(CXXFLAGS) -o $@
 
 clean:
-    rm -rf $(EXEC) *.dSYM
+	rm -rf $(EXEC) *.dSYM
