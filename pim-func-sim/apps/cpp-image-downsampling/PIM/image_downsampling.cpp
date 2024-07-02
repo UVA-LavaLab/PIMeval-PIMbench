@@ -148,7 +148,7 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   // Returns average of the four input vectors as a uint8_t array
   int sz = upper_left.size();
 
-  PimObjId ul = pimAlloc(PIM_ALLOC_V1, sz, 8, PIM_UINT8);
+  PimObjId ul = pimAlloc(PIM_ALLOC_AUTO, sz, 8, PIM_UINT8);
   assert(-1 != ul);
 
   PimObjId ur = pimAllocAssociated(8, ul, PIM_UINT8);
