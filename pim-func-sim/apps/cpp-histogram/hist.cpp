@@ -5,16 +5,12 @@
 #include <vector>
 #include <getopt.h>
 #include <stdint.h>
-#include <iomanip>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cstring>
 #include <cassert>
-#if defined(_OPENMP)
-#include <omp.h>
-#endif
 
 #include "../util.h"
 #include "libpimsim.h"
@@ -80,10 +76,10 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void orderData(std::vector<uint8_t> &orderedImgData, const std::vector<uint8_t> imgData, uint64_t idxBegin, uint64_t idxEnd)
+void orderData(std::vector<uint8_t> &orderedImgData, const std::vector<uint8_t> imgData, uint64_t idxBegin, uint64_t idxEnd, int numChannels)
 {
   // Splitting apart individual pixel values by grouping image data vector by color channels, going blue, green, then red
-  for (int i = 0; i < 3; ++i)
+  for (int i = 0; i < numChannels; ++i)
   {
     for (uint64_t j = idxBegin; j < idxEnd; j+=3)
     {
@@ -92,7 +88,8 @@ void orderData(std::vector<uint8_t> &orderedImgData, const std::vector<uint8_t> 
   }
 }
 
-void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
+void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, int numBins, 
+               std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
 {
   unsigned bitsPerElement = sizeof(uint8_t) * 8;
   PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_UINT8);
@@ -105,9 +102,9 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::
 
   uint64_t prevCount; // Needed when image data can't fit in one PIM object, multiple passes are needed
 
-  for (uint64_t i = 0; i < 256; ++i) 
+  for (int i = 0; i < numBins; ++i) 
   {
-    status = pimEQScalar(imgObj, tempObj, i);
+    status = pimEQScalar(imgObj, tempObj, static_cast<uint64_t> (i));
     assert(status == PIM_OK);
 
     prevCount = blueCount[i];
@@ -137,8 +134,7 @@ int main(int argc, char *argv[])
   std::cout << "Input file : '" << fn << "'" << std::endl;
   int fd;
   uint64_t imgDataBytes;
-  int numChannels;
-  int imgDataOffsetPosition;
+  int numChannels, imgDataOffsetPosition, numBins;
   struct stat finfo;
   char* fdata;
   unsigned short* dataPos;
@@ -171,6 +167,7 @@ int main(int argc, char *argv[])
       return 1;
     }
 
+    numBins = 256; // RGB values at any given pixel can be a value 0 to 255 (inclusive)
     numChannels = 3; // Red, green, and blue color channels
     imgDataOffsetPosition = 10; // Start of image data, ignoring unneeded header data and info
     // Defined according to the assumed input file structure given
@@ -187,7 +184,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  std::vector<uint64_t> redCount(256, 0), greenCount(256, 0), blueCount(256, 0);
+  std::vector<uint64_t> redCount(numBins, 0), greenCount(numBins, 0), blueCount(numBins, 0);
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
   std::vector<uint8_t> orderedImgData;
 
@@ -199,8 +196,8 @@ int main(int argc, char *argv[])
 
   if (numItr == 1)
   {
-    orderData(orderedImgData, imgData, 0, imgDataBytes);
-    histogram(imgDataBytes, orderedImgData, redCount, greenCount, blueCount);
+    orderData(orderedImgData, imgData, 0, imgDataBytes, numChannels);
+    histogram(imgDataBytes, orderedImgData, numBins, redCount, greenCount, blueCount);
   }
   else
   {
@@ -214,9 +211,9 @@ int main(int argc, char *argv[])
       uint64_t chunkSize = endByte - startByte;
 
       std::vector<uint8_t> imgDataChunk(imgData.begin() + startByte, imgData.begin() + endByte);
-      orderData(orderedImgData, imgDataChunk, startByte, endByte);
+      orderData(orderedImgData, imgDataChunk, startByte, endByte, numChannels);
 
-      histogram(chunkSize, orderedImgData, redCount, greenCount, blueCount);
+      histogram(chunkSize, orderedImgData, numBins, redCount, greenCount, blueCount);
 
       orderedImgData.clear();
     }
@@ -224,14 +221,14 @@ int main(int argc, char *argv[])
 
   if (params.shouldVerify)
   {
-    uint64_t redCheck[256];
-    uint64_t greenCheck[256];
-    uint64_t blueCheck[256];
+    uint64_t redCheck[numBins];
+    uint64_t greenCheck[numBins];
+    uint64_t blueCheck[numBins];
     int errorFlag = 0;
 
-    memset(&(redCheck[0]), 0, sizeof(uint64_t) * 256);
-    memset(&(greenCheck[0]), 0, sizeof(uint64_t) * 256);
-    memset(&(blueCheck[0]), 0, sizeof(uint64_t) * 256);
+    memset(&(redCheck[0]), 0, sizeof(uint64_t) * numBins);
+    memset(&(greenCheck[0]), 0, sizeof(uint64_t) * numBins);
+    memset(&(blueCheck[0]), 0, sizeof(uint64_t) * numBins);
    
     for (int i=*dataPos; i < finfo.st_size; i+=3) 
     {      
@@ -245,7 +242,7 @@ int main(int argc, char *argv[])
       redCheck[*val]++;   
     }
 
-    for (int i = 0; i < 256; ++i)
+    for (int i = 0; i < numBins; ++i)
     {
       if (redCheck[i] != redCount[i]) 
       {
