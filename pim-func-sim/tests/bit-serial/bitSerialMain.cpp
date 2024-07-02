@@ -8,53 +8,75 @@
 #include "bitSerialSimdram.h"
 #include <iostream>
 
-bool
-bitSerialMain::testBitsimd()
+bitSerialMain::bitSerialMain()
 {
-  std::cout << "========== PIM_DEVICE_BITSIMD_V ==========" << std::endl;
-  bitSerialBase* model = new bitSerialBitsimd;
-  bool ok = model->runTests();
-  delete model;
-  std::cout << (ok ? "Passed" : "Failed") << std::endl;
-  return ok;
+  m_deviceList = {
+    "bitsimd_v",
+    "bitsimd_v_ap",
+    "simdram",
+  };
+  m_testList = {
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "fp32",
+  };
 }
 
-bool
-bitSerialMain::testBitsimdAp()
+void
+bitSerialMain::runTests(const std::vector<std::string>& deviceList, const std::vector<std::string>& testList)
 {
-  std::cout << "========== PIM_DEVICE_BITSIMD_V_AP ==========" << std::endl;
-  bitSerialBase* model = new bitSerialBitsimdAp;
-  bool ok = model->runTests();
-  delete model;
-  std::cout << (ok ? "Passed" : "Failed") << std::endl;
-  return ok;
-}
+  const auto& myDeviceList = deviceList.empty() ? m_deviceList : deviceList;
+  const auto& myTestList = testList.empty() ? m_testList : testList;
 
-bool
-bitSerialMain::testSimdram()
-{
-  std::cout << "========== PIM_DEVICE_SIMDRAM ==========" << std::endl;
-  bitSerialBase* model = new bitSerialSimdram;
-  bool ok = model->runTests();
-  delete model;
-  std::cout << (ok ? "Passed" : "Failed") << std::endl;
-  return ok;
-}
+  // device -> test -> numPassed/numTests
+  std::map<std::string, std::map<std::string, std::pair<int, int>>> stats;
 
-bool
-bitSerialMain::runAllTests()
-{
-  std::cout << "Bit Serial Performance Modeling" << std::endl;
-  bool ok = true;
-  ok &= testBitsimd();
-  return ok;
+  for (const auto& device : myDeviceList) {
+    std::cout << "INFO: Bit Serial Performance Modeling for " << device << std::endl;
+    std::unique_ptr<bitSerialBase> model;
+    if (device == "bitsimd_v") {
+      model = std::make_unique<bitSerialBitsimd>();
+    } else if (device == "bitsimd_v_ap") {
+      model = std::make_unique<bitSerialBitsimdAp>();
+    } else if (device == "simdram") {
+      model = std::make_unique<bitSerialSimdram>();
+    }
+    bool ok = false;
+    if (model) {
+      ok = model->runTests(myTestList);
+      stats[device] = model->getStats();
+    }
+    std::cout << "INFO: Bit Serial Performance Modeling for " << device << (ok ? " -- Succeed" : " -- Failed!") << std::endl;
+  }
+
+  // show stats
+  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "Summary (passed / total):" << std::endl;
+  for (const auto& device : myDeviceList) {
+    std::cout << "    " << device << std::endl;
+    auto it = stats.find(device);
+    if (it != stats.end()) {
+      for (const auto& test : myTestList) {
+        auto it2 = it->second.find(test);
+        if (it2 != it->second.end()) {
+          std::cout << "        " << test << " : " << it2->second.first << " / " << it2->second.second << std::endl;
+        }
+      }
+    }
+  }
+  std::cout << "----------------------------------------" << std::endl;
 }
 
 int main()
 {
   bitSerialMain app;
-  bool ok = app.runAllTests();
-  std::cout << (ok ? "All passed!" : "Some failed!") << std::endl;
+  app.runTests();
   return 0;
 }
 

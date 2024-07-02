@@ -13,13 +13,13 @@
 class bitSerialSimdram : public bitSerialBase
 {
 public:
-  bitSerialSimdram() {}
+  bitSerialSimdram() { m_deviceName = "simdram"; }
   ~bitSerialSimdram() {}
 
 protected:
 
   // virtual: create device
-  virtual PimDeviceEnum getDeviceType() override { return PIM_DEVICE_NONE; }
+  virtual PimDeviceEnum getDeviceType() override { return PIM_DEVICE_SIMDRAM; }
 
 private:
 

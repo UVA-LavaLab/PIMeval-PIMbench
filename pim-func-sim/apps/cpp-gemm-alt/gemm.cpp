@@ -82,10 +82,10 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
+void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int64_t> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, col, bitsPerElement, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -105,14 +105,8 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  PimStatus status = pimBroadcastInt(dstObj, 0);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  for (uint64_t i = 0; i < col; ++i)
+  PimStatus status = pimCopyHostToDevice((void *)srcVector.data(), srcObj2);
+  for (uint64_t i = 0; i < row; ++i)
   {
     status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
     if (status != PIM_OK)
@@ -121,14 +115,14 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
+    status = pimMul(srcObj1, srcObj2, dstObj);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
       return;
     }
 
-    status = pimAdd(srcObj2, dstObj, dstObj);
+    status = pimRedSumInt(dstObj, &dst[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -136,12 +130,6 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     }
   }
 
-  dst.reserve(row);
-  status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-  }
   pimFree(srcObj1);
   pimFree(srcObj2);
   pimFree(dstObj);
@@ -159,30 +147,26 @@ void transposeMatrix(uint64_t row, uint64_t col, std::vector<std::vector<int>> &
   }
 }
 
-void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<int>> &srcMatrixA, std::vector<std::vector<int>> &srcMatrixB, std::vector<std::vector<int>> &dstMatrix, bool shouldVerify)
+void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<int>> &srcMatrixA, std::vector<std::vector<int>> &srcMatrixB, std::vector<std::vector<int64_t>> &dstMatrix, bool shouldVerify)
 {
-  dstMatrix.resize(row, std::vector<int>(colB, 0));
-  std::vector<std::vector<int>> transposedDstMat(colB, std::vector<int>(row, 0));
+  dstMatrix.resize(row, std::vector<int64_t>(colB, 0));
   vector<std::vector<int>> srcMatrixAT(colA, std::vector<int>(row, 0)), srcMatrixBT(colB, std::vector<int>(colA, 0));
-  // TODO: Do we actually need to transpose matrices
-  transposeMatrix(row, colA, srcMatrixA, srcMatrixAT);
   transposeMatrix(colA, colB, srcMatrixB, srcMatrixBT);
-  for (uint64_t i = 0; i < colB; ++i)
+  for (uint64_t i = 0; i < row; ++i)
   {
-    gemv(row, colA, srcMatrixBT[i], srcMatrixAT, transposedDstMat[i]);
+    gemv(colB, colA, srcMatrixA[i], srcMatrixBT, dstMatrix[i]);
   }
-  transposeMatrix(colB, row, transposedDstMat, dstMatrix);
   if (shouldVerify)
   {
     cout << "Starting verification......\n";
-    std::vector<std::vector<int>> C(row, std::vector<int>(colB, 0));
+    std::vector<std::vector<int64_t>> C(row, std::vector<int64_t>(colB, 0));
     for (uint64_t i = 0; i < row; ++i)
     {
       for (uint64_t j = 0; j < colB; ++j)
       {
         for (uint64_t k = 0; k < colA; ++k)
         {
-          C[i][j] += srcMatrixAT[k][i] * srcMatrixBT[j][k];
+            C[i][j] += srcMatrixA[i][k] * srcMatrixB[k][j];
         }
       }
     }
@@ -208,7 +192,8 @@ int main(int argc, char *argv[])
   std::cout << "Row: " << params.row << " Column: " << params.columnA << "\n";
 
   std::vector<int> srcVector, resultVector;
-  std::vector<std::vector<int>> srcMatrixA, srcMatrixB, dstMatrix;
+  std::vector<std::vector<int>> srcMatrixA, srcMatrixB;
+  std::vector<std::vector<int64_t>> dstMatrix;
   if (params.inputFile == nullptr)
   {
     getMatrix(params.row, params.columnA, 0, srcMatrixA);

@@ -1,10 +1,10 @@
-# Makefile: Test functional behavior
+# Makefile: C++ version of RELU
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
 
-EXEC := test-functional.out
-SRC := test-functional.cpp
+EXEC := relu.out
+SRC := relu.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 
