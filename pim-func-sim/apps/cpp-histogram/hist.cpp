@@ -74,18 +74,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void orderData(const std::vector<uint8_t> imgData, std::vector<uint8_t> &orderedImgData, uint64_t idxBegin, uint64_t idxEnd)
-{
-  // Splitting apart individual pixel values by grouping image data vector by color channels, going blue, green, then red
-  for (int i = 0; i < NUMCHANNELS; ++i)
-  {
-    for (uint64_t j = idxBegin; j < idxEnd; j+=NUMCHANNELS)
-    {
-      orderedImgData.push_back(imgData[j + i]);
-    }
-  }
-}
-
 void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const std::vector<uint8_t> &greenData, const std::vector<uint8_t> &blueData, 
                std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
 {
@@ -202,7 +190,6 @@ int main(int argc, char *argv[])
 
   std::vector<uint64_t> redCount(NUMBINS, 0), greenCount(NUMBINS, 0), blueCount(NUMBINS, 0);
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
-  // std::vector<uint8_t> orderedImgData;
 
   std::vector<uint8_t> redData, greenData, blueData;
 
@@ -222,28 +209,25 @@ int main(int argc, char *argv[])
 
   if (numItr == 1)
   {
-    // orderData(imgData, orderedImgData, 0, imgDataBytes);
-    // histogram(imgDataBytes, orderedImgData, redCount, greenCount, blueCount);
     histogram(imgDataBytes / NUMCHANNELS, redData, greenData, blueData, redCount, greenCount, blueCount);
   }
   else
   {
     //TODO: ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
-    // uint64_t bytesPerChunk = totalAvailableBits / 8;
+    uint64_t bytesPerChunk = totalAvailableBits / 8;
 
-    // for (int itr = 0; itr < numItr; ++itr)
-    // {
-    //   uint64_t startByte = itr * bytesPerChunk;
-    //   uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes);
-    //   uint64_t chunkSize = endByte - startByte;
+    for (int itr = 0; itr < numItr; ++itr)
+    {
+      uint64_t startByte = itr * bytesPerChunk;
+      uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes / NUMCHANNELS);
+      uint64_t chunkSize = endByte - startByte;
 
-    //   std::vector<uint8_t> imgDataChunk(imgData.begin() + startByte, imgData.begin() + endByte);
-    //   orderData(imgDataChunk, orderedImgData, startByte, endByte);
+      std::vector<uint8_t> redDataChunk(redData.begin() + startByte, redData.begin() + endByte);
+      std::vector<uint8_t> greenDataChunk(greenData.begin() + startByte, greenData.begin() + endByte);
+      std::vector<uint8_t> blueDataChunk(blueData.begin() + startByte, blueData.begin() + endByte);
 
-    //   histogram(chunkSize, orderedImgData, redCount, greenCount, blueCount);
-
-    //   orderedImgData.clear();
-    // }
+      histogram(chunkSize, redDataChunk, greenDataChunk, blueDataChunk, redCount, greenCount, blueCount);
+    }
   }
 
   if (params.shouldVerify)
