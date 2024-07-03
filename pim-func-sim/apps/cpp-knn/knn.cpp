@@ -13,9 +13,9 @@
 #include <stdint.h>
 #include <iomanip>
 #include <unordered_map>
-#include <omp.h>
 
 #if defined(_OPENMP)
+#include <omp.h>
 #endif
 
 #include "../util.h"
