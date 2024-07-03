@@ -391,10 +391,10 @@ void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelHei
 void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
-  if (srcObj1 == -1)
+  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
+  if (srcObj == -1)
   {
-    std::cout << "Function: " << __func__ << ", Abort: pimAlloc failed for srcObj1" << std::endl;
+    std::cout << "Function: " << __func__ << ", Abort: pimAlloc failed for srcObj" << std::endl;
     return;
   }
   PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
