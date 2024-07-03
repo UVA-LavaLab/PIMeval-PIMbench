@@ -124,14 +124,14 @@ void printMatrixDimensions (std::vector<int> &inputMatrix) {
 }
 
 // Function to print the dimensions of a 2D matrix
-void printMatrixDimensions (std::vector<std::vector<int>> &inputMatrix) {     
+inline void printMatrixDimensions (std::vector<std::vector<int>> &inputMatrix) {     
   std::cout << inputMatrix.size() << " x " 
             << inputMatrix[0].size() 
             << std::endl;
 }
 
 // Function to print the dimensions of a 3D matrix
-void printMatrixDimensions (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
+inline void printMatrixDimensions (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
   std::cout << inputMatrix.size() << " x " 
             << inputMatrix[0].size() << " x " 
             << inputMatrix[0][0].size() 
