@@ -17,6 +17,9 @@
 
 using namespace std;
 
+#define NUMBINS 256 // RGB values at any given pixel can be a value 0 to 255 (inclusive)
+#define NUMCHANNELS 3 // Red, green, and blue color channels
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -29,9 +32,8 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./lr [options]"
+          "\nUsage:  ./hist [options]"
           "\n"
-          "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    24-bit .bmp input file (default=uses 'small.bmp' from 'histogram_datafiles' directory)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -41,22 +43,18 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = 0; 
   p.configFile = nullptr;
   p.inputFile = "histogram_datafiles/small.bmp";
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:c:i:v:")) >= 0)
   {
     switch (opt)
     {
     case 'h':
       usage();
       exit(0);
-      break;
-    case 'l':
-      p.dataSize = strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -76,20 +74,20 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void orderData(std::vector<uint8_t> &orderedImgData, const std::vector<uint8_t> imgData, uint64_t idxBegin, uint64_t idxEnd, int numChannels)
+void orderData(const std::vector<uint8_t> imgData, std::vector<uint8_t> &orderedImgData, uint64_t idxBegin, uint64_t idxEnd)
 {
   // Splitting apart individual pixel values by grouping image data vector by color channels, going blue, green, then red
-  for (int i = 0; i < numChannels; ++i)
+  for (int i = 0; i < NUMCHANNELS; ++i)
   {
-    for (uint64_t j = idxBegin; j < idxEnd; j+=3)
+    for (uint64_t j = idxBegin; j < idxEnd; j+=NUMCHANNELS)
     {
       orderedImgData.push_back(imgData[j + i]);
     }
   }
 }
 
-void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, int numBins, 
-               std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
+void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::vector<uint64_t> &redCount, 
+               std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
 {
   unsigned bitsPerElement = sizeof(uint8_t) * 8;
   PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_UINT8);
@@ -102,23 +100,23 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, int n
 
   uint64_t prevCount; // Needed when image data can't fit in one PIM object, multiple passes are needed
 
-  for (int i = 0; i < numBins; ++i) 
+  for (int i = 0; i < NUMBINS; ++i) 
   {
     status = pimEQScalar(imgObj, tempObj, static_cast<uint64_t> (i));
     assert(status == PIM_OK);
 
     prevCount = blueCount[i];
-    status = pimRedSumRangedUInt(tempObj, 0, imgDataBytes / 3, &blueCount[i]);
+    status = pimRedSumRangedUInt(tempObj, 0, imgDataBytes / NUMCHANNELS, &blueCount[i]);
     assert(status == PIM_OK);
     blueCount[i] += prevCount;
 
     prevCount = greenCount[i];
-    status = pimRedSumRangedUInt(tempObj, imgDataBytes / 3, imgDataBytes / 3 * 2, &greenCount[i]);
+    status = pimRedSumRangedUInt(tempObj, imgDataBytes / NUMCHANNELS, imgDataBytes / NUMCHANNELS * 2, &greenCount[i]);
     assert(status == PIM_OK);
     greenCount[i] += prevCount;
 
     prevCount = redCount[i];
-    status = pimRedSumRangedUInt(tempObj, imgDataBytes / 3 * 2, imgDataBytes, &redCount[i]);
+    status = pimRedSumRangedUInt(tempObj, imgDataBytes / NUMCHANNELS * 2, imgDataBytes, &redCount[i]);
     assert(status == PIM_OK);
     redCount[i] += prevCount;
   }
@@ -134,7 +132,7 @@ int main(int argc, char *argv[])
   std::cout << "Input file : '" << fn << "'" << std::endl;
   int fd;
   uint64_t imgDataBytes;
-  int numChannels, imgDataOffsetPosition, numBins;
+  int imgDataOffsetPosition;
   struct stat finfo;
   char* fdata;
   unsigned short* dataPos;
@@ -167,8 +165,6 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-    numBins = 256; // RGB values at any given pixel can be a value 0 to 255 (inclusive)
-    numChannels = 3; // Red, green, and blue color channels
     imgDataOffsetPosition = 10; // Start of image data, ignoring unneeded header data and info
     // Defined according to the assumed input file structure given
 
@@ -177,27 +173,33 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %ld bytes of image data, %ld pixels\n", imgDataBytes, imgDataBytes / numChannels);
+  printf("This file has %ld bytes of image data, %ld pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
 
   if (!createDevice(params.configFile))
   {
     return 1;
   }
 
-  std::vector<uint64_t> redCount(numBins, 0), greenCount(numBins, 0), blueCount(numBins, 0);
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  assert(status == PIM_OK);
+
+  std::vector<uint64_t> redCount(NUMBINS, 0), greenCount(NUMBINS, 0), blueCount(NUMBINS, 0);
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
   std::vector<uint8_t> orderedImgData;
 
-  uint64_t numCol = 8192, numRow = 8192, numCore = 4096;
+  uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
+           numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
   uint64_t totalAvailableBits = numCol * numRow * numCore;
-  uint64_t requiredBitsforImage = ((imgDataBytes * 32) + 32);
+  cout << totalAvailableBits << endl;
+  uint64_t requiredBitsforImage = ((imgDataBytes * 8) + 8); // Using uint8_t instead of int, only require 8 bits
   int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
   std::cout << "Required iterations for image: " << numItr << std::endl;
 
   if (numItr == 1)
   {
-    orderData(orderedImgData, imgData, 0, imgDataBytes, numChannels);
-    histogram(imgDataBytes, orderedImgData, numBins, redCount, greenCount, blueCount);
+    orderData(imgData, orderedImgData, 0, imgDataBytes);
+    histogram(imgDataBytes, orderedImgData, redCount, greenCount, blueCount);
   }
   else
   {
@@ -211,9 +213,9 @@ int main(int argc, char *argv[])
       uint64_t chunkSize = endByte - startByte;
 
       std::vector<uint8_t> imgDataChunk(imgData.begin() + startByte, imgData.begin() + endByte);
-      orderData(orderedImgData, imgDataChunk, startByte, endByte, numChannels);
+      orderData(imgDataChunk, orderedImgData, startByte, endByte);
 
-      histogram(chunkSize, orderedImgData, numBins, redCount, greenCount, blueCount);
+      histogram(chunkSize, orderedImgData, redCount, greenCount, blueCount);
 
       orderedImgData.clear();
     }
@@ -221,14 +223,14 @@ int main(int argc, char *argv[])
 
   if (params.shouldVerify)
   {
-    uint64_t redCheck[numBins];
-    uint64_t greenCheck[numBins];
-    uint64_t blueCheck[numBins];
+    uint64_t redCheck[NUMBINS];
+    uint64_t greenCheck[NUMBINS];
+    uint64_t blueCheck[NUMBINS];
     int errorFlag = 0;
 
-    memset(&(redCheck[0]), 0, sizeof(uint64_t) * numBins);
-    memset(&(greenCheck[0]), 0, sizeof(uint64_t) * numBins);
-    memset(&(blueCheck[0]), 0, sizeof(uint64_t) * numBins);
+    memset(&(redCheck[0]), 0, sizeof(uint64_t) * NUMBINS);
+    memset(&(greenCheck[0]), 0, sizeof(uint64_t) * NUMBINS);
+    memset(&(blueCheck[0]), 0, sizeof(uint64_t) * NUMBINS);
    
     for (int i=*dataPos; i < finfo.st_size; i+=3) 
     {      
@@ -242,7 +244,7 @@ int main(int argc, char *argv[])
       redCheck[*val]++;   
     }
 
-    for (int i = 0; i < numBins; ++i)
+    for (int i = 0; i < NUMBINS; ++i)
     {
       if (redCheck[i] != redCount[i]) 
       {
