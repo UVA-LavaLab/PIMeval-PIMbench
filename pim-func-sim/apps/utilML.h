@@ -398,7 +398,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj, PIM_INT32);
   if (dstObj == -1)
   {
     std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated failed for dstObj" << std::endl;
@@ -414,21 +414,21 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 
   for (int i = 0; i < col; ++i)
   {
-    status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
+    status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice failed between srcMatrix and srcObj1 at i=" << i << std::endl;
+      std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice failed between srcMatrix and srcObj at i=" << i << std::endl;
       return;
     }
 
-    status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
+    status = pimMulScalar(srcObj, srcObj, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Function: " << __func__ << ", Abort: pimMulScalar failed between srcObj1 and srcObj2 at i=" << i << std::endl;
       return;
     }
 
-    status = pimAdd(srcObj2, dstObj, dstObj);
+    status = pimAdd(srcObj, dstObj, dstObj);
     if (status != PIM_OK)
     {
       std::cout << "Function: " << __func__ << ", Abort: pimAdd failed between srcVector and dstObj at i=" << i << std::endl;
@@ -442,8 +442,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   {
     std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost failed between dstObj and dst" << std::endl;
   }
-  pimFree(srcObj1);
-  pimFree(srcObj2);
+  pimFree(srcObj);
   pimFree(dstObj);
 }
 
