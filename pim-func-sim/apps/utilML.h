@@ -397,12 +397,6 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     std::cout << "Function: " << __func__ << ", Abort: pimAlloc failed for srcObj" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
-  {
-    std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated failed for srcObj2" << std::endl;
-    return;
-  }
 
   PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (dstObj == -1)
