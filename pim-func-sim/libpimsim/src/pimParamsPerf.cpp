@@ -800,15 +800,12 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) 
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
-    if (dataType == PIM_INT32 || dataType == PIM_UINT32) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       // Assume pop count reduction circut in tR runtime
       msRuntime = ((m_tR + m_tR) * bitsPerElement);
       msRuntime *= numPass;
       // reduction for all regions
       msRuntime += static_cast<double>(numRegions) / 3200000;
-    } else if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT64) {
-      // todo
-      std::printf("PIM-Warning: BitSIMD int & uint 8/16/64 performance stats not implemented yet.\n");
     } else {
       assert(0);
     }
