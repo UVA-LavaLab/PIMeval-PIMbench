@@ -702,7 +702,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-  uint64_t currIdx = (uint64_t)numElementsInRegion * index;
+  uint64_t currIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index;
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
