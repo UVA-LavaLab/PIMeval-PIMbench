@@ -1,5 +1,5 @@
 // PIM Functional Simulator - Application Utilities for Machine Learning Code.
-// The utilies for Conv, MaxPooling, RELU, GEMV are got from their respective cpp files. So, any change in the individual cpp file should be reflected here.
+// The utilies for Conv, MaxPooling, RELU, GEMV are got from their respective cpp files. So, any change in the individual cpp file should also be updated here manually.
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #ifndef PIM_FUNC_SIM_APPS_UTIL_ML_H
