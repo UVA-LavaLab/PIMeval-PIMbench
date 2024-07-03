@@ -86,41 +86,57 @@ void orderData(const std::vector<uint8_t> imgData, std::vector<uint8_t> &ordered
   }
 }
 
-void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::vector<uint64_t> &redCount, 
-               std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
+void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const std::vector<uint8_t> &greenData, const std::vector<uint8_t> &blueData, 
+               std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
 {
   unsigned bitsPerElement = sizeof(uint8_t) * 8;
-  PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_UINT8);
-  assert(imgObj != -1);
-  PimObjId tempObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_UINT8);
+  PimObjId redObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_UINT8);
+  assert(redObj != -1);
+  PimObjId greenObj = pimAllocAssociated(bitsPerElement, redObj, PIM_UINT8);
+  assert(greenObj != -1);
+  PimObjId blueObj = pimAllocAssociated(bitsPerElement, redObj, PIM_UINT8);
+  assert(blueObj != -1);
+  PimObjId tempObj = pimAllocAssociated(bitsPerElement, redObj, PIM_UINT8);
   assert(tempObj != -1);
 
-  PimStatus status = pimCopyHostToDevice((void *) imgData.data(), imgObj);
+  PimStatus status = pimCopyHostToDevice((void *) redData.data(), redObj);
+  assert(status == PIM_OK);
+  status = pimCopyHostToDevice((void *) blueData.data(), blueObj);
+  assert(status == PIM_OK);
+  status = pimCopyHostToDevice((void *) greenData.data(), greenObj);
   assert(status == PIM_OK);
 
   uint64_t prevCount; // Needed when image data can't fit in one PIM object, multiple passes are needed
 
   for (int i = 0; i < NUMBINS; ++i) 
   {
-    status = pimEQScalar(imgObj, tempObj, static_cast<uint64_t> (i));
+    status = pimEQScalar(blueObj, tempObj, static_cast<uint64_t> (i));
     assert(status == PIM_OK);
 
     prevCount = blueCount[i];
-    status = pimRedSumRangedUInt(tempObj, 0, imgDataBytes / NUMCHANNELS, &blueCount[i]);
+    status = pimRedSumUInt(tempObj, &blueCount[i]);
     assert(status == PIM_OK);
     blueCount[i] += prevCount;
 
+    status = pimEQScalar(greenObj, tempObj, static_cast<uint64_t> (i));
+    assert(status == PIM_OK);
+
     prevCount = greenCount[i];
-    status = pimRedSumRangedUInt(tempObj, imgDataBytes / NUMCHANNELS, imgDataBytes / NUMCHANNELS * 2, &greenCount[i]);
+    status = pimRedSumUInt(tempObj, &greenCount[i]);
     assert(status == PIM_OK);
     greenCount[i] += prevCount;
 
+    status = pimEQScalar(redObj, tempObj, static_cast<uint64_t> (i));
+    assert(status == PIM_OK);
+
     prevCount = redCount[i];
-    status = pimRedSumRangedUInt(tempObj, imgDataBytes / NUMCHANNELS * 2, imgDataBytes, &redCount[i]);
+    status = pimRedSumUInt(tempObj, &redCount[i]);
     assert(status == PIM_OK);
     redCount[i] += prevCount;
   }
-  pimFree(imgObj);
+  pimFree(redObj);
+  pimFree(greenObj);
+  pimFree(blueObj);
   pimFree(tempObj);
 }
 
@@ -186,39 +202,48 @@ int main(int argc, char *argv[])
 
   std::vector<uint64_t> redCount(NUMBINS, 0), greenCount(NUMBINS, 0), blueCount(NUMBINS, 0);
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
-  std::vector<uint8_t> orderedImgData;
+  // std::vector<uint8_t> orderedImgData;
+
+  std::vector<uint8_t> redData, greenData, blueData;
+
+  for (uint64_t i = 0; i < imgDataBytes; i+=NUMCHANNELS)
+  {
+    blueData.push_back(imgData[i]);
+    greenData.push_back(imgData[i + 1]);
+    redData.push_back(imgData[i + 2]);
+  }
 
   uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
            numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
   uint64_t totalAvailableBits = numCol * numRow * numCore;
-  cout << totalAvailableBits << endl;
-  uint64_t requiredBitsforImage = ((imgDataBytes * 8) + 8); // Using uint8_t instead of int, only require 8 bits
+  uint64_t requiredBitsforImage = ((imgDataBytes / NUMCHANNELS * 8) + 8); // Using uint8_t instead of int, only require 8 bits
   int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
   std::cout << "Required iterations for image: " << numItr << std::endl;
 
   if (numItr == 1)
   {
-    orderData(imgData, orderedImgData, 0, imgDataBytes);
-    histogram(imgDataBytes, orderedImgData, redCount, greenCount, blueCount);
+    // orderData(imgData, orderedImgData, 0, imgDataBytes);
+    // histogram(imgDataBytes, orderedImgData, redCount, greenCount, blueCount);
+    histogram(imgDataBytes / NUMCHANNELS, redData, greenData, blueData, redCount, greenCount, blueCount);
   }
   else
   {
     //TODO: ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
-    uint64_t bytesPerChunk = totalAvailableBits / 8;
+    // uint64_t bytesPerChunk = totalAvailableBits / 8;
 
-    for (int itr = 0; itr < numItr; ++itr)
-    {
-      uint64_t startByte = itr * bytesPerChunk;
-      uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes);
-      uint64_t chunkSize = endByte - startByte;
+    // for (int itr = 0; itr < numItr; ++itr)
+    // {
+    //   uint64_t startByte = itr * bytesPerChunk;
+    //   uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes);
+    //   uint64_t chunkSize = endByte - startByte;
 
-      std::vector<uint8_t> imgDataChunk(imgData.begin() + startByte, imgData.begin() + endByte);
-      orderData(imgDataChunk, orderedImgData, startByte, endByte);
+    //   std::vector<uint8_t> imgDataChunk(imgData.begin() + startByte, imgData.begin() + endByte);
+    //   orderData(imgDataChunk, orderedImgData, startByte, endByte);
 
-      histogram(chunkSize, orderedImgData, redCount, greenCount, blueCount);
+    //   histogram(chunkSize, orderedImgData, redCount, greenCount, blueCount);
 
-      orderedImgData.clear();
-    }
+    //   orderedImgData.clear();
+    // }
   }
 
   if (params.shouldVerify)
@@ -232,7 +257,7 @@ int main(int argc, char *argv[])
     memset(&(greenCheck[0]), 0, sizeof(uint64_t) * NUMBINS);
     memset(&(blueCheck[0]), 0, sizeof(uint64_t) * NUMBINS);
    
-    for (int i=*dataPos; i < finfo.st_size; i+=3) 
+    for (int i=*dataPos; i < finfo.st_size; i+=NUMCHANNELS) 
     {      
       unsigned char *val = (unsigned char *)&(fdata[i]);
       blueCheck[*val]++;
