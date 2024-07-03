@@ -1,4 +1,4 @@
-// PIM Functional Simulator - Application Utilities for Floating <-> Fixed-Point Conversions.
+// PIM Functional Simulator - Application Utilities for Floating <-> Fixed-Point Conversions. Currently used for CNNs only.
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 #ifndef PIM_FUNC_SIM_APPS_UTIL_FIXEDPOINT_H
