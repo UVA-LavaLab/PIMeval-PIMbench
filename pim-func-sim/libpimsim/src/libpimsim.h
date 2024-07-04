@@ -129,6 +129,7 @@ struct PimDeviceProperties {
   PimStatus pimPopCount(PimObjId src, PimObjId dest);
   PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
   PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
+  // Note: Reduction sum range is [idxBegin, idxEnd)
   PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
   PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
   PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
