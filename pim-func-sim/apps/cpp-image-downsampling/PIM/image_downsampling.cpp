@@ -160,9 +160,6 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   PimObjId lr = pimAllocAssociated(8, ul, PIM_UINT8);
   assert(-1 != lr);
 
-  // PimObjId divisor_4 = pimAllocAssociated(32, ul, PIM_INT32);
-  // assert(-1 != divisor_4);
-
   PimStatus ul_status = pimCopyHostToDevice(upper_left.data(), ul);
   assert(PIM_OK == ul_status);
 
@@ -187,9 +184,6 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   PimStatus lr_right_shift_status = pimShiftBitsRight(lr, lr, 2);
   assert(PIM_OK == lr_right_shift_status);
 
-  // PimStatus divisor_4_status = pimBroadcast(divisor_4, 4);
-  // assert(PIM_OK == divisor_4_status);
-
   PimStatus upper_sum_status = pimAdd(ul, ur, ur);
   assert(PIM_OK == upper_sum_status);
 
@@ -199,19 +193,8 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   PimStatus result_sum_status = pimAdd(ur, lr, lr);
   assert(PIM_OK == result_sum_status);
 
-  // PimStatus lr_div_status = pimDiv(lr, divisor_4, lr);
-  // assert(PIM_OK == lr_div_status);
-
-  // vector<uint32_t> tmp;
-  // tmp.resize(sz);
-
   PimStatus result_copy_status = pimCopyDeviceToHost(lr, (void*) result);
   assert(PIM_OK == result_copy_status);
-  
-  // Transform output from uint32_t (supported by PIM simulator) to uint8_t (required for BMP output)
-  // for(int i=0; i<sz; ++i) {
-  //   result[i] = (uint8_t) tmp[i];
-  // }
 
   pimFree(ul);
   pimFree(ur);
