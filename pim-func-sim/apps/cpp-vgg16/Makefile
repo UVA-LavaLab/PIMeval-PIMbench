@@ -12,8 +12,11 @@ endif
 EXEC := vgg16.out
 SRC := vgg16.cpp
 
-# Add linker flags for libjpeg
-LDFLAGS += -ljpeg
+COMPILE_WITH_JPEG ?= 1
+ifeq ($(COMPILE_WITH_JPEG), 1)
+    # Add linker flags for libjpeg
+    LDFLAGS += -ljpeg
+endif
 
 debug perf dramsim3_integ: $(EXEC)
 

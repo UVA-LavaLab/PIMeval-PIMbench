@@ -16,10 +16,7 @@
 #include "../utilFixedPoint.h"
 #include <iomanip>
 #include <chrono>
-#define STB_IMAGE_IMPLEMENTATION
-#include "../stb_image.h"
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "../stb_image_resize.h"
+#include <cassert>
 
 using namespace std;
 
@@ -95,42 +92,51 @@ int main(int argc, char *argv[])
   std::vector<std::vector<std::vector<float>>> kernelMatrix_f;
   std::vector<std::vector<std::vector<int>>> inputMatrix;
   std::vector<std::vector<std::vector<int>>> kernelMatrix;
+  // Dimensions of the input image
+  int imageHeight = 224;
+  int imageWidth = 224;
+  int imageDepth = 3;
+  // Dimensions of the kernel in the first convolutional layer
+  int KernelHeight = 3; 
+  int kernelWidth = 3;
+  int kernelDepth = 64;
+  // Padding for the input image
+  int padding = 1; 
 
   if (params.imageInputFile == nullptr)
   {
-    inputMatrix.resize(3);
-    for (int i = 0; i < 3; i++)
+    inputMatrix.resize(imageDepth);
+    for (int i = 0; i < imageDepth; i++)
     {
-      getMatrix(224, 224, 1, inputMatrix[i]);
+      getMatrix(imageHeight, imageWidth, padding, inputMatrix[i]);
     }
   }
   else // Get inputMatrix from the input image
   {
     std::string outputFile = "resized_output.jpg";
-
-    // Desired dimensions for resized image
-    int new_width = 224;
-    int new_height = 224;
-
     // Matrix to store resized image data
     std::vector<std::vector<std::vector<int>>> inputMatrixBeforePadding;
     // Resize the input JPEG image
-    readJPEG(params.imageInputFile, inputMatrixBeforePadding, new_height, new_width);
+    readJPEG(params.imageInputFile, inputMatrixBeforePadding, imageHeight, imageWidth);
     // Successfully resized image, now write to output JPEG file
     writeResizedImage(outputFile, inputMatrixBeforePadding);
     // Padding the resized input image
     int depth = inputMatrixBeforePadding.size();
+    if (depth != imageDepth) {
+      std::cerr << "Assertion failed: depth (" << depth << ") != imageDepth (" << imageDepth << ")\n";
+      assert(depth == imageDepth && "Given input image depth does not match with the expected image depth");  
+    }    
     inputMatrix.resize(depth); 
     for (int d = 0; d < depth; ++d) {
-      addPadding(224, 224, 1, inputMatrixBeforePadding[d], inputMatrix[d]);
+      addPadding(imageHeight, imageWidth, padding, inputMatrixBeforePadding[d], inputMatrix[d]);
     }  
   }
   if (params.kernelMatrixFile == nullptr)
   {
-    kernelMatrix.resize(64);
+    kernelMatrix.resize(kernelDepth);
     for (auto &mat : kernelMatrix)
     {
-      getMatrix(3, 3, 0, mat);
+      getMatrix(KernelHeight, kernelWidth, 0, mat);
     }
   }
   else
@@ -189,10 +195,9 @@ int main(int argc, char *argv[])
   {
     addPadding(224, 224, 1, resultMatrix1[i], inputMatrix[i]);
   }
-
-  std::cout << "........starting conv1-2........\n";
   resultMatrix1.clear();
   resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv1-2........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and kernel matrices  
     std::cout << "Input matrix dimensions after padding: ";
@@ -376,6 +381,7 @@ int main(int argc, char *argv[])
   }
   resultMatrix1.clear();
   resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv3-2........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and kernel matrices  
     std::cout << "Input matrix dimensions after padding: ";
@@ -383,7 +389,6 @@ int main(int argc, char *argv[])
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);     
   }  
-  std::cout << "........starting conv3-2........\n";
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv3-2........\n";
 
@@ -424,6 +429,7 @@ int main(int argc, char *argv[])
   }
   resultMatrix1.clear();
   resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv4-1........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and kernel matrices  
     std::cout << "Input matrix dimensions after padding: ";
@@ -431,7 +437,6 @@ int main(int argc, char *argv[])
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);    
   }  
-  std::cout << "........starting conv4-1........\n";
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv4-1........\n";
 
@@ -467,14 +472,14 @@ int main(int argc, char *argv[])
   }
   resultMatrix1.clear();
   resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv4-2........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and kernel matrices  
     std::cout << "Input matrix dimensions after padding: ";
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);        
-  }  
-  std::cout << "........starting conv4-2........\n";
+  }
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv4-2........\n";
 
@@ -516,14 +521,14 @@ int main(int argc, char *argv[])
   }
   resultMatrix1.clear();
   resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv5-1........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and kernel matrices  
     std::cout << "Input matrix dimensions after padding: ";
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);      
-  }  
-  std::cout << "........starting conv5-1........\n";
+  }
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv5-1........\n";
 
@@ -559,6 +564,7 @@ int main(int argc, char *argv[])
   }
   resultMatrix1.clear();
   resultMatrix1.shrink_to_fit();
+  std::cout << "........starting conv5-2........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and kernel matrices  
     std::cout << "Input matrix dimensions after padding: ";
@@ -566,7 +572,6 @@ int main(int argc, char *argv[])
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);     
   }  
-  std::cout << "........starting conv5-2........\n";
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv5-2........\n";
 
@@ -603,8 +608,7 @@ int main(int argc, char *argv[])
   std::cout << "........starting dense1........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and weight matrices  
-    std::cout << "Input matrix dimensions: ";
-    printMatrixDimensions(flattenedMat);
+    std::cout << "Input matrix dimensions: " << flattenedMat.size() << std::endl;
     std::cout << "Weight matrix dimensions: ";
     printMatrixDimensions(denseWeight);     
   }   
@@ -635,8 +639,7 @@ int main(int argc, char *argv[])
   std::cout << "........starting dense2........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and weight matrices  
-    std::cout << "Input matrix dimensions: ";
-    printMatrixDimensions(flattenedMat);
+    std::cout << "Input matrix dimensions: " << denseOutput1.size() << std::endl;
     std::cout << "Weight matrix dimensions: ";
     printMatrixDimensions(denseWeight);     
   }  
@@ -667,8 +670,7 @@ int main(int argc, char *argv[])
   std::cout << "........starting dense3........\n";
   if (params.moreDebugPrints == true) { 
     // Check the dimensions of the input and weight matrices  
-    std::cout << "Input matrix dimensions: ";
-    printMatrixDimensions(flattenedMat);
+    std::cout << "Input matrix dimensions: " << denseOutput2.size() << std::endl;
     std::cout << "Weight matrix dimensions: ";
     printMatrixDimensions(denseWeight);     
   }  
