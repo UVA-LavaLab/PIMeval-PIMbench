@@ -82,21 +82,45 @@ struct NewImgWrapper {
   int new_pixel_data_width;
 };
 
-NewImgWrapper createNewImage(std::vector<uint8_t> img)
+
+// BMP file offsets constants [1], used to parse BMP file
+constexpr int data_offset_location = 0xA;
+constexpr int width_location = 0x12;
+constexpr int height_location = 0x16;
+constexpr int x_pixels_per_m_location = 0x26;
+constexpr int y_pixels_per_m_location = 0x2A;
+constexpr int size_location = 2;
+constexpr int unused_location = 6;
+constexpr int info_header_size_location = 0xE;
+constexpr int planes_location = 0x1A;
+constexpr int bit_per_pixel_location = 0x1C;
+constexpr int compression_location = 0x1E;
+constexpr int compressed_size_location = 0x22;
+constexpr int used_colors_location = 0x2E;
+constexpr int important_colors_location = 0x32;
+
+constexpr int info_header_size = 40;
+constexpr int num_planes = 1;
+constexpr int bits_per_pixel = 24;
+constexpr int min_data_offset = 0x36;
+
+NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img)
 {
+  // Parse input BMP file and create header for output BMP file
   // Parse BMP file [1]
+
   NewImgWrapper res;
+  res.data_offset = *((int*)(img.data() + data_offset_location));
 
-  res.data_offset = *((int*)(img.data() + 0xA));
-
-  int img_width = *((int*)(img.data() + 0x12));
-  int img_height = *((int*)(img.data() + 0x16));
+  int img_width = *((int*)(img.data() + width_location));
+  int img_height = *((int*)(img.data() + height_location));
 
   printf("Input Image: %dx%d\n", img_width, img_height);
 
-  int x_pixels_per_m = *((int*)(img.data() + 0x26));
-  int y_pixels_per_m = *((int*)(img.data() + 0x2A));
+  int x_pixels_per_m = *((int*)(img.data() + x_pixels_per_m_location));
+  int y_pixels_per_m = *((int*)(img.data() + y_pixels_per_m_location));
 
+  // Scan line size is padded to nearest 4 byte boundary, below obtains the scan line size
   res.scanline_size = 3 * img_width;
   int scanline_size_mod = res.scanline_size % 4;
   if (scanline_size_mod) {
@@ -106,6 +130,8 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img)
   res.old_pixels_size = img_height * res.scanline_size;
 
   res.new_pixel_data_width = 3 * (img_width >> 1);
+
+  // Scan line size is padded to nearest 4 byte boundary, below obtains the scan line size for the image being created
   res.new_scanline_size = res.new_pixel_data_width;
   int new_scanline_size_mod = res.new_scanline_size % 4;
   if (new_scanline_size_mod) {
@@ -114,29 +140,29 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img)
 
   res.new_width = img_width >> 1;
   res.new_height = img_height >> 1;
-  res.new_data_offset = 0x36;
+  res.new_data_offset = min_data_offset;
   int new_img_size = res.new_data_offset + res.new_height * res.new_scanline_size;
   res.new_img.resize(new_img_size);
 
   //    Header
   res.new_img[0] = 'B';
   res.new_img[1] = 'M';
-  *((int*)(res.new_img.data() + 2)) = new_img_size;
-  *((int*)(res.new_img.data() + 6)) = 0;
-  *((int*)(res.new_img.data() + 0xA)) = res.new_data_offset;
+  *((int*)(res.new_img.data() + size_location)) = new_img_size;
+  *((int*)(res.new_img.data() + unused_location)) = 0;
+  *((int*)(res.new_img.data() + data_offset_location)) = res.new_data_offset;
 
   //    InfoHeader
-  *((int*)(res.new_img.data() + 0xE)) = 40;
-  *((int*)(res.new_img.data() + 0x12)) = res.new_width;
-  *((int*)(res.new_img.data() + 0x16)) = res.new_height;
-  *((int16_t*)(res.new_img.data() + 0x1A)) = 1;
-  *((int16_t*)(res.new_img.data() + 0x1C)) = 24;
-  *((int*)(res.new_img.data() + 0x1E)) = 0;
-  *((int*)(res.new_img.data() + 0x22)) = 0;
-  *((int*)(res.new_img.data() + 0x26)) = x_pixels_per_m;
-  *((int*)(res.new_img.data() + 0x2A)) = y_pixels_per_m;
-  *((int*)(res.new_img.data() + 0x2E)) = 0;
-  *((int*)(res.new_img.data() + 0x32)) = 0;
+  *((int*)(res.new_img.data() + info_header_size_location)) = info_header_size;
+  *((int*)(res.new_img.data() + width_location)) = res.new_width;
+  *((int*)(res.new_img.data() + height_location)) = res.new_height;
+  *((int16_t*)(res.new_img.data() + planes_location)) = num_planes;
+  *((int16_t*)(res.new_img.data() + bit_per_pixel_location)) = bits_per_pixel;
+  *((int*)(res.new_img.data() + compression_location)) = 0;
+  *((int*)(res.new_img.data() + compressed_size_location)) = 0;
+  *((int*)(res.new_img.data() + x_pixels_per_m_location)) = x_pixels_per_m;
+  *((int*)(res.new_img.data() + y_pixels_per_m_location)) = y_pixels_per_m;
+  *((int*)(res.new_img.data() + used_colors_location)) = 0;
+  *((int*)(res.new_img.data() + important_colors_location)) = 0;
 
   return res;
 }
@@ -200,9 +226,9 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   pimFree(lr);
 }
 
-std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
+std::vector<uint8_t> image_downsampling_pim(std::vector<uint8_t>& img)
 {
-  NewImgWrapper avg_out = createNewImage(img);
+  NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img);
   size_t needed_elements = avg_out.new_height * avg_out.new_scanline_size;
   uint8_t* pixels_out_avg = (uint8_t*)avg_out.new_img.data() + avg_out.new_data_offset;
   uint8_t* pixels_in = (uint8_t*)img.data() + avg_out.data_offset;
@@ -262,10 +288,10 @@ inline void set_pixel(const char* pixels, Pixel* new_pixel, int scanline_size, i
   *old_pix = *new_pixel;
 }
 
-std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
+std::vector<uint8_t> image_downsampling_cpu(std::vector<uint8_t> img)
 {
   //    Averaging Kernel
-  NewImgWrapper avg_out = createNewImage(img);
+  NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img);
   char* pixels_out_averaged = (char*)avg_out.new_img.data() + avg_out.new_data_offset;
   char* pixels_in = (char*)img.data() + avg_out.data_offset;
 
@@ -305,26 +331,26 @@ vector<uint8_t> read_file_bytes(const string& filename)
   return img_buffer;
 }
 
-void write_img(vector<uint8_t>& img, std::string filename) {
+void write_img_to_file(vector<uint8_t>& img, std::string filename) {
     auto outfile = std::fstream(filename, std::ios::out | std::ios::binary);
     outfile.write((char*) img.data(), img.size());
     outfile.close();
 }
 
-bool check_image(std::vector<uint8_t>& img) {
+bool check_valid_input_image(std::vector<uint8_t>& img) {
   // Verify that input image is of the correct type
   if (img[0] != 'B' || img[1] != 'M') {
     cout << "Not a BMP file!\n";
     return false;
   }
 
-  int compression = *((int*)(img.data() + 0x1E));
+  int compression = *((int*)(img.data() + compression_location));
   if (compression) {
     cout << "Error, compressed bmp files not supported\n";
     return false;
   }
 
-  int16_t bits_per_pixel = *((int16_t*)(img.data() + 0x1C));
+  int16_t bits_per_pixel = *((int16_t*)(img.data() + bit_per_pixel_location));
   if (bits_per_pixel != 24) {
     cout << "Only 24 bits per pixel currently supported\n";
     return false;
@@ -346,18 +372,18 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  if(!check_image(img)) {
+  if(!check_valid_input_image(img)) {
     return 1;
   }
 
-  vector<uint8_t> pim_averaged = avg_pim(img);
+  vector<uint8_t> pim_averaged = image_downsampling_pim(img);
 
   if(params.outputFile != nullptr) {
-    write_img(pim_averaged, params.outputFile);
+    write_img_to_file(pim_averaged, params.outputFile);
   }
 
   if(params.shouldVerify) {
-    vector<uint8_t> cpu_averaged = avg_cpu(img);
+    vector<uint8_t> cpu_averaged = image_downsampling_cpu(img);
 
     if (cpu_averaged.size() != pim_averaged.size()) {
       cout << "Average kernel fail, sizes do not match" << endl;

@@ -81,7 +81,7 @@ struct NewImgWrapper {
   int new_pixel_data_width;
 };
 
-NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
+NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img, bool print_size=false)
 {
   // Parse BMP file [1]
   NewImgWrapper res;
@@ -162,7 +162,7 @@ inline void set_pixel(const char* pixels, Pixel* new_pixel, int scanline_size, i
 std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
 {
   //    Averaging Kernel
-  NewImgWrapper avg_out = createNewImage(img);
+  NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img);
   char* pixels_out_averaged = (char*)avg_out.new_img.data() + avg_out.new_data_offset;
   char* pixels_in = (char*)img.data() + avg_out.data_offset;
 
