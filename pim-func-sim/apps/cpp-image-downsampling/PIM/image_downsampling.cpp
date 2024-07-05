@@ -82,7 +82,7 @@ struct NewImgWrapper {
   int new_pixel_data_width;
 };
 
-NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
+NewImgWrapper createNewImage(std::vector<uint8_t> img)
 {
   // Parse BMP file [1]
   NewImgWrapper res;
@@ -92,9 +92,7 @@ NewImgWrapper createNewImage(std::vector<uint8_t> img, bool print_size=false)
   int img_width = *((int*)(img.data() + 0x12));
   int img_height = *((int*)(img.data() + 0x16));
 
-  if(print_size) {
-    printf("Input Image: %dx%d\n", img_width, img_height);
-  }
+  printf("Input Image: %dx%d\n", img_width, img_height);
 
   int x_pixels_per_m = *((int*)(img.data() + 0x26));
   int y_pixels_per_m = *((int*)(img.data() + 0x2A));
@@ -204,7 +202,7 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
 
 std::vector<uint8_t> avg_pim(std::vector<uint8_t>& img)
 {
-  NewImgWrapper avg_out = createNewImage(img, true);
+  NewImgWrapper avg_out = createNewImage(img);
   size_t needed_elements = avg_out.new_height * avg_out.new_scanline_size;
   uint8_t* pixels_out_avg = (uint8_t*)avg_out.new_img.data() + avg_out.new_data_offset;
   uint8_t* pixels_in = (uint8_t*)img.data() + avg_out.data_offset;
