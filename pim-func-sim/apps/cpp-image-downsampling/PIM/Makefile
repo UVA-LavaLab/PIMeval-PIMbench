@@ -1,39 +1,26 @@
 # Makefile: C++ version of image downsampling
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-CXX := g++
-CXXFLAGS := -std=c++17 -Wall
+LIBPIMSIM_PATH = ../../../libpimsim
+include ../../Makefile.common
 
-# Setup libpimsim library
-INC_DIR := ../../../libpimsim/include
-LIB_DIR := ../../../libpimsim/lib
-CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimsim
-DEPS := $(INC_DIR)/libpimsim.h $(LIB_DIR)/libpimsim.a
+# make USE_OPENMP=1
+USE_OPENMP ?= 0
+ifeq ($(USE_OPENMP),1)
+	CXXFLAGS += -fopenmp
+endif
 
 EXEC := image_downsampling_pim.out
-SRC := image_downsampling.cpp
-
-.PHONY: debug perf dramsim3_integ clean
-.DEFAULT_GOAL := perf
-
-# Setup build targets
-ifeq ($(MAKECMDGOALS),)
-	MAKECMDGOALS := $(.DEFAULT_GOAL)
-endif
-ifeq ($(MAKECMDGOALS),debug)
-	CXXFLAGS += -g -DDEBUG
-endif
-ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -O3
-endif
-ifeq ($(MAKECMDGOALS),dramsim3_integ)
-	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
-endif
+SRCS := image_downsampling.cpp
+OBJS := $(SRCS:.cpp=.o)
 
 debug perf dramsim3_integ: $(EXEC)
 
-$(EXEC): $(SRC) $(DEPS)
-	$(CXX) $(SRC) $(CXXFLAGS) -o $@
+$(EXEC): $(OBJS) $(DEPS)
+	$(CXX) $(OBJS) $(CXXFLAGS) -o $@
+
+%.o: %.cpp
+	$(CXX) -c $< $(CXXFLAGS) -o $@
 
 clean:
-	rm -f $(EXEC)
+	rm -f $(EXEC) $(OBJS)
