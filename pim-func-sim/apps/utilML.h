@@ -660,7 +660,7 @@ vector<vector<vector<float>>> read_conv_layer_weights_from_csv(const string& fil
             int cols = stoi(items[4]);  // Number of columns in each kernel
             kernelMatrix.resize(num_kernels); // Resize the 3D vector to accommodate the kernels
 
-            int idx = 4; // Start index of the actual weights in the CSV line
+            int idx = 5; // Start index of the actual weights in the CSV line
             for (int d = 0; d < num_kernels; ++d) { // Loop through each kernel
                 kernelMatrix[d].resize(rows, vector<float>(cols, 0)); // Resize each kernel matrix
                 for (int r = 0; r < rows; ++r) { // Loop through each row

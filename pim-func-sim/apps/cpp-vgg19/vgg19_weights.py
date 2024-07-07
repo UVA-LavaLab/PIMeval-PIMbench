@@ -6,6 +6,9 @@ import csv
 # Load pre-trained VGG19 model
 vgg19 = models.vgg19(pretrained=True)
 
+# Set the model to evaluation mode
+vgg19.eval()
+
 # Function to binarize weights
 def binarize_weights(weights):
     #return (weights > 0).astype(int)

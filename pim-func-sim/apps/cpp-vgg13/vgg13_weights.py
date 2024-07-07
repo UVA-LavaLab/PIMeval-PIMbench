@@ -6,8 +6,11 @@ import csv
 # Load pre-trained VGG13 model
 vgg13 = models.vgg13(pretrained=True)
 
+# Set the model to evaluation mode
+vgg13.eval()
+
 # Function to binarize weights
-def binarize_weights(weights):
+def binarize_weights(weights):ak
     #return (weights > 0).astype(int)
     return weights
 
