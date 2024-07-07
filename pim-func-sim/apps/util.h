@@ -118,11 +118,6 @@ bool createDevice(char *configFile)
   return true;
 }
 
-// Function to print the dimensions of a 1D matrix
-void printMatrixDimensions (std::vector<int> &inputMatrix) {
-  std::cout << inputMatrix.size() << std::endl;
-}
-
 // Function to print the dimensions of a 2D matrix
 inline void printMatrixDimensions (std::vector<std::vector<int>> &inputMatrix) {     
   std::cout << inputMatrix.size() << " x " 
@@ -138,7 +133,7 @@ inline void printMatrixDimensions (std::vector<std::vector<std::vector<int>>> &i
             << std::endl;   
 }
 
-// Function to print a 1D matrix
+// Function to print a vector
 void printMatrix(std::vector<int>& matrix) {
   for (int val : matrix) {
     std::cout << val << " ";

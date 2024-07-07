@@ -679,14 +679,14 @@ vector<vector<vector<float>>> read_conv_layer_weights_from_csv(const string& fil
 
 // Function to read weights of a specific layer from CSV (for dense layers).
 std::vector<std::vector<float>> read_dense_layer_weights_from_csv(const std::string& filename, const std::string& layer_name) {
-    std::ifstream file(filename);
-    std::string line;
-    std::vector<std::vector<float>> denseMatrix;
+    std::ifstream file(filename); // Open the CSV file
+    std::string line; // Variable to hold each line of the CSV
+    std::vector<std::vector<float>> denseMatrix; // Matrix to store the weights of the dense layer
 
     while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string item;
-        std::vector<std::string> items;
+        std::stringstream ss(line); // Create a string stream from the line
+        std::string item; // Variable to hold each item in the line
+        std::vector<std::string> items; // Vector to store all items in the line
 
         // Split the line by commas
         while (std::getline(ss, item, ',')) {
@@ -695,14 +695,15 @@ std::vector<std::vector<float>> read_dense_layer_weights_from_csv(const std::str
 
         // Check if the layer name matches the current line
         if (items[0] == layer_name) {
-            int rows = std::stoi(items[2]);
-            int cols = std::stoi(items[1]);
-            denseMatrix.resize(rows, std::vector<float>(cols, 0));
+            int rows = std::stoi(items[2]); // Number of rows in the dense matrix
+            int cols = std::stoi(items[1]); // Number of columns in the dense matrix
+            denseMatrix.resize(rows, std::vector<float>(cols, 0)); // Resize the matrix to the appropriate dimensions
 
-            int idx = 3;
+            int idx = 3; // Start index of the actual weights in the CSV line
+            // Populate the dense matrix with weights
             for (int r = 0; r < rows; ++r) {
                 for (int c = 0; c < cols; ++c) {
-                    denseMatrix[r][c] = std::stof(items[idx++]);
+                    denseMatrix[r][c] = std::stof(items[idx++]); // Convert the string weight to float and store it in the matrix
                 }
             }
 
@@ -710,7 +711,7 @@ std::vector<std::vector<float>> read_dense_layer_weights_from_csv(const std::str
         }
     }
 
-    throw std::runtime_error("Layer not found in the CSV file");
+    throw std::runtime_error("Layer not found in the CSV file"); // Throw an error if the layer name is not found
 }
 
 // Function to binarize a 3D matrix of floats.
