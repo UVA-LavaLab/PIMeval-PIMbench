@@ -17,10 +17,12 @@
 
 using namespace std;
 
+#define MINCOLORVALUE 0 // Sets the max value that any color channel can be in a given pixel
+#define MAXCOLORVALUE 255 // Sets the max value that any color channel can be in a given pixel
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  uint64_t dataSize;
   char *configFile;
   std::string inputFile;
   bool shouldVerify;
@@ -32,7 +34,6 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./lr [options]"
           "\n"
-          "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    24-bit .bmp input file (default=uses 'sample1.bmp' from '../cpp-histogram/histogram_datafiles' directory)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -43,23 +44,19 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = 0; 
   p.configFile = nullptr;
   p.inputFile = "../cpp-histogram/histogram_datafiles/small.bmp";
   p.shouldVerify = false;
   p.brightnessCoefficient = 20;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:l:c:i:v:b:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:c:i:v:b:")) >= 0)
   {
     switch (opt)
     {
     case 'h':
       usage();
       exit(0);
-      break;
-    case 'l':
-      p.dataSize = strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -82,8 +79,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void brightness(uint64_t imgDataBytes, const std::vector<int16_t> &imgData, int minColorValue, int maxColorValue, 
-                int coefficient, std::vector<int16_t> &resultData)
+void brightness(uint64_t imgDataBytes, const std::vector<int16_t> &imgData, int coefficient, std::vector<int16_t> &resultData)
 {
   unsigned bitsPerElement = sizeof(int16_t) * 8; 
   PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_INT16);
@@ -100,9 +96,9 @@ void brightness(uint64_t imgDataBytes, const std::vector<int16_t> &imgData, int 
 
   status = pimAddScalar(imgObj, additionObj, coefficient);
   assert(status == PIM_OK);
-  status = pimMinScalar(additionObj, minObj, maxColorValue);
+  status = pimMinScalar(additionObj, minObj, MAXCOLORVALUE);
   assert(status == PIM_OK);
-  status = pimMaxScalar(minObj, resultObj, minColorValue);
+  status = pimMaxScalar(minObj, resultObj, MINCOLORVALUE);
   assert(status == PIM_OK);
 
   status = pimCopyDeviceToHost(resultObj, (void *) resultData.data());
@@ -114,9 +110,9 @@ void brightness(uint64_t imgDataBytes, const std::vector<int16_t> &imgData, int 
   pimFree(resultObj);
 }
 
-int truncate(int16_t pixelValue, int brightnessCoefficient, int minColorValue, int maxColorValue)
+int truncate(int16_t pixelValue, int brightnessCoefficient)
 {
-  return std::min(maxColorValue, std::max(minColorValue, pixelValue + brightnessCoefficient));
+  return std::min(MAXCOLORVALUE, std::max(MINCOLORVALUE, pixelValue + brightnessCoefficient));
 }
 
 int main(int argc, char *argv[])
@@ -130,7 +126,7 @@ int main(int argc, char *argv[])
   struct stat finfo;
   char* fdata;
   unsigned short* dataPos;
-  int imgDataOffsetPosition, minColorValue, maxColorValue;
+  int imgDataOffsetPosition;
 
   // Start data parsing
   if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
@@ -160,9 +156,6 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-    minColorValue = 0; // Sets the max value that any color channel can be in a given pixel
-    maxColorValue = 255; // Sets the max value that any color channel can be in a given pixel
-
     imgDataOffsetPosition = 10; // Start of image data, ignoring unneeded header data and info
     // Defined according to the assumed input file structure given
 
@@ -178,6 +171,10 @@ int main(int argc, char *argv[])
     return 1;
   }
 
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  assert(status == PIM_OK);
+
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
   std::vector<int16_t> imgDataToInt16(imgDataBytes), resultData(imgDataBytes);
   // Converting to int16_t to prevent potential overflow situations when adding or subtracting the brightness coefficient
@@ -188,7 +185,8 @@ int main(int argc, char *argv[])
     imgDataToInt16[i] = (static_cast<int16_t> (imgData[i]));
   }
 
-  uint64_t numCol = 8192, numRow = 8192, numCore = 4096;
+  uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
+           numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
   uint64_t totalAvailableBits = numCol * numRow * numCore;
   uint64_t requiredBitsforImage = (imgDataBytes * 32) + 32;
   int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
@@ -196,7 +194,7 @@ int main(int argc, char *argv[])
 
   if (numItr == 1)
   {
-    brightness(imgDataBytes, imgDataToInt16, minColorValue, maxColorValue, params.brightnessCoefficient, resultData);
+    brightness(imgDataBytes, imgDataToInt16, params.brightnessCoefficient, resultData);
   }
   else
   {
@@ -211,7 +209,7 @@ int main(int argc, char *argv[])
       uint64_t chunkSize = endByte - startByte;
 
       std::vector<int16_t> imgDataChunk(imgDataToInt16.begin() + startByte, imgDataToInt16.begin() + endByte);
-      brightness(chunkSize, imgDataChunk, minColorValue, maxColorValue, params.brightnessCoefficient, tempResult);
+      brightness(chunkSize, imgDataChunk, params.brightnessCoefficient, tempResult);
       resultData.insert(resultData.end(), tempResult.begin(), tempResult.end());
     }
   }
@@ -221,7 +219,7 @@ int main(int argc, char *argv[])
     int errorFlag = 0;
     for (uint64_t i = 0; i < imgDataBytes; ++i) 
     {     
-      imgDataToInt16[i] = truncate(imgDataToInt16[i], params.brightnessCoefficient, minColorValue, maxColorValue); 
+      imgDataToInt16[i] = truncate(imgDataToInt16[i], params.brightnessCoefficient); 
       if (imgDataToInt16[i] != resultData[i])
       {
         std::cout << "Wrong answer at index " << i << " | Wrong PIM answer = " << resultData[i] << " (CPU expected = " << imgDataToInt16[i] << ")" << std::endl;

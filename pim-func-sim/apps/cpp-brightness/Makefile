@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := brightness
+EXEC := brightness.out
 SRC := brightness.cpp
 
 debug perf dramsim3_integ: $(EXEC)
