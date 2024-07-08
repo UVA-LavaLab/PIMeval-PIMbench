@@ -106,6 +106,22 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
   return true;
 }
 
+bool
+pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
+  pimPerfMon perfMon("getDeviceProperties");
+  if (!m_device) {
+    std::printf("PIM-Error: No PIM device exists.\n");
+    return false;
+  }
+  deviceProperties->deviceType = m_device->getDeviceType();
+  deviceProperties->numRanks = m_device->getNumRanks();
+  deviceProperties->numBankPerRank = m_device->getNumBankPerRank();
+  deviceProperties->numSubarrayPerBank = m_device->getNumSubarrayPerBank();
+  deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
+  deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
+  return true;
+}
+
 //! @brief  Delete PIM device
 bool
 pimSim::deleteDevice()
