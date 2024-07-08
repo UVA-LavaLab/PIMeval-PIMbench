@@ -18,7 +18,9 @@
 #include "libpimsim.h"
 #include <map>
 #include <fstream>
-#include <jpeglib.h>  
+#ifdef COMPILE_WITH_JPEG
+#include <jpeglib.h>
+#endif  
 using namespace std;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
@@ -743,6 +745,7 @@ std::vector<std::vector<int>> binarizeMatrix(const std::vector<std::vector<float
   return binarizedMatrix;
 }
 
+#ifdef COMPILE_WITH_JPEG
 // Function to read a JPEG image and store its pixel data into inputMatrix.
 void readJPEG(const std::string& filename, std::vector<std::vector<std::vector<int>>>& inputMatrix, int &targetHeight, int &targetWidth) {
   // Open the JPEG file
@@ -871,5 +874,6 @@ void writeResizedImage(const std::string& outputFilename, const std::vector<std:
 
   std::cout << "Resized image saved as JPEG: " << outputFilename << std::endl;
 }
+#endif
 
 #endif

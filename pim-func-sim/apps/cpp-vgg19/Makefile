@@ -14,6 +14,7 @@ SRC := vgg19.cpp
 
 COMPILE_WITH_JPEG ?= 1
 ifeq ($(COMPILE_WITH_JPEG), 1)
+    CXXFLAGS += -DCOMPILE_WITH_JPEG
     # Add linker flags for libjpeg
     LDFLAGS += -ljpeg
 endif
