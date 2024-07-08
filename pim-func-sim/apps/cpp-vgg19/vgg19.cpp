@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   else // Get inputMatrix from the input image
   {
     #ifdef COMPILE_WITH_JPEG
-    // If JPEG lib is not supported, below code will not work. In that case disable JPEG by adding COMPILE_WITH_JPEG = 0 during make.      
+    // If JPEG lib is not supported, below code will not work. In that case disable JPEG by adding COMPILE_WITH_JPEG=0 during make.      
     std::string outputFile = "resized_output.jpg";
     // Matrix to store resized image data
     std::vector<std::vector<std::vector<int>>> inputMatrixBeforePadding;
