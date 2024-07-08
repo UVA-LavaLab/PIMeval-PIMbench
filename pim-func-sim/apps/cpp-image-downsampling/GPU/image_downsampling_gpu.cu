@@ -303,6 +303,8 @@ __global__ void GPU_init() { }
 int main(int argc, char* argv[])
 {
 
+  cudaGetLastError();
+
   struct Params params = getInputParams(argc, argv);
   std::cout << "GPU test: Image Downsampling" << std::endl;
   
@@ -321,6 +323,13 @@ int main(int argc, char* argv[])
   auto end_time = current_time_ns();
 
   auto dur = ((double) (end_time - start_time))/1000000;
+  
+  cudaError_t cuda_error = cudaGetLastError();
+
+  if(cuda_error != cudaSuccess) {
+    printf("Cuda Error: %s\n", cudaGetErrorString(cuda_error));
+    return -1;
+  }
 
   cout << "Time: " << dur << " ms" << endl;
 
