@@ -32,7 +32,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./lr [options]"
+          "\nUsage:  ./brightness.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    24-bit .bmp input file (default=uses 'sample1.bmp' from '../cpp-histogram/histogram_datafiles' directory)"
