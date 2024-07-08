@@ -103,6 +103,10 @@ constexpr int info_header_size = 40;
 constexpr int num_planes = 1;
 constexpr int bits_per_pixel = 24;
 constexpr int min_data_offset = 0x36;
+constexpr int color_channels_per_pixel = 3;
+constexpr int bmp_scanline_padding_multiple = 4; // BMP file format specifies that scanlines are padded to nearest 4 byte boundary
+constexpr int bits_per_element = 8;
+constexpr int shift_amount = 2;
 
 NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img)
 {
@@ -121,21 +125,21 @@ NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img)
   int y_pixels_per_m = *((int*)(img.data() + y_pixels_per_m_location));
 
   // Scan line size is padded to nearest 4 byte boundary, below obtains the scan line size
-  res.scanline_size = 3 * img_width;
-  int scanline_size_mod = res.scanline_size % 4;
+  res.scanline_size = color_channels_per_pixel * img_width;
+  int scanline_size_mod = res.scanline_size % bmp_scanline_padding_multiple;
   if (scanline_size_mod) {
-    res.scanline_size = res.scanline_size - scanline_size_mod + 4;
+    res.scanline_size = res.scanline_size - scanline_size_mod + bmp_scanline_padding_multiple;
   }
 
   res.old_pixels_size = img_height * res.scanline_size;
 
-  res.new_pixel_data_width = 3 * (img_width >> 1);
+  res.new_pixel_data_width = color_channels_per_pixel * (img_width >> 1);
 
   // Scan line size is padded to nearest 4 byte boundary, below obtains the scan line size for the image being created
   res.new_scanline_size = res.new_pixel_data_width;
-  int new_scanline_size_mod = res.new_scanline_size % 4;
+  int new_scanline_size_mod = res.new_scanline_size % bmp_scanline_padding_multiple;
   if (new_scanline_size_mod) {
-    res.new_scanline_size = res.new_scanline_size - new_scanline_size_mod + 4;
+    res.new_scanline_size = res.new_scanline_size - new_scanline_size_mod + bmp_scanline_padding_multiple;
   }
 
   res.new_width = img_width >> 1;
@@ -172,16 +176,16 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   // Returns average of the four input vectors as a uint8_t array
   int sz = upper_left.size();
 
-  PimObjId ul = pimAlloc(PIM_ALLOC_AUTO, sz, 8, PIM_UINT8);
+  PimObjId ul = pimAlloc(PIM_ALLOC_AUTO, sz, bits_per_element, PIM_UINT8);
   assert(-1 != ul);
 
-  PimObjId ur = pimAllocAssociated(8, ul, PIM_UINT8);
+  PimObjId ur = pimAllocAssociated(bits_per_element, ul, PIM_UINT8);
   assert(-1 != ur);
 
-  PimObjId ll = pimAllocAssociated(8, ul, PIM_UINT8);
+  PimObjId ll = pimAllocAssociated(bits_per_element, ul, PIM_UINT8);
   assert(-1 != ll);
 
-  PimObjId lr = pimAllocAssociated(8, ul, PIM_UINT8);
+  PimObjId lr = pimAllocAssociated(bits_per_element, ul, PIM_UINT8);
   assert(-1 != lr);
 
   PimStatus ul_status = pimCopyHostToDevice(upper_left.data(), ul);
@@ -196,16 +200,16 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   PimStatus lr_status = pimCopyHostToDevice(lower_right.data(), lr);
   assert(PIM_OK == lr_status);
 
-  PimStatus ul_right_shift_status = pimShiftBitsRight(ul, ul, 2);
+  PimStatus ul_right_shift_status = pimShiftBitsRight(ul, ul, shift_amount);
   assert(PIM_OK == ul_right_shift_status);
 
-  PimStatus ur_right_shift_status = pimShiftBitsRight(ur, ur, 2);
+  PimStatus ur_right_shift_status = pimShiftBitsRight(ur, ur, shift_amount);
   assert(PIM_OK == ur_right_shift_status);
 
-  PimStatus ll_right_shift_status = pimShiftBitsRight(ll, ll, 2);
+  PimStatus ll_right_shift_status = pimShiftBitsRight(ll, ll, shift_amount);
   assert(PIM_OK == ll_right_shift_status);
 
-  PimStatus lr_right_shift_status = pimShiftBitsRight(lr, lr, 2);
+  PimStatus lr_right_shift_status = pimShiftBitsRight(lr, lr, shift_amount);
   assert(PIM_OK == lr_right_shift_status);
 
   PimStatus upper_sum_status = pimAdd(ul, ur, ur);
@@ -247,12 +251,12 @@ std::vector<uint8_t> image_downsampling_pim(std::vector<uint8_t>& img)
   lower_right.reserve(needed_elements);
   for (int y = 0; y < avg_out.new_height; ++y) {
     uint8_t* row2_it = pixels_in_it + avg_out.scanline_size;
-    for(int x = 0; x < 6*avg_out.new_width; x += 6) {
-      for(int i=0; i<3; ++i) {
+    for(int x = 0; x < 2*color_channels_per_pixel*avg_out.new_width; x += 2*color_channels_per_pixel) {
+      for(int i=0; i<color_channels_per_pixel; ++i) {
         upper_left.push_back(pixels_in_it[x+i]);
-        upper_right.push_back(pixels_in_it[x+i+3]);
+        upper_right.push_back(pixels_in_it[x+i+color_channels_per_pixel]);
         lower_left.push_back(row2_it[x+i]);
-        lower_right.push_back(row2_it[x+3+i]);
+        lower_right.push_back(row2_it[x+color_channels_per_pixel+i]);
       }
     }
 
@@ -279,12 +283,12 @@ struct Pixel {
 
 inline Pixel* get_pixel(const char* pixels, int scanline_size, int x, int y)
 {
-  return (Pixel*)(pixels + scanline_size * y + 3 * x);
+  return (Pixel*)(pixels + scanline_size * y + color_channels_per_pixel * x);
 }
 
 inline void set_pixel(const char* pixels, Pixel* new_pixel, int scanline_size, int x, int y)
 {
-  auto* old_pix = (Pixel*)(pixels + scanline_size * y + 3 * x);
+  auto* old_pix = (Pixel*)(pixels + scanline_size * y + color_channels_per_pixel * x);
   *old_pix = *new_pixel;
 }
 
@@ -303,9 +307,9 @@ std::vector<uint8_t> image_downsampling_cpu(std::vector<uint8_t> img)
       Pixel curr_pix4 = *get_pixel(pixels_in, avg_out.scanline_size, 2 * x + 1, 2 * y + 1);  // 4 + 4
 
       Pixel new_pix;
-      new_pix.red = (curr_pix1.red>>2) + (curr_pix2.red>>2) + (curr_pix3.red>>2) + (curr_pix4.red>>2);
-      new_pix.blue = (curr_pix1.blue>>2) + (curr_pix2.blue>>2) + (curr_pix3.blue>>2) + (curr_pix4.blue>>2);
-      new_pix.green = (curr_pix1.green>>2) + (curr_pix2.green>>2) + (curr_pix3.green>>2) + (curr_pix4.green>>2);
+      new_pix.red = (curr_pix1.red>>shift_amount) + (curr_pix2.red>>shift_amount) + (curr_pix3.red>>shift_amount) + (curr_pix4.red>>shift_amount);
+      new_pix.blue = (curr_pix1.blue>>shift_amount) + (curr_pix2.blue>>shift_amount) + (curr_pix3.blue>>shift_amount) + (curr_pix4.blue>>shift_amount);
+      new_pix.green = (curr_pix1.green>>shift_amount) + (curr_pix2.green>>shift_amount) + (curr_pix3.green>>shift_amount) + (curr_pix4.green>>shift_amount);
 
       set_pixel(pixels_out_averaged, &new_pix, avg_out.new_scanline_size, x, y);
     }
@@ -350,9 +354,9 @@ bool check_valid_input_image(std::vector<uint8_t>& img) {
     return false;
   }
 
-  int16_t bits_per_pixel = *((int16_t*)(img.data() + bit_per_pixel_location));
-  if (bits_per_pixel != 24) {
-    cout << "Only 24 bits per pixel currently supported\n";
+  int16_t actual_bits_per_pixel = *((int16_t*)(img.data() + bit_per_pixel_location));
+  if (actual_bits_per_pixel != bits_per_pixel) {
+    cout << "Only " << bits_per_pixel << " bits per pixel currently supported, " << actual_bits_per_pixel << " bits per pixel provided" << endl;
     return false;
   }
   return true;
