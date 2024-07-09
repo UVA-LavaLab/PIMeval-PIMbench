@@ -32,7 +32,7 @@ std::vector<std::vector<std::vector<int>>> floatToFixed(std::vector<std::vector<
   size_t depth = inputMatrix.size();
   size_t height = inputMatrix[0].size();
   size_t width = inputMatrix[0][0].size();
-
+ 
   #pragma omp parallel for collapse(3)
   for (size_t i = 0; i < depth; ++i) {
     for (size_t j = 0; j < height; ++j) {
