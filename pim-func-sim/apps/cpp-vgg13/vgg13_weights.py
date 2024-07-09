@@ -10,8 +10,8 @@ vgg13 = models.vgg13(pretrained=True)
 vgg13.eval()
 
 # Function to binarize weights
-def binarize_weights(weights):ak
-    #return (weights > 0).astype(int)
+def binarize_weights(weights):
+    # return (weights > 0).astype(int)
     return weights
 
 # Save the VGG13 weights to a CSV file
@@ -28,5 +28,4 @@ def save_weights_to_csv(model, filename):
 
 # Save the VGG13 weights to a CSV file
 save_weights_to_csv(vgg13, 'vgg13_weights.csv')
-
 
