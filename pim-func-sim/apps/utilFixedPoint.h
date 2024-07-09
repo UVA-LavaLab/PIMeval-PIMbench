@@ -29,10 +29,14 @@ std::vector<std::vector<std::vector<int>>> floatToFixed(std::vector<std::vector<
     std::vector<std::vector<int>>(inputMatrix[0].size(),
       std::vector<int>(inputMatrix[0][0].size())));
 
+  size_t depth = inputMatrix.size();
+  size_t height = inputMatrix[0].size();
+  size_t width = inputMatrix[0][0].size();
+
   #pragma omp parallel for collapse(3)
-  for (size_t i = 0; i < inputMatrix.size(); ++i) {
-    for (size_t j = 0; j < inputMatrix[i].size(); ++j) {
-      for (size_t k = 0; k < inputMatrix[i][j].size(); ++k) {
+  for (size_t i = 0; i < depth; ++i) {
+    for (size_t j = 0; j < height; ++j) {
+      for (size_t k = 0; k < width; ++k) {
         fixedMatrix[i][j][k] = static_cast<int>(inputMatrix[i][j][k] * FIXED_POINT_SCALING_FACTOR);
       }
     }
@@ -47,10 +51,14 @@ std::vector<std::vector<std::vector<float>>> fixedToFloat(std::vector<std::vecto
     std::vector<std::vector<float>>(fixedMatrix[0].size(),
       std::vector<float>(fixedMatrix[0][0].size())));
 
+  size_t depth = fixedMatrix.size();
+  size_t height = fixedMatrix[0].size();
+  size_t width = fixedMatrix[0][0].size();
+
   #pragma omp parallel for collapse(3)
-  for (size_t i = 0; i < fixedMatrix.size(); ++i) {
-    for (size_t j = 0; j < fixedMatrix[i].size(); ++j) {
-      for (size_t k = 0; k < fixedMatrix[i][j].size(); ++k) {
+  for (size_t i = 0; i < depth; ++i) {
+    for (size_t j = 0; j < height; ++j) {
+      for (size_t k = 0; k < width; ++k) {
         floatMatrix[i][j][k] = static_cast<float>(fixedMatrix[i][j][k]) / FIXED_POINT_SCALING_FACTOR;
       }
     }
@@ -64,9 +72,12 @@ std::vector<std::vector<int>> floatToFixed(std::vector<std::vector<float>>& inpu
   std::vector<std::vector<int>> fixedMatrix(inputMatrix.size(),
     std::vector<int>(inputMatrix[0].size()));
 
+  size_t height = inputMatrix.size();
+  size_t width = inputMatrix[0].size();
+
   #pragma omp parallel for collapse(2)
-  for (size_t i = 0; i < inputMatrix.size(); ++i) {
-    for (size_t j = 0; j < inputMatrix[i].size(); ++j) {
+  for (size_t i = 0; i < height; ++i) {
+    for (size_t j = 0; j < width; ++j) {
       fixedMatrix[i][j] = static_cast<int>(inputMatrix[i][j] * FIXED_POINT_SCALING_FACTOR);
     }
   }
@@ -79,9 +90,12 @@ std::vector<std::vector<float>> fixedToFloat(std::vector<std::vector<int>>& fixe
   std::vector<std::vector<float>> floatMatrix(fixedMatrix.size(),
     std::vector<float>(fixedMatrix[0].size()));
 
+  size_t height = fixedMatrix.size();
+  size_t width = fixedMatrix[0].size();
+
   #pragma omp parallel for collapse(2)
-  for (size_t i = 0; i < fixedMatrix.size(); ++i) {
-    for (size_t j = 0; j < fixedMatrix[i].size(); ++j) {
+  for (size_t i = 0; i < height; ++i) {
+    for (size_t j = 0; j < width; ++j) {
       floatMatrix[i][j] = static_cast<float>(fixedMatrix[i][j]) / FIXED_POINT_SCALING_FACTOR;
     }
   }
