@@ -33,7 +33,7 @@ public:
   double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
   double getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   double getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  double getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  double getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
   double getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   double getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 

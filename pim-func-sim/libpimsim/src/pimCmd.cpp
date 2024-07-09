@@ -702,7 +702,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-  uint64_t currIdx = (uint64_t)numElementsInRegion * index;
+  uint64_t currIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index;
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
@@ -723,7 +723,31 @@ pimCmdRedSum<T>::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, objSrc);
+  unsigned numPass = 0;
+  if (m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+    // determine numPass for ranged redSum
+    unsigned bitsPerElement = objSrc.getBitsPerElement();
+    std::unordered_map<PimCoreId, unsigned> activeRegionPerCore;
+    uint64_t index = 0;
+    for (const auto& region : objSrc.getRegions()) {
+      PimCoreId coreId = region.getCoreId();
+      unsigned numElementsInRegion = getNumElementsInRegion(region, bitsPerElement);
+      bool isActive = index < m_idxEnd && index + numElementsInRegion - 1 >= m_idxBegin;
+      if (isActive) {
+        activeRegionPerCore[coreId]++;
+      }
+      index += numElementsInRegion;
+    }
+    for (const auto& [coreId, count] : activeRegionPerCore) {
+      if (numPass < count) {
+        numPass = count;
+      }
+    }
+  } else {
+    numPass = objSrc.getMaxNumRegionsPerCore();
+  }
+
+  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, objSrc, numPass);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
   return true;
 }
