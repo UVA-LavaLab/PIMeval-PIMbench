@@ -14,6 +14,9 @@
 #include <random>
 
 #include "libpimsim.h"
+#include <map>
+#include <fstream>
+
 using namespace std;
 
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
@@ -113,6 +116,52 @@ bool createDevice(char *configFile)
     }
   }
   return true;
+}
+
+// Function to print the dimensions of a 2D matrix
+inline void printMatrixDimensions (std::vector<std::vector<int>> &inputMatrix) {     
+  std::cout << inputMatrix.size() << " x " 
+            << inputMatrix[0].size() 
+            << std::endl;
+}
+
+// Function to print the dimensions of a 3D matrix
+inline void printMatrixDimensions (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
+  std::cout << inputMatrix.size() << " x " 
+            << inputMatrix[0].size() << " x " 
+            << inputMatrix[0][0].size() 
+            << std::endl;   
+}
+
+// Function to print a vector
+void printVector(std::vector<int>& vec) {
+  for (auto val : vec) {
+    std::cout << val << " ";
+  }
+  std::cout << std::endl;
+}
+
+// Function to print a 2D matrix
+void printMatrix(std::vector<std::vector<int>>& matrix) {
+  for (const auto& row : matrix) {
+    for (int val : row) {
+      std::cout << val << " ";
+    }
+    std::cout << std::endl;
+  }
+}
+
+// Function to print a 3D matrix
+void printMatrix(std::vector<std::vector<std::vector<int>>>& matrix) {
+  for (const auto& mat2D : matrix) {
+    for (const auto& row : mat2D) {
+      for (int val : row) {
+        std::cout << val << " ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "---" << std::endl; // Separator between 2D matrices
+  }
 }
 
 #endif
