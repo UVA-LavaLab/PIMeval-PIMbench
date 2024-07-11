@@ -134,7 +134,7 @@ inline void printMatrixDimensions (std::vector<std::vector<std::vector<int>>> &i
 }
 
 // Function to print a vector
-void printMatrix(std::vector<int>& matrix) {
+void printVector(std::vector<int>& vec) {
   for (int val : matrix) {
     std::cout << val << " ";
   }
