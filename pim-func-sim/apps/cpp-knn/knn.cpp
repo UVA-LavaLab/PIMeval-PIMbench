@@ -108,6 +108,120 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+// Verification ---------------------------------------------------------------------
+
+float compute_distance(const vector<vector<int>>& ref,
+                      const vector<vector<int>>& query,
+                      int           dim,
+                      int           ref_index,
+                      int           query_index) {
+  int sum = 0;
+  // the last dim is the target dim, so don't include it
+  for (int d=0; d<dim-1; ++d) {
+      const float diff = ref[d][ref_index] - query[d][query_index];
+      sum += abs(diff);
+  }
+  return sum;
+}
+
+vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) {
+    priority_queue<pair<int, int>> maxHeap;
+    for(int i = 0; i < (int) data.size(); ++i) {
+        if ((int) maxHeap.size() < k) {
+            maxHeap.push({data[i], i});
+        } else if (data[i] < maxHeap.top().first) {
+            maxHeap.pop();
+            maxHeap.push({data[i], i});
+        }
+    }
+
+    vector<pair<int, int>> result(k);
+    int idx = k-1;
+    
+    while(!maxHeap.empty() && idx >= 0) {
+        result[idx--] = maxHeap.top();
+        maxHeap.pop();
+    }
+
+    return result;   
+}
+
+void countLabelsAndClassify(uint64_t numPoints, uint64_t numTests, vector<vector<int>> &dataPoints, 
+          vector<vector<int>> &distMat, 
+          int adjusted_dim, 
+          int k,
+          vector<int> &testPredictions
+          ) {
+
+  #pragma omp parallel for schedule(static)
+  for(int i = 0; i < (int) numTests; i++) {
+    vector<pair<int, int>> kSmallest = findKSmallestWithIndices(distMat[i], k);
+
+    // Tally the labels of the k nearest neighbors
+    unordered_map<int, int> labelCount;
+    for (const auto& elem : kSmallest) {
+      int index = elem.second;
+      int label = dataPoints[adjusted_dim][index];
+      #pragma omp atomic
+      labelCount[label]++;
+    }
+    
+    // Find the label with the highest count
+    int maxCount = 0;
+    int bestLabel = -1;
+    for (const auto& entry : kSmallest) {
+      int index = entry.second;
+      int label = dataPoints[adjusted_dim][index];
+      if (labelCount[label] > maxCount) {
+        maxCount = labelCount[label];
+        bestLabel = label;
+      }
+    }
+
+    // Assign the most frequent label to the test point
+    testPredictions[i] = bestLabel;
+  }
+}
+
+bool knn_test(vector<vector<int>> ref,
+          const vector<vector<int>> query,
+          int           dim,
+          int           k,
+          const vector<int> pimResult) {
+
+  int ref_nb = ref[0].size();
+  int query_nb = query[0].size();
+  // Allocate local array to store all the distances / indexes for a given query point 
+  vector<vector<int>> distMat(query_nb, vector<int>(ref_nb));
+  vector<int> index(ref_nb);
+
+  // Process one query point at a time
+  for (int i=0; i<query_nb; ++i) {
+
+    // Compute all distances / indexes for this point
+    for (int j=0; j<ref_nb; ++j) {
+      distMat[i][j]  = compute_distance(ref, query, dim, j, i);
+      index[j] = j;
+    }
+  }
+
+  // perform classification for this query point
+  vector<int> testResults(query_nb);
+  countLabelsAndClassify(ref_nb, query_nb, ref, distMat, dim-1, k, testResults);
+
+  for(int i = 0; i < query_nb; i++) {
+    if(testResults[i] != pimResult[i]) {
+      printf("Query point at index %i failed. Pim classified this point as %i but actual classification is %i\n", i, pimResult[i], testResults[i]);
+      return false;
+    }
+  }
+
+  return true;
+
+}
+
+// PIM ---------------------------------------------------------------------
+
 void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId> &pimObjectList, PimObjId refObj)
 {
   int idx = 0;
@@ -139,7 +253,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
 
 void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector<PimObjId> &pimObjectList)
 {
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (int i = 0; i < (int) pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)dataPoints[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -150,29 +264,8 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
   }
 }
 
-vector<pair<int, int>> findKSmallestWithIndices(const vector<int>& data, int k) {
-    priority_queue<pair<int, int>> maxHeap;
-    for(int i = 0; i < data.size(); ++i) {
-        if (maxHeap.size() < k) {
-            maxHeap.push({data[i], i});
-        } else if (data[i] < maxHeap.top().first) {
-            maxHeap.pop();
-            maxHeap.push({data[i], i});
-        }
-    }
 
-    vector<pair<int, int>> result(k);
-    int idx = k-1;
-    
-    while(!maxHeap.empty() && idx >= 0) {
-        result[idx--] = maxHeap.top();
-        maxHeap.pop();
-    }
-
-    return result;   
-}
-
-void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, const vector<vector<int>> &dataPoints, vector<vector<int>> &testPoints, vector<int> &testPredictions)
+void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, vector<vector<int>> &dataPoints, vector<vector<int>> &testPoints, vector<int> &testPredictions)
 {
   int adjusted_dim = dimension - 1; // Force the user to specficy the target index to the last column in the data and test points
   vector<PimObjId> dataPointObjectList(adjusted_dim);
@@ -186,7 +279,7 @@ void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, con
 
   vector<vector<int>> distMat(numOfTests, vector<int>(numOfPoints));
   
-  for(int j = 0; j < numOfTests; ++j){
+  for(int j = 0; j < (int) numOfTests; ++j){
     for (int i = 0; i < adjusted_dim; ++i){
       // for each point calculate manhattan distance. Not using euclidean distance to avoid multiplication.
 
@@ -222,41 +315,17 @@ void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, con
   }
 
   auto start = std::chrono::high_resolution_clock::now();
-  int numTests = distMat.size();
-#pragma omp parallel for schedule(static)
-  for(int i = 0; i < numTests; i++) {
-    vector<pair<int, int>> kSmallest = findKSmallestWithIndices(distMat[i], k);
+  
+  countLabelsAndClassify(numOfPoints, numOfTests, dataPoints, distMat, adjusted_dim, k, testPredictions);
 
-    // Tally the labels of the k nearest neighbors
-    unordered_map<int, int> labelCount;
-    for (const auto& elem : kSmallest) {
-      int index = elem.second;
-      int label = dataPoints[adjusted_dim][index];
-      #pragma omp atomic
-      labelCount[label]++;
-    }
-    
-    // Find the label with the highest count
-    int maxCount = 0;
-    int bestLabel = -1;
-    for (const auto& entry : labelCount) {
-      if (entry.second > maxCount) {
-        maxCount = entry.second;
-        bestLabel = entry.first;
-      }
-    }
-
-    // Assign the most frequent label to the test point
-    testPredictions[i] = bestLabel;
-  }
   auto end = std::chrono::high_resolution_clock::now();
   hostElapsedTime += (end - start);
 
-  for (int i = 0; i < resultObjectList.size(); ++i) {
+  for (int i = 0; i < (int) resultObjectList.size(); ++i) {
     pimFree(resultObjectList[i]);
   }
 
-  for (int i = 0; i < dataPointObjectList.size(); ++i) {
+  for (int i = 0; i < (int) dataPointObjectList.size(); ++i) {
     pimFree(dataPointObjectList[i]);
   }
 
@@ -356,12 +425,18 @@ int main(int argc, char *argv[])
   vector<int> testPredictions(numTests);
   runKNN(numPoints, numTests, dim, params.k, dataPoints, testPoints, testPredictions);
 
-  if (params.shouldVerify)
-  {
-  }
 
   pimShowStats();
   cout << "Host elapsed time: " << fixed << setprecision(3) << hostElapsedTime.count() << " ms." << endl;
+
+  if (params.shouldVerify)
+  {
+    if (!knn_test(dataPoints, testPoints, dim, k, testPredictions)) {
+      cerr << "KNN verification failed!\n";
+    } else {
+      cout << "KNN was succesfully verified against host result\n";
+    }
+  }
 
   return 0;
 }
