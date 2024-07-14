@@ -18,6 +18,7 @@
 #include "libpimsim.h"
 #include <map>
 #include <fstream>
+#include <sstream>
 #ifdef COMPILE_WITH_JPEG
 #include <jpeglib.h>
 #endif  
@@ -874,6 +875,6 @@ void writeResizedImage(const std::string& outputFilename, const std::vector<std:
 
   std::cout << "Resized image saved as JPEG: " << outputFilename << std::endl;
 }
-#endif
+#endif // ifdef COMPILE_WITH_JPEG
 
 #endif
