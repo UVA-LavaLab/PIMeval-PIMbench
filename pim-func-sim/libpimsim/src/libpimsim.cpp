@@ -100,7 +100,7 @@ pimCopyHostToDevice(void* src, PimObjId dest)
 PimStatus
 pimCopyHostToDeviceRanged(void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
 {
-  bool ok = PIM_OK; /* TODO: implement for ranged copying */ 
+  bool ok = pimSim::get()->pimCopyMainToDeviceRanged(src, idxBegin, idxEnd, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -116,7 +116,7 @@ pimCopyDeviceToHost(PimObjId src, void* dest)
 PimStatus
 pimCopyDeviceToHostRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest)
 {
-  bool ok = PIM_OK; /* TODO: implement for ranged copying */ 
+  bool ok = pimSim::get()->pimCopyDeviceToMainRanged(src, idxBegin, idxEnd, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -132,7 +132,7 @@ pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
 PimStatus
 pimCopyHostToDeviceWithTypeRanged(PimCopyEnum copyType, void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
 {
-  bool ok = PIM_OK; /* TODO: implement for ranged copying */ 
+  bool ok = pimSim::get()->pimCopyMainToDeviceWithTypeRanged(copyType, src, idxBegin, idxEnd, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -148,7 +148,7 @@ pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
 PimStatus
 pimCopyDeviceToHostWithTypeRanged(PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest)
 {
-  bool ok = PIM_OK; /* TODO: implement for ranged copying */ 
+  bool ok = pimSim::get()->pimCopyDeviceToMainWithTypeRanged(copyType, src, idxBegin, idxEnd, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -164,7 +164,7 @@ pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
 PimStatus
 pimCopyDeviceToDevice(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
 {
-  bool ok = PIM_OK; /* TODO: implement for ranged copying */ 
+  bool ok = pimSim::get()->pimCopyDeviceToDeviceRanged(src, idxBegin, idxEnd, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

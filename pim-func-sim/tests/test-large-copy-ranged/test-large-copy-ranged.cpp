@@ -15,13 +15,13 @@ void testLargeCopy(PimDeviceEnum deviceType)
 {
   // 8GB capacity
   unsigned numRanks = 1;
-  unsigned numBankPerRank = 1; // 128; // 8 chips * 16 banks
-  unsigned numSubarrayPerBank = 2; // 32;
+  unsigned numBankPerRank = 128; // 8 chips * 16 banks
+  unsigned numSubarrayPerBank = 32;
   unsigned numRows = 2048;
   unsigned numCols = 8192;
 
   uint64_t numElements = 2LL * 1024 * 1024 + 2; // 4G + 2 elements
-  uint64_t HostNumElements = numElements / 2;  
+  uint64_t HostNumElements = numElements; 
   unsigned bitsPerElement = 8;
   std::vector<char> src(HostNumElements);
   std::vector<char> dest(HostNumElements);
@@ -37,9 +37,9 @@ void testLargeCopy(PimDeviceEnum deviceType)
     PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT8);
     assert(obj != -1);
 
-    status = pimCopyHostToDeviceRanged((void*)src.data(), 0, HostNumElements - 1, obj);
+    status = pimCopyHostToDeviceRanged((void*)src.data(), 0, HostNumElements, obj);
     assert(status == PIM_OK);
-    status = pimCopyDeviceToHostRanged(obj, 0, HostNumElements - 1, (void*)dest.data());
+    status = pimCopyDeviceToHostRanged(obj, 0, HostNumElements, (void*)dest.data());
 
     uint64_t numError = 0;
     for (uint64_t i = 0; i < HostNumElements; ++i) {

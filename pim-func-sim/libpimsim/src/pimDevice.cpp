@@ -235,7 +235,7 @@ bool
 pimDevice::pimCopyDeviceToMainRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest)
 {
   PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
-  return pimCopyDeviceToMainWithType(copyType, src, dest);
+  return pimCopyDeviceToMainWithTypeRanged(copyType, src, idxBegin, idxEnd, dest);
 }
 
 //! @brief  Copy data from host to PIM
