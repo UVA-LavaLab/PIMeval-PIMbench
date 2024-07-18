@@ -82,16 +82,11 @@ PimStatus pimFree(PimObjId obj);
 PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
 
 // Data transfer
-PimStatus pimCopyHostToDevice(void* src, PimObjId dest);
-PimStatus pimCopyHostToDeviceRanged(void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
-PimStatus pimCopyDeviceToHost(PimObjId src, void* dest);
-PimStatus pimCopyDeviceToHostRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest);
-PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
-PimStatus pimCopyHostToDeviceWithTypeRanged(PimCopyEnum copyType, void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
-PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest);
-PimStatus pimCopyDeviceToHostWithTypeRanged(PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest);
-PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
-PimStatus pimCopyDeviceToDeviceRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
+PimStatus pimCopyHostToDevice(void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 
 // Logic and Arithmetic Operation
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);

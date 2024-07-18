@@ -205,17 +205,19 @@ pimCmdCopy::sanityCheck() const
     }
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
     uint64_t numElements = objDest.getNumElements();
-    if (m_idxBegin > numElements) {
-      std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
-      return false;
-    }
-    if (m_idxEnd > numElements && m_idxEnd != std::numeric_limits<uint64_t>::max()) {
-      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
-      return false;
-    }
-    if (m_idxEnd < m_idxBegin) {
-      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_dest);
-      return false;
+    if (!m_copyFullRange) {
+      if (m_idxBegin > numElements) {
+        std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
+        return false;
+      }
+      if (m_idxEnd > numElements) {
+        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
+        return false;
+      }
+      if (m_idxEnd < m_idxBegin) {
+        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_dest);
+        return false;
+      }
     }
     break;
   }
@@ -231,17 +233,19 @@ pimCmdCopy::sanityCheck() const
     }
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
-    if (m_idxBegin > numElements) {
-      std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-      return false;
-    }
-    if (m_idxEnd > numElements && m_idxEnd != std::numeric_limits<uint64_t>::max()) {
-      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-      return false;
-    }
-    if (m_idxEnd < m_idxBegin) {
-      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_src);
-      return false;
+    if (!m_copyFullRange) {
+      if (m_idxBegin > numElements) {
+        std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
+        return false;
+      }
+      if (m_idxEnd > numElements) {
+        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
+        return false;
+      }
+      if (m_idxEnd < m_idxBegin) {
+        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_src);
+        return false;
+      }
     }
     break;
   }
@@ -262,17 +266,19 @@ pimCmdCopy::sanityCheck() const
       return false;
     }
     uint64_t numElements = objSrc.getNumElements();
-    if (m_idxBegin > numElements) {
-      std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-      return false;
-    }
-    if (m_idxEnd > numElements && m_idxEnd != std::numeric_limits<uint64_t>::max()) {
-      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-      return false;
-    }
-    if (m_idxEnd < m_idxBegin) {
-      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_src);
-      return false;
+    if (!m_copyFullRange) {
+      if (m_idxBegin > numElements) {
+        std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
+        return false;
+      }
+      if (m_idxEnd > numElements) {
+        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
+        return false;
+      }
+      if (m_idxEnd < m_idxBegin) {
+        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_src);
+        return false;
+      }
     }
     break;
   }
@@ -317,7 +323,12 @@ pimCmdCopy::computeRegion(unsigned index)
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
           if (isDCCN) { val = !val; }
-          if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+          if (!m_copyFullRange) {
+            if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+              bits.push_back(val);
+            }
+          }
+          else {
             bits.push_back(val);
           }
         }
@@ -331,7 +342,12 @@ pimCmdCopy::computeRegion(unsigned index)
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
           if (isDCCN) { val = !val; }
-          if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+          if (!m_copyFullRange) {
+            if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+              bits.push_back(val);
+            }
+          }
+          else {
             bits.push_back(val);
           }
           currIdx += (c % bitsPerElement == (bitsPerElement - 1));
@@ -366,7 +382,12 @@ pimCmdCopy::computeRegion(unsigned index)
         unsigned row = rowIdx + i % numAllocRows;
         unsigned col = colIdx + i / numAllocRows;
         currIdx = regionBeginIdx + col;
-        if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+        if (!m_copyFullRange) {
+          if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+            core.setBit(row, col, val);
+          }
+        } 
+        else {
           core.setBit(row, col, val);
         }
       }
@@ -378,7 +399,12 @@ pimCmdCopy::computeRegion(unsigned index)
         unsigned row = rowIdx + i / numAllocCols;
         unsigned col = colIdx + i % numAllocCols;
         currIdx = regionBeginIdx + col / bitsPerElement;
-        if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+        if (!m_copyFullRange) {
+          if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+            core.setBit(row, col, val);
+          }
+        } 
+        else {
           core.setBit(row, col, val);
         }
       }
@@ -405,8 +431,10 @@ pimCmdCopy::updateStats() const
    if (m_cmdType == PimCmdEnum::COPY_H2D) {
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
     uint64_t numElements = objDest.getNumElements();
-    if (m_idxBegin > 0 || m_idxEnd < numElements) {
-      numElements = m_idxEnd - m_idxBegin;
+    if (!m_copyFullRange) {
+      if (m_idxBegin > 0 || m_idxEnd < numElements) {
+        numElements = m_idxEnd - m_idxBegin;
+      }
     }
     unsigned bitsPerElement = objDest.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement);
@@ -419,8 +447,10 @@ pimCmdCopy::updateStats() const
   } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
-    if (m_idxBegin > 0 || m_idxEnd < numElements) {
-      numElements = m_idxEnd - m_idxBegin;
+    if (!m_copyFullRange) {
+      if (m_idxBegin > 0 || m_idxEnd < numElements) {
+        numElements = m_idxEnd - m_idxBegin;
+      }
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement);
@@ -433,8 +463,10 @@ pimCmdCopy::updateStats() const
   } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
-    if (m_idxBegin > 0 || m_idxEnd < numElements) {
-      numElements = m_idxEnd - m_idxBegin;
+    if (!m_copyFullRange) {
+      if (m_idxBegin > 0 || m_idxEnd < numElements) {
+        numElements = m_idxEnd - m_idxBegin;
+      }
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement);

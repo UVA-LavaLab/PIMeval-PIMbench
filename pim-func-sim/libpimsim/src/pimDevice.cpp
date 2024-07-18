@@ -206,93 +206,48 @@ pimDevice::pimCreateDualContactRef(PimObjId refId)
   return m_resMgr->pimCreateDualContactRef(refId);
 }
 
-//! @brief  Copy data from host to PIM
-bool
-pimDevice::pimCopyMainToDevice(void* src, PimObjId dest)
-{
-  PimCopyEnum copyType = m_resMgr->isHLayoutObj(dest) ? PIM_COPY_H : PIM_COPY_V;
-  return pimCopyMainToDeviceWithType(copyType, src, dest);
-}
-
 //! @brief  Copy data from host to PIM within a range
 bool
-pimDevice::pimCopyMainToDeviceRanged(void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
+pimDevice::pimCopyMainToDevice(void* src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   PimCopyEnum copyType = m_resMgr->isHLayoutObj(dest) ? PIM_COPY_H : PIM_COPY_V;
-  return pimCopyMainToDeviceWithTypeRanged(copyType, src, idxBegin, idxEnd, dest);
-}
-
-//! @brief  Copy data from PIM to host
-bool
-pimDevice::pimCopyDeviceToMain(PimObjId src, void* dest)
-{
-  PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
-  return pimCopyDeviceToMainWithType(copyType, src, dest);
+  return pimCopyMainToDeviceWithType(copyType, src, dest, idxBegin, idxEnd);
 }
 
 //! @brief  Copy data from PIM to host within a range
 bool
-pimDevice::pimCopyDeviceToMainRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest)
+pimDevice::pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
-  return pimCopyDeviceToMainWithTypeRanged(copyType, src, idxBegin, idxEnd, dest);
-}
-
-//! @brief  Copy data from host to PIM
-bool
-pimDevice::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
-{
-  std::unique_ptr<pimCmd> cmd =
-    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_H2D, copyType, src, dest);
-  return executeCmd(std::move(cmd));
+  return pimCopyDeviceToMainWithType(copyType, src, dest, idxBegin, idxEnd);
 }
 
 //! @brief  Copy data from host to PIM within a range
 bool
-pimDevice::pimCopyMainToDeviceWithTypeRanged(PimCopyEnum copyType, void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
+pimDevice::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   std::unique_ptr<pimCmd> cmd =
-    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_H2D, copyType, src, idxBegin, idxEnd, dest);
-  return executeCmd(std::move(cmd));
-}
-
-//! @brief  Copy data from PIM to host
-bool
-pimDevice::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
-{
-  std::unique_ptr<pimCmd> cmd =
-    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2H, copyType, src, dest);
+    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_H2D, copyType, src, dest, idxBegin, idxEnd);
   return executeCmd(std::move(cmd));
 }
 
 //! @brief  Copy data from PIM to host within a range
 bool
-pimDevice::pimCopyDeviceToMainWithTypeRanged(PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest)
+pimDevice::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   std::unique_ptr<pimCmd> cmd =
-    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2H, copyType, src, idxBegin, idxEnd, dest);
-  return executeCmd(std::move(cmd));
-}
-
-//! @brief  Copy data from PIM to PIM
-bool
-pimDevice::pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
-{
-  const pimObjInfo& obj = m_resMgr->getObjInfo(src);
-  PimCopyEnum copyType = obj.isVLayout() ? PIM_COPY_V : PIM_COPY_H;
-  std::unique_ptr<pimCmd> cmd =
-    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2D, copyType, src, dest);
+    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2H, copyType, src, dest, idxBegin, idxEnd);
   return executeCmd(std::move(cmd));
 }
 
 //! @brief  Copy data from PIM to PIM within a range
 bool
-pimDevice::pimCopyDeviceToDeviceRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
+pimDevice::pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   const pimObjInfo& obj = m_resMgr->getObjInfo(src);
   PimCopyEnum copyType = obj.isVLayout() ? PIM_COPY_V : PIM_COPY_H;
   std::unique_ptr<pimCmd> cmd =
-    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2D, copyType, src, idxBegin, idxEnd, dest);
+    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2D, copyType, src, dest, idxBegin, idxEnd);
   return executeCmd(std::move(cmd));
 }
 

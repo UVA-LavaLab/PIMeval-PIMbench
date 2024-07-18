@@ -56,16 +56,11 @@ public:
   PimObjId pimCreateDualContactRef(PimObjId refId);
 
   // Data transfer
-  bool pimCopyMainToDevice(void* src, PimObjId dest);
-  bool pimCopyMainToDeviceRanged(void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
-  bool pimCopyDeviceToMain(PimObjId src, void* dest);
-  bool pimCopyDeviceToMainRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest);
-  bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
-  bool pimCopyMainToDeviceWithTypeRanged(PimCopyEnum copyType, void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
-  bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
-  bool pimCopyDeviceToMainWithTypeRanged(PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest);
-  bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
-  bool pimCopyDeviceToDeviceRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
+  bool pimCopyMainToDevice(void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
