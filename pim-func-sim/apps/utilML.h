@@ -19,7 +19,7 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-#ifdef COMPILE_WITH_JPEG
+#if defined(COMPILE_WITH_JPEG)
 #include <jpeglib.h>
 #endif  
 using namespace std;

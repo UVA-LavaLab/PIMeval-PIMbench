@@ -8,6 +8,8 @@ SUBDIRS := $(wildcard */.)
 
 USE_OPENMP ?= 0
 
+COMPILE_WITH_JPEG ?= 0
+
 debug: $(SUBDIRS)
 	@echo "INFO: apps target = debug"
 
@@ -20,5 +22,5 @@ dramsim3_integ: $(SUBDIRS)
 clean: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)
+	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP) COMPILE_WITH_JPEG=$(COMPILE_WITH_JPEG)
 
