@@ -47,10 +47,15 @@ public:
   PimObjId pimCreateDualContactRef(PimObjId refId);
 
   bool pimCopyMainToDevice(void* src, PimObjId dest);
+  bool pimCopyMainToDeviceRanged(void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
   bool pimCopyDeviceToMain(PimObjId src, void* dest);
+  bool pimCopyDeviceToMainRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest);
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest);
+  bool pimCopyMainToDeviceWithTypeRanged(PimCopyEnum copyType, void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest);
+  bool pimCopyDeviceToMainWithTypeRanged(PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest);
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest);
+  bool pimCopyDeviceToDeviceRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest);
 
   pimResMgr* getResMgr() { return m_resMgr; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }

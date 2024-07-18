@@ -204,10 +204,17 @@ class pimCmdCopy : public pimCmd
 public:
   pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, void* src, PimObjId dest)
     : pimCmd(PimCmdEnum::COPY_H2D), m_copyType(copyType), m_ptr(src), m_dest(dest) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, void* src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
+    : pimCmd(PimCmdEnum::COPY_H2D), m_copyType(copyType), m_ptr(src), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_dest(dest) {}
   pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, void* dest)
     : pimCmd(PimCmdEnum::COPY_D2H), m_copyType(copyType), m_ptr(dest), m_src(src) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, void* dest)
+    : pimCmd(PimCmdEnum::COPY_D2H), m_copyType(copyType), m_ptr(dest), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_src(src) {}
   pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, PimObjId dest)
     : pimCmd(PimCmdEnum::COPY_D2D), m_copyType(copyType), m_src(src), m_dest(dest) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, uint64_t idxBegin, uint64_t idxEnd, PimObjId dest)
+    : pimCmd(PimCmdEnum::COPY_D2D), m_copyType(copyType), m_src(src), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_dest(dest) {}
+
   virtual ~pimCmdCopy() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -218,6 +225,8 @@ protected:
   void* m_ptr = nullptr;
   PimObjId m_src = -1;
   PimObjId m_dest = -1;
+  uint64_t m_idxBegin = 0;
+  uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };
 
 //! @class  pimCmdFunc1
