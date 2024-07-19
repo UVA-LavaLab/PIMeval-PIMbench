@@ -96,7 +96,7 @@ bool createDevice(char *configFile)
     unsigned numRanks = 2;
     unsigned numBankPerRank = 128; // 8 chips * 16 banks
     unsigned numSubarrayPerBank = 32;
-    unsigned numRows = 8192;
+    unsigned numRows = 1024;
     unsigned numCols = 8192;
 
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
