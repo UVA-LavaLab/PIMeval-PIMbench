@@ -82,6 +82,9 @@ PimStatus pimFree(PimObjId obj);
 PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
 
 // Data transfer
+// Note: idxBegin and idxEnd specify the range of indexes to be processed by the PIM.
+// The size of the host-side vector should match the size of this range on the PIM side.
+// If the default values for idxBegin and idxEnd are used, the entire range of the PIM object will be considered.
 PimStatus pimCopyHostToDevice(void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);

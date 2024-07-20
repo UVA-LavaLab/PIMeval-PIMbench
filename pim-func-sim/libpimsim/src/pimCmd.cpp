@@ -192,6 +192,7 @@ bool
 pimCmdCopy::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
+  uint64_t numElements = 0;
   switch (m_cmdType) {
   case PimCmdEnum::COPY_H2D:
   {
@@ -204,21 +205,7 @@ pimCmdCopy::sanityCheck() const
       return false;
     }
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
-    uint64_t numElements = objDest.getNumElements();
-    if (!m_copyFullRange) {
-      if (m_idxBegin > numElements) {
-        std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
-        return false;
-      }
-      if (m_idxEnd > numElements) {
-        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
-        return false;
-      }
-      if (m_idxEnd < m_idxBegin) {
-        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_dest);
-        return false;
-      }
-    }
+    numElements = objDest.getNumElements();
     break;
   }
   case PimCmdEnum::COPY_D2H:
@@ -232,21 +219,7 @@ pimCmdCopy::sanityCheck() const
       return false;
     }
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    uint64_t numElements = objSrc.getNumElements();
-    if (!m_copyFullRange) {
-      if (m_idxBegin > numElements) {
-        std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-        return false;
-      }
-      if (m_idxEnd > numElements) {
-        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-        return false;
-      }
-      if (m_idxEnd < m_idxBegin) {
-        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_src);
-        return false;
-      }
-    }
+    numElements = objSrc.getNumElements();
     break;
   }
   case PimCmdEnum::COPY_D2D:
@@ -265,26 +238,27 @@ pimCmdCopy::sanityCheck() const
       std::printf("PIM-Error: PIM object IDs %d and %d are not associated for device-to-device copying\n", m_src, m_dest);
       return false;
     }
-    uint64_t numElements = objSrc.getNumElements();
-    if (!m_copyFullRange) {
-      if (m_idxBegin > numElements) {
-        std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-        return false;
-      }
-      if (m_idxEnd > numElements) {
-        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_src);
-        return false;
-      }
-      if (m_idxEnd < m_idxBegin) {
-        std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_src);
-        return false;
-      }
-    }
+    numElements = objSrc.getNumElements();
     break;
   }
   default:
     assert(0);
   }
+  if (!m_copyFullRange) {
+    if (m_idxBegin > numElements) {
+      std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
+      return false;
+    }
+    if (m_idxEnd > numElements) {
+      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
+      return false;
+    }
+    if (m_idxEnd < m_idxBegin) {
+      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_dest);
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -315,7 +289,7 @@ pimCmdCopy::computeRegion(unsigned index)
     PimCoreId coreId = region.getCoreId();
     pimCore& core = m_device->getCore(coreId);
     bool isDCCN = objSrc.isDualContactRef();
-    uint64_t currIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index;
+    uint64_t reginBeginIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index; 
     if (m_copyType == PIM_COPY_V) {
       for (unsigned c = 0; c < numAllocCols; ++c) {
         for (unsigned r = 0; r < numAllocRows; ++r) {
@@ -324,6 +298,7 @@ pimCmdCopy::computeRegion(unsigned index)
           bool val = core.getBit(row, col);
           if (isDCCN) { val = !val; }
           if (!m_copyFullRange) {
+            uint64_t currIdx = reginBeginIdx + c; 
             if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
               bits.push_back(val);
             }
@@ -332,17 +307,16 @@ pimCmdCopy::computeRegion(unsigned index)
             bits.push_back(val);
           }
         }
-        currIdx += 1;
       }
     } else if (m_copyType == PIM_COPY_H) {
       for (unsigned r = 0; r < numAllocRows; ++r) {
-        currIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index;
         for (unsigned c = 0; c < numAllocCols; ++c) {
           unsigned row = rowIdx + r;
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
           if (isDCCN) { val = !val; }
           if (!m_copyFullRange) {
+            uint64_t currIdx = reginBeginIdx + c / bitsPerElement; 
             if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
               bits.push_back(val);
             }
@@ -350,7 +324,6 @@ pimCmdCopy::computeRegion(unsigned index)
           else {
             bits.push_back(val);
           }
-          currIdx += (c % bitsPerElement == (bitsPerElement - 1));
         }
       }
     } else {
@@ -373,7 +346,6 @@ pimCmdCopy::computeRegion(unsigned index)
     pimCore& core = m_device->getCore(coreId);
     bool isDCCN = objDest.isDualContactRef();
     uint64_t regionBeginIdx = (uint64_t)objDest.getMaxElementsPerRegion() * index;
-    uint64_t currIdx = 0;
     if (m_copyType == PIM_COPY_V) {
       size_t bitIdx = 0;
       for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
@@ -381,8 +353,8 @@ pimCmdCopy::computeRegion(unsigned index)
         if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i % numAllocRows;
         unsigned col = colIdx + i / numAllocRows;
-        currIdx = regionBeginIdx + col;
         if (!m_copyFullRange) {
+          uint64_t currIdx = regionBeginIdx + col;
           if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
             core.setBit(row, col, val);
           }
@@ -398,8 +370,8 @@ pimCmdCopy::computeRegion(unsigned index)
         if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i / numAllocCols;
         unsigned col = colIdx + i % numAllocCols;
-        currIdx = regionBeginIdx + col / bitsPerElement;
         if (!m_copyFullRange) {
+          uint64_t currIdx = regionBeginIdx + col / bitsPerElement;
           if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
             core.setBit(row, col, val);
           }
@@ -432,9 +404,7 @@ pimCmdCopy::updateStats() const
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
     uint64_t numElements = objDest.getNumElements();
     if (!m_copyFullRange) {
-      if (m_idxBegin > 0 || m_idxEnd < numElements) {
-        numElements = m_idxEnd - m_idxBegin;
-      }
+      numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objDest.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement);
@@ -448,9 +418,7 @@ pimCmdCopy::updateStats() const
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
     if (!m_copyFullRange) {
-      if (m_idxBegin > 0 || m_idxEnd < numElements) {
-        numElements = m_idxEnd - m_idxBegin;
-      }
+      numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement);
@@ -464,9 +432,7 @@ pimCmdCopy::updateStats() const
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
     if (!m_copyFullRange) {
-      if (m_idxBegin > 0 || m_idxEnd < numElements) {
-        numElements = m_idxEnd - m_idxBegin;
-      }
+      numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement);
