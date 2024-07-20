@@ -22,14 +22,7 @@ class pimDevice;
 class pimRegion
 {
 public:
-  pimRegion()
-    : m_coreId(-1),
-      m_rowIdx(0),
-      m_colIdx(0),
-      m_numAllocRows(0),
-      m_numAllocCols(0),
-      m_isValid(false)
-  {}
+  pimRegion() {}
   ~pimRegion() {}
 
   void setCoreId(PimCoreId coreId) { m_coreId = coreId; }
@@ -37,6 +30,8 @@ public:
   void setColIdx(unsigned colIdx) { m_colIdx = colIdx; }
   void setNumAllocRows(unsigned numAllocRows) { m_numAllocRows = numAllocRows; }
   void setNumAllocCols(unsigned numAllocCols) { m_numAllocCols = numAllocCols; }
+  void setElemIdxBegin(uint64_t idx) { m_elemIdxBegin = idx; }
+  void setElemIdxEnd(uint64_t idx) { m_elemIdxEnd = idx; }
   void setIsValid(bool val) { m_isValid = val; }
 
   PimCoreId getCoreId() const { return m_coreId; }
@@ -44,18 +39,23 @@ public:
   unsigned getColIdx() const { return m_colIdx; }
   unsigned getNumAllocRows() const { return m_numAllocRows; }
   unsigned getNumAllocCols() const { return m_numAllocCols; }
+  uint64_t getElemIdxBegin() const { return m_elemIdxBegin; }
+  uint64_t getElemIdxEnd() const { return m_elemIdxEnd; }
+  uint64_t getNumElemInRegion() const { return m_elemIdxEnd - m_elemIdxBegin; }
 
   bool isValid() const { return m_isValid && m_coreId >= 0 && m_numAllocRows > 0 && m_numAllocCols > 0; }
 
   void print(uint64_t regionId) const;
 
 private:
-  PimCoreId m_coreId;
-  unsigned m_rowIdx;  // starting row index
-  unsigned m_colIdx;  // starting col index
-  unsigned m_numAllocRows;  // number of rows of this region
-  unsigned m_numAllocCols;  // number of cols of this region
-  bool m_isValid;
+  PimCoreId m_coreId = -1;
+  unsigned m_rowIdx = 0;        // starting row index
+  unsigned m_colIdx = 0;        // starting col index
+  unsigned m_numAllocRows = 0;  // number of rows of this region
+  unsigned m_numAllocCols = 0;  // number of cols of this region
+  uint64_t m_elemIdxBegin = 0;  // begin element index in this region
+  uint64_t m_elemIdxEnd = 0;    // end element index in this region
+  bool m_isValid = false;
 };
 
 
