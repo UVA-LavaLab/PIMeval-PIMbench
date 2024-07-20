@@ -1,7 +1,7 @@
 // Test: Test reduction sum
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <iostream>
 #include <vector>
 #include <algorithm>

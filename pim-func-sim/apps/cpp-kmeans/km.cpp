@@ -12,7 +12,7 @@
 #endif
 
 #include "../util.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 

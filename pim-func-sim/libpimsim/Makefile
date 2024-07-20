@@ -18,7 +18,7 @@ INCDIR := include
 SRC := $(wildcard $(SRCDIR)/*.cpp)
 OBJ := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRC))
 
-TARGET := $(LIBDIR)/libpimsim.a
+TARGET := $(LIBDIR)/libpimeval.a
 
 .PHONY: debug perf dramsim3_integ clean create_link
 .DEFAULT_GOAL := perf
@@ -48,13 +48,13 @@ PIM_SIM_TARGET ?= PIM_DEVICE_NONE
 CXXFLAGS += -DPIM_SIM_TARGET=$(PIM_SIM_TARGET)
 
 debug: $(TARGET)
-	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
+	@echo "INFO: libpimeval target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
 
 perf: $(TARGET)
-	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
+	@echo "INFO: libpimeval target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
 
 dramsim3_integ: $(TARGET)
-	@echo "INFO: libpimsim target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
+	@echo "INFO: libpimeval target = $(MAKECMDGOALS), CXXFLAGS = $(CXXFLAGS)"
 
 $(TARGET): $(OBJ) | $(LIBDIR)
 	$(AR) $(ARFLAGS) $@ $^ $(THIRD_PARTY_LIB)
@@ -70,7 +70,7 @@ clean:
 
 create_link:
 	mkdir -p $(INCDIR)
-	if [ ! -e $(INCDIR)/libpimsim.h ] ; then \
-		ln -s ../$(SRCDIR)/libpimsim.h $(INCDIR)/libpimsim.h ; \
+	if [ ! -e $(INCDIR)/libpimeval.h ] ; then \
+		ln -s ../$(SRCDIR)/libpimeval.h $(INCDIR)/libpimeval.h ; \
 	fi
 

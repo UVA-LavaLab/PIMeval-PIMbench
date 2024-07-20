@@ -5,7 +5,7 @@
 #ifndef LAVA_PIM_UTILS_H
 #define LAVA_PIM_UTILS_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <string>
 #include <queue>
 #include <vector>

@@ -4,7 +4,7 @@
 #ifndef BIT_SERIAL_BASE_H
 #define BIT_SERIAL_BASE_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <cassert>
 #include <vector>
 #include <random>

@@ -1,9 +1,9 @@
-// File: libpimsim.h
-// PIM Functional Simulator Library Interface
+// File: libpimeval.h
+// PIMeval Simulation Library Interface
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#ifndef LAVA_LIB_PIM_SIM_H
-#define LAVA_LIB_PIM_SIM_H
+#ifndef LAVA_LIB_PIM_EVAL_H
+#define LAVA_LIB_PIM_EVAL_H
 
 #include <cstdint>
 #include <cstdarg>

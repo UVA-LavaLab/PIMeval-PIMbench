@@ -5,7 +5,7 @@
 #ifndef LAVA_PIM_PARAMS_PERF_H
 #define LAVA_PIM_PARAMS_PERF_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include "pimParamsDram.h"
 #include "pimCmd.h"
 #include "pimResMgr.h"

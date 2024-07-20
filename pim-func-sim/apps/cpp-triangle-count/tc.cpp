@@ -16,7 +16,7 @@
 #endif
 
 #include "../util.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 
 #define DEBUG 0
 

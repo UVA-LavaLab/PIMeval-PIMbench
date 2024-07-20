@@ -4,12 +4,12 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall
 
-# Setup libpimsim library
-LIBPIMSIM_PATH ?= ../../../../libpimsim
-INC_DIR := $(LIBPIMSIM_PATH)/include
-LIB_DIR := $(LIBPIMSIM_PATH)/lib
-CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimsim
-DEPS := $(INC_DIR)/libpimsim.h $(LIB_DIR)/libpimsim.a
+# Setup libpimeval library
+LIBPIMEVAL_PATH ?= ../../../../libpimsim
+INC_DIR := $(LIBPIMEVAL_PATH)/include
+LIB_DIR := $(LIBPIMEVAL_PATH)/lib
+CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimeval
+DEPS := $(INC_DIR)/libpimeval.h $(LIB_DIR)/libpimeval.a
 
 .PHONY: debug perf dramsim3_integ clean
 .DEFAULT_GOAL := perf

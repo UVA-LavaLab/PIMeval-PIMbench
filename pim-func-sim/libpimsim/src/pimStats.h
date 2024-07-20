@@ -7,7 +7,7 @@
 
 #include "pimParamsDram.h"
 #include "pimParamsPerf.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <cstdint>
 #include <string>
 #include <map>

@@ -5,7 +5,7 @@
 #define BIT_SERIAL_SIMDRAM_H
 
 #include "bitSerialBase.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <vector>
 
 //! @class  bitSerialSimdram

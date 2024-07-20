@@ -5,7 +5,7 @@
 #include "pimDevice.h"
 #include "pimResMgr.h"
 #include "pimSim.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <cstdio>
 #include <deque>
 #include <memory>

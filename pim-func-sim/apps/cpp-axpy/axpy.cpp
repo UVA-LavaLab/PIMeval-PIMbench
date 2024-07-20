@@ -11,7 +11,7 @@
 #endif
 
 #include "../util.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <cassert>
 
 using namespace std;
