@@ -128,15 +128,6 @@ pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
   return true;
 }
 
-//! @brief  Utility: Get number of elements in a region
-unsigned
-pimCmd::getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const
-{
-  unsigned numAllocRows = region.getNumAllocRows();
-  unsigned numAllocCols = region.getNumAllocCols();
-  return (uint64_t)numAllocRows * numAllocCols / bitsPerElement;
-}
-
 //! @brief  Process all regions in MT used by derived classes
 bool
 pimCmd::computeAllRegions(unsigned numRegions)
@@ -503,7 +494,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   // perform the computation
-  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElementSrc);
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
@@ -601,7 +592,7 @@ pimCmdFunc2::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   // perform the computation
-  unsigned numElementsInRegion = getNumElementsInRegion(src1Region, bitsPerElementSrc1);
+  unsigned numElementsInRegion = src1Region.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     auto locSrc1 = locateNthElement(src1Region, isVLayout, j, bitsPerElementSrc1);
     auto locSrc2 = locateNthElement(src2Region, isVLayout, j, bitsPerElementSrc2);
@@ -767,8 +758,8 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   PimCoreId coreId = srcRegion.getCoreId();
   pimCore& core = m_device->getCore(coreId);
 
-  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-  uint64_t currIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index;
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+  uint64_t currIdx = srcRegion.getElemIdxBegin();
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
@@ -797,7 +788,7 @@ pimCmdRedSum<T>::updateStats() const
     uint64_t index = 0;
     for (const auto& region : objSrc.getRegions()) {
       PimCoreId coreId = region.getCoreId();
-      unsigned numElementsInRegion = getNumElementsInRegion(region, bitsPerElement);
+      unsigned numElementsInRegion = region.getNumElemInRegion();
       bool isActive = index < m_idxEnd && index + numElementsInRegion - 1 >= m_idxBegin;
       if (isActive) {
         activeRegionPerCore[coreId]++;
@@ -862,7 +853,7 @@ pimCmdBroadcast<T>::computeRegion(unsigned index)
   PimCoreId coreId = destRegion.getCoreId();
   pimCore &core = m_device->getCore(coreId);
 
-  unsigned numElementsInRegion = getNumElementsInRegion(destRegion, bitsPerElement);
+  unsigned numElementsInRegion = destRegion.getNumElemInRegion();
 
   uint64_t val = *reinterpret_cast<uint64_t *>(&m_val);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
@@ -926,7 +917,7 @@ pimCmdRotate::execute()
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
-      unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+      unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
       auto locSrc = locateNthElement(srcRegion, isVLayout, numElementsInRegion - 1, bitsPerElement);
       uint64_t val = 0;
       if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
@@ -968,7 +959,7 @@ pimCmdRotate::computeRegion(unsigned index)
   pimCore &core = m_device->getCore(coreId);
 
   // read out values
-  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   std::vector<uint64_t> regionVector(numElementsInRegion);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
