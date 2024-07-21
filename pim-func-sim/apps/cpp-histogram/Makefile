@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := hist
+EXEC := hist.out
 SRC := hist.cpp
 
 debug perf dramsim3_integ: $(EXEC)
