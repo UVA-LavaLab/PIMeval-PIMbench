@@ -549,7 +549,11 @@ pimParamsPerf::isVLayoutDevice() const
 {
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V: return true;
+  case PIM_DEVICE_BITSIMD_V_NAND: return true;
+  case PIM_DEVICE_BITSIMD_V_MAJ: return true;
   case PIM_DEVICE_BITSIMD_V_AP: return true;
+  case PIM_DEVICE_DRISA_NOR: return true;
+  case PIM_DEVICE_DRISA_MIXED: return true;
   case PIM_DEVICE_SIMDRAM: return true;
   case PIM_DEVICE_BITSIMD_H: return false;
   case PIM_DEVICE_FULCRUM: return false;
@@ -568,7 +572,11 @@ pimParamsPerf::isHLayoutDevice() const
 {
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V: return false;
+  case PIM_DEVICE_BITSIMD_V_NAND: return false;
+  case PIM_DEVICE_BITSIMD_V_MAJ: return false;
   case PIM_DEVICE_BITSIMD_V_AP: return false;
+  case PIM_DEVICE_DRISA_NOR: return false;
+  case PIM_DEVICE_DRISA_MIXED: return false;
   case PIM_DEVICE_SIMDRAM: return false;
   case PIM_DEVICE_BITSIMD_H: return true;
   case PIM_DEVICE_FULCRUM: return true;
