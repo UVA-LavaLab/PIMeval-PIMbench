@@ -521,81 +521,6 @@ pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
   m_tL = m_paramsDram->getNsTCCD() / 1000000.0;
 }
 
-//! @brief  Set PIM device and simulation target
-void
-pimParamsPerf::setDevice(PimDeviceEnum deviceType)
-{
-  m_curDevice = deviceType;
-  m_simTarget = deviceType;
-
-  // determine simulation target for functional device
-  if (deviceType == PIM_FUNCTIONAL) {
-    PimDeviceEnum simTarget = PIM_DEVICE_NONE;
-    // from 'make PIM_SIM_TARGET=...'
-    #if defined(PIM_SIM_TARGET)
-    simTarget = PIM_SIM_TARGET;
-    #endif
-    // default sim target
-    if (simTarget == PIM_DEVICE_NONE || simTarget == PIM_FUNCTIONAL) {
-      simTarget = PIM_DEVICE_BITSIMD_V;
-    }
-    m_simTarget = simTarget;
-  }
-}
-
-//! @brief  If a PIM device uses vertical data layout
-bool
-pimParamsPerf::isVLayoutDevice() const
-{
-  switch (m_simTarget) {
-  case PIM_DEVICE_BITSIMD_V: return true;
-  case PIM_DEVICE_BITSIMD_V_NAND: return true;
-  case PIM_DEVICE_BITSIMD_V_MAJ: return true;
-  case PIM_DEVICE_BITSIMD_V_AP: return true;
-  case PIM_DEVICE_DRISA_NOR: return true;
-  case PIM_DEVICE_DRISA_MIXED: return true;
-  case PIM_DEVICE_SIMDRAM: return true;
-  case PIM_DEVICE_BITSIMD_H: return false;
-  case PIM_DEVICE_FULCRUM: return false;
-  case PIM_DEVICE_BANK_LEVEL: return false;
-  case PIM_DEVICE_NONE:
-  case PIM_FUNCTIONAL:
-  default:
-    assert(0);
-  }
-  return false;
-}
-
-//! @brief  If a PIM device uses horizontal data layout
-bool
-pimParamsPerf::isHLayoutDevice() const
-{
-  switch (m_simTarget) {
-  case PIM_DEVICE_BITSIMD_V: return false;
-  case PIM_DEVICE_BITSIMD_V_NAND: return false;
-  case PIM_DEVICE_BITSIMD_V_MAJ: return false;
-  case PIM_DEVICE_BITSIMD_V_AP: return false;
-  case PIM_DEVICE_DRISA_NOR: return false;
-  case PIM_DEVICE_DRISA_MIXED: return false;
-  case PIM_DEVICE_SIMDRAM: return false;
-  case PIM_DEVICE_BITSIMD_H: return true;
-  case PIM_DEVICE_FULCRUM: return true;
-  case PIM_DEVICE_BANK_LEVEL: return true;
-  case PIM_DEVICE_NONE:
-  case PIM_FUNCTIONAL:
-  default:
-    assert(0);
-  }
-  return false;
-}
-
-//! @brief  If a PIM device uses hybrid data layout
-bool
-pimParamsPerf::isHybridLayoutDevice() const
-{
-  return false;
-}
-
 //! @brief  Get ms runtime for bytes transferred between host and device
 double
 pimParamsPerf::getMsRuntimeForBytesTransfer(uint64_t numBytes) const
@@ -666,16 +591,17 @@ pimParamsPerf::getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTyp
 double
 pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
-  switch (m_simTarget) {
+  switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-    msRuntime += getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass);
+    msRuntime += getMsRuntimeBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass);
     break;
   case PIM_DEVICE_FULCRUM:
   {
@@ -753,17 +679,18 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
 double
 pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
 
-  switch (m_simTarget) {
+  switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-    msRuntime = getMsRuntimeBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass);
+    msRuntime = getMsRuntimeBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass);
     break;
   case PIM_DEVICE_FULCRUM:
   {
@@ -797,6 +724,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
 double
 pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   PimDataType dataType = obj.getDataType();
   unsigned bitsPerElement = obj.getBitsPerElement();
@@ -804,7 +732,7 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, 
   uint64_t numElements = obj.getNumElements();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
 
-  switch (m_simTarget) {
+  switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
@@ -848,12 +776,13 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, 
 double
 pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
 
-  switch (m_simTarget) {
+  switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   {
@@ -897,12 +826,13 @@ double
 //pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numRegions) const
 pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
 
-  switch (m_simTarget) {
+  switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
     // rotate within subarray:

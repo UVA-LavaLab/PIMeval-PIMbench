@@ -42,9 +42,6 @@ pimSim::pimSim()
   m_paramsDram = new pimParamsDram();
   m_paramsPerf = new pimParamsPerf(m_paramsDram);
   m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
-
-  m_numThreads = std::thread::hardware_concurrency();
-  m_threadPool = new pimUtils::threadPool(m_numThreads);
 }
 
 //! @brief  pimSim dtor
@@ -56,6 +53,28 @@ pimSim::~pimSim()
   delete m_paramsPerf;
 }
 
+//! @brief  Determine num threads and init thread pool
+void
+pimSim::initThreadPool(unsigned maxNumThreads)
+{
+  if (m_threadPool) {
+    delete m_threadPool;
+    m_threadPool = nullptr;
+  }
+  unsigned hwThreads = std::thread::hardware_concurrency();
+  if (maxNumThreads == 0) {
+    m_numThreads = hwThreads;
+  } else {
+    m_numThreads = std::min(maxNumThreads, hwThreads);
+  }
+  if (m_numThreads < 1) {
+    m_numThreads = 1;
+  }
+  if (m_numThreads > 1) {
+    m_threadPool = new pimUtils::threadPool(m_numThreads);
+  }
+}
+
 //! @brief  Create a PIM device
 bool
 pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
@@ -65,11 +84,6 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
-
-  m_paramsPerf->setDevice(deviceType);
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
 
   m_device = new pimDevice();
   m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
@@ -90,11 +104,6 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     std::printf("PIM-Error: PIM Device is already created\n");
     return false;
   }
-
-  m_paramsPerf->setDevice(deviceType);
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getCurDevice()).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_paramsPerf->getSimTarget()).c_str());
 
   m_device = new pimDevice();
   m_device->init(deviceType, configFileName);
@@ -132,7 +141,6 @@ pimSim::deleteDevice()
   }
   delete m_device;
   m_device = nullptr;
-  m_paramsPerf->setDevice(PIM_DEVICE_NONE);
   return true;
 }
 
@@ -151,14 +159,20 @@ pimSim::isValidDevice(bool showMsg) const
 PimDeviceEnum
 pimSim::getDeviceType() const
 {
-  return m_paramsPerf->getCurDevice();
+  if (m_device && m_device->isValid()) {
+    return m_device->getDeviceType();
+  }
+  return PIM_DEVICE_NONE;
 }
 
 //! @brief  Get simulation target device
 PimDeviceEnum
 pimSim::getSimTarget() const
 {
-  return m_paramsPerf->getSimTarget();
+  if (m_device && m_device->isValid()) {
+    return m_device->getSimTarget();
+  }
+  return PIM_DEVICE_NONE;
 }
 
 //! @brief  Get number of ranks
