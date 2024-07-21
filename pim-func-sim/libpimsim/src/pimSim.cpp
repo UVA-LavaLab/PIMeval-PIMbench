@@ -300,49 +300,49 @@ pimSim::pimCreateDualContactRef(PimObjId refId)
   return m_device->pimCreateDualContactRef(refId);
 }
 
-// @brief  Copy data from main memory to PIM device
+// @brief  Copy data from main memory to PIM device within a range
 bool
-pimSim::pimCopyMainToDevice(void* src, PimObjId dest)
+pimSim::pimCopyMainToDevice(void* src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimCopyMainToDevice");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyMainToDevice(src, dest);
+  return m_device->pimCopyMainToDevice(src, dest, idxBegin, idxEnd);
 }
 
-// @brief  Copy data from PIM device to main memory
+// @brief  Copy data from PIM device to main memory within a range
 bool
-pimSim::pimCopyDeviceToMain(PimObjId src, void* dest)
+pimSim::pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyDeviceToMain(src, dest);
+  return m_device->pimCopyDeviceToMain(src, dest, idxBegin, idxEnd);
 }
 
-// @brief  Copy data from main memory to PIM device with type
+// @brief  Copy data from main memory to PIM device with type within a range
 bool
-pimSim::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
+pimSim::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimCopyMainToDevice");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyMainToDeviceWithType(copyType, src, dest);
+  return m_device->pimCopyMainToDeviceWithType(copyType, src, dest, idxBegin, idxEnd);
 }
 
-// @brief  Copy data from PIM device to main memory with type
+// @brief  Copy data from PIM device to main memory with type within a range
 bool
-pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest)
+pimSim::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyDeviceToMainWithType(copyType, src, dest);
+  return m_device->pimCopyDeviceToMainWithType(copyType, src, dest, idxBegin, idxEnd);
 }
 
-// @brief  Copy data from PIM device to device
+// @brief  Copy data from PIM device to device within a range
 bool
-pimSim::pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+pimSim::pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimCopyDeviceToDevice");
   if (!isValidDevice()) { return false; }
-  return m_device->pimCopyDeviceToDevice(src, dest);
+  return m_device->pimCopyDeviceToDevice(src, dest, idxBegin, idxEnd);
 }
 
 // @brief  Load vector with a scalar value
