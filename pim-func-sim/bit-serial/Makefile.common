@@ -5,7 +5,7 @@ CXX := g++
 CXXFLAGS := -std=c++17 -Wall
 
 # Setup libpimeval library
-LIBPIMEVAL_PATH ?= ../libpimsim
+LIBPIMEVAL_PATH ?= ../libpimeval
 INC_DIR := $(LIBPIMEVAL_PATH)/include
 LIB_DIR := $(LIBPIMEVAL_PATH)/lib
 CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimeval
