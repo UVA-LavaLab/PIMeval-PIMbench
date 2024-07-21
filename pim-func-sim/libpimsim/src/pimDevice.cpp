@@ -33,7 +33,11 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
   PimDeviceEnum simTarget = pimSim::get()->getParamsPerf()->getSimTarget();
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
+  case PIM_DEVICE_BITSIMD_V_NAND:
+  case PIM_DEVICE_BITSIMD_V_MAJ:
   case PIM_DEVICE_BITSIMD_V_AP:
+  case PIM_DEVICE_DRISA_NOR:
+  case PIM_DEVICE_DRISA_MIXED:
   case PIM_DEVICE_SIMDRAM:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_FULCRUM:
