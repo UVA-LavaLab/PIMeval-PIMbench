@@ -1,14 +1,14 @@
 # Makefile for PIM Functional Simulator
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-LIBDIR := libpimsim
+LIBDIR := libpimeval
 BITSERIALDIR := bit-serial
 APPDIR := apps
 TESTDIR := tests
 ALLDIRS := $(LIBDIR) $(BITSERIALDIR) $(APPDIR) $(TESTDIR)
 
 # Handle dependency between lib and apps to support make -j
-DEP_LIBPIMSIM := $(LIBDIR)/lib/libpimsim.a
+DEP_LIBPIMEVAL := $(LIBDIR)/lib/libpimeval.a
 
 .PHONY: debug perf dramsim3_integ clean $(ALLDIRS)
 .DEFAULT_GOAL := perf
@@ -33,9 +33,9 @@ USE_OPENMP ?= 0
 # Run make with COMPILE_WITH_JPEG=0 to disable compilation with JPEG. JPEG compilation is needed for VGG apps.
 COMPILE_WITH_JPEG ?= 0
 
-$(DEP_LIBPIMSIM) $(LIBDIR):
+$(DEP_LIBPIMEVAL) $(LIBDIR):
 	$(MAKE) -C $(LIBDIR) $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP) COMPILE_WITH_JPEG=$(COMPILE_WITH_JPEG)
 
-$(BITSERIALDIR) $(APPDIR) $(TESTDIR): $(DEP_LIBPIMSIM)
+$(BITSERIALDIR) $(APPDIR) $(TESTDIR): $(DEP_LIBPIMEVAL)
 	$(MAKE) -C $@ $(MAKECMDGOALS) PIM_SIM_TARGET=$(PIM_SIM_TARGET) USE_OPENMP=$(USE_OPENMP) COMPILE_WITH_JPEG=$(COMPILE_WITH_JPEG)
 

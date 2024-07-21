@@ -1,7 +1,7 @@
 # Makefile: C++ version of image downsampling
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-LIBPIMEVAL_PATH = ../../../libpimsim
+LIBPIMEVAL_PATH = ../../../libpimeval
 include ../../Makefile.common
 
 # make USE_OPENMP=1

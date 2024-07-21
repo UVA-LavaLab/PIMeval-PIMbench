@@ -1,4 +1,4 @@
-## PIM Functional Simulator
+## PIMeval Simulator
 
 ### Description
 
@@ -20,11 +20,11 @@
   * Guard any `-fopenmp` with this flag in Makefile
 
 ### Code Architecture
-* libpimsim
-  * `src`: PIM functional simualtor source code
-  * `include/libpimsim.h`: Public header file (after make)
-  * `lib/libpimsim.a`: PIM functional simulator library (after make)
-* apps
+* libpimeval - PIMeval similation framework
+  * `src`: PIMeval simualtor source code
+  * `include/libpimeval.h`: Public header file (after make)
+  * `lib/libpimeval.a`: PIMeval simulator library (after make)
+* apps - PIMbench
   * `cpp-vec-add`: Vector addition
   * `cpp-vec-arithmetic`: Vector arithmetic
   * `cpp-vec-comp`: Vector comparison
@@ -42,7 +42,7 @@
 * This module contains a copy of DRAMsim3
   * Oringal DRAMsim3 repo: https://github.com/umd-memsys/DRAMsim3
   * Clone date: 05/06/2024
-  * Location: ./libpimsim/DRAMsim3/
+  * Location: ./third_party/DRAMsim3/
 * DRAMsim3 related code are guarded with DRAMSIM3_INTEG flag
   * Requires `make dramsim3_integ`
 * Below is needed for dramsim3_integ for now
