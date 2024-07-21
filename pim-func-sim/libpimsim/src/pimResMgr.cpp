@@ -121,6 +121,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
   unsigned numRowsToAlloc = 0;
   uint64_t numRegions = 0;
   unsigned numColsToAllocLast = 0;
+  uint64_t numElemPerRegion = 0;
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
@@ -129,6 +130,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
     }
+    numElemPerRegion = numCols;
   } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
@@ -137,6 +139,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     if (numColsToAllocLast == 0) {
       numColsToAllocLast = numCols;
     }
+    numElemPerRegion = numCols / bitsPerElement;
   } else {
     std::printf("PIM-Error: Unsupported PIM allocation type %d\n", static_cast<int>(allocType));
     return -1;
@@ -153,12 +156,13 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     }
   }
 
-  // create regions
+  // create new regions
   bool success = true;
   for (unsigned i = 0; i < numCores; ++i) {
     m_coreUsage.at(i)->newAllocStart();
   }
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
+    uint64_t elemIdx = 0;
     for (uint64_t i = 0; i < numRegions; ++i) {
       PimCoreId coreId = sortedCoreId[i % numCores];
       unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
@@ -168,6 +172,9 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
         success = false;
         break;
       }
+      newRegion.setElemIdxBegin(elemIdx);
+      elemIdx += numElemPerRegion;
+      newRegion.setElemIdxEnd(elemIdx); // exclusive
       newObj.addRegion(newRegion);
 
       // add to core usage map
@@ -176,7 +183,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     }
   }
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage.at(i)->newAllocEnd(success);
+    m_coreUsage.at(i)->newAllocEnd(success); // rollback if failed
   }
 
   if (!success) {
@@ -232,7 +239,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
   }
   assert(allocType == assocObj.getAllocType());
 
-  // allocate regions
+  // allocate associated regions
   pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
   m_availObjId++;
 
@@ -253,6 +260,8 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
       success = false;
       break;
     }
+    newRegion.setElemIdxBegin(region.getElemIdxBegin());
+    newRegion.setElemIdxEnd(region.getElemIdxEnd()); // exclusive
     newObj.addRegion(newRegion);
 
     // add to core usage map
@@ -260,7 +269,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
     m_coreUsage.at(coreId)->addRange(alloc, newObj.getObjId());
   }
   for (unsigned i = 0; i < numCores; ++i) {
-    m_coreUsage.at(i)->newAllocEnd(success);
+    m_coreUsage.at(i)->newAllocEnd(success); // rollback if failed
   }
 
   if (!success) {

@@ -88,43 +88,43 @@ pimCreateDualContactRef(PimObjId refId)
   return pimSim::get()->pimCreateDualContactRef(refId);
 }
 
-//! @brief  Copy data from main to PIM device
+//! @brief  Copy data from main memory to PIM device for a range of elements within the PIM object
 PimStatus
-pimCopyHostToDevice(void* src, PimObjId dest)
+pimCopyHostToDevice(void* src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
-  bool ok = pimSim::get()->pimCopyMainToDevice(src, dest);
+  bool ok = pimSim::get()->pimCopyMainToDevice(src, dest, idxBegin, idxEnd);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Copy data from PIM device to main
+//! @brief  Copy data from PIM device to main memory for a range of elements within the PIM object
 PimStatus
-pimCopyDeviceToHost(PimObjId src, void* dest)
+pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
-  bool ok = pimSim::get()->pimCopyDeviceToMain(src, dest);
+  bool ok = pimSim::get()->pimCopyDeviceToMain(src, dest, idxBegin, idxEnd);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Copy data from main to PIM device with type
+//! @brief  Copy data from main memory to PIM device with type for a range of elements within the PIM object
 PimStatus
-pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest)
+pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
-  bool ok = pimSim::get()->pimCopyMainToDeviceWithType(copyType, src, dest);
+  bool ok = pimSim::get()->pimCopyMainToDeviceWithType(copyType, src, dest, idxBegin, idxEnd);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Copy data from PIM device to main with type
+//! @brief  Copy data from PIM device to main memory with type for a range of elements within the PIM object
 PimStatus
-pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest)
+pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
-  bool ok = pimSim::get()->pimCopyDeviceToMainWithType(copyType, src, dest);
+  bool ok = pimSim::get()->pimCopyDeviceToMainWithType(copyType, src, dest, idxBegin, idxEnd);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-//! @brief  Copy data from PIM device to device
+//! @brief  Copy data from PIM device to device for a range of elements within the PIM object
 PimStatus
-pimCopyDeviceToDevice(PimObjId src, PimObjId dest)
+pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
-  bool ok = pimSim::get()->pimCopyDeviceToDevice(src, dest);
+  bool ok = pimSim::get()->pimCopyDeviceToDevice(src, dest, idxBegin, idxEnd);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

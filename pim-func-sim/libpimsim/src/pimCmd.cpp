@@ -128,15 +128,6 @@ pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
   return true;
 }
 
-//! @brief  Utility: Get number of elements in a region
-unsigned
-pimCmd::getNumElementsInRegion(const pimRegion& region, unsigned bitsPerElement) const
-{
-  unsigned numAllocRows = region.getNumAllocRows();
-  unsigned numAllocCols = region.getNumAllocCols();
-  return (uint64_t)numAllocRows * numAllocCols / bitsPerElement;
-}
-
 //! @brief  Process all regions in MT used by derived classes
 bool
 pimCmd::computeAllRegions(unsigned numRegions)
@@ -192,6 +183,7 @@ bool
 pimCmdCopy::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
+  uint64_t numElements = 0;
   switch (m_cmdType) {
   case PimCmdEnum::COPY_H2D:
   {
@@ -203,6 +195,8 @@ pimCmdCopy::sanityCheck() const
       std::printf("PIM-Error: Invalid PIM object ID %d as copy destination\n", m_dest);
       return false;
     }
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    numElements = objDest.getNumElements();
     break;
   }
   case PimCmdEnum::COPY_D2H:
@@ -215,6 +209,8 @@ pimCmdCopy::sanityCheck() const
       std::printf("PIM-Error: Invalid null pointer as copy destination\n");
       return false;
     }
+    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    numElements = objSrc.getNumElements();
     break;
   }
   case PimCmdEnum::COPY_D2D:
@@ -233,11 +229,27 @@ pimCmdCopy::sanityCheck() const
       std::printf("PIM-Error: PIM object IDs %d and %d are not associated for device-to-device copying\n", m_src, m_dest);
       return false;
     }
+    numElements = objSrc.getNumElements();
     break;
   }
   default:
     assert(0);
   }
+  if (!m_copyFullRange) {
+    if (m_idxBegin > numElements) {
+      std::printf("PIM-Error: The beggining of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
+      return false;
+    }
+    if (m_idxEnd > numElements) {
+      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is greater than the number of elements\n", m_dest);
+      return false;
+    }
+    if (m_idxEnd < m_idxBegin) {
+      std::printf("PIM-Error: The end of the copy range for PIM object ID %d is less than its beggining\n", m_dest);
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -264,9 +276,11 @@ pimCmdCopy::computeRegion(unsigned index)
     unsigned colIdx = region.getColIdx();
     unsigned numAllocRows = region.getNumAllocRows();
     unsigned numAllocCols = region.getNumAllocCols();
+    unsigned bitsPerElement = objSrc.getBitsPerElement();
     PimCoreId coreId = region.getCoreId();
     pimCore& core = m_device->getCore(coreId);
     bool isDCCN = objSrc.isDualContactRef();
+    uint64_t reginBeginIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index; 
     if (m_copyType == PIM_COPY_V) {
       for (unsigned c = 0; c < numAllocCols; ++c) {
         for (unsigned r = 0; r < numAllocRows; ++r) {
@@ -274,7 +288,15 @@ pimCmdCopy::computeRegion(unsigned index)
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
           if (isDCCN) { val = !val; }
-          bits.push_back(val);
+          if (!m_copyFullRange) {
+            uint64_t currIdx = reginBeginIdx + c; 
+            if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+              bits.push_back(val);
+            }
+          }
+          else {
+            bits.push_back(val);
+          }
         }
       }
     } else if (m_copyType == PIM_COPY_H) {
@@ -284,7 +306,15 @@ pimCmdCopy::computeRegion(unsigned index)
           unsigned col = colIdx + c;
           bool val = core.getBit(row, col);
           if (isDCCN) { val = !val; }
-          bits.push_back(val);
+          if (!m_copyFullRange) {
+            uint64_t currIdx = reginBeginIdx + c / bitsPerElement; 
+            if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+              bits.push_back(val);
+            }
+          }
+          else {
+            bits.push_back(val);
+          }
         }
       }
     } else {
@@ -302,9 +332,11 @@ pimCmdCopy::computeRegion(unsigned index)
     unsigned colIdx = region.getColIdx();
     unsigned numAllocRows = region.getNumAllocRows();
     unsigned numAllocCols = region.getNumAllocCols();
+    unsigned bitsPerElement = objDest.getBitsPerElement();
     PimCoreId coreId = region.getCoreId();
     pimCore& core = m_device->getCore(coreId);
     bool isDCCN = objDest.isDualContactRef();
+    uint64_t regionBeginIdx = (uint64_t)objDest.getMaxElementsPerRegion() * index;
     if (m_copyType == PIM_COPY_V) {
       size_t bitIdx = 0;
       for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
@@ -312,7 +344,15 @@ pimCmdCopy::computeRegion(unsigned index)
         if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i % numAllocRows;
         unsigned col = colIdx + i / numAllocRows;
-        core.setBit(row, col, val);
+        if (!m_copyFullRange) {
+          uint64_t currIdx = regionBeginIdx + col;
+          if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+            core.setBit(row, col, val);
+          }
+        } 
+        else {
+          core.setBit(row, col, val);
+        }
       }
     } else if (m_copyType == PIM_COPY_H) {
       size_t bitIdx = 0;
@@ -321,7 +361,15 @@ pimCmdCopy::computeRegion(unsigned index)
         if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i / numAllocCols;
         unsigned col = colIdx + i % numAllocCols;
-        core.setBit(row, col, val);
+        if (!m_copyFullRange) {
+          uint64_t currIdx = regionBeginIdx + col / bitsPerElement;
+          if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+            core.setBit(row, col, val);
+          }
+        } 
+        else {
+          core.setBit(row, col, val);
+        }
       }
     } else {
       assert(0);
@@ -346,6 +394,9 @@ pimCmdCopy::updateStats() const
    if (m_cmdType == PimCmdEnum::COPY_H2D) {
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
     uint64_t numElements = objDest.getNumElements();
+    if (!m_copyFullRange) {
+      numElements = m_idxEnd - m_idxBegin;
+    }
     unsigned bitsPerElement = objDest.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement);
 
@@ -357,6 +408,9 @@ pimCmdCopy::updateStats() const
   } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
+    if (!m_copyFullRange) {
+      numElements = m_idxEnd - m_idxBegin;
+    }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement);
 
@@ -368,6 +422,9 @@ pimCmdCopy::updateStats() const
   } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
+    if (!m_copyFullRange) {
+      numElements = m_idxEnd - m_idxBegin;
+    }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement);
 
@@ -437,7 +494,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   // perform the computation
-  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElementSrc);
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
@@ -535,7 +592,7 @@ pimCmdFunc2::computeRegion(unsigned index)
   pimCore& core = m_device->getCore(coreId);
 
   // perform the computation
-  unsigned numElementsInRegion = getNumElementsInRegion(src1Region, bitsPerElementSrc1);
+  unsigned numElementsInRegion = src1Region.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     auto locSrc1 = locateNthElement(src1Region, isVLayout, j, bitsPerElementSrc1);
     auto locSrc2 = locateNthElement(src2Region, isVLayout, j, bitsPerElementSrc2);
@@ -701,8 +758,8 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   PimCoreId coreId = srcRegion.getCoreId();
   pimCore& core = m_device->getCore(coreId);
 
-  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
-  uint64_t currIdx = (uint64_t)objSrc.getMaxElementsPerRegion() * index;
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+  uint64_t currIdx = srcRegion.getElemIdxBegin();
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
@@ -731,7 +788,7 @@ pimCmdRedSum<T>::updateStats() const
     uint64_t index = 0;
     for (const auto& region : objSrc.getRegions()) {
       PimCoreId coreId = region.getCoreId();
-      unsigned numElementsInRegion = getNumElementsInRegion(region, bitsPerElement);
+      unsigned numElementsInRegion = region.getNumElemInRegion();
       bool isActive = index < m_idxEnd && index + numElementsInRegion - 1 >= m_idxBegin;
       if (isActive) {
         activeRegionPerCore[coreId]++;
@@ -796,7 +853,7 @@ pimCmdBroadcast<T>::computeRegion(unsigned index)
   PimCoreId coreId = destRegion.getCoreId();
   pimCore &core = m_device->getCore(coreId);
 
-  unsigned numElementsInRegion = getNumElementsInRegion(destRegion, bitsPerElement);
+  unsigned numElementsInRegion = destRegion.getNumElemInRegion();
 
   uint64_t val = *reinterpret_cast<uint64_t *>(&m_val);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
@@ -860,7 +917,7 @@ pimCmdRotate::execute()
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
-      unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+      unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
       auto locSrc = locateNthElement(srcRegion, isVLayout, numElementsInRegion - 1, bitsPerElement);
       uint64_t val = 0;
       if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
@@ -902,7 +959,7 @@ pimCmdRotate::computeRegion(unsigned index)
   pimCore &core = m_device->getCore(coreId);
 
   // read out values
-  unsigned numElementsInRegion = getNumElementsInRegion(srcRegion, bitsPerElement);
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   std::vector<uint64_t> regionVector(numElementsInRegion);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
