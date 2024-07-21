@@ -1,6 +1,6 @@
 # Project files
-libpimsim/build/
-libpimsim/lib/
+libpimeval/build/
+libpimeval/lib/
 
 # LSP
 compile_commands.json
