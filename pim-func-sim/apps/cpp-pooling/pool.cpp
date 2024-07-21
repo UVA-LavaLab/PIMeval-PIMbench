@@ -1,7 +1,7 @@
 // Test: C++ version of max pool. 
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <iostream>
 #include <vector>
 #include <getopt.h>

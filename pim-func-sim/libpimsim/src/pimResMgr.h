@@ -5,7 +5,7 @@
 #ifndef LAVA_PIM_RES_MGR_H
 #define LAVA_PIM_RES_MGR_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <vector>
 #include <tuple>
 #include <unordered_map>

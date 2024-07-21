@@ -5,7 +5,7 @@
 #ifndef LAVA_PIM_CMD_H
 #define LAVA_PIM_CMD_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include "pimResMgr.h"
 #include "pimCore.h"
 #include "pimUtils.h"

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <algorithm>
-#include "libpimsim.h"
+#include "libpimeval.h"
 
 class PIMAuxilary {
 public:

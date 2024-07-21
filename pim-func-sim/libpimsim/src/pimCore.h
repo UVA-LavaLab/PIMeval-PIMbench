@@ -5,7 +5,7 @@
 #ifndef LAVA_PIM_CORE_H
 #define LAVA_PIM_CORE_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <vector>
 #include <string>
 #include <map>

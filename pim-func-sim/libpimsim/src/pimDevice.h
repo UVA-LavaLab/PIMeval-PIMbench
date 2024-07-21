@@ -5,7 +5,7 @@
 #ifndef LAVA_PIM_DEVICE_H
 #define LAVA_PIM_DEVICE_H
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include "pimCore.h"
 #include "pimCmd.h"
 #ifdef DRAMSIM3_INTEG

@@ -5,7 +5,7 @@
 #define BIT_SERIAL_BITSIMD_AP_H
 
 #include "bitSerialBase.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include <vector>
 
 //! @class  bsBitsimd

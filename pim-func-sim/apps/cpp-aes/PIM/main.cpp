@@ -1,7 +1,7 @@
 // C++ version of Advanced Encryption Algorithm (AES)
 // Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
-#include "libpimsim.h"
+#include "libpimeval.h"
 #include "PIMAuxilary.h"
 #include <iostream> 
 #include <vector>
