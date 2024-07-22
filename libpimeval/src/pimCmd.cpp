@@ -31,7 +31,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::ADD, "add" },
     { PimCmdEnum::SUB, "sub" },
     { PimCmdEnum::MUL, "mul" },
-    { PimCmdEnum::MUL_AGGREGATE, "mul_aggregate" },
+    { PimCmdEnum::SCALED_ADD, "scaled_add" },
     { PimCmdEnum::DIV, "div" },
     { PimCmdEnum::AND, "and" },
     { PimCmdEnum::OR, "or" },
@@ -627,7 +627,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
         case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::MUL_AGGREGATE: result = (operand1 * m_scalerValue) + operand2; break;
+        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalerValue) + operand2; break;
         default:
           std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
           assert(0);
@@ -658,7 +658,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
         case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::MUL_AGGREGATE: result = (operand1 * m_scalerValue) + operand2; break;
+        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalerValue) + operand2; break;
         default:
           std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
           assert(0);

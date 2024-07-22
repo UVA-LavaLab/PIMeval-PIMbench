@@ -46,7 +46,7 @@ enum class PimCmdEnum {
   ADD,
   SUB,
   MUL,
-  MUL_AGGREGATE,
+  SCALED_ADD,
   DIV,
   AND,
   OR,

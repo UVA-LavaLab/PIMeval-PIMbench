@@ -336,7 +336,7 @@ PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalerValue)
 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue) 
 {
-  bool ok = pimSim::get()->pimMulAndAggregate(src1, src2, dest, scalerValue);
+  bool ok = pimSim::get()->pimScaledAdd(src1, src2, dest, scalerValue);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
