@@ -23,7 +23,6 @@ using namespace std;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  uint64_t dataSize;
   char *configFile;
   std::string inputFile;
   bool shouldVerify;
@@ -32,7 +31,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./hist [options]"
+          "\nUsage:  ./hist.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    24-bit .bmp input file (default=uses 'small.bmp' from 'histogram_datafiles' directory)"
