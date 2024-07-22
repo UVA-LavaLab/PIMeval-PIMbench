@@ -616,7 +616,7 @@ bool pimSim::pimMax(PimObjId src, PimObjId dest, uint64_t scalerValue)
 bool pimSim::pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue) {
   pimPerfMon perfMon("pimScaledAdd");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::MUL_AGGREGATE, src1, src2, dest, scalerValue);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::SCALED_ADD, src1, src2, dest, scalerValue);
   return m_device->executeCmd(std::move(cmd));
 }
 
