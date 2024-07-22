@@ -622,10 +622,10 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfALUOperationPerCycle = ((double)bitsPerElement / m_flucrumAluBitWidth); 
+    double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth); 
     switch (cmdType)
     {
-    case PimCmdEnum::POPCOUNT: numberOfALUOperationPerCycle *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    case PimCmdEnum::POPCOUNT: numberOfALUOperationPerElement *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
@@ -652,7 +652,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     // Consequently, only one row read operation is required in this case.
     // Additionally, using the walker-renaming technique (refer to the Fulcrum paper for details),
     // the write operation is also pipelined. Thus, only one row write operation is needed.
-    msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerCycle * numPass);
+    msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
@@ -712,21 +712,21 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfALUOperationPerCycle = ((double)bitsPerElement / m_flucrumAluBitWidth);
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * m_fulcrumAluLatency;
+    double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
     msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfALUOperationPerCycle = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * m_blimpCoreLatency * numberOfALUOperationPerCycle;
+    double numberOfALUOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * m_blimpCoreLatency * numberOfALUOperationPerElement;
     switch (cmdType)
     {
     case PimCmdEnum::SCALED_ADD:
     {
-      msRuntime += maxElementsPerRegion * numberOfALUOperationPerCycle * m_blimpCoreLatency;
+      msRuntime += maxElementsPerRegion * numberOfALUOperationPerElement * m_blimpCoreLatency;
       break;
     }
     case PimCmdEnum::ADD:
