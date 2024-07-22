@@ -116,7 +116,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimMulAndAggregate(srcObj1, dstObj, dstObj, srcVector[i]);
+    status = pimScaledAdd(srcObj1, dstObj, dstObj, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;

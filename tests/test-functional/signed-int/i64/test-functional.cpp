@@ -86,7 +86,7 @@ void testFunctional()
 
   // Test mul-aggregate
   {
-    status = pimMulAndAggregate(obj1, obj2, obj3, 2);
+    status = pimScaledAdd(obj1, obj2, obj3, 2);
     assert(status == PIM_OK);
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
