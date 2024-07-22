@@ -45,6 +45,8 @@ public:
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
   pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
+
+  void initThreadPool(unsigned maxNumThreads);
   pimUtils::threadPool* getThreadPool() { return m_threadPool; }
   unsigned getNumThreads() const { return m_numThreads; }
 

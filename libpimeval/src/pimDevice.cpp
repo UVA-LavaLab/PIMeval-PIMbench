@@ -30,8 +30,7 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
 {
   std::printf("PIM-Info: Config: #ranks = %u, #bankPerRank = %u, #subarrayPerBank = %u, #rows = %u, $cols = %u\n",
               numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
-  PimDeviceEnum simTarget = pimSim::get()->getParamsPerf()->getSimTarget();
-  switch (simTarget) {
+  switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_NAND:
   case PIM_DEVICE_BITSIMD_V_MAJ:
@@ -60,6 +59,82 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
   return true;
 }
 
+//! @brief  Config device type and simulation target
+void
+pimDevice::configDevice(PimDeviceEnum curDevice, PimDeviceEnum simTarget)
+{
+  m_deviceType = curDevice;
+  m_simTarget = curDevice;
+
+  // determine simulation target for functional device
+  if (curDevice == PIM_FUNCTIONAL) {
+    // from 'make PIM_SIM_TARGET=...'
+    #if defined(PIM_SIM_TARGET)
+    if (simTarget == PIM_DEVICE_NONE) {
+      simTarget = PIM_SIM_TARGET;
+    }
+    #endif
+    // default sim target
+    if (simTarget == PIM_DEVICE_NONE || simTarget == PIM_FUNCTIONAL) {
+      simTarget = PIM_DEVICE_BITSIMD_V;
+    }
+    m_simTarget = simTarget;
+  }
+}
+
+//! @brief  If a PIM device uses vertical data layout
+bool
+pimDevice::isVLayoutDevice() const
+{
+  switch (m_simTarget) {
+  case PIM_DEVICE_BITSIMD_V: return true;
+  case PIM_DEVICE_BITSIMD_V_NAND: return true;
+  case PIM_DEVICE_BITSIMD_V_MAJ: return true;
+  case PIM_DEVICE_BITSIMD_V_AP: return true;
+  case PIM_DEVICE_DRISA_NOR: return true;
+  case PIM_DEVICE_DRISA_MIXED: return true;
+  case PIM_DEVICE_SIMDRAM: return true;
+  case PIM_DEVICE_BITSIMD_H: return false;
+  case PIM_DEVICE_FULCRUM: return false;
+  case PIM_DEVICE_BANK_LEVEL: return false;
+  case PIM_DEVICE_NONE:
+  case PIM_FUNCTIONAL:
+  default:
+    assert(0);
+  }
+  return false;
+}
+
+//! @brief  If a PIM device uses horizontal data layout
+bool
+pimDevice::isHLayoutDevice() const
+{
+  switch (m_simTarget) {
+  case PIM_DEVICE_BITSIMD_V: return false;
+  case PIM_DEVICE_BITSIMD_V_NAND: return false;
+  case PIM_DEVICE_BITSIMD_V_MAJ: return false;
+  case PIM_DEVICE_BITSIMD_V_AP: return false;
+  case PIM_DEVICE_DRISA_NOR: return false;
+  case PIM_DEVICE_DRISA_MIXED: return false;
+  case PIM_DEVICE_SIMDRAM: return false;
+  case PIM_DEVICE_BITSIMD_H: return true;
+  case PIM_DEVICE_FULCRUM: return true;
+  case PIM_DEVICE_BANK_LEVEL: return true;
+  case PIM_DEVICE_NONE:
+  case PIM_FUNCTIONAL:
+  default:
+    assert(0);
+  }
+  return false;
+}
+
+//! @brief  If a PIM device uses hybrid data layout
+bool
+pimDevice::isHybridLayoutDevice() const
+{
+  return false;
+}
+
 //! @brief  Init pim device, with config file
 bool
 pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
@@ -67,7 +142,10 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   assert(!m_isInit);
   assert(deviceType != PIM_DEVICE_NONE);
 
-  m_deviceType = deviceType;
+  configDevice(deviceType);
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
 
   // input params
   m_numRanks = numRanks;
@@ -97,6 +175,10 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
+
+  unsigned maxNumThreads = 0; // use max hardware parallelism by default
+  // TODO: read max num threads from config file
+  pimSim::get()->initThreadPool(maxNumThreads);
 
   m_isInit = true;
   return m_isValid;
@@ -171,9 +253,9 @@ PimObjId
 pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
 {
   if (allocType == PIM_ALLOC_AUTO) {
-    if (pimSim::get()->getParamsPerf()->isVLayoutDevice()) {
+    if (isVLayoutDevice()) {
       allocType = PIM_ALLOC_V;
-    } else if (pimSim::get()->getParamsPerf()->isHLayoutDevice()) {
+    } else if (isHLayoutDevice()) {
       allocType = PIM_ALLOC_H;
     } else {
       assert(0);

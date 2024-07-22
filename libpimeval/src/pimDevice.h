@@ -30,6 +30,7 @@ public:
   void uninit();
 
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
+  PimDeviceEnum getSimTarget() const { return m_simTarget; }
   unsigned getNumRanks() const { return m_numRanks; }
   unsigned getNumBankPerRank() const { return m_numBankPerRank; }
   unsigned getNumSubarrayPerBank() const { return m_numSubarrayPerBank; }
@@ -39,6 +40,10 @@ public:
   unsigned getNumRows() const { return m_numRows; }
   unsigned getNumCols() const { return m_numCols; }
   bool isValid() const { return m_isValid; }
+
+  bool isVLayoutDevice() const;
+  bool isHLayoutDevice() const;
+  bool isHybridLayoutDevice() const;
 
   PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
   PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
@@ -58,8 +63,10 @@ public:
 
 private:
   bool adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
+  void configDevice(PimDeviceEnum curDevice, PimDeviceEnum simTarget = PIM_DEVICE_NONE);
 
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
+  PimDeviceEnum m_simTarget = PIM_DEVICE_NONE;
   unsigned m_numRanks = 0;
   unsigned m_numBankPerRank = 0;
   unsigned m_numSubarrayPerBank = 0;
