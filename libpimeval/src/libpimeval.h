@@ -123,6 +123,8 @@ PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
 PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
 PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
 PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
+// multiply src1 with scalerValue and add the multiplication result with src2. Save the result to dest. 
+PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
 PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
 PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);

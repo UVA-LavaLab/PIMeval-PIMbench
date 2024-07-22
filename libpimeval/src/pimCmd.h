@@ -46,6 +46,7 @@ enum class PimCmdEnum {
   ADD,
   SUB,
   MUL,
+  MUL_AGGREGATE,
   DIV,
   AND,
   OR,
@@ -301,6 +302,8 @@ class pimCmdFunc2 : public pimCmd
 public:
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
+  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue)
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalerValue(scalerValue) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -310,6 +313,7 @@ protected:
   PimObjId m_src1;
   PimObjId m_src2;
   PimObjId m_dest;
+  uint64_t m_scalerValue;
 };
 
 //! @class  pimCmdedSum

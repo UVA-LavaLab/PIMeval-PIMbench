@@ -84,6 +84,18 @@ void testFunctional()
     std::cout << "[PASSED] pimMul" << std::endl;
   }
 
+  // Test mul-aggregate
+  {
+    status = pimScaledAdd(obj1, obj2, obj3, 2);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<uint16_t>((src1[i] * 2) + src2[i]));
+    }
+    std::cout << "[PASSED] pimMulAggregate" << std::endl;
+  }
+
   // Test div
   {
     status = pimDiv(obj1, obj2, obj3);
