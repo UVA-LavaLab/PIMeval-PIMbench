@@ -87,13 +87,10 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
   PimStatus status = pimCopyHostToDevice((void *)X.data(), obj1);
   assert (status == PIM_OK);
 
-  status = pimMulScalar(obj1, obj1, A);
-  assert (status == PIM_OK);
-
   status = pimCopyHostToDevice((void *)Y.data(), obj2);
   assert (status == PIM_OK);
 
-  status = pimAdd(obj1, obj2, obj2);
+  status = pimScaledAdd(obj1, obj2, obj2, A);
   assert (status == PIM_OK);
 
   dst.resize(vectorLength);
