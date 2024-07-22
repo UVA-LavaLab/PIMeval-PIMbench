@@ -122,6 +122,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
   uint64_t numRegions = 0;
   unsigned numColsToAllocLast = 0;
   uint64_t numElemPerRegion = 0;
+  uint64_t numElemPerRegionLast = 0;
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
@@ -131,6 +132,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
       numColsToAllocLast = numCols;
     }
     numElemPerRegion = numCols;
+    numElemPerRegionLast = numColsToAllocLast;
   } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
@@ -140,6 +142,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
       numColsToAllocLast = numCols;
     }
     numElemPerRegion = numCols / bitsPerElement;
+    numElemPerRegionLast = numColsToAllocLast / bitsPerElement;
   } else {
     std::printf("PIM-Error: Unsupported PIM allocation type %d\n", static_cast<int>(allocType));
     return -1;
@@ -166,6 +169,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     for (uint64_t i = 0; i < numRegions; ++i) {
       PimCoreId coreId = sortedCoreId[i % numCores];
       unsigned numColsToAlloc = (i == numRegions - 1 ? numColsToAllocLast : numCols);
+      unsigned numElemInRegion = (i == numRegions - 1 ? numElemPerRegionLast : numElemPerRegion);
       pimRegion newRegion = findAvailRegionOnCore(coreId, numRowsToAlloc, numColsToAlloc);
       if (!newRegion.isValid()) {
         std::printf("PIM-Error: Failed to allocate object with %u rows on core %d\n", numRowsToAlloc, coreId);
@@ -173,7 +177,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
         break;
       }
       newRegion.setElemIdxBegin(elemIdx);
-      elemIdx += numElemPerRegion;
+      elemIdx += numElemInRegion;
       newRegion.setElemIdxEnd(elemIdx); // exclusive
       newObj.addRegion(newRegion);
 
