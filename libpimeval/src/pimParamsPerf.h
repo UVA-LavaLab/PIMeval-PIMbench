@@ -35,6 +35,10 @@ private:
   double m_tR; // Row read latency in ms
   double m_tW; // Row write latency in ms
   double m_tL; // Logic operation / tCCD in ms
+  double m_fulcrumAluLatency = 0.00000609; // 6.09ns
+  unsigned m_flucrumAluBitWidth = 32;
+  double m_blimpCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper
+  unsigned m_blimpCoreBitWidth = 64; 
 
   static const std::unordered_map<PimDeviceEnum, std::unordered_map<PimDataType,
       std::unordered_map<PimCmdEnum, std::tuple<unsigned, unsigned, unsigned>>>> s_bitsimdPerfTable;
