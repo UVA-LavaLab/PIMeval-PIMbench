@@ -622,14 +622,10 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.00000609; // 6.09 ns. Referance fulcrum paper
-    unsigned aluBits = 32; // 32-bit ALU
-    double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
-    // As fulcrum has three walkers, 2 for input operands and 1 for output, for one operand instructions, the next operand are being fetched to the walker. Hence only one row read should be counted
-    msRuntime = m_tR + (m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * numPass); 
+    double numberOfALUOperationPerCycle = ((double)bitsPerElement / m_flucrum_alu_bits); 
     switch (cmdType)
     {
-    case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    case PimCmdEnum::POPCOUNT: numberOfALUOperationPerCycle *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
@@ -650,15 +646,15 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
+    // As fulcrum has three walkers, 2 for input operands and 1 for output, for one operand instructions, the next operand are being fetched to the walker. Hence only one row read should be counted
+    msRuntime = m_tR + (m_tW + maxElementsPerRegion * m_fulcrum_alu_lat * numberOfALUOperationPerCycle * numPass);
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double riscVCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper 
-    unsigned aluBits = 64; // 64-bit RISCV core
-    double numberOfOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime =  m_tR + (m_tW + maxElementsPerRegion * riscVCoreLatency * numberOfOperationPerCycle * numPass);
+    double numberOfOperationPerCycle = ((double)bitsPerElement / m_blimp_core_bits);
+    msRuntime =  m_tR + (m_tW + maxElementsPerRegion * m_blimp_core_lat * numberOfOperationPerCycle * numPass);
     switch (cmdType)
     {
     case PimCmdEnum::POPCOUNT:
@@ -710,44 +706,16 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.00000609; // 6.09 ns
-    unsigned aluBits = 32; // 32-bit ALU
-    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
-    switch (cmdType)
-    {
-    case PimCmdEnum::SCALED_ADD:
-    {
-      msRuntime += maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
-      break;
-    }
-    case PimCmdEnum::ADD:
-    case PimCmdEnum::SUB:
-    case PimCmdEnum::MUL:
-    case PimCmdEnum::DIV:
-    case PimCmdEnum::AND:
-    case PimCmdEnum::OR:
-    case PimCmdEnum::XOR:
-    case PimCmdEnum::XNOR:
-    case PimCmdEnum::GT:
-    case PimCmdEnum::LT:
-    case PimCmdEnum::EQ:
-    case PimCmdEnum::MIN:
-    case PimCmdEnum::MAX:  break;
-    default:
-       std::printf("PIM-Warning: Unsupported PIM command.\n");
-       break;
-    }
+    double numberOfALUOperationPerCycle = (bitsPerElement / m_flucrum_alu_bits);
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * m_fulcrum_alu_lat;
     msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double riscVCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper 
-    unsigned aluBits = 64; // 64-bit RISCV core
-    double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * riscVCoreLatency * numberOfALUOperationPerCycle;
+    double numberOfALUOperationPerCycle = (bitsPerElement / m_blimp_core_bits);
+    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * m_blimp_core_lat * numberOfALUOperationPerCycle;
     switch (cmdType)
     {
     case PimCmdEnum::SCALED_ADD:
@@ -819,20 +787,16 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, 
   case PIM_DEVICE_FULCRUM:
   {
     // read a row to walker, then reduce in serial
-    double aluLatency = 0.00000609; // 6.09ns
-    unsigned aluBits = 32; // 32-bit ALU
-    double numberOfOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime = m_tR + (maxElementsPerRegion * aluLatency * numberOfOperationPerCycle *numPass);
+    double numberOfOperationPerCycle = ((double)bitsPerElement/m_flucrum_alu_bits);
+    msRuntime = m_tR + (maxElementsPerRegion * m_fulcrum_alu_lat * numberOfOperationPerCycle * numPass);
     // reduction for all regions
     msRuntime += static_cast<double>(numCore) / 3200000;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
   {
-    double riscVCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper 
-    unsigned aluBits = 64; // 64-bit RISCV core
-    double numberOfOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime = m_tR + (maxElementsPerRegion * riscVCoreLatency * numberOfOperationPerCycle * numPass);
+    double numberOfOperationPerCycle = ((double)bitsPerElement/m_blimp_core_bits);
+    msRuntime = m_tR + (maxElementsPerRegion * m_blimp_core_lat * numberOfOperationPerCycle * numPass);
     // reduction for all regions
     msRuntime += static_cast<double>(numCore) / 3200000;
     break;
@@ -880,20 +844,16 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   case PIM_DEVICE_FULCRUM:
   {
     // assume taking 1 ALU latency to write an element
-    double aluLatency = 0.00000609; // 5ns
-    unsigned aluBits = 32; // 32-bits ALU
-    double numberOfOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime = m_tW + aluLatency * maxElementsPerRegion * numberOfOperationPerCycle;
+    double numberOfOperationPerCycle = ((double)bitsPerElement / m_flucrum_alu_bits);
+    msRuntime = m_tW + m_fulcrum_alu_lat * maxElementsPerRegion * numberOfOperationPerCycle;
     msRuntime *= numPass;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
   {
     // assume taking 1 ALU latency to write an element
-    double aluLatency = 0.000005; // 5ns
-    unsigned aluBits = 64; // 64-bit RISCV core
-    double numberOfOperationPerCycle = ((double)bitsPerElement/aluBits);
-    msRuntime = m_tW + (aluLatency * maxElementsPerRegion * numberOfOperationPerCycle);
+    double numberOfOperationPerCycle = ((double)bitsPerElement / m_blimp_core_bits);
+    msRuntime = m_tW + (m_blimp_core_lat * maxElementsPerRegion * numberOfOperationPerCycle);
     msRuntime *= numPass;
     break;
   }
