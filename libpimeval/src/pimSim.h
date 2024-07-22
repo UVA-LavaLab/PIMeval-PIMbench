@@ -92,6 +92,7 @@ public:
   bool pimEQ(PimObjId src, PimObjId dest, uint64_t scalerValue);
   bool pimMin(PimObjId src, PimObjId dest, uint64_t scalerValue);
   bool pimMax(PimObjId src, PimObjId dest, uint64_t scalerValue);
+  bool pimMulAndAggregate(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue);
   bool pimPopCount(PimObjId src, PimObjId dest);
   template <typename T> bool pimRedSum(PimObjId src, T* sum);
   template <typename T> bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum);

@@ -31,7 +31,7 @@ void testFunctional()
 
   // Assign some initial values
   for (unsigned i = 0; i < numElements; ++i) {
-    src1[i] = static_cast<int8_t>(i);
+    src1[i] = static_cast<int8_t>(i+1);
     src2[i] = static_cast<int8_t>(i*2 + 9);
   }
 
@@ -82,6 +82,18 @@ void testFunctional()
       assert(dest[i] == static_cast<int8_t>(src1[i] * src2[i]));
     }
     std::cout << "[PASSED] pimMul" << std::endl;
+  }
+
+  // Test mul-aggregate
+  {
+    status = pimMulAndAggregate(obj1, obj2, obj3, 2);
+    assert(status == PIM_OK);
+    status = pimCopyDeviceToHost(obj3, (void *)dest.data());
+    assert(status == PIM_OK);
+    for (unsigned i = 0; i < numElements; ++i) {
+      assert(dest[i] == static_cast<int8_t>((src1[i] * 2) + src2[i]));
+    }
+    std::cout << "[PASSED] pimMulAggregate" << std::endl;
   }
 
   // Test div

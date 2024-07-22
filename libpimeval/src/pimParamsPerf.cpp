@@ -44,6 +44,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   57 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   57 } },
+      { PimCmdEnum::MUL_AGGREGATE,{   44,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_INT16, {
       { PimCmdEnum::ABS,          {   17,   16,   66 } },
@@ -74,6 +75,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  113 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  113 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_INT32, {
       { PimCmdEnum::ABS,          {   33,   32,  130 } },
@@ -104,6 +106,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  225 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  225 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_INT64, {
       { PimCmdEnum::ABS,          {   65,   64,  258 } },
@@ -134,6 +137,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  449 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  449 } },
+      //{ PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT8, {
       { PimCmdEnum::ABS,          {    8,    8,    0 } },
@@ -164,6 +168,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   58 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   58 } },
+      { PimCmdEnum::MUL_AGGREGATE,{   44,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT16, {
       { PimCmdEnum::ABS,          {   16,   16,    0 } },
@@ -194,6 +199,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  114 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  114 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT32, {
       { PimCmdEnum::ABS,          {   32,   32,    0 } },
@@ -224,6 +230,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  226 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  226 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT64, {
       { PimCmdEnum::ABS,          {   64,   64,    0 } },
@@ -254,6 +261,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  450 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  450 } },
+      // { PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_FP32, {
       { PimCmdEnum::ADD,          { 1331,  685, 1687 } },
@@ -292,6 +300,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   65 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   65 } },
+      { PimCmdEnum::MUL_AGGREGATE,{   52,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_INT16, {
       { PimCmdEnum::ABS,          {   17,   16,   99 } },
@@ -322,6 +331,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  129 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  129 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_INT32, {
       { PimCmdEnum::ABS,          {   33,   32,  195 } },
@@ -352,6 +362,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  257 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  257 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_INT64, {
       { PimCmdEnum::ABS,          {   65,   64,  387 } },
@@ -382,6 +393,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  513 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  513 } },
+      // { PimCmdEnum::MUL_AGGREGATE,{   52,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT8, {
       { PimCmdEnum::ABS,          {    8,    8,    0 } },
@@ -412,6 +424,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   67 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   67 } },
+      { PimCmdEnum::MUL_AGGREGATE,{   52,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT16, {
       { PimCmdEnum::ABS,          {   16,   16,    0 } },
@@ -442,6 +455,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  131 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  131 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT32, {
       { PimCmdEnum::ABS,          {   32,   32,    0 } },
@@ -472,6 +486,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  259 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  259 } },
+      { PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_UINT64, {
       { PimCmdEnum::ABS,          {   64,   64,    0 } },
@@ -502,6 +517,7 @@ pimParamsPerf::s_bitsimdPerfTable = {
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  515 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  515 } },
+      // { PimCmdEnum::MUL_AGGREGATE,{  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR 
     }},
     { PIM_FP32, {
       { PimCmdEnum::ADD,          { 1597,  822, 2024 } },
@@ -699,6 +715,30 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
     msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
+    switch (cmdType)
+    {
+    case PimCmdEnum::MUL_AGGREGATE:
+    {
+      msRuntime += maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
+      break;
+    }
+    case PimCmdEnum::ADD:
+    case PimCmdEnum::SUB:
+    case PimCmdEnum::MUL:
+    case PimCmdEnum::DIV:
+    case PimCmdEnum::AND:
+    case PimCmdEnum::OR:
+    case PimCmdEnum::XOR:
+    case PimCmdEnum::XNOR:
+    case PimCmdEnum::GT:
+    case PimCmdEnum::LT:
+    case PimCmdEnum::EQ:
+    case PimCmdEnum::MIN:
+    case PimCmdEnum::MAX:  break;
+    default:
+       std::printf("PIM-Warning: Unsupported PIM command.\n");
+       break;
+    }
     msRuntime *= numPass;
     break;
   }
@@ -711,6 +751,30 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
     msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle / numALU;
+    switch (cmdType)
+    {
+    case PimCmdEnum::MUL_AGGREGATE:
+    {
+      msRuntime += maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency / numALU;
+      break;
+    }
+    case PimCmdEnum::ADD:
+    case PimCmdEnum::SUB:
+    case PimCmdEnum::MUL:
+    case PimCmdEnum::DIV:
+    case PimCmdEnum::AND:
+    case PimCmdEnum::OR:
+    case PimCmdEnum::XOR:
+    case PimCmdEnum::XNOR:
+    case PimCmdEnum::GT:
+    case PimCmdEnum::LT:
+    case PimCmdEnum::EQ:
+    case PimCmdEnum::MIN:
+    case PimCmdEnum::MAX:  break;
+    default:
+       std::printf("PIM-Warning: Unsupported PIM command.\n");
+       break;
+    }
     msRuntime *= numPass;
     break;
   }
