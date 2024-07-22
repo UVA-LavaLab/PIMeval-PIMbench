@@ -622,12 +622,13 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.000005; // 5ns
+    double aluLatency = 0.00000609; // 5ns
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = ((double)bitsPerElement/aluBits);
     msRuntime = m_tR + m_tW + maxElementsPerRegion * aluLatency * numberOfALUOperationPerCycle * numPass;
     switch (cmdType)
     {
+    case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
@@ -640,8 +641,7 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
     case PimCmdEnum::LT_SCALAR:
     case PimCmdEnum::EQ_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR: msRuntime += aluLatency * maxElementsPerRegion; break; // the broadcast value is being stored in the walker, hence no row write is needed.
-    case PimCmdEnum::POPCOUNT: msRuntime *= 12; break; // 4 shifts, 4 ands, 3 add/sub, 1 mul
+    case PimCmdEnum::MAX_SCALAR:
     case PimCmdEnum::ABS:
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R: break;
@@ -711,7 +711,7 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_FULCRUM:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double aluLatency = 0.000005; // 5ns
+    double aluLatency = 0.00000609; // 5ns
     unsigned aluBits = 32; // 32-bit ALU
     double numberOfALUOperationPerCycle = (bitsPerElement/aluBits);
     msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerCycle * aluLatency;
@@ -819,11 +819,21 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, 
     // consider PCL
     break;
   case PIM_DEVICE_FULCRUM:
+  {
+    // read a row to walker, then reduce in serial
+    double aluLatency = 0.00000609; // 6.09ns
+    msRuntime = (m_tR + maxElementsPerRegion * aluLatency);
+    msRuntime *= numPass;
+    // reduction for all regions
+    msRuntime += static_cast<double>(numRegions) / 3200000;
+    break;
+  }
   case PIM_DEVICE_BANK_LEVEL:
   {
     // read a row to walker, then reduce in serial
     double aluLatency = 0.000005; // 5ns
-    msRuntime = (m_tR + maxElementsPerRegion * aluLatency);
+    double numAlu = 2;
+    msRuntime = (m_tR + maxElementsPerRegion * aluLatency/numAlu);
     msRuntime *= numPass;
     // reduction for all regions
     msRuntime += static_cast<double>(numRegions) / 3200000;
@@ -870,11 +880,19 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
     break;
   }
   case PIM_DEVICE_FULCRUM:
+  {
+    // assume taking 1 ALU latency to write an element
+    double aluLatency = 0.00000609; // 5ns
+    msRuntime = m_tW + aluLatency * maxElementsPerRegion;
+    msRuntime *= numPass;
+    break;
+  }
   case PIM_DEVICE_BANK_LEVEL:
   {
     // assume taking 1 ALU latency to write an element
     double aluLatency = 0.000005; // 5ns
-    msRuntime = m_tW + aluLatency * maxElementsPerRegion;
+    double numAlu = 2;
+    msRuntime = m_tW + (aluLatency * maxElementsPerRegion / aluLatency);
     msRuntime *= numPass;
     break;
   }
