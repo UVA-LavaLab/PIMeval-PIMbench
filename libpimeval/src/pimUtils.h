@@ -40,7 +40,7 @@ namespace pimUtils
   class threadPool {
   public:
     threadPool(size_t numThreads);
-    ~threadPool() {}
+    ~threadPool();
     void doWork(const std::vector<pimUtils::threadWorker*>& workers);
   private:
     void workerThread();

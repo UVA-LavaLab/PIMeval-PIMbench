@@ -130,6 +130,21 @@ pimUtils::threadPool::threadPool(size_t numThreads)
   std::printf("PIM-Info: Created thread pool with %lu threads.\n", m_threads.size());
 }
 
+//! @brief  Thread pool dtor
+pimUtils::threadPool::~threadPool()
+{
+  {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_terminate = true;
+  }
+  m_cond.notify_all();
+  for (auto& thread : m_threads) {
+    if (thread.joinable()) {
+      thread.join();
+    }
+  }
+}
+
 //! @brief  Entry to process workers in MT
 void
 pimUtils::threadPool::doWork(const std::vector<pimUtils::threadWorker*>& workers)
@@ -150,7 +165,8 @@ pimUtils::threadPool::doWork(const std::vector<pimUtils::threadWorker*>& workers
 
 //! @brief  Worker thread that process workers
 void
-pimUtils::threadPool::workerThread() {
+pimUtils::threadPool::workerThread()
+{
   while (true) {
     threadWorker* worker;
     {
