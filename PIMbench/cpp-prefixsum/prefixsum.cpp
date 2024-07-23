@@ -74,9 +74,9 @@ struct Params getInputParams(int argc, char **argv)
 
 void prefixSum(vector<int>& input, vector<int>& deviceoutput, uint64_t len)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-  std::vector<PimObjId> temp(len);
-  std::vector<PimObjId> acc(len);
+ unsigned bitsPerElement = sizeof(int) * 8;
+ std::vector<PimObjId> temp(len);
+ std::vector<PimObjId> acc(len);
 
  PimObjId inputObj = pimAlloc(PIM_ALLOC_AUTO, len, bitsPerElement, PIM_INT32);
  if (inputObj == -1) 
