@@ -82,20 +82,20 @@ struct Params getInputParams(int argc, char **argv)
 void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
-  if (srcObj == -1)
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
+  if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-  //PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj, PIM_INT32);
-  //if (srcObj2 == -1)
-  //{
-  //  std::cout << "Abort" << std::endl;
-  // return;
-  //}
+  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  if (srcObj2 == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
-  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj, PIM_INT32);
+  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
   if (dstObj == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -111,14 +111,14 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 
   for (int i = 0; i < col; ++i)
   {
-    status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj);
+    status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
       return;
     }
 
-    status = pimScaledAdd(srcObj, dstObj, dstObj, srcVector[i]);
+    status = pimScaledAdd(srcObj1, dstObj, dstObj, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -126,7 +126,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     }
 
     //Let's not remove this following commented block
-    // status = pimMulScalar(srcObj, srcObj2, srcVector[i]);
+    // status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
     // if (status != PIM_OK)
     // {
     //   std::cout << "Abort" << std::endl;
@@ -147,8 +147,8 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   {
     std::cout << "Abort" << std::endl;
   }
-  pimFree(srcObj);
-  //pimFree(srcObj2);
+  pimFree(srcObj1);
+  pimFree(srcObj2);
   pimFree(dstObj);
 }
 
@@ -189,7 +189,6 @@ int main(int argc, char *argv[])
       {
         result += srcMatrix[j][i] * srcVector[j];
       }
-      
       if (result != resultVector[i])
       {
 #pragma omp critical
