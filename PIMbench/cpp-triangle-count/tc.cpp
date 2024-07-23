@@ -337,8 +337,6 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
-    // cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
-    // cout << "words_per_device: " << words_per_device << endl;
     assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (words_per_device / 2)");
     int oneCount = 0;
     uint64_t words = 0;
