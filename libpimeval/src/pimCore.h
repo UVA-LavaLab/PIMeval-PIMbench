@@ -1,6 +1,8 @@
 // File: pimCore.h
-// PIM Functional Simulator - PIM Core
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+// PIMeval Simulator - PIM Core
+// Copyright (c) 2024 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
 
 #ifndef LAVA_PIM_CORE_H
 #define LAVA_PIM_CORE_H

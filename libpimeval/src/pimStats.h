@@ -1,6 +1,8 @@
 // File: pimStats.h
-// PIM Functional Simulator - Stats
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+// PIMeval Simulator - Stats
+// Copyright (c) 2024 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
 
 #ifndef LAVA_PIM_STATS_H
 #define LAVA_PIM_STATS_H

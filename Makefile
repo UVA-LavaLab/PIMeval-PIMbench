@@ -1,5 +1,7 @@
-# Makefile for PIM Functional Simulator
-# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+# Makefile for PIMeval / PIMbench Framework
+# Copyright (c) 2024 University of Virginia
+# This file is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for more details.
 
 LIBDIR := libpimeval
 BITSERIALDIR := bit-serial
@@ -14,13 +16,13 @@ DEP_LIBPIMEVAL := $(LIBDIR)/lib/libpimeval.a
 .DEFAULT_GOAL := perf
 
 debug: $(ALLDIRS)
-	@echo "\nINFO: Built PIM Functional Simulator with target = debug\n"
+	@echo "\nINFO: Built PIMeval Simulator with target = debug\n"
 
 perf: $(ALLDIRS)
-	@echo "\nINFO: Built PIM Functional Simulator with target = perf\n"
+	@echo "\nINFO: Built PIMeval Simulator with target = perf\n"
 
 dramsim3_integ: $(ALLDIRS)
-	@echo "\nINFO: Built PIM Functional Simulator with target = dramsim3_integ\n"
+	@echo "\nINFO: Built PIMeval Simulator with target = dramsim3_integ\n"
 
 clean: $(ALLDIRS)
 

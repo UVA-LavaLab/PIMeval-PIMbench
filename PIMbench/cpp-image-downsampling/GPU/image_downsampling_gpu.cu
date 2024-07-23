@@ -1,5 +1,7 @@
 // Image Downsampling implementation on GPU
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+// Copyright (c) 2024 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
 
 #include <unistd.h>
 #include <cassert>

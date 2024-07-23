@@ -1,5 +1,7 @@
-// PIM Functional Simulator - Application Utilities for Floating <-> Fixed-Point Conversions. Currently used for CNNs only.
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+// PIMeval Simulator - Application Utilities for Floating <-> Fixed-Point Conversions. Currently used for CNNs only.
+// Copyright (c) 2024 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
 
 #ifndef PIM_FUNC_SIM_APPS_UTIL_FIXEDPOINT_H
 #define PIM_FUNC_SIM_APPS_UTIL_FIXEDPOINT_H

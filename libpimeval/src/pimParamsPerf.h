@@ -1,6 +1,8 @@
 // File: pimParamsPerf.h
-// PIM Functional Simulator - Performance parameters
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+// PIMeval Simulator - Performance parameters
+// Copyright (c) 2024 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
 
 #ifndef LAVA_PIM_PARAMS_PERF_H
 #define LAVA_PIM_PARAMS_PERF_H
