@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
     getVector(params.vectorLength, X);
     getVector(params.vectorLength, Y);
   } else {
-    //TODO: Read from files
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
   }
   
   if (!createDevice(params.configFile)) return 1;
