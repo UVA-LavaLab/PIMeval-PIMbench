@@ -3,8 +3,8 @@
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-LIBPIMEVAL_PATH = ../../../libpimeval
-include ../../Makefile.common
+LIBPIMEVAL_PATH = ../../libpimeval
+include ../Makefile.common
 
 # make USE_OPENMP=1
 USE_OPENMP ?= 0
@@ -14,15 +14,11 @@ endif
 
 EXEC := image_downsampling.out
 SRCS := image_downsampling.cpp
-OBJS := $(SRCS:.cpp=.o)
 
 debug perf dramsim3_integ: $(EXEC)
 
-$(EXEC): $(OBJS) $(DEPS)
-	$(CXX) $(OBJS) $(CXXFLAGS) -o $@
-
-%.o: %.cpp
-	$(CXX) -c $< $(CXXFLAGS) -o $@
+$(EXEC): $(SRCS)
+	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
 
 clean:
-	rm -f $(EXEC) $(OBJS)
+	rm -rf $(EXEC) *.dSYM
