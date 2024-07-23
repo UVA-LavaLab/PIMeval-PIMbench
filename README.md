@@ -109,6 +109,6 @@ make -j
 -->
 
 ### Contributors
-This repository is the result of a collaborative effort of many talented individuals. We are grateful to everyone who contributed to this repo. Special thanks to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and Farzana Siddique for her exceptional contributions on both simulator and PIMbench suite.
+This repository is the result of a collaborative effort by many individuals, including Farzana Ahmed Siddique, Deyuan Guo, Zhenxing Fan, Mohammadhosein Gholamrezaei, Morteza Baradaran, Alif Ahmed, Hugo Abbot, Kyle Durrer, Ethan Ermovick, Kumaresh Nandagopal and Khyati Kiyawat. We are grateful to everyone who contributed to this repository. Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
 
 \<citation recommendation to be updated\>
