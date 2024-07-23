@@ -7,11 +7,11 @@ include ../Makefile.common
 # make USE_OPENMP=1
 USE_OPENMP ?= 0
 ifeq ($(USE_OPENMP),1)
-  CXXFLAGS += -fopenmp
+	CXXFLAGS += -fopenmp
 endif
 
 EXEC := aes.out
-SRCS := PIMAuxilary.cpp aes.cpp
+SRCS := $(wildcard *.cpp)
 
 debug perf dramsim3_integ: $(EXEC)
 
