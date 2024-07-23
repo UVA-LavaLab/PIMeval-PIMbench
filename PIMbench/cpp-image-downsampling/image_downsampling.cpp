@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../../util.h"
+#include "../util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
   std::cout << "PIM test: Image Downsampling" << std::endl;
 
   string input_file = params.inputFile;
-  input_file = "../Dataset/" + input_file;
+  input_file = "./Dataset/" + input_file;
   std::vector<uint8_t> img = read_file_bytes(input_file);
 
   if(!createDevice(params.configFile)) {
