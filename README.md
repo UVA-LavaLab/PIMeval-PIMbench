@@ -4,10 +4,10 @@
 
 ### Description
 * PIMeval
-  * A C++ library based PIM simulation and evaluation framework
-  * Support various subarray-level bit-serial, subarray-level bit-paralle and bank level PIM architectures
+  * A PIM simulation and evaluation framework implemented as a C++ library
+  * Support various subarray-level bit-serial, subarray-level bit-parallel and bank-level PIM architectures
   * Support both vertical and horizontal data layouts
-  * Support multi PIM core programming model and resource management
+  * Support multi-PIM-core programming model and resource management
   * Support high-level functional programming with a set of general APIs common to all PIM architectures
   * Support low-level micro-ops programming for modeling architecture details
   * Support performance and energy modeling with detailed stats tracking
@@ -25,7 +25,7 @@ make -j10
 
 ### Code Structure
 * PIMeval: PIM similation framework - libpimeval
-  * `libpimeval/src`: PIMeval simualtor source code
+  * `libpimeval/src`: PIMeval simulator source code
   * `libpimeval.h`: PIMeval simulator library interface
   * `libpimeval.a`: PIMeval simulator library (after make)
 * PIMbench: PIM benchmark suite
