@@ -25,7 +25,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./prefixsum [options]"
+          "\nUsage:  ./prefixsum.out [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
@@ -43,10 +43,10 @@ struct Params getInputParams(int argc, char **argv)
   p.shouldVerify = false;
 
   int opt;
-while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
- {
-  switch (opt)
+  while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
   {
+    switch (opt)
+    {
     case 'h':
       usage();
       exit(0);
@@ -70,22 +70,6 @@ while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
     }
   }
   return p;
-}
-
-void readFromFile(const char* fileName, std::vector<int>& input) 
-{
-  std::ifstream inputFile(fileName);
-  if (!inputFile) 
-  {
-     std::cerr << "Error opening file: " << fileName << std::endl;
-     exit(1);
-  }
-  int value;
-  while (inputFile >> value) 
-  {
-    input.push_back(value);
-  }
-    inputFile.close();
 }
 
 void prefixSum(vector<int>& input, vector<int>& deviceoutput, uint64_t len)
@@ -176,11 +160,6 @@ pimFree(outputObj);
 
 int main(int argc, char* argv[]) 
 {
-  if (argc != 2) 
-  {
-    std::cerr << "Usage: " << argv[0] << " <number>\n";
-    return 1;
-  }
   struct Params params = getInputParams(argc, argv);
   int range = std::stoi(argv[1]);
   vector<int> input; 
@@ -190,7 +169,7 @@ int main(int argc, char* argv[])
   } 
    else 
    {
-     readFromFile(params.inputFile, input);
+     //TODO(read from file)
    } 
 
 int len=input.size();
