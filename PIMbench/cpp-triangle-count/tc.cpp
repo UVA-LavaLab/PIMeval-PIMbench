@@ -418,7 +418,6 @@ int main(int argc, char** argv) {
 
         // Convert edge list to adjacency matrix
         vector<vector<bool>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
-        // cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
         cout << "-----------convertToBitwiseAdjMatrix-----------" << endl;
     
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
