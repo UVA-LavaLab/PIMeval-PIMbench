@@ -45,8 +45,8 @@ struct Params getInputParams(int argc, char **argv)
   int opt;
 while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
  {
-    switch (opt)
-    {
+  switch (opt)
+  {
     case 'h':
       usage();
       exit(0);
@@ -72,91 +72,99 @@ while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
   return p;
 }
 
-void readFromFile(const char* fileName, std::vector<int>& input) {
- std::ifstream inputFile(fileName);
- if (!inputFile) {
-  std::cerr << "Error opening file: " << fileName << std::endl;
-  exit(1);
-}
-  int value;
-  while (inputFile >> value) {
-  input.push_back(value);
+void readFromFile(const char* fileName, std::vector<int>& input) 
+{
+  std::ifstream inputFile(fileName);
+  if (!inputFile) 
+  {
+     std::cerr << "Error opening file: " << fileName << std::endl;
+     exit(1);
   }
-  inputFile.close();
+  int value;
+  while (inputFile >> value) 
+  {
+    input.push_back(value);
+  }
+    inputFile.close();
 }
 
-void prefixSum(vector<int>& input, vector<int>& device_output, uint64_t len) {
-  
-//Allocate memory on PIM for the input vector
-unsigned bitsPerElement = sizeof(int) * 8;
-std::vector<PimObjId> temp(len);
-std::vector<PimObjId> acc(len);
+void prefixSum(vector<int>& input, vector<int>& deviceoutput, uint64_t len)
+{
+  unsigned bitsPerElement = sizeof(int) * 8;
+  std::vector<PimObjId> temp(len);
+  std::vector<PimObjId> acc(len);
 
-PimObjId inputObj = pimAlloc(PIM_ALLOC_AUTO, len, bitsPerElement, PIM_INT32);
-if (inputObj == -1) {
+ PimObjId inputObj = pimAlloc(PIM_ALLOC_AUTO, len, bitsPerElement, PIM_INT32);
+ if (inputObj == -1) 
+ {
    std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
-    return;
-}
+   return;
+ }
 
-PimStatus status = pimCopyHostToDevice((void*)input.data(), inputObj);
-  if (status != PIM_OK) {
-    std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
-    return;
-}
-
-PimObjId tempObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
-  if (tempObj == -1) {
+ PimStatus status = pimCopyHostToDevice((void*)input.data(), inputObj);
+ if (status != PIM_OK) 
+ {
+   std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
+   return;
+ }
+ PimObjId tempObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
+ if (tempObj == -1) 
+ {
    std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
-    return;
-}
+   return;
+ }
+ status = pimCopyHostToDevice((void*)input.data(), tempObj);
+ if (status != PIM_OK) 
+ {
+   std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
+   return;
+ }
 
-status = pimCopyHostToDevice((void*)input.data(), tempObj);
-  if (status != PIM_OK) {
-    std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
-    return;
-}
-
-PimObjId accObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
-  if (accObj == -1) {
+ PimObjId accObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
+ if (accObj == -1) 
+ {
    std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
-    return;
-}
+   return;
+ }
 
-status = pimCopyHostToDevice((void*)input.data(), accObj);
-  if (status != PIM_OK) {
-    std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
-    return;
+ status = pimCopyHostToDevice((void*)input.data(), accObj);
+ if (status != PIM_OK) 
+ {
+   std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
+   return;
 }
 
 PimObjId outputObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
-  if (outputObj == -1) {
-   std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
-    return;
+if (outputObj == -1) 
+{
+  std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
+  return;
 }
 
-status = pimCopyHostToDevice((void*)device_output.data(), outputObj);
-  if (status != PIM_OK) {
-    std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
-    return;
+status = pimCopyHostToDevice((void*)deviceoutput.data(), outputObj);
+if (status != PIM_OK) 
+{
+  std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
+  return;
 }
 
 while(len>0)
+{
+ pimShiftElementsRight(tempObj);
+ status = pimAdd(tempObj, accObj, accObj);
+ if (status != PIM_OK) 
  {
-// Perform the addition on PIM
-pimShiftElementsRight(tempObj);
-status = pimAdd(tempObj, accObj, accObj);
-if (status != PIM_OK) {
-  std::cerr << "Abort: Failed to perform PIM addition." << std::endl;
-    return;
-}
+   std::cerr << "Abort: Failed to perform PIM addition." << std::endl;
+   return;
+ }
     len --;  
 }
 
- // Copy the result back to the host
-status = pimCopyDeviceToHost(accObj, (void*)device_output.data());
-if (status != PIM_OK) {
-std::cerr << "Abort: Failed to copy prefix sum result from PIM." << std::endl;
-    return;
+status = pimCopyDeviceToHost(accObj, (void*)deviceoutput.data());
+if (status != PIM_OK)
+{
+  std::cerr << "Abort: Failed to copy prefix sum result from PIM." << std::endl;
+  return;
 }
 
 // Clean up PIM objects
@@ -166,54 +174,58 @@ pimFree(inputObj);
 pimFree(outputObj);
 }
 
-int main(int argc, char* argv[]) {
-if (argc != 2) {
+int main(int argc, char* argv[]) 
+{
+  if (argc != 2) 
+  {
     std::cerr << "Usage: " << argv[0] << " <number>\n";
     return 1;
-}
-struct Params params = getInputParams(argc, argv);
-int range = std::stoi(argv[1]);
-vector<int> input; 
-
-if(params.inputFile == nullptr)
- {
-  getVector(range, input);
- } 
- else {
-    readFromFile(params.inputFile, input);
- } 
+  }
+  struct Params params = getInputParams(argc, argv);
+  int range = std::stoi(argv[1]);
+  vector<int> input; 
+  if(params.inputFile == nullptr)
+  {
+    getVector(range, input);
+  } 
+   else 
+   {
+     readFromFile(params.inputFile, input);
+   } 
 
 int len=input.size();
+vector<int> deviceoutput;
+vector<int> hostoutput(len);
 
-vector<int> device_output;
-vector<int> host_output(len);
-
-for (int i = 0; i < input.size(); i++) {
-    device_output.push_back(0);
+for (int i = 0; i < input.size(); i++) 
+{
+  deviceoutput.push_back(0);
 }
 
-host_output[0]=input[0];
-for (int i = 0; i < input.size(); i++) {
-    host_output[i+1] = host_output[i]+ input[i+1]; 
+hostoutput[0]=input[0];
+for (int i = 0; i < input.size(); i++) 
+{
+  hostoutput[i+1] = hostoutput[i]+ input[i+1]; 
 }
 
 if (!createDevice(params.configFile)) return 1;
-prefixSum(input, device_output, len);
+prefixSum(input, deviceoutput, len);
 
-// Verification of Results host_results vs device_results
-if (params.shouldVerify) {
+// Verification of Results hostresults vs deviceresults
+if (params.shouldVerify) 
+{
     // verify result
-    #pragma omp parallel for
-    for (unsigned i = 0; i<len; ++i)
+  #pragma omp parallel for
+  for (unsigned i = 0; i<len; ++i)
+  {
+    if(hostoutput[i]!= deviceoutput[i])
     {
-      if (host_output[i]!= device_output[i])
-      {
-        std::cout << "Wrong answer for Prefixsum: " << host_output[i] << " = " << device_output[i] << std::endl;
-      }
+      std::cout << "Wrong answer for Prefixsum: " << hostoutput[i] << " != " << deviceoutput[i] << std::endl;
     }
   }
+}
 
-  pimShowStats();
+pimShowStats();
 return 0;
 
 }
