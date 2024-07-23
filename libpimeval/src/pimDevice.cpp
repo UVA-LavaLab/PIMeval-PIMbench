@@ -30,7 +30,7 @@ pimDevice::~pimDevice()
 bool
 pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
 {
-  std::printf("PIM-Info: Config: #ranks = %u, #bankPerRank = %u, #subarrayPerBank = %u, #rowsPerSubarray = %u, #colsPerSubarray = %u\n",
+  std::printf("PIM-Info: Config: #ranks = %u, #bankPerRank = %u, #subarrayPerBank = %u, #rowsPerSubarray = %u, #colsPerRow = %u\n",
               numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
