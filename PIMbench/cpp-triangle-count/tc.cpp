@@ -24,14 +24,6 @@
 
 #define BITS_PER_INT 32
 
-#define NUM_RANKS 1
-#define NUM_BANK_PER_RANK 128
-#define NUM_SUBARRAY_PER_BANK 32
-#define ROW_SIZE 8192
-#define COL_SIZE 8192
-
-uint64_t WORDS_PER_RANK = (uint64_t) NUM_RANKS * NUM_BANK_PER_RANK * NUM_SUBARRAY_PER_BANK * ROW_SIZE * COL_SIZE / BITS_PER_INT;
-
 typedef uint32_t UINT32;
 
 
@@ -103,6 +95,10 @@ struct Params getInputParams(int argc, char **argv)
       usage();
       exit(0);
     }
+  }
+  if (p.inputFile == nullptr)
+  {
+    p.inputFile = "Dataset/v18772_symetric";
   }
   return p;
 }
@@ -250,15 +246,15 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     return sum;
 }
 
-int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix, uint64_t words_per_device) {
     uint64_t operandsCount = 4; // src1, src2, dst, popCountSrc
-    uint64_t operandMaxNumberOfWords = WORDS_PER_RANK / operandsCount;
+    uint64_t operandMaxNumberOfWords = words_per_device / operandsCount;
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
-    cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
-    assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
+    cout << "words_per_device: " << words_per_device << endl;
+    assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (words_per_device / 2)");
     int oneCount = 0;
     uint64_t words = 0;
     std::vector<unsigned int> src1;
@@ -335,15 +331,15 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
     return count / 6;
 }
 
-int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix) {
+int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<UINT32>>& bitAdjMatrix, uint64_t words_per_device) {
     uint64_t operandsCount = 4; // src1, src2, dst, popCountSrc
-    uint64_t operandMaxNumberOfWords = WORDS_PER_RANK / operandsCount;
+    uint64_t operandMaxNumberOfWords = words_per_device / operandsCount;
     int count = 0;
     int V = bitAdjMatrix.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
-    cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
-    cout << "WORDS_PER_RANK: " << WORDS_PER_RANK << endl;
-    assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (WORDS_PER_RANK / 2)");
+    // cout << "wordsPerMatrixRow: " << wordsPerMatrixRow << endl;
+    // cout << "words_per_device: " << words_per_device << endl;
+    assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (words_per_device / 2)");
     int oneCount = 0;
     uint64_t words = 0;
     std::vector<unsigned int> src1;
@@ -366,7 +362,7 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             }
             if((words + wordsPerMatrixRow > operandMaxNumberOfWords) || ((i == V - 1) && (j == V - 1) && words > 0)){
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
-                cout << "words in this itr: " << words << endl;
+                cout << "Number of words that are processed in this iteration: " << words << endl;
                 std::vector<unsigned int> dst(words);
                 std::vector<unsigned int> popCountSrc(words);
                 int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dst, popCountSrc);
@@ -387,15 +383,31 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
         }
     }
-    cout << "oneCount: " << oneCount << endl;
-    cout << "TriangleCount: " << count / 6 << endl;
+    // cout << "oneCount: " << oneCount << endl;
+    // cout << "TriangleCount: " << count / 6 << endl;
     // Each triangle is counted 6 times (once at each vertex), so divide the count by 6
     return count / 6;
+}
+
+int cpuTriangleCount(const vector<vector<bool>>& adjMatrix) {
+    int count = 0;
+    int V = adjMatrix.size();
+    for (int i = 0; i < V; ++i) {
+        for (int j = 0; j < V; ++j) {
+            for (int k = 0; k < V; ++k) {
+                if (adjMatrix[i][j] && adjMatrix[j][k] && adjMatrix[k][i]) {
+                    ++count;
+                }
+            }
+        }
+    }
+    return count / 6; // Each triangle is counted 6 times (once at each vertex), so divide the count by 6
 }
 
 int main(int argc, char** argv) {
     try {
         struct Params params = getInputParams(argc, argv);
+        cout << "Input graph file: " << params.inputFile << endl;
         // Read edge list from JSON file
         vector<pair<int, int>> edgeList = readEdgeList(params.inputFile);
         
@@ -410,16 +422,35 @@ int main(int argc, char** argv) {
 
         // Convert edge list to adjacency matrix
         vector<vector<bool>> adjMatrix = edgeListToAdjMatrix(edgeList, numNodes);
-        cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
+        // cout << "Adjacency Matrix size:" << adjMatrix.size() << endl;
         cout << "-----------convertToBitwiseAdjMatrix-----------" << endl;
-
+    
         vector<vector<UINT32>> bitAdjMatrix = convertToBitwiseAdjMatrix(adjMatrix);
 
         cout << "-----------createDevice-----------" << endl;
+        // create device
         if (!createDevice(params.configFile))
             return 1;
+
+        // get device parameters 
+        PimDeviceProperties deviceProp;
+        PimStatus status = pimGetDeviceProperties(&deviceProp);
+        assert(status == PIM_OK);
+
+        uint64_t words_per_device = (uint64_t) deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank * deviceProp.numRowPerSubarray * deviceProp.numColPerSubarray / BITS_PER_INT;
         //run simulation
-        run_rowmaxusage(adjMatrix, bitAdjMatrix);
+        cout << "-----------Start running on PIM-----------" << endl;
+        int pimTriCount = run_rowmaxusage(adjMatrix, bitAdjMatrix, words_per_device);
+
+        if (params.shouldVerify){
+            //run on cpu
+            cout << "-----------Triangle Count Verification-----------" << endl;
+            int cpuTriCount = cpuTriangleCount(adjMatrix);
+            if (cpuTriCount != pimTriCount)
+                printf("PIM count (%d) does not match CPU count(%d)\n", pimTriCount, cpuTriCount);
+            else
+                printf("PIM count (%d) matches CPU count(%d)\n", pimTriCount, cpuTriCount);
+        }
 
         //stats
         pimShowStats();
