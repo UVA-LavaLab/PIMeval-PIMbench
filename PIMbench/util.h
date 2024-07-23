@@ -25,10 +25,10 @@ void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 {
   srand((unsigned)time(NULL));
   srcVector.resize(vectorLength);
-#pragma omp parallel for
+  #pragma omp parallel for
   for (uint64_t i = 0; i < vectorLength; ++i)
   {
-    srcVector[i] = (rand() % (i + 1) + 1);
+    srcVector[i] = rand() % (2 * (i + 1)) - (i + 1);
   }
 }
 
@@ -53,12 +53,12 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &
 {
   srand((unsigned)time(NULL));
   inputMatrix.resize(row + 2 * padding, std::vector<int>(column + 2 * padding, 0));
-#pragma omp parallel for
+  #pragma omp parallel for
   for (int i = padding; i < row + padding; ++i)
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = rand() % (i + 1);
+      inputMatrix[i][j] = rand() % (2 * (i + 1)) - (i + 1);
     }
   }
 }
@@ -165,6 +165,34 @@ void printMatrix(std::vector<std::vector<std::vector<int>>>& matrix) {
       std::cout << std::endl;
     }
     std::cout << "---" << std::endl; // Separator between 2D matrices
+  }
+}
+
+// Decompose the input matrix by sliding the kernel dimensions (kernelHeight * kernelWidth) along the input matrix with a stride.
+// Assume the input matrix is padded.
+void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, int padding, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+{
+  // Calculate the number of rows and columns for the decomposed matrix
+  int numRows = kernelHeight * kernelWidth;
+  int numCols = ((matrixRow - kernelHeight + 2 * padding) / stride + 1) * ((matrixColumn - kernelWidth + 2 * padding) / stride + 1);  
+  // Initialize the decomposed matrix with the correct size
+  decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
+
+  int colIdx = 0;
+  for (int i = 0; i < (matrixRow + 2 * padding - kernelHeight + 1); i += stride)
+  {
+    for (int j = 0; j < (matrixColumn + 2 * padding - kernelWidth + 1); j += stride)
+    {
+      int rowIDX = 0;
+      for (int k = i; k < i + kernelHeight; k++)
+      {
+        for (int l = j; l < j + kernelWidth; l++)
+        {
+          decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
+        }
+      }
+      ++colIdx;
+    }
   }
 }
 

@@ -23,35 +23,11 @@
 #include <sstream>
 #if defined(COMPILE_WITH_JPEG)
 #include <jpeglib.h>
-#endif  
+#endif 
+#include "util.h" 
 using namespace std;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
-
-// Decompose the input matrix by sliding the kernel dimensions (kernelHeight * kernelWidth) along the input matrix with a stride.
-// Assume the input matrix is padded.
-void DecomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
-{
-  int numRows = kernelHeight * kernelWidth;
-  int numCols = matrixRow * matrixColumn;
-  decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
-  int colIdx = 0;
-  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
-  {
-    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
-    {
-      int rowIDX = 0;
-      for (int k = i; k < i + kernelHeight; k++)
-      {
-        for (int l = j; l < j + kernelWidth; l++)
-        {
-          decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
-        }
-      }
-      ++colIdx;
-    }
-  }
-}
 
 // Function to perform softmax operation on Host.
 //  -> Find the max value in the input vector
@@ -98,28 +74,10 @@ void softmaxOnHost(const std::vector<T> &input, std::vector<double> &output)
 // The function allocates the necessary PIM objects, broadcasts filter values to PIM objects, and performs
 // element-wise multiplication followed by summation to produce the output.
 // The summed results are then copied from the PIM (device) to Host.
-void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol)
+void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<PimObjId> &filterObjects, std::vector<PimObjId> &matrixObjects, std::vector<int> &outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol)
 {
   unsigned bitsPerElement = 32;
-  std::vector<PimObjId> filterObjects;
   std::vector<int> temp;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, bitsPerElement, PIM_INT32);
-  if (obj1 == -1)
-  {
-    std::cout << "Function: " << __func__ << "Abort: pimAlloc failed for obj1" << std::endl;
-    return;
-  }
-  filterObjects.push_back(obj1);
-  for (int i = 1; i < numRequiredPIMRows; i++)
-  {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
-    if (obj == -1)
-    {
-      std::cout << "Function: " << __func__ << "Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
-      return;
-    }
-    filterObjects.push_back(obj);
-  }
 
   int idx = 0;
   for (int i = 0; i < filterMatrix.size(); ++i)
@@ -129,48 +87,29 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
       PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
       if (status != PIM_OK)
       {
-        std::cout << "Function: " << __func__ << "Abort: pimBroadcastInt failed between filterObjects and filterMatrix at i=" << i << ", j=" << j << std::endl;
-        return;
+        std::cout << "Function: " << __func__  << ": " << ", Abort: pimBroadCastInt failed for filterObjects at iteration, i, j:" << i << j << std::endl;
+        std::exit(1);
       }
     }
   }
-
-  std::vector<PimObjId> matrixObjects;
-  for (int i = 0; i < numRequiredPIMRows; i++)
+    
+  for (int i = 0; i < matrixObjects.size(); i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
-    if (obj == -1)
-    {
-      std::cout << "Function: " << __func__ << "Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
-      return;
-    }
-    matrixObjects.push_back(obj);
-  }
-
-  for (int i = 0; i < inputMatrix.size(); i++)
-  {
-    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
+    PimStatus status = pimMul(matrixObjects[i], filterObjects[i], filterObjects[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << "Abort: pimCopyHostToDevice failed between inputMatrix and matrixObjects at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__  << ": " << ", Abort: pimMul failed between matrixObjects[i] and filterObjects[i] at itertion, i:" << i << std::endl;
+      std::exit(1);
     }
+  }
   
-    status = pimMul(matrixObjects[i], filterObjects[i], filterObjects[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Function: " << __func__ << "Abort: pimMul failed for matrixObjects and filterObjects at i=" << i << std::endl;
-      return;
-    }
-  }
-
   for (int i = 1; i < numRequiredPIMRows; i++)
   {
     PimStatus status = pimAdd(filterObjects[0], filterObjects[i], filterObjects[0]);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << "Abort: pimAdd failed between filterObjects[0] and filterObjects[i] at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__  << ": " << ", Abort: pimAdd failed between filterObjects[0] and filterObjects[i] at iteration, i:" << i << std::endl;
+      std::exit(1);
     }
   }
 
@@ -179,18 +118,8 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   PimStatus status = pimCopyDeviceToHost(filterObjects[0], outputMatrix.data());
   if (status != PIM_OK)
   {
-    std::cout << "Function: " << __func__ << "Abort: pimCopyDeviceToHost failed between filterObjects[0] and outputMatrix" << std::endl;
-    return;
-  }
-
-  for (auto elem : filterObjects)
-  {
-    pimFree(elem);
-  }
-
-  for (auto elem : matrixObjects)
-  {
-    pimFree(elem);
+    std::cout << "Function: " << __func__  << ": " << ", Abort: pimCopyDeviceToHost failed between filterObjects[0] and outputMatrix" << std::endl;
+    std::exit(1);
   }
 }
 
@@ -204,6 +133,7 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
   unsigned numCols = 8192, numOfCore = 4096;
 
+  // Dimensions of the input and kernel matrices. Input matrix is already padded.
   int inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
@@ -211,66 +141,120 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
   int kernelHeight = kernelMatrix[0].size();
   int kernelWidth = kernelMatrix[0][0].size();
 
-  int outMatDim = kernelMatrix.size();
+  // Calculate the dimensions of the output matrix assuming the input matrix is already padded
   int outMatRow = std::floor((inputHeight - kernelHeight) / stride) + 1;
   int outMatCol = std::floor((inputWidth - kernelWidth) / stride) + 1;   
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) < inputDepth ? floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) : inputDepth;
+  int numOfMatPerRow = std::floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) < inputDepth ? std::floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) : inputDepth;
   int numOfPIMRow = kernelHeight * kernelWidth;
 
-  resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
+  std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
-  for (int i = 0; i < kernelDepth; i++)
-  {
-    int tempcol = 0;
-    std::vector<int> dstVec(outMatRow * outMatCol);
-    for (int j = 0; j < inputDepth; j += numOfMatPerRow)
-    {
-      int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+  int tempcol = 0;
+  int hopSize = outMatCol * outMatRow;
+  std::vector<int> dstVec(outMatRow * outMatCol);
+  std::vector<std::vector<int>> decompMat;
+  std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+  std::vector<int> outVector;
 
-      std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-      for (int k = j; k < matChunk; k++)
-      {
-        std::vector<std::vector<int>> decompMat;
-	      DecomposeMatrix(inputHeight, inputWidth, kernelMatrix[i].size(), kernelMatrix[i][0].size(), stride, inputMatrix[k], decompMat);
-	      for (int idx = 0; idx < mergedMat.size(); idx++)
-        {
-          mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
-          mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
-          tempcol = mergedMat[idx].size();
-        }
+  resultMatrix.resize(kernelDepth, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));  
+
+  // Loop through input depth in chunks
+  for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
+    int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+
+    // Decompose and merge matrices
+    for (int k = j; k < matChunk; k++) {
+      decomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, 0, inputMatrix[k], decompMat);
+      for (int idx = 0; idx < mergedMat.size(); idx++) {
+        mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
+        tempcol = mergedMat[idx].size();
       }
+    }
+  }   
 
-      std::vector<int> outVector;
-      performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol);
+  // Allocate PIM Objects for the kernels
+  // Allocate PIM Objects for the input matrices and copy the corrresponding data from the host to the device 
+  unsigned bitsPerElement = 32;
+  std::vector<PimObjId> filterObjects;
+  std::vector<PimObjId> matrixObjects;  
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, tempcol, bitsPerElement, PIM_INT32);
+  if (obj1 == -1)
+  {
+    std::cout << "Function: " << __func__ << ": " << ", Abort: pimAlloc failed for obj1" << std::endl;
+    std::exit(1);
+  }
+  filterObjects.push_back(obj1);
+  for (int i = 1; i < numOfPIMRow; i++)
+  {
+    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
+    if (obj == -1)
+    {
+      std::cout << "Function: " << __func__ << ": " << ", Abort: pimAllocAssociated failed for filterObjects at iteration, i:" << i << std::endl;
+      std::exit(1);
+    }
+    filterObjects.push_back(obj);
+  }
 
-      auto start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < numOfPIMRow; i++)
+  {
+    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
+    if (obj == -1)
+    {
+      std::cout << "Function: " << __func__ << ": " << ", Abort: pimAllocAssociated failed for matrixObjects at iteration, i:" << i << std::endl;
+      std::exit(1);
+    }
+    matrixObjects.push_back(obj);
+  }
 
-      int hopSize = outMatCol * outMatRow;
-      if (j == 0)
-      {
+  for (int i = 0; i < mergedMat.size(); i++)
+  {
+    PimStatus status = pimCopyHostToDevice((void *)mergedMat[i].data(), matrixObjects[i]);
+    if (status != PIM_OK)
+    {
+      std::cout << "Function: " << __func__ << ": " << ", Abort: pimCopyHostToDevice failed for copying between mergedMat and matrixObjects at iteration, i" << i << std::endl;
+      std::exit(1);
+    }
+
+  }
+
+  // Perform convolution
+  for (int i = 0; i < kernelDepth; i++) {
+
+    performConv(kernelMatrix[i], filterObjects, matrixObjects, outVector, numOfPIMRow, tempcol);
+
+    #pragma omp parallel for    
+    for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
+      if (j == 0) {
         std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
       }
 
-      for (int m = 0; m < hopSize; ++m)
-      {
-        for (int n = m + hopSize; n < outVector.size(); n += hopSize)
-        {
+      // Accumulate results
+      for (int m = 0; m < hopSize; ++m) {
+        for (int n = m + hopSize; n < outVector.size(); n += hopSize) {
           dstVec[m] += outVector[n];
         }
-      }
-      auto end = std::chrono::high_resolution_clock::now();
-      hostElapsedTime += (end - start);
-    
+      }   
     }
+    // Store result matrix
     int ddx = 0;
-    for (int rdx = 0; rdx < outMatRow; ++rdx)
-    {
-      for (int cdx = 0; cdx < outMatCol; ++cdx)
-      {
+    for (int rdx = 0; rdx < outMatRow; ++rdx) {
+      for (int cdx = 0; cdx < outMatCol; ++cdx) {
         resultMatrix[i][rdx][cdx] = dstVec[ddx++];
       }
     }
-  }  
+        
+    auto end = std::chrono::high_resolution_clock::now();
+  }
+
+  for (auto elem : filterObjects)
+  {
+    pimFree(elem);
+  }
+  for (auto elem : matrixObjects)
+  {
+    pimFree(elem);
+  }    
 }
 
 // This should work for bitSIMD or any PIM that requires vertical data layout.
@@ -283,7 +267,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
 
   if (inputMatrix.empty())
   {
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;        
+    std::exit(1);
   }
   int numRows = inputMatrix.size();
   int numCols = inputMatrix[0].size();
@@ -292,8 +277,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
-    std::cout << "Function: " << __func__ << "Abort: pimAlloc failed for obj1" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimAlloc failed for obj1" << std::endl;
+    std::exit(1);
   }
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
@@ -301,8 +286,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
-      std::cout << "Function: " << __func__ << "Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
+      std::exit(1);
     }
     pimObjectList[i] = obj;
   }
@@ -312,8 +297,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << "Abort: pimCopyHostToDevice failed between inputMatrix and pimObjectList at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice failed between inputMatrix and pimObjectList at i=" << i << std::endl;
+      std::exit(1);
     }
   }
 
@@ -322,16 +307,16 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimStatus status = pimMax(pimObjectList[0], pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << "Abort: pimMax failed between pimObjectList[0] and pimObjectList[i] at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__ << ", Abort: pimMax failed between pimObjectList[0] and pimObjectList[i] at i=" << i << std::endl;
+      std::exit(1);
     }
   }
   outputMatrix.resize(numCols);
   PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
-    std::cout << "Function: " << __func__ << "Abort: pimCopyDeviceYoHost failed between pimObjectList[0] and outputMatrix" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceYoHost failed between pimObjectList[0] and outputMatrix" << std::endl;
+    std::exit(1);
   }
   for (auto elem : pimObjectList)
   {
@@ -358,34 +343,39 @@ void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelHei
   int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < inputDepth ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : inputDepth;
 
   resultMatrix.resize(inputDepth, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
+  int tempcol = 0;
+  std::vector<std::vector<int>> decompMat;
+  std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+  std::vector<int> outVector;
+  outVector.resize(inputDepth * outputHeight * outputWidth);
+    
+  // Loop through input depth in chunks
+  for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
+    int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+
+    // Decompose and merge matrices
+    for (int k = j; k < matChunk; k++) {
+      decomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, 0, inputMatrix[k], decompMat);
+      for (int idx = 0; idx < mergedMat.size(); idx++) {
+        mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
+        tempcol = mergedMat[idx].size();
+      }
+    }
+  }
+
+  maxPool(mergedMat, outVector);
 
   for (int i = 0; i < inputDepth; i += 1)
-  {
-    // This vector packs all the matrices that can be fit into one PIM iteration
-    std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= inputDepth ? (numOfMatPerRow + i) : inputDepth;
-    for (int j = i; j < matChunk; j++)
-    {
-      std::vector<std::vector<int>> tempMat;
-      DecomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, inputMatrix[j], tempMat);
-      for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
-      }
-    }
-    std::vector<int> outMatrix;
-    maxPool(mergedMat, outMatrix);
+  {     
     int idx = 0;
-    for (int j = i; j < matChunk; ++j)
-    {
-      for (int r = 0; r < resultMatrix[j].size(); ++r)
+      for (int r = 0; r < resultMatrix[i].size(); ++r)
       {
-        for (int c = 0; c < resultMatrix[j][r].size(); ++c)
+        for (int c = 0; c < resultMatrix[i][r].size(); ++c)
         {
-          resultMatrix[j][r][c] = outMatrix[idx++];
+          resultMatrix[i][r][c] = outVector[idx++];
         }
       }
-    }
   }
 }
 
@@ -399,22 +389,22 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
   if (srcObj == -1)
   {
-    std::cout << "Function: " << __func__ << ", Abort: pimAlloc failed for srcObj" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimAlloc for srcObj failed" << std::endl;
+    std::exit(1);
   }
 
   PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj, PIM_INT32);
   if (dstObj == -1)
   {
-    std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated failed for dstObj" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for dstObj failed" << std::endl;
+    std::exit(1);
   }
 
   PimStatus status = pimBroadcastInt(dstObj, 0);
   if (status != PIM_OK)
   {
-    std::cout << "Function: " << __func__ << ", Abort: pimBroadcastInt failed for dstObj" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimBroadCastInt failed for dstObj" << std::endl;
+    std::exit(1);
   }
 
   for (int i = 0; i < col; ++i)
@@ -422,22 +412,15 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice failed between srcMatrix and srcObj at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice failed between srcMatrix and srcObj at iteration, i:" << i << std::endl;
+      std::exit(1);
     }
 
-    status = pimMulScalar(srcObj, srcObj, srcVector[i]);
+    status = pimScaledAdd(srcObj, dstObj, dstObj, srcVector[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << ", Abort: pimMulScalar failed between srcObj1 and srcObj2 at i=" << i << std::endl;
-      return;
-    }
-
-    status = pimAdd(srcObj, dstObj, dstObj);
-    if (status != PIM_OK)
-    {
-      std::cout << "Function: " << __func__ << ", Abort: pimAdd failed between srcVector and dstObj at i=" << i << std::endl;
-      return;
+      std::cout << "Function: " << __func__ << ", Abort: pimScaledAdd failed at iteration, i:" << i << std::endl;
+      std::exit(1);
     }
   }
 
@@ -445,7 +428,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
   if (status != PIM_OK)
   {
-    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost failed between dstObj and dst" << std::endl;
+    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost failed between dstObj and dst data" << std::endl;
   }
   pimFree(srcObj);
   pimFree(dstObj);
@@ -460,53 +443,38 @@ void performRelu(std::vector<int> &inputMatrix)
 
   if (inputMatrix.empty()) {
     std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;    
-    return;
+    std::exit(1); 
   }
   int numCols = inputMatrix.size();
 
-  // Initialize reluConst vector with zero for max(0, x) operation.
-  std::vector<int> reluConst(numCols, 0);  
+  // Initialize reluConst with zero for max(0, x) operation.
+  uint64_t reluConst = 0;  
 
   PimObjId pimObject = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (pimObject == -1) {
     std::cout << "Function: " << __func__ << ", Abort: pimAlloc for PimObj pimObject failed" << std::endl;
-    return;
-  }
-
-  PimObjId RELUConstObj = pimAllocAssociated(bitsPerElement, pimObject, PIM_INT32);
-  if (RELUConstObj == -1) {
-    std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for PimObj RELUConstObj failed" << std::endl;
-    return;
+    std::exit(1);
   }
 
   PimStatus status = pimCopyHostToDevice((void *)inputMatrix.data(), pimObject);
   if (status != PIM_OK) {
     std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice from inputMatrix to pimObject failed" << std::endl;
-    return;
+    std::exit(1);
   }
 
-  status = pimCopyHostToDevice((void *)reluConst.data(), RELUConstObj);
+  status = pimMaxScalar(pimObject, pimObject, reluConst);
   if (status != PIM_OK) {
-    std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice from reluConst to RELUConstObj failed" << std::endl;
-    return;
-  }  
-
-  status = pimMax(RELUConstObj, pimObject, pimObject);
-  if (status != PIM_OK) {
-    std::cout << "Function: " << __func__ << ", Abort: pimMax failed between RELUConstObj and pimObject" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimMaxScalar failed between pimObject and reluConst" << std::endl;
+    std::exit(1);
   }
 
   inputMatrix.resize(numCols);
   status = pimCopyDeviceToHost(pimObject, inputMatrix.data());
   if (status != PIM_OK) {
-    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost from pimObject to outputMatrix" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost from pimObject to inputMatrix failed" << std::endl;
+    std::exit(1);
   }
-
   pimFree(pimObject);
-  pimFree(RELUConstObj);
-
 }
 
 // Perform the RELU (REctified Linear Unit) operation, max(0, x), a non-linear activation function in PIM for the given 2D input matrix.
@@ -519,19 +487,19 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
   if (inputMatrix.empty())
   {    
     std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;
-    return;
+    std::exit(1);
   }
   int numRows = inputMatrix.size();
   int numCols = inputMatrix[0].size();
-  // Initialize reluConst vector with zero for max(0, x) operation. Initialize with a different value 'y' for max(y, x) operation.
-  std::vector<int> reluConst(numCols, 0);  
+  // Initialize reluConst with zero for max(0, x) operation. Initialize with a different value 'y' for max(y, x) operation.
+  int reluConst = 0;  
 
   std::vector<PimObjId> pimObjectList(numRows);
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Function: " << __func__ << ", Abort: pimAlloc for PimObj obj1 failed" << std::endl;
-    return;
+    std::exit(1);
   }
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
@@ -540,15 +508,9 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     if (obj == -1)
     {
       std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for PimObj obj failed" << std::endl;
-      return;
+      std::exit(1);
     }
     pimObjectList[i] = obj;
-  }
-  PimObjId RELUConstObj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
-  if (RELUConstObj == -1)
-  {
-      std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for PimObj RELUConstObj failed" << std::endl;
-      return;
   }
 
   for (int i = 0; i < pimObjectList.size(); i++)
@@ -557,38 +519,30 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     if (status != PIM_OK)
     {
       std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice from inputMatrix[" << i << "] to pimObjectList[" << i << "] failed" << std::endl;
-      return;
+      std::exit(1);
     }
   }
-  PimStatus status = pimCopyHostToDevice((void *) reluConst.data(), RELUConstObj);
-  if (status != PIM_OK)
-  {
-      std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice from reluConst to RELUConstObj failed" << std::endl;
-      return;
-  }  
 
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimMax(RELUConstObj, pimObjectList[i], pimObjectList[0]);
+    PimStatus status = pimMaxScalar(pimObjectList[i], pimObjectList[0], reluConst);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << ", Abort: pimMax failed between RELUConstObj and pimObjectList[" << i << "]" << std::endl;
-      return;
+      std::cout << "Function: " << __func__ << ", Abort: pimMaxScalar failed between reluConst and pimObjectList[" << i << "]" << std::endl;
+      std::exit(1);
     }
   }
   outputMatrix.resize(numCols);
-  status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
-    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost from pimObjectList[0] to outputMatrix" << std::endl;
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost from pimObjectList[0] to outputMatrix failed" << std::endl;
+    std::exit(1);
   }
   for (auto elem : pimObjectList)
   {
     pimFree(elem);
   }
-  pimFree(RELUConstObj);
-
 }
 
 // Function executing RELU for a given 3D input matrix.
@@ -599,46 +553,50 @@ void relu (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
   
   // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
   unsigned numCols = 8192, numOfCore = 4096;
-  
-  const int kernelHeight = 1;
-  const int kernelWidth = 1;
-  const int stride = 1;
+
+  // Calculate matrix dimensions
   int inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
-  int outputHeight = inputHeight;
-  int outputWidth = inputWidth;  
-  int numOfPIMRow = kernelHeight * kernelWidth;
+
+  // Define parameters for processing
+  int numOfPIMRow = 1;
   int numOfPIMColumn = (inputHeight * inputWidth / numOfPIMRow);
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < inputDepth ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : inputDepth;
-  
-  for (int i = 0; i < inputDepth; i += 1)
-  {
-    // This vector packs all the matrices that can be fit into one PIM iteration
-    std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= inputDepth ? (numOfMatPerRow + i) : inputDepth;
-    for (int j = i; j < matChunk; j++)
-    {
-      std::vector<std::vector<int>> tempMat;
-      DecomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, inputMatrix[j], tempMat);
+  int numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfCore) / numOfPIMColumn)), inputDepth);
+
+  int tempcol = 0;
+  std::vector<std::vector<int>> decompMat;
+  std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+  std::vector<int> outVector;
+  outVector.resize(inputDepth * inputHeight * inputWidth); 
+
+  // Loop through input depth in chunks
+  for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
+    int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+
+    // Decompose and merge matrices
+    for (int k = j; k < matChunk; k++) {
+      decomposeMatrix(inputHeight, inputWidth, 1, 1, 1, 0, inputMatrix[k], decompMat);
       for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+        mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
+        tempcol = mergedMat[idx].size();
       }
     }
-    std::vector<int> outMatrix;
-    performRelu(mergedMat, outMatrix);
+  }
+  
+  performRelu(mergedMat, outVector);
+
+  for (int i = 0; i < inputDepth; i += 1)
+  {     
     int idx = 0;
-    for (int j = i; j < matChunk; ++j)
-    {
       for (int r = 0; r < inputHeight; ++r)
       {
         for (int c = 0; c < inputWidth; ++c)
         {
-          inputMatrix[j][r][c] = outMatrix[idx++];
+          inputMatrix[i][r][c] = outVector[idx++];
         }
       }
-    }
   }
 }
 
@@ -719,33 +677,55 @@ std::vector<std::vector<float>> read_dense_layer_weights_from_csv(const std::str
     throw std::runtime_error("Layer not found in the CSV file"); // Throw an error if the layer name is not found
 }
 
-// Function to binarize a 3D matrix of floats.
-// Added to binarize the values of kernel matrices of the convolutional layers. May not be needed after adding float support.
-std::vector<std::vector<std::vector<int>>> binarizeMatrix(const std::vector<std::vector<std::vector<float>>>& weights) {
-  std::vector<std::vector<std::vector<int>>> binarizedMatrix(weights.size());
-    for (size_t d = 0; d < weights.size(); ++d) {
-      binarizedMatrix[d].resize(weights[d].size());
-      for (size_t r = 0; r < weights[d].size(); ++r) {
-        binarizedMatrix[d][r].resize(weights[d][r].size());
-        for (size_t c = 0; c < weights[d][r].size(); ++c) {
-          binarizedMatrix[d][r][c] = (weights[d][r][c] > 0) ? 1 : 0;
+// Function to quantize a 3D matrix of float to a specified integer range based on the given bit width.
+// The quantization factor should represent the bit width (e.g., 1 for INT1, 2 for INT2, 4 for INT4, 8 for INT8, 16 for INT16).
+// The default bitWidth is 1 which represents binary quantization.
+std::vector<std::vector<std::vector<int>>> quantizeMatrix(const std::vector<std::vector<std::vector<float>>>& weights, int bitWidth = 1) {
+  if (bitWidth <= 0 || bitWidth > 32) {
+    throw std::invalid_argument("Bit width must be a positive integer up to 32.");
+  }
+
+  std::vector<std::vector<std::vector<int>>> quantizedMatrix(weights.size());
+  int maxQuantValue = (1 << (bitWidth - 1)) - 1;
+  for (size_t d = 0; d < weights.size(); ++d) {
+    quantizedMatrix[d].resize(weights[d].size());
+    for (size_t r = 0; r < weights[d].size(); ++r) {
+      quantizedMatrix[d][r].resize(weights[d][r].size());
+      for (size_t c = 0; c < weights[d][r].size(); ++c) {
+        // Scale and quantize the float value to the specified integer range
+        if (bitWidth == 1) {
+          quantizedMatrix[d][r][c] = weights[d][r][c] >= 0 ? 1 : -1;
+        } else {
+          quantizedMatrix[d][r][c] = static_cast<int>(std::round(std::clamp(weights[d][r][c], -1.0f, 1.0f) * maxQuantValue));
         }
       }
     }
-  return binarizedMatrix;
+  }
+  return quantizedMatrix;
 }
 
-// Function to binarize a 2D matrix of floats.
-// Added to binarize the values of kernel matrices of the dense layers. May not be needed after adding float support.
-std::vector<std::vector<int>> binarizeMatrix(const std::vector<std::vector<float>>& weights) {
-  std::vector<std::vector<int>> binarizedMatrix(weights.size());
-    for (size_t r = 0; r < weights.size(); ++r) {
-      binarizedMatrix[r].resize(weights[r].size());
-      for (size_t c = 0; c < weights[r].size(); ++c) {
-        binarizedMatrix[r][c] = (weights[r][c] > 0) ? 1 : 0;
+// Function to quantize a 2D matrix of floats to a specified integer range based on the given bit width.
+// The quantization factor should represent the bit width (e.g., 1 for INT1, 2 for INT2, 4 for INT4, 8 for INT8, 16 for INT16).
+// The default bitWidth is 1 which represents binary quantization.
+std::vector<std::vector<int>> quantizeMatrix(const std::vector<std::vector<float>>& weights, int bitWidth = 1) {
+  if (bitWidth <= 0 || bitWidth > 32) {
+    throw std::invalid_argument("Bit width must be a positive integer up to 32.");
+  }
+
+  std::vector<std::vector<int>> quantizedMatrix(weights.size());
+  int maxQuantValue = (1 << (bitWidth - 1)) - 1;
+  for (size_t r = 0; r < weights.size(); ++r) {
+    quantizedMatrix[r].resize(weights[r].size());
+    for (size_t c = 0; c < weights[r].size(); ++c) {
+      // Scale and quantize the float value to the specified integer range
+      if (bitWidth == 1) {
+        quantizedMatrix[r][c] = weights[r][c] >= 0 ? 1 : -1;
+      } else {
+        quantizedMatrix[r][c] = static_cast<int>(std::round(std::clamp(weights[r][c], -1.0f, 1.0f) * maxQuantValue));
       }
     }
-  return binarizedMatrix;
+  }
+  return quantizedMatrix;
 }
 
 #ifdef COMPILE_WITH_JPEG
@@ -755,7 +735,7 @@ void readJPEG(const std::string& filename, std::vector<std::vector<std::vector<i
   FILE* file = fopen(filename.c_str(), "rb");
   if (!file) {
     std::cerr << "Error opening file: " << filename << std::endl;
-    return;
+    std::exit(1);
   }
 
   // Initialize the JPEG decompression object
@@ -825,7 +805,7 @@ void writeResizedImage(const std::string& outputFilename, const std::vector<std:
   FILE* outfile = fopen(outputFilename.c_str(), "wb");
   if (!outfile) {
     std::cerr << "Error opening output JPEG file: " << outputFilename << std::endl;
-    return;
+    std::exit(1);
   }
 
   // Initialize the JPEG compression object

@@ -30,6 +30,7 @@ typedef struct Params
   char *kernelMatrixFile;
   bool shouldVerify;
   bool moreDebugPrints;
+  int quantizationFactor;
 } Params;
 
 void usage()
@@ -42,6 +43,7 @@ void usage()
           "\n    -k    input csv file containing the kernel matrices (default=generates matrices with random numbers)"
           "\n    -c    input file containing dramsim config"
           "\n    -m    enable more debug prints (default = false)"
+          "\n    -q    quantization factor for quantizing the weights (default = 1, binarize the weights)"
           "\n");
 }
 
@@ -53,9 +55,10 @@ struct Params getInputParams(int argc, char **argv)
   p.kernelMatrixFile = nullptr;
   p.shouldVerify = false;
   p.moreDebugPrints = false;
+  p.quantizationFactor = 1;
 
   int opt;
-  while ((opt = getopt(argc, argv, "c:v:i:k:m:")) >= 0)
+  while ((opt = getopt(argc, argv, "c:v:i:k:m:q:")) >= 0)
   {
     switch (opt)
     {
@@ -77,7 +80,10 @@ struct Params getInputParams(int argc, char **argv)
       break;
     case 'm':
       p.moreDebugPrints = (*optarg == 't') ? true : false; 
-      break;       
+      break;
+    case 'q':
+      p.quantizationFactor = atoi(optarg);
+      break;         
     default:
       fprintf(stderr, "\nUnrecognized option!\n");
       usage();
@@ -150,7 +156,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }
 
@@ -165,7 +171,7 @@ int main(int argc, char *argv[])
     std::cout << "Input matrix dimensions after padding: ";
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
-    printMatrixDimensions(kernelMatrix); 
+    printMatrixDimensions(kernelMatrix);
   }  
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv1-1........\n";
@@ -174,7 +180,7 @@ int main(int argc, char *argv[])
   std::cout << "........starting RELU........\n";
   relu(resultMatrix1);
   std::cout << "........ending RELU........\n";
-
+  
   // conv1-2
   kernelMatrix.clear();
   if (params.kernelMatrixFile == nullptr)
@@ -191,7 +197,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }
   inputMatrix.clear();
@@ -208,7 +214,7 @@ int main(int argc, char *argv[])
     std::cout << "Input matrix dimensions after padding: ";
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
-    printMatrixDimensions(kernelMatrix);    
+    printMatrixDimensions(kernelMatrix);   
   }  
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv1-2........\n";
@@ -240,7 +246,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -257,7 +263,7 @@ int main(int argc, char *argv[])
     std::cout << "Input matrix dimensions after padding: ";
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
-    printMatrixDimensions(kernelMatrix);    
+    printMatrixDimensions(kernelMatrix);
   }  
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv2-1........\n";
@@ -266,7 +272,7 @@ int main(int argc, char *argv[])
   std::cout << "........starting RELU........\n";
   relu(resultMatrix1);
   std::cout << "........ending RELU........\n";
-
+  
   // conv2-2
   kernelMatrix.clear();
   if (params.kernelMatrixFile == nullptr)
@@ -283,7 +289,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -332,7 +338,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -375,7 +381,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -423,7 +429,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }
   inputMatrix.clear();
@@ -466,7 +472,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -515,7 +521,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -558,7 +564,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
+      kernelMatrix = quantizeMatrix(kernelMatrix_f, params.quantizationFactor);
     }  
   }  
   inputMatrix.clear();
@@ -607,7 +613,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       denseWeight = floatToFixed(denseWeight_f);
     } else {
-      denseWeight = binarizeMatrix(denseWeight_f);
+      denseWeight = quantizeMatrix(denseWeight_f, params.quantizationFactor);
     }  
   }  
   std::cout << "........starting dense1........\n";
@@ -638,7 +644,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       denseWeight = floatToFixed(denseWeight_f);
     } else {
-      denseWeight = binarizeMatrix(denseWeight_f);
+      denseWeight = quantizeMatrix(denseWeight_f, params.quantizationFactor);
     }  
   }  
   std::cout << "........starting dense2........\n";
@@ -669,7 +675,7 @@ int main(int argc, char *argv[])
     if (params.shouldVerify == true) {
       denseWeight = floatToFixed(denseWeight_f);
     } else {
-      denseWeight = binarizeMatrix(denseWeight_f);
+      denseWeight = quantizeMatrix(denseWeight_f, params.quantizationFactor);
     }      
   }  
   std::cout << "........starting dense3........\n";

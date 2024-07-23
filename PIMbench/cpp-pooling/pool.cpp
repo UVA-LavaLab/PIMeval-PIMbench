@@ -102,43 +102,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-// Function to print a 3D matrix
-void print3DMatrix(const std::vector<std::vector<std::vector<int>>> &matrix) {
-    for (int i = 0; i < matrix.size(); ++i) {
-        std::cout << "Layer " << i << ":\n";
-        for (int j = 0; j < matrix[i].size(); ++j) {
-            for (int k = 0; k < matrix[i][j].size(); ++k) {
-                std::cout << matrix[i][j][k] << " ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-    }
-}
-
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
-{
-  int numRows = kernelHeight * kernelWidth;
-  int numCols = matrixRow * matrixColumn;
-  decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
-  int colIdx = 0;
-  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
-  {
-    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
-    {
-      int rowIDX = 0;
-      for (int k = i; k < i + kernelHeight; k++)
-      {
-        for (int l = j; l < j + kernelWidth; l++)
-        {
-          decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
-        }
-      }
-      ++colIdx;
-    }
-  }
-}
-
 /*
   This should work for bitSIMD or any PIM that requires vertical data layout.
 */
@@ -157,7 +120,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
-    std::cout << "Abort" << std::endl;
+    std::cout << "Function: " << __func__ << "Abort" << std::endl;
     return;
   }
   pimObjectList[0] = obj1;
@@ -166,7 +129,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Function: " << __func__ << "Abort" << std::endl;
       return;
     }
     pimObjectList[i] = obj;
@@ -177,7 +140,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Function: " << __func__ << "Abort" << std::endl;
       return;
     }
   }
@@ -187,7 +150,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimStatus status = pimMax(pimObjectList[0], pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Function: " << __func__ << "Abort" << std::endl;
       return;
     }
   }
@@ -195,7 +158,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
-    std::cout << "Abort" << std::endl;
+    std::cout << "Function: " << __func__ << "Abort" << std::endl;
     return;
   }
   for (auto elem : pimObjectList)
@@ -251,18 +214,18 @@ std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector
   if (moreDebugPrints == true) {
     std::cout << "Stride: " << stride << ", Kernel size: " << kernelHeight << "x" << kernelWidth << std::endl;
     std::cout << "Input matrix:" << std::endl;
-    print3DMatrix(inputMatrix);
+    printMatrix(inputMatrix);
     std::cout << "Output matrix from CPU:" << std::endl;
-    print3DMatrix(outputMatrix);
+    printMatrix(outputMatrix);
     std::cout << "Output matrix from PIM:" << std::endl;
-    print3DMatrix(PIMResult);    
+    printMatrix(PIMResult);    
   }
   
   return outputMatrix;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
   struct Params params = getInputParams(argc, argv);
 
   std::vector<std::vector<std::vector<int>>> inputMatrix;
@@ -291,6 +254,8 @@ int main(int argc, char *argv[])
   int numOfPIMColumn = (params.row * params.column / numOfPIMRow);
   int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < params.dim ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : params.dim;
 
+  // Calculate dimensions
+  int inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
   int outputHeight = (inputHeight - params.kernelHeight) / params.stride + 1;
@@ -298,46 +263,57 @@ int main(int argc, char *argv[])
   
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(params.dim, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
+  std::vector<std::vector<int>> decompMat;
+  std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+  std::vector<int> outVector;
+  outVector.resize(inputDepth * outputHeight * outputWidth);
 
-  for (int i = 0; i < params.dim; i += 1)
-  {
-    // This vector packs all the matrices that can be fit into one PIM iteration
-    std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
-    for (int j = i; j < matChunk; j++)
-    {
-      std::vector<std::vector<int>> tempMat;
-      getDecomposedMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, inputMatrix[j], tempMat);
-      if (params.moreDebugPrints == true) { 
-        // Debug print
+  // Loop through input depth in chunks
+  for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
+    int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+    // Decompose and merge matrices
+    for (int k = j; k < matChunk; k++) {
+      decomposeMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, 0, inputMatrix[k], decompMat);
+      if (params.moreDebugPrints) { 
+        // Debug print decomposed matrix
         std::cout << "Decomposed Matrix:" << std::endl;
-        for (const auto &row : tempMat)
-        {
-          for (const auto &val : row)
-          {
+        for (const auto &row : decompMat) {
+          for (const auto &val : row) {
             std::cout << val << " ";
           }
           std::cout << std::endl;
         }
       }
       for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+        mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
       }
     }
-    std::vector<int> outMatrix;
-    maxPool(mergedMat, outMatrix);
+
+    if (params.moreDebugPrints) {
+      // Debug print merged matrix
+      std::cout << "Merged Matrix:" << std::endl;      
+      for (const auto &row : mergedMat) {
+        for (const auto &val : row) {
+          std::cout << val << " ";
+        }
+        std::cout << std::endl;
+      }
+    }
+  }
+
+  maxPool(mergedMat, outVector);
+
+  for (int i = 0; i < params.dim; i += 1)
+  {
     int idx = 0;
-    for (int j = i; j < matChunk; ++j)
-    {
-      for (int r = 0; r < resultMatrix[j].size(); ++r)
+      for (int r = 0; r < resultMatrix[i].size(); ++r)
       {
-        for (int c = 0; c < resultMatrix[j][r].size(); ++c)
+        for (int c = 0; c < resultMatrix[i][r].size(); ++c)
         {
-          resultMatrix[j][r][c] = outMatrix[idx++];
+          resultMatrix[i][r][c] = outVector[idx++];
         }
       }
-    }
   }
 
   if (params.shouldVerify == true)

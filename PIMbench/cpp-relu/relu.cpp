@@ -40,9 +40,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.row = 224;
-  p.column = 224;
-  p.dim = 64;
+  p.row = 226;
+  p.column = 226;
+  p.dim = 128;
   p.imageMatrixFile = nullptr;
   p.dramConfigFile = nullptr;
   p.shouldVerify = false;
@@ -87,58 +87,22 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-// Function to print a 3D matrix
-void print3DMatrix(const std::vector<std::vector<std::vector<int>>> &matrix) {
-    for (int i = 0; i < matrix.size(); ++i) {
-        std::cout << "Layer " << i << ":\n";
-        for (int j = 0; j < matrix[i].size(); ++j) {
-            for (int k = 0; k < matrix[i][j].size(); ++k) {
-                std::cout << matrix[i][j][k] << " ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-    }
-}
-
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
-{
-  int numRows = kernelHeight * kernelWidth;
-  int numCols = matrixRow * matrixColumn;
-  decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
-  int colIdx = 0;
-  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
-  {
-    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
-    {
-      int rowIDX = 0;
-      for (int k = i; k < i + kernelHeight; k++)
-      {
-        for (int l = j; l < j + kernelWidth; l++)
-        {
-          decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
-        }
-      }
-      ++colIdx;
-    }
-  }
-}
-
 /*
   This should work for bitSIMD or any PIM that requires vertical data layout.
 */
-void RELU(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
+void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
   unsigned bitsPerElement = 32;
 
   if (inputMatrix.empty())
   {
-    return;
+    std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;
+    return;   
   }
   int numRows = inputMatrix.size();
   int numCols = inputMatrix[0].size();
-  // Initialize reluConst vector with zero for max(0, x) operation. Initialize with a different value 'y' for max(y, x) operation.
-  std::vector<int> reluConst(numCols, 0);  
+  // Initialize reluConst with zero for max(0, x) operation. Initialize with a different value 'y' for max(y, x) operation.
+  uint64_t reluConst = 0;  
 
   std::vector<PimObjId> pimObjectList(numRows);
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
@@ -158,13 +122,7 @@ void RELU(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &ou
     }
     pimObjectList[i] = obj;
   }
-  PimObjId RELUConstObj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
-  if (RELUConstObj == -1)
-  {
-      std::cout << "Abort: pimAllocAssociated for PimObj RELUConstObj failed" << std::endl;
-      return;
-  }
-
+  
   for (int i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
@@ -174,16 +132,10 @@ void RELU(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &ou
       return;
     }
   }
-  PimStatus status = pimCopyHostToDevice((void *) reluConst.data(), RELUConstObj);
-  if (status != PIM_OK)
-  {
-      std::cout << "Abort: pimCopyHostToDevice from reluConst to RELUConstObj failed" << std::endl;
-      return;
-  }  
 
   for (int i = 0; i < pimObjectList.size(); i++)
   {
-    PimStatus status = pimMax(RELUConstObj, pimObjectList[i], pimObjectList[0]);
+    PimStatus status = pimMaxScalar(pimObjectList[i], pimObjectList[0], reluConst);
     if (status != PIM_OK)
     {
       std::cout << "Abort: pimMax failed between RELUConstObj and pimObjectList[" << i << "]" << std::endl;
@@ -191,7 +143,7 @@ void RELU(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &ou
     }
   }
   outputMatrix.resize(numCols);
-  status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort: pimCopyDeviceToHost from pimObjectList[0] to outputMatrix" << std::endl;
@@ -232,113 +184,123 @@ std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector
   }
    
   if (mismatch_counter == 0) {
-    std::cout << "Success: PIM results match with CPU results" << std::endl; 
+    std::cout << "Success: PIM results match with CPU results" << std::endl << std::endl; 
   } else {
-    std::cout << "Failure: PIM results do not match with CPU results" << std::endl;
+    std::cout << "Failure: PIM results do not match with CPU results" << std::endl << std::endl;
   }
 
   if (moreDebugPrints == true) {
     std::cout << "Stride: " << stride << ", Kernel size: " << kernelHeight << "x" << kernelWidth << std::endl;
     std::cout << "Input matrix:" << std::endl;
-    print3DMatrix(inputMatrix);
+    printMatrix(inputMatrix);
     std::cout << "Output matrix from CPU:" << std::endl;
-    print3DMatrix(outputMatrix);
+    printMatrix(outputMatrix);
     std::cout << "Output matrix from PIM:" << std::endl;
-    print3DMatrix(PIMResult);    
+    printMatrix(PIMResult);    
   }
   
   return outputMatrix;
 }
 
-int main(int argc, char *argv[])
-{
-  struct Params params = getInputParams(argc, argv);
+int main(int argc, char *argv[]) {
 
-  std::vector<std::vector<std::vector<int>>> inputMatrix;
-  inputMatrix.resize(params.dim, std::vector<std::vector<int>>(params.row, std::vector<int>(params.column)));
-  const int kernelHeight = 1;
-  const int kernelWidth = 1;
-  const int stride = 1;
+  // Parse input parameters from command line
+  Params params = getInputParams(argc, argv);
 
-  if (params.imageMatrixFile == nullptr)
-  {
-    for (auto &mat : inputMatrix)
-    {
+  // Initialize input matrix based on parsed dimensions
+  std::vector<std::vector<std::vector<int>>> inputMatrix(params.dim, std::vector<std::vector<int>>(params.row, std::vector<int>(params.column)));
+
+  // Check if an image matrix file is provided
+  if (params.imageMatrixFile == nullptr) {
+    // Generate or retrieve matrix data if no file is provided
+    for (auto &mat : inputMatrix) {
       getMatrix(params.row, params.column, 0, mat);
     }
-  }
-  else
-  {
-    // TODO: read Matrix from file
+  } else {
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 0;    
   }
 
+  // Create a device based on provided DRAM configuration file
   if (!createDevice(params.dramConfigFile))
     return 1;
 
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
-  unsigned numCols = 8192, numOfCore = 4096;
-  
-  int numOfPIMRow = kernelHeight * kernelWidth;
-  int numOfPIMColumn = (params.row * params.column / numOfPIMRow);
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < params.dim ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : params.dim;
-
+  // Calculate matrix dimensions
+  int inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
-  int outputHeight = inputHeight;
-  int outputWidth = inputWidth;
-  
-  std::vector<std::vector<std::vector<int>>> resultMatrix;
-  resultMatrix.resize(params.dim, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
 
-  for (int i = 0; i < params.dim; i += 1)
-  {
-    // This vector packs all the matrices that can be fit into one PIM iteration
-    std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
-    for (int j = i; j < matChunk; j++)
-    {
-      std::vector<std::vector<int>> tempMat;
-      //tempMat = inputMatrix[i];
-      getDecomposedMatrix(params.row, params.column, kernelHeight, kernelWidth, stride, inputMatrix[j], tempMat);
-      if (params.moreDebugPrints == true) { 
-        // Debug print
+  // Define parameters for processing
+  unsigned numCols = 8192, numOfCore = 4096;
+  int numOfPIMRow = 1;
+  int numOfPIMColumn = (inputHeight * inputWidth / numOfPIMRow);
+  int numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfCore) / numOfPIMColumn)), inputDepth);
+
+  // Initialize result matrix with the same dimensions as input matrix
+  std::vector<std::vector<std::vector<int>>> resultMatrix(inputDepth, std::vector<std::vector<int>>(inputHeight, std::vector<int>(inputWidth)));
+
+  int tempcol = 0;
+  std::vector<std::vector<int>> decompMat;
+  std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+  std::vector<int> outVector;
+  outVector.resize(inputDepth * inputHeight * inputWidth);
+  
+  // Loop through input depth in chunks
+  for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
+    int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+    // Decompose and merge matrices
+    for (int k = j; k < matChunk; k++) {
+      decomposeMatrix(params.row, params.column, 1, 1, 1, 0, inputMatrix[k], decompMat);
+      if (params.moreDebugPrints) { 
+        // Debug print decomposed matrix
         std::cout << "Decomposed Matrix:" << std::endl;
-        for (const auto &row : tempMat)
-        {
-          for (const auto &val : row)
-          {
+        for (const auto &row : decompMat) {
+          for (const auto &val : row) {
             std::cout << val << " ";
           }
           std::cout << std::endl;
         }
       }
       for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+        mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
+        tempcol = mergedMat[idx].size();
       }
     }
-    std::vector<int> outMatrix;
-    RELU(mergedMat, outMatrix);
-    int idx = 0;
-    for (int j = i; j < matChunk; ++j)
-    {
-      for (int r = 0; r < resultMatrix[j].size(); ++r)
-      {
-        for (int c = 0; c < resultMatrix[j][r].size(); ++c)
-        {
-          resultMatrix[j][r][c] = outMatrix[idx++];
-        }
-      }
-    }
-  }
 
-  if (params.shouldVerify == true)
-  {
-    // Perform RELU on CPU and compare results with PIM
-    verifyWithCPU(inputMatrix, resultMatrix, kernelHeight, kernelWidth, stride, params.moreDebugPrints);
+    if (params.moreDebugPrints) {
+      // Debug print merged matrix
+      std::cout << "Merged Matrix:" << std::endl;            
+      for (const auto &row : mergedMat) {
+        for (const auto &val : row) {
+          std::cout << val << " ";
+        }
+        std::cout << std::endl;
+      }
+    }
   }
   
-  pimShowStats();
+  performRelu(mergedMat, outVector);
 
+  for (int i = 0; i < inputDepth; i += 1)
+  {     
+    int idx = 0;
+      for (int r = 0; r < inputHeight; ++r)
+      {
+        for (int c = 0; c < inputWidth; ++c)
+        {
+          resultMatrix[i][r][c] = outVector[idx++];
+        }
+      }
+  }  
+  
+  // Verify results against CPU if specified
+  if (params.shouldVerify) {
+    verifyWithCPU(inputMatrix, resultMatrix, 1, 1, 1, params.moreDebugPrints);
+  }
+
+  // Display PIM processing statistics
+  pimShowStats();
+  
   return 0;
 }
