@@ -3,11 +3,12 @@
 
 #include <vector>
 #include <algorithm>
+#include <cstdint>
 #include "libpimeval.h"
 
 class PIMAuxilary {
 public:
-    std::vector<int> array;
+    std::vector<uint8_t> array;
     PimObjId pimObjId;
     PimAllocEnum allocType;
     unsigned numElements;
@@ -21,21 +22,11 @@ public:
     PIMAuxilary(const PIMAuxilary* src); // Copy constructor
     ~PIMAuxilary();
 
-    std::vector<int>* getArray();
-    void setArray(const std::vector<int>& newArray);
+    std::vector<uint8_t>* getArray();
+    void setArray(const std::vector<uint8_t>& newArray);
     PimObjId getPimObjId() const;
     void setPimObjId(PimObjId id);
-    int verifyArrayEquality(const std::vector<int>& otherArray) const;
+    int verifyArrayEquality(const std::vector<uint8_t>& otherArray) const;
 };
-
-// PIM functions to be added 
-void pimShiftLeft(PIMAuxilary* x, int shiftAmount);
-void pimShiftRight(PIMAuxilary* x, int shiftAmount);
-void pimMul_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst);
-void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst);
-void pimCopyDeviceToDevice(PIMAuxilary* src, PIMAuxilary* dst);
-
-
-
 
 #endif // PIMAUXILARY_H

@@ -3,8 +3,7 @@
 #include <iostream>
 #include <cassert>
 
-
-PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_AUTO), numElements(0), bitsPerElements(0), dataType(PIM_INT32) {
+PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_AUTO), numElements(0), bitsPerElements(0), dataType(PIM_UINT8) {
     // Constructor initialization
 }
 
@@ -14,7 +13,7 @@ PIMAuxilary::PIMAuxilary(const PIMAuxilary* src) {
         std::cout << "Abort" << std::endl;
         abort();
     }
-    this->array = *(new std::vector<int>(src->numElements));
+    this->array = *(new std::vector<uint8_t>(src->numElements));
     this->array.assign(src->array.begin(), src->array.end());  // Copy all elements from src to dest
     this->allocType = src->allocType;
     this->numElements = src->numElements;
@@ -28,7 +27,7 @@ PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned 
         std::cout << "Abort" << std::endl;
         abort();
     }
-    this->array = *(new std::vector<int>(numElements));
+    this->array = *(new std::vector<uint8_t>(numElements));
     this->allocType = allocType;
     this->numElements = numElements;
     this->bitsPerElements = bitsPerElements;
@@ -41,23 +40,22 @@ PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned 
         std::cout << "Abort" << std::endl;
         abort();
     }
-    this->array = std::vector<int>(numElements);
+    this->array = std::vector<uint8_t>(numElements);
     this->allocType = allocType;
     this->numElements = numElements;
     this->bitsPerElements = bitsPerElements;
     this->dataType = dataType;
 }
 
-
 PIMAuxilary::~PIMAuxilary() {
     // Destructor - for cleanup, if needed
 }
 
-std::vector<int>* PIMAuxilary::getArray() {
+std::vector<uint8_t>* PIMAuxilary::getArray() {
     return &array;
 }
 
-void PIMAuxilary::setArray(const std::vector<int>& newArray) {
+void PIMAuxilary::setArray(const std::vector<uint8_t>& newArray) {
     array = newArray;
 }
 
@@ -69,7 +67,7 @@ void PIMAuxilary::setPimObjId(PimObjId id) {
     pimObjId = id;
 }
 
-int PIMAuxilary::verifyArrayEquality(const std::vector<int>& otherArray) const {
+int PIMAuxilary::verifyArrayEquality(const std::vector<uint8_t>& otherArray) const {
     return array == otherArray ? 1 : 0;
 }
 
