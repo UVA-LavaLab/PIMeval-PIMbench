@@ -1,14 +1,28 @@
-# Makefile for PIMeval Simulator - Applications
+# Makefile: C++ version of image downsampling
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-SUBDIRS := PIM
+LIBPIMEVAL_PATH = ../../../libpimeval
+include ../../Makefile.common
 
-.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
-.DEFAULT_GOAL := perf
+# make USE_OPENMP=1
+USE_OPENMP ?= 0
+ifeq ($(USE_OPENMP),1)
+	CXXFLAGS += -fopenmp
+endif
 
-debug perf dramsim3_integ clean: $(SUBDIRS)
+EXEC := image_downsampling.out
+SRCS := image_downsampling.cpp
+OBJS := $(SRCS:.cpp=.o)
 
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+debug perf dramsim3_integ: $(EXEC)
+
+$(EXEC): $(OBJS) $(DEPS)
+	$(CXX) $(OBJS) $(CXXFLAGS) -o $@
+
+%.o: %.cpp
+	$(CXX) -c $< $(CXXFLAGS) -o $@
+
+clean:
+	rm -f $(EXEC) $(OBJS)
