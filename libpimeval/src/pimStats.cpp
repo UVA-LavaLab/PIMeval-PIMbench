@@ -15,7 +15,9 @@ void
 pimStatsMgr::showStats() const
 {
   std::printf("----------------------------------------\n");
+  #if defined(DEBUG)
   showApiStats();
+  #endif
   showDeviceParams();
   showCopyStats();
   showCmdStats();
@@ -85,7 +87,9 @@ pimStatsMgr::showDeviceParams() const
   std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
   std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());
   std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD());
+  #if defined(DEBUG)
   std::printf(" %30s : %f\n", "AAP (ns)", m_paramsDram->getNsAAP());
+  #endif
 }
 
 //! @brief  Show data copy stats
