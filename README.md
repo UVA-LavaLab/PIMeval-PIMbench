@@ -17,10 +17,10 @@
 
 ### Quick start
 ```
-git clone https://github.com/deyuan/PIMeval.git
+git clone <url_to_your_fork>
 cd PIMeval/
-make -j10
-./PIMbench/cpp-vec-add/vec-add.out
+make -j<n_proc>
+./PIMbench/<application_dir>/<application_executable>
 ```
 
 ### Code Structure
@@ -35,6 +35,7 @@ make -j10
   * `cpp-gemm`: General matrix-matrix product
   * `cpp-gemv`: General matrix-vector product
   * `cpp-histogram`: Histogram
+  * `cpp-brightness`: Image brightness
   * `cpp-image-downsampling`: Image downsampling
   * `cpp-kmeans`: K-means
   * `cpp-knn`: kNN
@@ -46,7 +47,6 @@ make -j10
   * `cpp-vgg16`: VGG-16
   * `cpp-vgg19`: VGG-19
 * More applications
-  * `cpp-brightness`: Image brightness
   * `cpp-convolution`: Convolution
   * `cpp-db-filtering`: DB filtering
   * `cpp-dot-prod`: Dot product
@@ -73,7 +73,7 @@ make -j10
   * `make dramsim3_integ`: Enable DRAMsim3 related code with `-DDRAMSIM3_INTEG`
 -->
 * Multi-threaded building
-  * `make -j10`
+  * `make -j<n_proc>`
 * Specify simulation target
   * `make PIM_SIM_TARGET=PIM_DEVICE_BITSIMD_V` (default)
   * `make PIM_SIM_TARGET=PIM_DEVICE_FULCRUM`
