@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
   uint64_t totalAvailableBits = numCol * numRow * numCore;
   uint64_t requiredBitsforImage = ((imgDataBytes / NUMCHANNELS * 8) + 8); // Using uint8_t instead of int, only require 8 bits
   int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
-  std::cout << "Required iterations for image: " << numItr << std::endl;
+  //std::cout << "Required iterations for image: " << numItr << std::endl;
 
   if (numItr == 1)
   {

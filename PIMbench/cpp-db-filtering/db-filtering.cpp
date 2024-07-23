@@ -31,12 +31,12 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\n    Usage:  ./db-filtering [options]"
+          "\n    Usage:  ./db-filtering.out [options]"
           "\n"
           "\n    -n    database size (default=65536 elements)"
           "\n    -k    value of key (default = 70)"
           "\n    -c    dramsim config file"
-          "\n    -i    input file containing the array of value to be sort (default=generates datapoints with random numbers)"
+          "\n    -i    input file containing the database (default=generates datapoints with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=true)"
           "\n");
 }
@@ -104,7 +104,8 @@ int main(int argc, char **argv){
         key = p.key;
     }
     else{
-        // TODO: Read from files
+        std::cout << "Reading from input file is not implemented yet." << std::endl;
+        return 0;
     }
 
     if (!createDevice(p.configFile)){

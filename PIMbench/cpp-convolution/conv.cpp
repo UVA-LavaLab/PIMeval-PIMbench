@@ -32,7 +32,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./conv [options]"
+          "\nUsage:  ./conv.out [options]"
           "\n"
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"
@@ -345,7 +345,8 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // TODO: read Image Matrix from file
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 0;
   }
 
   if (params.kernelMatrixFile == nullptr)
