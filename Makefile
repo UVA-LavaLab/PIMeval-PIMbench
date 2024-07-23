@@ -3,7 +3,7 @@
 
 LIBDIR := libpimeval
 BITSERIALDIR := bit-serial
-APPDIR := apps
+APPDIR := PIMbench
 TESTDIR := tests
 ALLDIRS := $(LIBDIR) $(BITSERIALDIR) $(APPDIR) $(TESTDIR)
 
