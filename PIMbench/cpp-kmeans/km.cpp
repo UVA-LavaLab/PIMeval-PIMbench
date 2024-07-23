@@ -35,7 +35,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./km [options]"
+          "\nUsage:  ./km.out [options]"
           "\n"
           "\n    -n    number of points (default=65536 points)"
           "\n    -d    dimension (default=2)"
@@ -318,7 +318,8 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // TODO: Read from files
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 0;
   }
 
   if (!createDevice(params.configFile))

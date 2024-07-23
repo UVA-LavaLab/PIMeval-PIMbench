@@ -345,7 +345,8 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // TODO: read Image Matrix from file
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 0;
   }
 
   if (params.kernelMatrixFile == nullptr)

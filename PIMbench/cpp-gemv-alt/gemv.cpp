@@ -27,7 +27,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./gemv [options]"
+          "\nUsage:  ./gemv.out [options]"
           "\n"
           "\n    -r    matrix row (default=8M elements)"
           "\n    -d    matrix column (default=8M elements)"
@@ -148,7 +148,8 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // TODO: Read from files
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 0;
   }
 
   if (!createDevice(params.configFile))

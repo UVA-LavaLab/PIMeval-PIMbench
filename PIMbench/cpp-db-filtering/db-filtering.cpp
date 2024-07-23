@@ -104,7 +104,8 @@ int main(int argc, char **argv){
         key = p.key;
     }
     else{
-        // TODO: Read from files
+        std::cout << "Reading from input file is not implemented yet." << std::endl;
+        return 0;
     }
 
     if (!createDevice(p.configFile)){

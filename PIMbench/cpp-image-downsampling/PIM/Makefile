@@ -12,7 +12,7 @@ ifeq ($(USE_OPENMP),1)
 	CXXFLAGS += -fopenmp
 endif
 
-EXEC := image_downsampling_pim.out
+EXEC := image_downsampling.out
 SRCS := image_downsampling.cpp
 OBJS := $(SRCS:.cpp=.o)
 

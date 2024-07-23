@@ -25,7 +25,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./pool [options]"
+          "\nUsage:  ./pool.out [options]"
           "\n"
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"
@@ -277,7 +277,8 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // TODO: read Matrix from file
+    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 0;
   }
 
   if (!createDevice(params.dramConfigFile))
