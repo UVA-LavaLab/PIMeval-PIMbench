@@ -7,20 +7,17 @@ include ../Makefile.common
 # make USE_OPENMP=1
 USE_OPENMP ?= 0
 ifeq ($(USE_OPENMP),1)
-	CXXFLAGS += -fopenmp
+  CXXFLAGS += -fopenmp
 endif
 
 EXEC := aes.out
 SRCS := PIMAuxilary.cpp aes.cpp
-OBJS := $(SRCS:.cpp=.o)
 
 debug perf dramsim3_integ: $(EXEC)
 
-$(EXEC): $(OBJS) $(DEPS)
-	$(CXX) $(OBJS) $(CXXFLAGS) -o $@
-
-%.o: %.cpp
-	$(CXX) -c $< $(CXXFLAGS) -o $@
+$(EXEC): $(SRCS) $(DEPS)
+	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
 
 clean:
-	rm -f $(EXEC) $(OBJS)
+	rm -f $(EXEC)
+
