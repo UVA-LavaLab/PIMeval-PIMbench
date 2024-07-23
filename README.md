@@ -1,5 +1,7 @@
 ## PIMeval Simulator and PIMbench Suite
 
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
 ### Description
 * PIMeval
   * A C++ library based PIM simulation and evaluation framework
