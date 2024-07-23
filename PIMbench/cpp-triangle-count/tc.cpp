@@ -383,8 +383,6 @@ int run_rowmaxusage(const vector<vector<bool>>& adjMatrix, const vector<vector<U
             std::cout << "run_rowmaxusage: Progress: " << (i * 100 / V) << "\% rows completed." << std::endl;
         }
     }
-    // cout << "oneCount: " << oneCount << endl;
-    // cout << "TriangleCount: " << count / 6 << endl;
     // Each triangle is counted 6 times (once at each vertex), so divide the count by 6
     return count / 6;
 }
