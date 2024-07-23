@@ -29,7 +29,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\n    Usage:  ./radix-sort [options]"
+          "\n    Usage:  ./radix-sort.out [options]"
           "\n"
           "\n    -n    array size (default=65536 elements)"
           "\n    -c    dramsim config file"
