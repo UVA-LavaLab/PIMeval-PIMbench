@@ -3,7 +3,7 @@
 
 include ../Makefile.common
 
-EXEC := prefixsum
+EXEC := prefixsum.out
 SRC := prefixsum.cpp
 
 debug perf dramsim3_integ: $(EXEC)
