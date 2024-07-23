@@ -50,7 +50,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add [options]"
+          "\nUsage:  ./tc.out [options]"
           "\n"
           "\n    -l    input size (default=8M elements)"
           "\n    -c    dramsim config file"

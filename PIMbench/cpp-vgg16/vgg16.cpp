@@ -35,7 +35,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./vgg16 [options]"
+          "\nUsage:  ./vgg16.out [options]"
           "\n"
           "\n    -v    should verify result with CPU"
           "\n    -i    input image file (default=generates matrix with random numbers)"
