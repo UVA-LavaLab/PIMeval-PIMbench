@@ -695,6 +695,17 @@ int main(int argc, char *argv[])
   auto end = std::chrono::high_resolution_clock::now();
   hostElapsedTime += (end - start);
   std::cout << "Dimensions of the softmax output: " << resultVector.size() <<  std::endl;
+
+  // *********************************************************************************************************************************
+  //  Verification Process:
+  //  The following code initializes a vector of pairs, fills it with the softmax output values and their corresponding indices.
+  //  Then sorts the pairs by value in descending order, and prints out the top 5 values along with their indices. 
+  //  These indices can be used to map back to the original 1000 output classes of the VGG13 model.  
+  //  The top 5 results are printed as the goal is to see if the correct class label is among the indices of the top 5 values.
+  //  This is important in many classification tasks where the top prediction might not always be correct, 
+  //  but the correct label might still be within the top 5 highest probability predictions.    
+  // *********************************************************************************************************************************
+
   // Create a vector of pairs to store value-index pairs
   std::vector<std::pair<double, int>> valueIndexPairs;
   // Populate the vector with value-index pairs
