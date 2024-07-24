@@ -16,7 +16,7 @@
   * A rich set of PIM benchmark applications on top of the PIMeval functional simulation and evaluation framework
 
 ### Quick start
-```
+```bash
 git clone <url_to_your_fork>
 cd PIMeval/
 make -j<n_proc>
@@ -50,8 +50,7 @@ cd /PIMbench/<application_dir>
   * `cpp-vgg13`: VGG-13
   * `cpp-vgg16`: VGG-16
   * `cpp-vgg19`: VGG-19
-* misc-bench
-  Miscellenous benchmarks implemented for testing purpose.
+* misc-bench: Miscellenous benchmarks implemented for testing purpose.
   * `cpp-dot-prod`: Dot product
   * `cpp-prefixsum`: Prefix sum of a vector
   * `cpp-sad`: Sum of absolute difference
