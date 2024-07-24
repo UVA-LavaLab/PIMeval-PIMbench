@@ -141,7 +141,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     // }
   }
 
-  dst.reserve(row);
+  dst.resize(row);
   status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
   if (status != PIM_OK)
   {
