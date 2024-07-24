@@ -106,7 +106,7 @@ void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<in
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Vector length: " << params.vectorLength << "\n";
+  std::cout << "Running PIM AXPY for vector length: " << params.vectorLength << "\n";
   std::vector<int> X, Y, Y_device;
   if (params.inputFile == nullptr)
   {
@@ -114,6 +114,7 @@ int main(int argc, char* argv[])
     getVector(params.vectorLength, Y);
   } else {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
+    return 1;
   }
   
   if (!createDevice(params.configFile)) return 1;

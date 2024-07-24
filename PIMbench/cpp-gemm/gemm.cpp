@@ -29,9 +29,9 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./gemm.out [options]"
           "\n"
-          "\n    -r    matrix1 row (default=65536 elements)"
-          "\n    -d    matrix1 column (default=65536 elements)"
-          "\n    -z    matrix2 column (default=65536 elements)"
+          "\n    -r    matrix1 row (default=1024 elements)"
+          "\n    -d    matrix1 column (default=256 elements)"
+          "\n    -z    matrix2 column (default=64 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -41,9 +41,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.row = 65536;
-  p.columnA = 65536;
-  p.columnB = 65536;
+  p.row = 1024;
+  p.columnA = 256;
+  p.columnB = 64;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
@@ -207,7 +207,7 @@ void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<in
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Row: " << params.row << " Column: " << params.columnA << "\n";
+  std::cout << "Running gemm on PIM for matrix row: " << params.row << " column: " << params.columnA << "\n";
 
   std::vector<int> srcVector, resultVector;
   std::vector<std::vector<int>> srcMatrixA, srcMatrixB, dstMatrix;
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
   else
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 0;
+    return 1;
   }
 
   if (!createDevice(params.configFile))

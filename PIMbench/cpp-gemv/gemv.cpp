@@ -29,8 +29,8 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./gemv.out [options]"
           "\n"
-          "\n    -r    matrix row (default=65536 elements)"
-          "\n    -d    matrix column (default=65536 elements)"
+          "\n    -r    matrix row (default=2048 elements)"
+          "\n    -d    matrix column (default=64 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -40,8 +40,8 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.row = 65536;
-  p.column = 65536;
+  p.row = 2048;
+  p.column = 64;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
@@ -155,7 +155,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Row: " << params.row << " Column: " << params.column << "\n";
+  std::cout << "Running GEMV for matrix row: " << params.row << " column: " << params.column << "\n";
 
   std::vector<int> srcVector, resultVector;
   std::vector<std::vector<int>> srcMatrix; // matrix should lay out in colXrow format for bitserial PIM
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
   else
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 0;
+    return 1;
   }
 
   if (!createDevice(params.configFile))

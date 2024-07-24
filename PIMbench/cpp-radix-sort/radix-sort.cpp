@@ -31,7 +31,7 @@ void usage()
   fprintf(stderr,
           "\n    Usage:  ./radix-sort.out [options]"
           "\n"
-          "\n    -n    array size (default=65536 elements)"
+          "\n    -n    array size (default=2048 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing the array of value to be sort (default=generates datapoints with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=true)"
@@ -41,7 +41,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.arraySize = 65536;
+  p.arraySize = 2048;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = true;
