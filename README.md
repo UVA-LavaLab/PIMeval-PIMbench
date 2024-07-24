@@ -85,10 +85,6 @@ cd /PIMbench/<application_dir>
 
 <!--
 ### About DRAMsim3 Integration
-* This module contains a copy of DRAMsim3
-  * Oringal DRAMsim3 repo: https://github.com/umd-memsys/DRAMsim3
-  * Clone date: 05/06/2024
-  * Location: ./third_party/DRAMsim3/
 * DRAMsim3 related code are guarded with DRAMSIM3_INTEG flag
   * Requires `make dramsim3_integ`
 * Below is needed for dramsim3_integ for now
@@ -110,6 +106,8 @@ make -j
 -->
 
 ### Contributors
-This repository is the result of a collaborative effort by many individuals, including Farzana Ahmed Siddique, Deyuan Guo, Zhenxing Fan, Mohammadhosein Gholamrezaei, Morteza Baradaran, Alif Ahmed, Hugo Abbot, Kyle Durrer, Ethan Ermovick, Kumaresh Nandagopal and Khyati Kiyawat. We are grateful to everyone who contributed to this repository. Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
+This repository is the result of a collaborative effort by many individuals, including Farzana Ahmed Siddique, Deyuan Guo, Zhenxing Fan, Mohammadhosein Gholamrezaei, Morteza Baradaran, Alif Ahmed, Hugo Abbot, Kyle Durrer, Ethan Ermovick, Kumaresh Nandagopal and Khyati Kiyawat. We are grateful to everyone who contributed to this repository.
+
+Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
 
 \<citation recommendation to be updated\>
