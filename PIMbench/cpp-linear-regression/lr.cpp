@@ -32,7 +32,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./lr.out [options]"
           "\n"
-          "\n    -l    input size (default=65536 elements)"
+          "\n    -l    input size (default=2048 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing 2D matrix (default=generates matrix with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -42,7 +42,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = 65536;
+  p.dataSize = 2048;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
   else
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 0;
+    return 1;
   }
 
   if (!createDevice(params.configFile))

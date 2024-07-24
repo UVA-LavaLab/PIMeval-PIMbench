@@ -33,7 +33,7 @@ void usage()
   fprintf(stderr,
           "\n    Usage:  ./db-filtering.out [options]"
           "\n"
-          "\n    -n    database size (default=65536 elements)"
+          "\n    -n    database size (default=2048 elements)"
           "\n    -k    value of key (default = 70)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing the database (default=generates datapoints with random numbers)"
@@ -44,7 +44,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.inVectorSize = 65536;
+  p.inVectorSize = 2048;
   p.key = 70;
   p.configFile = nullptr;
   p.inputFile = nullptr;
@@ -105,7 +105,7 @@ int main(int argc, char **argv){
     }
     else{
         std::cout << "Reading from input file is not implemented yet." << std::endl;
-        return 0;
+        return 1;
     }
 
     if (!createDevice(p.configFile)){

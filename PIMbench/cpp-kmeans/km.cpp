@@ -37,9 +37,9 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./km.out [options]"
           "\n"
-          "\n    -n    number of points (default=65536 points)"
+          "\n    -n    number of points (default=1024 points)"
           "\n    -d    dimension (default=2)"
-          "\n    -k    centroid (default=20)"
+          "\n    -k    centroid (default=5)"
           "\n    -r    max iteration (default=2)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing datapoints (default=generates datapoints with random numbers)"
@@ -50,9 +50,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.numPoints = 65536;
+  p.numPoints = 1024;
   p.dimension = 2;
-  p.k = 20;
+  p.k = 5;
   p.maxItr = 2;
   p.configFile = nullptr;
   p.inputFile = nullptr;
@@ -309,7 +309,7 @@ void initCentroids(int k, int dimension, int numOfPoints, std::vector<std::vecto
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Number of points: " << params.numPoints << "\n";
+  std::cout << "Running KMeans for PIM on number of points: " << params.numPoints << "\n";
   // row = dimension, col = number of datapoints. this is done to simplify data movement.
   std::vector<std::vector<int>> dataPoints;
   if (params.inputFile == nullptr)
@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
   else
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 0;
+    return 1;
   }
 
   if (!createDevice(params.configFile))

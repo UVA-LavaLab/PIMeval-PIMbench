@@ -31,7 +31,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./add.out [options]"
           "\n"
-          "\n    -l    input size (default=65536 elements)"
+          "\n    -l    input size (default=2048 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -41,7 +41,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.vectorLength = 65536;
+  p.vectorLength = 2048;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
@@ -126,7 +126,7 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Vector length: " << params.vectorLength << "\n";
+  std::cout << "Running Vector Add on PIM for vector length: " << params.vectorLength << "\n\n";
   std::vector<int> src1, src2, dst;
   if (params.inputFile == nullptr)
   {

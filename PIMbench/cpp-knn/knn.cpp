@@ -45,10 +45,10 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./knn.out [options]"
           "\n"
-          "\n    -n    number of data points (default=65536 points)"
-          "\n    -m    number of test points (default=100 points)"
+          "\n    -n    number of data points (default=1024 points)"
+          "\n    -m    number of test points (default=20 points)"
           "\n    -d    dimension (default=2)"
-          "\n    -k    neighbors (default=20)"
+          "\n    -k    neighbors (default=5)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing training datapoints (default=generates datapoints with random numbers)"
           "\n    -t    input file containing testing datapoints (default=generates datapoints with random numbers)"
@@ -59,10 +59,10 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.numDataPoints = 65536;
-  p.numTestPoints = 100;
+  p.numDataPoints = 1024;
+  p.numTestPoints = 20;
   p.dimension = 2;
-  p.k = 20;
+  p.k = 5;
   p.configFile = nullptr;
   p.inputTestFile = nullptr;
   p.inputDataFile = nullptr;
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
   vector<vector<int>> dataPoints;
   vector<vector<int>> testPoints;
 
-
+  std::cout << "Running KNN on PIM for datapoints: " << params.numDataPoints << "\n";
 
   if (params.inputTestFile == nullptr)
   {

@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
   else
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 0;
+    return 1;
   }
 
   if (params.kernelMatrixFile == nullptr)

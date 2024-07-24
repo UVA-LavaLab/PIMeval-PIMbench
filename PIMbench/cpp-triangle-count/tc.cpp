@@ -33,7 +33,6 @@ using namespace std;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  uint64_t vectorLength;
   char *configFile;
   char *inputFile;
   bool shouldVerify;
@@ -44,7 +43,6 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./tc.out [options]"
           "\n"
-          "\n    -l    input size (default=8M elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -64,22 +62,18 @@ void printNestedVector(const std::vector<std::vector<T>>& nestedVec) {
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.vectorLength = 65536;
   p.configFile = nullptr;
-  p.inputFile = nullptr;
+  p.inputFile = "Dataset/v18772_symetric";
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:l:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:c:i:v:")) >= 0)
   {
     switch (opt)
     {
     case 'h':
       usage();
       exit(0);
-      break;
-    case 'l':
-      p.vectorLength = strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -95,10 +89,6 @@ struct Params getInputParams(int argc, char **argv)
       usage();
       exit(0);
     }
-  }
-  if (p.inputFile == nullptr)
-  {
-    p.inputFile = "Dataset/v18772_symetric";
   }
   return p;
 }
@@ -403,7 +393,7 @@ int cpuTriangleCount(const vector<vector<bool>>& adjMatrix) {
 int main(int argc, char** argv) {
     try {
         struct Params params = getInputParams(argc, argv);
-        cout << "Input graph file: " << params.inputFile << endl;
+        cout << "Running triangle count on input graph file: " << params.inputFile << endl;
         // Read edge list from JSON file
         vector<pair<int, int>> edgeList = readEdgeList(params.inputFile);
         
