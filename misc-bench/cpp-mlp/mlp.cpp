@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 #include "../util.h"
-#include "libpimsim.h"
+#include "libpimeval.h"
 using namespace std;
 
 // Data type
@@ -105,8 +105,8 @@ static void init_weights(vector<vector<vector<T>>>& weight, vector<int>& layers,
 
   // correctly size the weight matrix between each layer
   for (unsigned int nl = 0; nl < num_layers - 1; nl++) {
-    int layerInputSize = layers[nl];
-    int layerOutputSize = layers[nl + 1];
+    unsigned int layerInputSize = layers[nl];
+    unsigned int layerOutputSize = layers[nl + 1];
     weight[nl].resize(layerInputSize);
 
     for (unsigned int m = 0; m < layerInputSize; m++) {
@@ -204,9 +204,7 @@ void transposeMatrix(uint64_t row, uint64_t col, std::vector<std::vector<int>> &
   }
 }
 
-static bool mlp_pim(vector<vector<vector<T>>>& weight, vector<vector<T>>& input, vector<vector<T>>& res, vector<T>& layers, unsigned int num_layers, bool shouldVerify) {
-
-  unsigned bitsPerElement = sizeof(int) * 8;
+static bool mlp_pim(vector<vector<vector<T>>>& weight, vector<vector<T>>& input, vector<vector<T>>& res, vector<T>& layers, int num_layers, bool shouldVerify) {
   vector<vector<vector<T>>> inputOutputLayerT(num_layers - 1);
   vector<vector<vector<T>>> weightLayerT(num_layers - 1);
   int numExamples = input.size();
@@ -226,6 +224,7 @@ static bool mlp_pim(vector<vector<vector<T>>>& weight, vector<vector<T>>& input,
     }
   }
   
+  // intialize input into the first layer
   transposeMatrix(numExamples, weight[0].size(), input, inputOutputLayerT[0]);
   // GEMM - TODO: Do we actually need to transpose matrices
   for(int n = 0; n < num_layers - 1; n++){
@@ -235,39 +234,35 @@ static bool mlp_pim(vector<vector<vector<T>>>& weight, vector<vector<T>>& input,
     if(n == 0) {
     }
     transposeMatrix(weightRow, weightCol, weight[n], weightLayerT[n]);
-    for (uint64_t i = 0; i < weightCol; ++i)
+    for (int i = 0; i < weightCol; ++i)
     {
       gemv(numExamples, weightRow, weightLayerT[n][i], inputOutputLayerT[n], tempLayer[i]);
     }
     if(n+1 == num_layers -1) {
-      // for(int x = 0; x < tempLayer.size(); x++) {
-      //   for(int y = 0; y < tempLayer[0].size(); y++) {
-      //     printf("temp layer is %i at row index %i, col index %i\n", tempLayer[x][y], x, y);
-      //   }
-      // }
+      // if this is the last hidden layer, update the result layer
       res = tempLayer;
     } else {
+      // otherwise, feed forward to the next hidden layer
       inputOutputLayerT[n+1] = tempLayer;
-      //transposeMatrix(numExamples, weightRow, tempLayer, inputOutputLayerT[n+1]);
     }
 
     if (shouldVerify)
     {
       std::vector<std::vector<T>> C(numExamples, std::vector<T>(weightCol));
-      for (uint64_t i = 0; i < numExamples; ++i)
+      for (int i = 0; i < numExamples; ++i)
       {
-        for (uint64_t j = 0; j < weightCol; ++j)
+        for (int j = 0; j < weightCol; ++j)
         {
-          for (uint64_t k = 0; k < weightRow; ++k)
+          for (int k = 0; k < weightRow; ++k)
           {
             C[i][j] += inputOutputLayerT[n][k][i] * weightLayerT[n][j][k];
           }
           C[i][j] = max(C[i][j], 0);
         }
       }
-      for (uint64_t i = 0; i < numExamples; ++i)
+      for (int i = 0; i < numExamples; ++i)
       {
-        for (uint64_t j = 0; j < weightCol; ++j)
+        for (int j = 0; j < weightCol; ++j)
         {
           if (C[i][j] != tempLayer[j][i])
           {
@@ -281,14 +276,6 @@ static bool mlp_pim(vector<vector<vector<T>>>& weight, vector<vector<T>>& input,
   }
 
   return true;
-
-  // PimStatus status = pimCopyDeviceToHost(inputOutputLayer, (void *) res.data());
-  // if (status != PIM_OK)
-  // {
-  //   std::cout << "Abort" << std::endl;
-  //   return;
-  // }
-
 }
 
 
@@ -319,5 +306,5 @@ int main(int argc, char **argv) {
 
   pimShowStats();
 
-return 0;
+  return 0;
 }
