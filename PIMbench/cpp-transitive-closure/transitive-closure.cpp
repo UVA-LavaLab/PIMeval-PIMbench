@@ -38,7 +38,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./transitive-closure.out [options]"
           "\n"
-          "\n    -l    number of vertices for a generated dataset (default=2^14 (16384) vertices)"
+          "\n    -l    number of vertices for a generated dataset (default=2^8 vertices)"
           "\n    -r    sparsity rate n for a generated dataset where 0 < n < 100. (default=50 percent)"
           "\n    -c    dramsim config file"
           "\n    -i    specify a .csv input file containing the number of vertices followed by a 2D array, used for verification with CPU/GPU benchmarks"
@@ -49,7 +49,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = 16384; 
+  p.dataSize = 256; 
   p.sparsityRate = 50;
   p.configFile = nullptr;
   p.inputFile = "";
