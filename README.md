@@ -20,7 +20,8 @@
 git clone <url_to_your_fork>
 cd PIMeval/
 make -j<n_proc>
-./PIMbench/<application_dir>/<application_executable>
+cd /PIMbench/<application_dir>
+./<application_executable_name>.out
 ```
 
 ### Code Structure
