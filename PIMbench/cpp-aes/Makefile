@@ -11,16 +11,13 @@ ifeq ($(USE_OPENMP),1)
 endif
 
 EXEC := aes.out
-SRCS := PIMAuxilary.cpp aes.cpp
-OBJS := $(SRCS:.cpp=.o)
+SRCS := $(wildcard *.cpp)
 
 debug perf dramsim3_integ: $(EXEC)
 
-$(EXEC): $(OBJS) $(DEPS)
-	$(CXX) $(OBJS) $(CXXFLAGS) -o $@
-
-%.o: %.cpp
-	$(CXX) -c $< $(CXXFLAGS) -o $@
+$(EXEC): $(SRCS) $(DEPS)
+	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
 
 clean:
-	rm -f $(EXEC) $(OBJS)
+	rm -f $(EXEC)
+
