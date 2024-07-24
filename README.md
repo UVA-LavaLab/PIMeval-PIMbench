@@ -16,7 +16,7 @@
   * A rich set of PIM benchmark applications on top of the PIMeval functional simulation and evaluation framework
 
 ### Quick start
-```
+```bash
 git clone <url_to_your_fork>
 cd PIMeval/
 make -j<n_proc>
@@ -44,15 +44,15 @@ cd /PIMbench/<application_dir>
   * `cpp-radix-sort`: Radix sort
   * `cpp-triangle-count`: Triangle counting
   * `cpp-vec-add`: Vector addition
+  * `cpp-convolution`: Convolution kernel for CNNs
+  * `cpp-pooling`: Max pooling
+  * `cpp-relu`: ReLU
   * `cpp-vgg13`: VGG-13
   * `cpp-vgg16`: VGG-16
   * `cpp-vgg19`: VGG-19
-* More applications
-  * `cpp-convolution`: Convolution
-  * `cpp-db-filtering`: DB filtering
+* misc-bench: Miscellenous benchmarks implemented for testing purpose.
   * `cpp-dot-prod`: Dot product
-  * `cpp-pooling`: Max pooling
-  * `cpp-relu`: ReLU
+  * `cpp-prefixsum`: Prefix sum of a vector
   * `cpp-sad`: Sum of absolute difference
   * `cpp-vec-arithmetic`: Vector arithmetic
   * `cpp-vec-comp`: Vector comparison
@@ -85,10 +85,6 @@ cd /PIMbench/<application_dir>
 
 <!--
 ### About DRAMsim3 Integration
-* This module contains a copy of DRAMsim3
-  * Oringal DRAMsim3 repo: https://github.com/umd-memsys/DRAMsim3
-  * Clone date: 05/06/2024
-  * Location: ./third_party/DRAMsim3/
 * DRAMsim3 related code are guarded with DRAMSIM3_INTEG flag
   * Requires `make dramsim3_integ`
 * Below is needed for dramsim3_integ for now
@@ -110,6 +106,8 @@ make -j
 -->
 
 ### Contributors
-This repository is the result of a collaborative effort by many individuals, including Farzana Ahmed Siddique, Deyuan Guo, Zhenxing Fan, Mohammadhosein Gholamrezaei, Morteza Baradaran, Alif Ahmed, Hugo Abbot, Kyle Durrer, Ethan Ermovick, Kumaresh Nandagopal and Khyati Kiyawat. We are grateful to everyone who contributed to this repository. Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
+This repository is the result of a collaborative effort by many individuals, including Farzana Ahmed Siddique, Deyuan Guo, Zhenxing Fan, Mohammadhosein Gholamrezaei, Morteza Baradaran, Alif Ahmed, Hugo Abbot, Kyle Durrer, Ethan Ermovick, Kumaresh Nandagopal and Khyati Kiyawat. We are grateful to everyone who contributed to this repository.
+
+Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
 
 \<citation recommendation to be updated\>
