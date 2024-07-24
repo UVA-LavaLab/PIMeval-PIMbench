@@ -155,7 +155,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Running GEMV for matrix row: " << params.row << " column: " << params.column << "\n";
+  std::cout << "Running GEMV for matrix row: " << params.row << " column: " << params.column << " and vector of size: " << params.column << std::endl;
 
   std::vector<int> srcVector, resultVector;
   std::vector<std::vector<int>> srcMatrix; // matrix should lay out in colXrow format for bitserial PIM

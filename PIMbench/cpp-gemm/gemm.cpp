@@ -207,7 +207,7 @@ void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<in
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Running gemm on PIM for matrix row: " << params.row << " column: " << params.columnA << "\n";
+  std::cout << "Running GEMM on PIM for matrix of row: " << params.row << " column: " << params.columnA << " and matrix of row: " << params.columnA << " column: " << params.columnB << std::endl;
 
   std::vector<int> srcVector, resultVector;
   std::vector<std::vector<int>> srcMatrixA, srcMatrixB, dstMatrix;
