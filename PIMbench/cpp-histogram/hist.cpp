@@ -36,7 +36,7 @@ void usage()
           "\nUsage:  ./hist.out [options]"
           "\n"
           "\n    -c    dramsim config file"
-          "\n    -i    24-bit .bmp input file (default=uses 'small.bmp' from 'histogram_datafiles' directory)"
+          "\n    -i    24-bit .bmp input file (default=uses 'sample1.bmp' from 'histogram_datafiles' directory)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
@@ -45,7 +45,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "histogram_datafiles/small.bmp";
+  p.inputFile = "histogram_datafiles/sample1.bmp";
   p.shouldVerify = false;
 
   int opt;
