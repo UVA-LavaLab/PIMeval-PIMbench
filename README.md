@@ -16,7 +16,7 @@
   * A rich set of PIM benchmark applications on top of the PIMeval functional simulation and evaluation framework
 
 ### Quick start
-```
+```bash
 git clone <url_to_your_fork>
 cd PIMeval/
 make -j<n_proc>
@@ -44,15 +44,15 @@ cd /PIMbench/<application_dir>
   * `cpp-radix-sort`: Radix sort
   * `cpp-triangle-count`: Triangle counting
   * `cpp-vec-add`: Vector addition
+  * `cpp-convolution`: Convolution kernel for CNNs
+  * `cpp-pooling`: Max pooling
+  * `cpp-relu`: ReLU
   * `cpp-vgg13`: VGG-13
   * `cpp-vgg16`: VGG-16
   * `cpp-vgg19`: VGG-19
-* More applications
-  * `cpp-convolution`: Convolution
-  * `cpp-db-filtering`: DB filtering
+* misc-bench: Miscellenous benchmarks implemented for testing purpose.
   * `cpp-dot-prod`: Dot product
-  * `cpp-pooling`: Max pooling
-  * `cpp-relu`: ReLU
+  * `cpp-prefixsum`: Prefix sum of a vector
   * `cpp-sad`: Sum of absolute difference
   * `cpp-vec-arithmetic`: Vector arithmetic
   * `cpp-vec-comp`: Vector comparison
