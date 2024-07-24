@@ -111,3 +111,8 @@ This repository is the result of a collaborative effort by many individuals, inc
 Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
 
 \<citation recommendation to be updated\>
+### Contact
+
+* Deyuan Guo - dg7vp AT virginia DOT edu
+* Farzana Ahmed Siddique - farzana AT virginia DOT edu
+* Kevin Skadron - skadron AT virginia DOT edu
