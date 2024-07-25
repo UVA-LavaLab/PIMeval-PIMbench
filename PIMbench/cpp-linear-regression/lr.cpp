@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
   {
     // verify result
     int64_t SX = 0, SY = 0, SXX = 0, SXY = 0;
-#pragma omp parallel for reduction(+ : SX, SXX, SY, SYY, SXY)
+#pragma omp parallel for reduction(+ : SX, SXX, SY, SXY)
     for (uint64_t i = 0; i < params.dataSize; ++i)
     {
       SX += dataPointsX[i];
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     // Calculate slope and intercept
     auto slope = (double)(params.dataSize * SXY - SX * SY) / (params.dataSize * SXX - SX * SX);
     auto intercept = (double)(SY - slope * SX) / params.dataSize;
-    if ((int)intercept != intercept_device)
+    if (intercept != intercept_device)
     {
       cout << "\nWrong answer. Expected: " << intercept << " . Calculated: " << intercept_device << "\n";
     }

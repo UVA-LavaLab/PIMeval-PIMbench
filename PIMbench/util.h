@@ -30,7 +30,7 @@ void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 #pragma omp parallel for
   for (uint64_t i = 0; i < vectorLength; ++i)
   {
-    srcVector[i] = (rand() % MAX_NUMBER);
+    srcVector[i] = rand() % MAX_NUMBER;
   }
 }
 
@@ -60,7 +60,7 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = rand() % (i + 1);
+      inputMatrix[i][j] = rand() % MAX_NUMBER;
     }
   }
 }
