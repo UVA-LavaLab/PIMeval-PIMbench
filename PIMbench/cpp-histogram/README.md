@@ -41,7 +41,7 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of histogram has been implemented using standard C++ library and threading for parallel execution. Other C++ libraries, such as OpenBLAS or Boost, were not used as either histogram implementations did not exist or did fall not fall into the scope of our use case. Threading was chosen in favor of OpenMP as timings had no significant differences, and due to previous works, which we modeled our benchmarks after, using the same method.
+The CPU variant of histogram has been implemented using standard C++ library and pthread for parallel execution. Other C++ libraries, such as OpenBLAS or Boost, were not used as either histogram implementations did not exist or did fall not fall into the scope of our use case. Threading was chosen in favor of OpenMP as timings had no significant differences, and due to previous works, such as Phoenix, which we modeled our benchmark after and modified slightly to make the method you see.
 
 #### GPU
 

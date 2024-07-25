@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::string fn = params.inputFile;
-  std::cout << "Input file : '" << fn << "'" << std::endl;
+  std::cout << "Running histogram on GPU for input file : '" << fn << "'" << std::endl;
 
   int fd;
   uint64_t imgDataBytes;
@@ -131,9 +131,21 @@ int main(int argc, char *argv[])
 
   // End data parsing
 
-  uint8_t* d_samples;
-  cudaMalloc(&d_samples, h_samples.size() * sizeof(uint8_t));
-  cudaMemcpy(d_samples, h_samples.data(), h_samples.size() * sizeof(uint8_t), cudaMemcpyHostToDevice);
+  uint8_t* d_samples; 
+  cudaError_t errorCode;
+
+  errorCode = cudaMalloc(&d_samples, h_samples.size() * sizeof(uint8_t));
+  if (errorCode != cudaSuccess)
+  {
+    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+    exit(1);
+  }
+  errorCode = cudaMemcpy(d_samples, h_samples.data(), h_samples.size() * sizeof(uint8_t), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+    exit(1);
+  }
 
   int num_samples = imgDataBytes / NUMCHANNELS;
   int *d_histogram[NUMCHANNELS];
@@ -143,16 +155,27 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < NUMCHANNELS; ++i) 
   {
-    cudaMalloc(&d_histogram[i], num_levels[i] * sizeof(int));
-    cudaMemset(d_histogram[i], 0, num_levels[i] * sizeof(int));
+    errorCode = cudaMalloc(&d_histogram[i], num_levels[i] * sizeof(int));
+    if (errorCode != cudaSuccess)
+    {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+    }
+    errorCode = cudaMemset(d_histogram[i], 0, num_levels[i] * sizeof(int));
+    if (errorCode != cudaSuccess)
+    {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+    }
   }
-
-  cudaError_t errorCode;
 
   int h_histogram[NUMCHANNELS][NUMBINS] = {0}; // h_histogram[2] is the red channel, h_histogram[1] is green, and h_histogram[0] is blue
   void *d_temp_storage = NULL;
   size_t temp_storage_bytes = 0;
 
+  std::cout << "Launching CUDA Kernel." << std::endl;
+
+  // Event creation
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
@@ -177,6 +200,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  /* Kernel Call */
   errorCode = cub::DeviceHistogram::MultiHistogramEven<NUMCHANNELS + 1, NUMCHANNELS>(d_temp_storage, temp_storage_bytes,
   d_samples, d_histogram, num_levels, lower_level, upper_level, num_samples);
   if (errorCode != cudaSuccess)
@@ -185,6 +209,15 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  // Check for kernel launch errors
+  errorCode = cudaGetLastError();
+  if (errorCode != cudaSuccess)
+  {
+    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+    exit(1);
+  }
+
+  // End timer
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&timeElapsed, start, stop);
@@ -248,6 +281,7 @@ int main(int argc, char *argv[])
     }
   }
 
+  /* Free memory */
   cudaFree(d_samples); 
   cudaFree(d_temp_storage);
   cudaEventDestroy(start);

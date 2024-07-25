@@ -35,7 +35,7 @@ cpp-brightness/
 
 ## Implementation Description
 
-This repository contains three different implementations of the histogram benchmark:
+This repository contains three different implementations of the brightness benchmark:
 
 1. CPU
 2. GPU

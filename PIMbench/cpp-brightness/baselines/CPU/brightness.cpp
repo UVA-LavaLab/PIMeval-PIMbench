@@ -50,7 +50,7 @@ struct Params getInputParams(int argc, char **argv)
   p.brightnessCoefficient = 20;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:i:v:b:")) >= 0)
   {
     switch (opt)
     {
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 {      
   struct Params params = getInputParams(argc, argv);
   std::string fn = params.inputFile;
-  std::cout << "Input file : '" << fn << "'" << std::endl;
+  std::cout << "Running brightness on CPU for input file : '" << fn << "'" << std::endl;
 
   int fd;
   uint64_t imgDataBytes, tempImgDataOffset;
@@ -159,8 +159,10 @@ int main(int argc, char *argv[])
     int errorFlag = 0;
     for (uint64_t i = 0; i < imgDataBytes; ++i) 
     { 
+      // baseline calculation
       imgData[i] = truncate(imgData[i], params.brightnessCoefficient); 
 
+      // comparison between baseline and OpenMP implementation from brightness()
       if (imgData[i] != resultData[i])
       {
         std::cout << "Wrong answer at index " << i << " | Wrong OpenMP answer = " << resultData[i] << " (CPU expected = " << imgData[i] << ")" << std::endl;

@@ -21,6 +21,17 @@
 #define MINCOLORVALUE 0 // Sets the max value that any color channel can be in a given pixel
 #define MAXCOLORVALUE 255 // Sets the max value that any color channel can be in a given pixel 
 
+// Thrust error-checking macro
+#define THRUST_CHECK() \
+do { \
+    cudaError_t err = cudaDeviceSynchronize(); \
+    if (err != cudaSuccess) { \
+        fprintf(stderr, "Thrust error in file '%s' in line %i : %s.\n", \
+                __FILE__, __LINE__, cudaGetErrorString(err)); \
+        exit(1); \
+    } \
+} while(0)
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -48,7 +59,7 @@ struct Params getInputParams(int argc, char **argv)
   p.brightnessCoefficient = 20;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:i:v:b:")) >= 0)
   {
     switch (opt)
     {
@@ -107,7 +118,7 @@ int main(int argc, char *argv[])
 {      
   struct Params params = getInputParams(argc, argv);
   std::string fn = params.inputFile;
-  std::cout << "Input file : '" << fn << "'" << std::endl;
+  std::cout << "Running brightness on GPU for input file : '" << fn << "'" << std::endl;
 
   // Begin data parsing
   int fd;
@@ -158,8 +169,10 @@ int main(int argc, char *argv[])
 
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size), resultData(imgDataBytes);
 
+  THRUST_CHECK();
   thrust::device_vector<uint8_t> thrustImgData = imgData;
-
+  THRUST_CHECK();
+  
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
@@ -168,7 +181,9 @@ int main(int argc, char *argv[])
   // Start timer
   cudaEventRecord(start, 0);
 
+  THRUST_CHECK();
   thrust::transform(thrustImgData.begin(), thrustImgData.end(), thrustImgData.begin(), calculateBrightness(brightnessCoefficient));
+  THRUST_CHECK();
 
   // End timer
   cudaEventRecord(stop, 0);
@@ -177,7 +192,9 @@ int main(int argc, char *argv[])
 
   printf("Execution time = %f ms\n", timeElapsed);
 
+  THRUST_CHECK();
   thrust::copy(thrustImgData.begin(), thrustImgData.end(), resultData.begin());
+  THRUST_CHECK();
 
   if (params.shouldVerify)
   {  

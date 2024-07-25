@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 {      
   struct Params params = getInputParams(argc, argv);
   std::string fn = params.inputFile;
-  std::cout << "Input file : '" << fn << "'" << std::endl;
+  std::cout << "Running histogram on CPU for input file : '" << fn << "'" << std::endl;
 
   int i, j;
   int fd;
