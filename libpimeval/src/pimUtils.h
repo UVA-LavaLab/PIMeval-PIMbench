@@ -24,6 +24,7 @@ namespace pimUtils
 {
   std::string pimStatusEnumToStr(PimStatus status);
   std::string pimDeviceEnumToStr(PimDeviceEnum deviceType);
+  PimDeviceEnum strToPimDeviceEnum(const std::string& deviceTypeStr);
   std::string pimAllocEnumToStr(PimAllocEnum allocType);
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
@@ -35,6 +36,36 @@ namespace pimUtils
 
   std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
+
+  const std::unordered_map<PimDeviceEnum, std::string> enumToStrMap = {
+      {PIM_DEVICE_NONE, "PIM_DEVICE_NONE"},
+      {PIM_FUNCTIONAL, "PIM_FUNCTIONAL"},
+      {PIM_DEVICE_BITSIMD_V, "PIM_DEVICE_BITSIMD_V"},
+      {PIM_DEVICE_BITSIMD_V_NAND, "PIM_DEVICE_BITSIMD_V_NAND"},
+      {PIM_DEVICE_BITSIMD_V_MAJ, "PIM_DEVICE_BITSIMD_V_MAJ"},
+      {PIM_DEVICE_BITSIMD_V_AP, "PIM_DEVICE_BITSIMD_V_AP"},
+      {PIM_DEVICE_DRISA_NOR, "PIM_DEVICE_DRISA_NOR"},
+      {PIM_DEVICE_DRISA_MIXED, "PIM_DEVICE_DRISA_MIXED"},
+      {PIM_DEVICE_SIMDRAM, "PIM_DEVICE_SIMDRAM"},
+      {PIM_DEVICE_BITSIMD_H, "PIM_DEVICE_BITSIMD_H"},
+      {PIM_DEVICE_FULCRUM, "PIM_DEVICE_FULCRUM"},
+      {PIM_DEVICE_BANK_LEVEL, "PIM_DEVICE_BANK_LEVEL"}
+  };
+
+  const std::unordered_map<std::string, PimDeviceEnum> strToEnumMap = {
+      {"PIM_DEVICE_NONE", PIM_DEVICE_NONE},
+      {"PIM_FUNCTIONAL", PIM_FUNCTIONAL},
+      {"PIM_DEVICE_BITSIMD_V", PIM_DEVICE_BITSIMD_V},
+      {"PIM_DEVICE_BITSIMD_V_NAND", PIM_DEVICE_BITSIMD_V_NAND},
+      {"PIM_DEVICE_BITSIMD_V_MAJ", PIM_DEVICE_BITSIMD_V_MAJ},
+      {"PIM_DEVICE_BITSIMD_V_AP", PIM_DEVICE_BITSIMD_V_AP},
+      {"PIM_DEVICE_DRISA_NOR", PIM_DEVICE_DRISA_NOR},
+      {"PIM_DEVICE_DRISA_MIXED", PIM_DEVICE_DRISA_MIXED},
+      {"PIM_DEVICE_SIMDRAM", PIM_DEVICE_SIMDRAM},
+      {"PIM_DEVICE_BITSIMD_H", PIM_DEVICE_BITSIMD_H},
+      {"PIM_DEVICE_FULCRUM", PIM_DEVICE_FULCRUM},
+      {"PIM_DEVICE_BANK_LEVEL", PIM_DEVICE_BANK_LEVEL}
+  };
 
   //! @class  threadWorker
   //! @brief  Thread worker base class

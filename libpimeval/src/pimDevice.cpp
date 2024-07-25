@@ -290,16 +290,13 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
       params[pimUtils::trim(key)] = pimUtils::trim(value);
     }
   }
-
   try {
-
-
     numRanks = std::stoi(pimUtils::getParam(params, "num_ranks"));
     numBankPerRank = std::stoi(pimUtils::getParam(params, "num_bank_per_rank"));
     numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
-
+    m_memConfigFileName = pimUtils::getParam(params, "memory_config_file");
   } catch (const std::invalid_argument& e) {
     std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
     errorMessage += e.what(); 

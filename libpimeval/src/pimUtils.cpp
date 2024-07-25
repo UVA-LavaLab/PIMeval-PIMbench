@@ -5,6 +5,7 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimUtils.h"
+#include "libpimeval.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -23,24 +24,23 @@ pimUtils::pimStatusEnumToStr(PimStatus status)
 }
 
 //! @brief  Convert PimDeviceEnum to string
-std::string
-pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType)
-{
-  switch (deviceType) {
-  case PIM_DEVICE_NONE: return "PIM_DEVICE_NONE";
-  case PIM_FUNCTIONAL: return "PIM_FUNCTIONAL";
-  case PIM_DEVICE_BITSIMD_V: return "PIM_DEVICE_BITSIMD_V";
-  case PIM_DEVICE_BITSIMD_V_NAND: return "PIM_DEVICE_BITSIMD_V_NAND";
-  case PIM_DEVICE_BITSIMD_V_MAJ: return "PIM_DEVICE_BITSIMD_V_MAJ";
-  case PIM_DEVICE_BITSIMD_V_AP: return "PIM_DEVICE_BITSIMD_V_AP";
-  case PIM_DEVICE_DRISA_NOR: return "PIM_DEVICE_DRISA_NOR";
-  case PIM_DEVICE_DRISA_MIXED: return "PIM_DEVICE_DRISA_MIXED";
-  case PIM_DEVICE_SIMDRAM: return "PIM_DEVICE_SIMDRAM";
-  case PIM_DEVICE_BITSIMD_H: return "PIM_DEVICE_BITSIMD_H";
-  case PIM_DEVICE_FULCRUM: return "PIM_DEVICE_FUMCRUM";
-  case PIM_DEVICE_BANK_LEVEL: return "PIM_DEVICE_BANK_LEVEL";
+std::string 
+pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType) {
+  auto it = enumToStrMap.find(deviceType);
+  if (it != enumToStrMap.end()) {
+    return it->second;
   }
   return "Unknown";
+}
+
+//! @brief  Convert string to PimDeviceEnum
+PimDeviceEnum
+pimUtils::strToPimDeviceEnum(const std::string& deviceTypeStr) {
+  auto it = strToEnumMap.find(deviceTypeStr);
+  if (it != strToEnumMap.end()) {
+    return it->second;
+  }
+  return PIM_DEVICE_UNKNOWN;
 }
 
 //! @brief  Convert PimAllocEnum to string
