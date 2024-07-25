@@ -4,15 +4,10 @@ Vector addition implementation using C++. Supports parallel execution using Open
 
 ## Compilation Instructions
 
-To compile with the default data type (`int32_t`), simply run:
+To compile, simply run:
 
 ```bash
 make 
-```
-To specify a different data type (e.g., float or double), use the DATA_TYPE variable during compilation:
-
-```bash
-make DATA_TYPE=float
 ```
 
 ## Execution Instructions
@@ -26,9 +21,9 @@ After compiling, run the executable using the following command:
 You can also specify the input size using the -i option:
 
 ```bash
-./vec_add.out -i <input_size>
+./vec_add.out -l <input_size>
 ```
-If you need help or want to see usage options, use the -h option:
+If you need to see usage options:
 
 ```bash
 ./vec_add.out -h
