@@ -69,7 +69,7 @@ To compile for the GPU variant, use:
 cd baselines/GPU
 make
 ```
-*Note that the GPU Makefile currently uses `SM_80`, which is compatible with the A100. To run it on a different GPU, please manually change this in the makefile.
+Note that the GPU Makefile currently uses `SM_80`, which is compatible with the A100. To run it on a different GPU, please manually change this in the makefile.
 
 ### PIM Variant
 
