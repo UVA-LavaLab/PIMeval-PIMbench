@@ -15,7 +15,10 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
-
+#include <algorithm>
+#include <cctype>
+#include <locale>
+#include <unordered_map>
 
 namespace pimUtils
 {
@@ -24,6 +27,11 @@ namespace pimUtils
   std::string pimAllocEnumToStr(PimAllocEnum allocType);
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
+  std::string& ltrim(std::string& s);
+  std::string& rtrim(std::string& s);
+  std::string& trim(std::string& s);
+  bool readFileContent(const char* fileName, std::string& fileContent);
+  std::string getParam(const std::unordered_map<std::string, std::string>& params, const std::string& key);
 
   std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);

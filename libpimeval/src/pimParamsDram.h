@@ -15,7 +15,7 @@ class pimParamsDram
 {
 public:
   pimParamsDram();
-  pimParamsDram(const std::string& configFile);
+  pimParamsDram(const std::string& config);
   ~pimParamsDram() {}
 
   float getNsRowRead() const { return m_tCK * (m_tRCD + m_tRP); }

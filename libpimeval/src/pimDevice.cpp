@@ -8,11 +8,18 @@
 #include "pimResMgr.h"
 #include "pimSim.h"
 #include "libpimeval.h"
+#include "pimUtils.h"
 #include <cstdio>
 #include <deque>
 #include <memory>
 #include <cassert>
-
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <algorithm>
+#include <cctype>
+#include <locale>
+#include <stdexcept>
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice()
@@ -137,7 +144,7 @@ pimDevice::isHybridLayoutDevice() const
   return false;
 }
 
-//! @brief  Init pim device, with config file
+//! @brief  Init pim device, with input arguments 
 bool
 pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
@@ -190,6 +197,7 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
 bool
 pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 {
+  bool success = false;
   assert(!m_isInit);
   assert(deviceType != PIM_DEVICE_NONE);
   if (!configFileName) {
@@ -202,6 +210,34 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   }
 
   m_deviceType = deviceType;
+  
+  // Read file content
+  unsigned numRanks;
+  unsigned numBankPerRank;
+  unsigned numSubarrayPerBank;
+  unsigned numRows;
+  unsigned numCols;
+
+  std::string fileContent;
+  success = pimUtils::readFileContent(configFileName, fileContent);
+  assert(success);
+  
+  // input params
+  success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  assert(success);
+  m_numRanks = numRanks;
+  m_numBankPerRank = numBankPerRank;
+  m_numSubarrayPerBank = numSubarrayPerBank;
+  m_numRowPerSubarray = numRows;
+  m_numColPerSubarray = numCols;
+
+  if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
+    m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
+    m_numRows = numRows;
+    m_numCols = numCols;
+  } else {
+    return false;
+  }
 
 #ifdef DRAMSIM3_INTEG
   std::string configFile(configFileName);
@@ -233,6 +269,45 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
   m_isInit = true;
   return m_isValid;
+}
+
+//! @brief Initilize the device config parameters by parsing the config file
+bool 
+pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols) 
+{
+  std::istringstream configStream(config);
+  std::string line;
+  std::unordered_map<std::string, std::string> params;
+
+  while (std::getline(configStream, line)) {
+    if (line.empty() || line[0] == '[') {
+      continue;
+    }
+    size_t equalPos = line.find('=');
+    if (equalPos != std::string::npos) {
+      std::string key = line.substr(0, equalPos);
+      std::string value = line.substr(equalPos + 1);
+      params[pimUtils::trim(key)] = pimUtils::trim(value);
+    }
+  }
+
+  try {
+
+
+    numRanks = std::stoi(pimUtils::getParam(params, "num_ranks"));
+    numBankPerRank = std::stoi(pimUtils::getParam(params, "num_bank_per_rank"));
+    numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
+    numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
+    numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
+
+  } catch (const std::invalid_argument& e) {
+    std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
+    errorMessage += e.what(); 
+    errorMessage += "\n";
+    std::printf("%s", errorMessage.c_str());
+    return false;
+  }
+  return true;
 }
 
 //! @brief  Uninit pim device

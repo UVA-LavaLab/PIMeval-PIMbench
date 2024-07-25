@@ -5,6 +5,11 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimUtils.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <unordered_map>
+#include <string>
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -187,5 +192,56 @@ pimUtils::threadPool::workerThread()
     }
     m_cond.notify_all();
   }
+}
+
+//! @brief Helper function to trim from the start (left) of the string
+std::string&
+pimUtils::ltrim(std::string& s) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+    return !std::isspace(ch);
+  }));
+  return s;
+ }
+
+//! @brief Helper function to trim from the end (right) of the string
+std::string&
+pimUtils::rtrim(std::string& s) {
+  s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+    return !std::isspace(ch);
+  }).base(), s.end());
+  return s;
+}
+
+//! @brief Function to trim from both ends
+std::string&
+pimUtils::trim(std::string& s) {
+  return ltrim(rtrim(s));
+}
+
+
+//! @brief Reads the content of a file and stores it in a provided std::string reference
+bool
+pimUtils::readFileContent(const char* fileName, std::string& fileContent) {
+    std::ifstream fileStream(fileName);
+
+    if (!fileStream.is_open()) {
+        std::cerr << "PIM-Error: Could not open the file: " << fileName << std::endl;
+        return false;
+    }
+
+    std::stringstream buffer;
+    buffer << fileStream.rdbuf();
+    fileContent = buffer.str();
+    return true;
+}
+
+//! @brief Returns the values of each parameter in the config files.
+std::string
+pimUtils::getParam(const std::unordered_map<std::string, std::string>& params, const std::string& key) {
+  auto it = params.find(key);
+  if (it == params.end()) {
+    throw std::invalid_argument(key);
+  }
+  return it->second;
 }
 
