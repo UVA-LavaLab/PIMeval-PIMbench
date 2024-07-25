@@ -21,6 +21,8 @@
 
 using namespace std;
 
+#define MAX_NUMBER 1024
+
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 {
   srand((unsigned)time(NULL));
@@ -28,7 +30,7 @@ void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 #pragma omp parallel for
   for (uint64_t i = 0; i < vectorLength; ++i)
   {
-    srcVector[i] = (rand() % (i + 1) + 1);
+    srcVector[i] = rand() % MAX_NUMBER;
   }
 }
 
@@ -58,7 +60,7 @@ void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = rand() % (i + 1);
+      inputMatrix[i][j] = rand() % MAX_NUMBER;
     }
   }
 }
@@ -95,7 +97,7 @@ bool createDevice(char *configFile)
   if (configFile == nullptr)
   {
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
-    unsigned numRanks = 2;
+    unsigned numRanks = 4;
     unsigned numBankPerRank = 128; // 8 chips * 16 banks
     unsigned numSubarrayPerBank = 32;
     unsigned numRows = 1024;
