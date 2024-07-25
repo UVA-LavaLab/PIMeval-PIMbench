@@ -9,13 +9,61 @@
 #include <math.h>
 #include <iostream>
 
-#include "../../../util.h"
+#include "../../../utilBaselines.h"
 
 vector<int> A;
 vector<int> B;
 vector<int> C;
 
 using namespace std;
+
+// Struct for Parameters
+struct Params
+{
+    uint64_t vectorSize = 2048; // Default vector size
+};
+
+/**
+ * @brief Displays usage information
+ */
+void usage()
+{
+    cerr << "\nUsage:  ./vec_add.out [options]\n"
+         << "\nOptions:\n"
+         << "    -l    vector size (default=2048 elements)\n"
+         << "    -h    display this help message\n";
+}
+
+/**
+ * @brief Parses command line input parameters
+ * @param argc Number of command line arguments
+ * @param argv Array of command line arguments
+ * @return Parsed parameters
+ */
+Params parseParams(int argc, char **argv)
+{
+    Params params;
+
+    int opt;
+    while ((opt = getopt(argc, argv, "l:h")) != -1)
+    {
+        switch (opt)
+        {
+        case 'h':
+            usage();
+            exit(0);
+        case 'l':
+            params.vectorSize = stoull(optarg);
+            break;
+        default:
+            cerr << "\nUnrecognized option: " << opt << "\n";
+            usage();
+            exit(1);
+        }
+    }
+
+    return params;
+}
 
 __global__ void vecAdd(int* x, int* y, int* z)
 {
@@ -25,17 +73,12 @@ __global__ void vecAdd(int* x, int* y, int* z)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
-    {
-        cout << argc << "\n";
-        printf("Vector size required.\n");
-        printf("Syntax: %s <vector_size>.\n", argv[0]);
-        exit(1);
-    }
-
-    uint64_t n = atoll(argv[1]);
-    getVector(n, A);
-    getVector(n, B);
+    
+    // Parse input parameters
+    Params params = parseParams(argc, argv);
+    uint64_t n = params.vectorSize;
+    getVector<int32_t>(n, A);
+    getVector<int32_t>(n, B);
     C.resize(n);
 
     int *x, *y, *z;

@@ -22,6 +22,7 @@ cpp-vec-add/
 │   │   ├── Makefile
 │   │   ├── vec_add.cu
 ├── README.md
+├── Makefile
 ```
 
 ## Implementation Description
@@ -41,7 +42,7 @@ The CPU variant of vector addition has been implemented using standard C++ and O
 
 #### GPU
 
-The GPU variant leverages cuBLAS to perform element-wise addition of two vectors on NVIDIA GPU.
+The GPU variant has been implemented using CUDA to perform element-wise addition of two vectors on NVIDIA GPU.
 
 ### PIM Implementation
 

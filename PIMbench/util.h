@@ -21,9 +21,6 @@
 
 using namespace std;
 
-
-#define CPU_WARMUP 2
-
 #define MAX_NUMBER 1024
 
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)

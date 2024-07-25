@@ -10,12 +10,12 @@
 #include <getopt.h>
 #include <chrono>
 #include <omp.h>
-#include "../../../util.h"
+#include "../../../utilBaselines.h"
 
 // Global Vectors
-vector<int> A;
-vector<int> B;
-vector<int> C;
+vector<int32_t> A;
+vector<int32_t> B;
+vector<int32_t> C;
 
 /**
  * @brief CPU vector addition kernel
@@ -33,7 +33,7 @@ static void vectorAddition(uint64_t numElements)
 // Struct for Parameters
 struct Params
 {
-    uint64_t vectorSize = 65536; // Default vector size
+    uint64_t vectorSize = 1024; // Default vector size
 };
 
 /**
@@ -88,17 +88,20 @@ int main(int argc, char **argv)
     uint64_t vectorSize = params.vectorSize;
     std::cout << "Running vector addition for CPU on vector of size: " << vectorSize << std::endl;
 
+    C.resize(vectorSize);
+    
     // Initialize vectors
-    getVector(vectorSize, A);
-    getVector(vectorSize, B);
+    getVector<int32_t>(vectorSize, A);
+    getVector<int32_t>(vectorSize, B);
+    std::cout << "Vector Initialization done!" << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < CPU_WARMUP; ++i)
+    for (int i = 0; i < WARMUP; ++i)
     {
         vectorAddition(vectorSize);
     }
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, milli> elapsedTime = (end - start) / CPU_WARMUP;
+    std::chrono::duration<double, milli> elapsedTime = (end - start) / WARMUP;
     std::cout << "Finished Running.\nDuration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
 
     return 0;
