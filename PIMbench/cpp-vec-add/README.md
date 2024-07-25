@@ -20,7 +20,7 @@ cpp-vec-add/
 │   │   ├── vec_add.cpp
 │   ├── GPU/
 │   │   ├── Makefile
-│   │   ├── vec-add-gpu.cu
+│   │   ├── vec_add.cu
 ├── README.md
 ```
 
