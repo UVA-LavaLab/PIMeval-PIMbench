@@ -26,9 +26,14 @@ cpp-vec-add/
 
 ## Implementation Description
 
-This repository contains three different implementation of vector addition benchmark: 1. CPU baseline, 2. GPU baseline, 3. PIM
+This repository contains three different implementations of the vector addition benchmark:
+1. CPU
+2. GPU
+3. PIM
 
 ### Baseline Implementation
+
+CPU and GPU has been used as baselines.
 
 #### CPU
 
@@ -40,7 +45,7 @@ The GPU variant leverages cuBLAS to perform element-wise addition of two vectors
 
 ### PIM Implementation
 
-The PIM (Processing In Memory) variant utilizes PIM architecture to perform element-wise addition of two vectors directly within the memory. The operation is defined as:
+The PIM variant is implemented using C++ and PIM architecture to perform element-wise addition of two vectors directly within the memory. The operation is defined as:
 
 For a detailed description of vector addition using PIM, you can refer to the specific PIM architecture documentation.
   
@@ -51,7 +56,8 @@ For a detailed description of vector addition using PIM, you can refer to the sp
 To compile for the CPU variant, use:
 
 ```bash
-make CPU
+cd baselines/CPU
+make
 ```
 
 ### GPU Variant
@@ -59,7 +65,8 @@ make CPU
 To compile for the GPU variant, use:
 
 ```bash
-make GPU
+cd baselines/GPU
+make
 ```
 
 ### PIM Variant
@@ -67,25 +74,31 @@ make GPU
 To compile for the PIM variant, use:
 
 ```bash
-make PIM
+cd PIM
+make
 ```
 
 ## Execution Instructions
 
 ### Running the Executable
 
-After compiling, run the executable with the following command:
+After compiling, run the each executable with the following command that will run it for default parameters:
 
+```bash
+./vec_add.out
+```
+
+To see help text use following command
 ```bash
 ./vec_add.out
 ```
 
 ### Specifying Input Size
 
-You can specify the input size using the `-i` option:
+You can specify the input size using the `-` option:
 
 ```bash
-./vec_add.out -i <input_size>
+./vec_add.out -l <input_size>
 ```
 
 ### Help and Usage Options
