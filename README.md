@@ -8,14 +8,14 @@
   * Support various subarray-level bit-serial, subarray-level bit-parallel and bank-level PIM architectures
   * Support both vertical and horizontal data layouts
   * Support multi-PIM-core programming model and resource management
-  * Support high-level functional programming with a set of general APIs common to all PIM architectures
+  * Support high-level functional simulation with a set of PIM architecture independent APIs
   * Support low-level micro-ops programming for modeling architecture details
   * Support performance and energy modeling with detailed stats tracking
   * Support multi-threaded simulation for runtime
 * PIMbench
   * A rich set of PIM benchmark applications on top of the PIMeval functional simulation and evaluation framework
 
-### Quick start
+### Quick Start
 ```bash
 git clone <url_to_your_fork>
 cd PIMeval/
