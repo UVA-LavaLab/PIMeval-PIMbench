@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -45,7 +45,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "histogram_datafiles/sample1.bmp";
+  p.inputFile = "../histogram_datafiles/sample1.bmp";
   p.shouldVerify = false;
 
   int opt;
