@@ -152,7 +152,20 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   assert(!m_isInit);
   assert(deviceType != PIM_DEVICE_NONE);
 
-  configDevice(deviceType);
+  std::printf("PIM-Info: Trying to read it from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+  // Read envirnment variable for the simulation target
+  std::string pimEvalTarget;
+  if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget)) {
+    std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
+  }
+  m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
+  if (m_simTarget == PIM_DEVICE_UNKNOWN) {
+    std::printf("PIM-Error: Invalid simulation target %s\n", pimEvalTarget.c_str());
+    assert (true);
+  }
+  if (m_simTarget == PIM_DEVICE_NONE || m_simTarget == PIM_DEVICE_UNKNOWN) {
+    configDevice(deviceType);
+  }
   std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
               pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
               pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
@@ -197,6 +210,8 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   bool success = false;
   assert(!m_isInit);
   assert(deviceType != PIM_DEVICE_NONE);
+  configDevice(deviceType);
+
   if (!configFileName) {
     std::printf("PIM-Error: Null PIM device config file name\n");
     return false;
@@ -261,6 +276,9 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   m_resMgr = new pimResMgr(this);
 
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
@@ -299,11 +317,29 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
       return false;
     }
   } catch (const std::invalid_argument& e) {
-    std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
-    errorMessage += e.what(); 
-    errorMessage += "\n";
-    std::printf("%s", errorMessage.c_str());
-    return false;
+    std::string missing = e.what();
+    if (missing == "simulation_target") {
+    std::printf("PIM-Info: Simulation target could not be located in PIMeval config file. Trying to read it from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+      // Read envirnment variable for the simulation target
+      std::string pimEvalTarget;
+      if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget)) {
+        std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
+        return true;
+      }
+      m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
+      if (m_simTarget == PIM_DEVICE_UNKNOWN) {
+        std::printf("PIM-Error: Invalid simulation target %s\n", pimEvalTarget.c_str());
+        return false;
+      }
+      std::printf("PIM-Info: Read simulation from the envirnment variables is \"%s\".\n", pimEvalTarget.c_str());
+    }
+    else {
+      std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
+      errorMessage += missing;
+      errorMessage += "\n";
+      std::printf("%s", errorMessage.c_str());
+      return false;
+    }
   }
   return true;
 }

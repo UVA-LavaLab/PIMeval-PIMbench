@@ -134,20 +134,39 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
 {
   pimPerfMon perfMon("createDeviceFromConfig");
   bool success = false;
+  std::string correctConfigFileName;
   if (!configFileName) {
-    std::printf("PIM-Error: Null PIM device config file name\n");
-    return false;
+    std::printf("PIM-Info: Null PIM device config file name. Read the config file name from environment variables %s and %s\n", pimUtils::envVarPimEvalConfigPath, pimUtils::envVarPimEvalConfigSim);
+
+    // Read envirnment variable for the config file path  
+    std::string pimEvalConfigPath;
+    if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalConfigPath, pimEvalConfigPath)) {
+      std::printf("PIM-Error: Could not read environment variable %s", pimUtils::envVarPimEvalConfigPath);
+      return false;
+    }
+
+    // Read envirnment variable for the simulation config file name 
+    std::string pimEvalConfigSim;
+    if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalConfigSim, pimEvalConfigSim)) {
+      std::printf("PIM-Error: Could not read environment variable %s", pimUtils::envVarPimEvalConfigSim);
+      return false;
+    }
+    correctConfigFileName = pimEvalConfigPath + "/" + pimEvalConfigSim;
+    std::printf("PIM-Info: Read config file from the envirnment variables is \"%s\".\n", correctConfigFileName.c_str());
   }
-  if (!std::filesystem::exists(configFileName)) {
+  else {
+    correctConfigFileName = configFileName;
+  }
+  if (!std::filesystem::exists(correctConfigFileName)) {
     std::printf("PIM-Error: Config file not found.\n");
     return false;
   }
 
   std::string fileContent;
-  success = pimUtils::readFileContent(configFileName, fileContent);
+  success = pimUtils::readFileContent(correctConfigFileName.c_str(), fileContent);
   assert(success);
 
-  m_configFilesPath = pimUtils::getDirectoryPath(configFileName);
+  m_configFilesPath = pimUtils::getDirectoryPath(correctConfigFileName);
 
   init(fileContent);
   if (m_device) {
@@ -156,7 +175,7 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
   }
 
   m_device = new pimDevice();
-  m_device->init(deviceType, configFileName);
+  m_device->init(deviceType, correctConfigFileName.c_str());
   if (!m_device->isValid()) {
     delete m_device;
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
@@ -960,11 +979,25 @@ pimSim::parseConfigFromFile(const std::string& simConfig) {
     m_numThreads = std::stoi(pimUtils::getParam(params, "max_num_threads"));
     m_memConfigFileName = pimUtils::getParam(params, "memory_config_file");
   } catch (const std::invalid_argument& e) {
-    std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
-    errorMessage += e.what();
-    errorMessage += "\n";
-    std::printf("%s", errorMessage.c_str());
-    return false;
+    std::string missing = e.what();
+    if (missing == "memory_config_file") {
+    std::printf("PIM-Info: PIM device params config file name could not be located in PIMeval config file. Trying to read it from envirnment variable %s\n", pimUtils::envVarPimEvalConfigMem);
+      // Read envirnment variable for the memory config file
+      std::string pimEvalConfigMem;
+      if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalConfigMem, pimEvalConfigMem)) {
+        std::printf("PIM-Error: Could not read environment variable %s\n", pimUtils::envVarPimEvalConfigMem);
+        return false;
+      }
+      m_memConfigFileName = pimEvalConfigMem;
+      std::printf("PIM-Info: Read config file from the envirnment variables is \"%s\".\n", m_memConfigFileName.c_str());
+    }
+    else {
+      std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
+      errorMessage += missing;
+      errorMessage += "\n";
+      std::printf("%s", errorMessage.c_str());
+      return false;
+    }
   }
   return true;
 }

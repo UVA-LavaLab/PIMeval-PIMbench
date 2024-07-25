@@ -37,6 +37,7 @@ namespace pimUtils
   std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
   std::string getDirectoryPath(const std::string& filePath);
+  bool getEnvVar(const std::string &varName, std::string &varValue);
 
   const std::unordered_map<PimDeviceEnum, std::string> enumToStrMap = {
       {PIM_DEVICE_NONE, "PIM_DEVICE_NONE"},
@@ -67,6 +68,11 @@ namespace pimUtils
       {"PIM_DEVICE_FULCRUM", PIM_DEVICE_FULCRUM},
       {"PIM_DEVICE_BANK_LEVEL", PIM_DEVICE_BANK_LEVEL}
   };
+
+  static constexpr const char* envVarPimEvalTarget = "PIMEVAL_TARGET";
+  static constexpr const char* envVarPimEvalConfigPath = "PIMEVAL_CONFIG_PATH";
+  static constexpr const char* envVarPimEvalConfigSim = "PIMEVAL_CONFIG_SIM";
+  static constexpr const char* envVarPimEvalConfigMem = "PIMEVAL_CONFIG_MEM";
 
   //! @class  threadWorker
   //! @brief  Thread worker base class

@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <string>
 #include <filesystem>
+#include <cstdlib>
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -234,6 +235,18 @@ pimUtils::readFileContent(const char* fileName, std::string& fileContent) {
     buffer << fileStream.rdbuf();
     fileContent = buffer.str();
     return true;
+}
+
+//! @brief Retrieves the value of the specified environment variable.
+bool
+pimUtils::getEnvVar(const std::string &name, std::string &value) {
+    const char* evnVal = std::getenv(name.c_str());
+    if (evnVal == nullptr) {
+        return false;
+    } else {
+        value = evnVal;
+        return true;
+    }
 }
 
 //! @brief Returns the values of each parameter in the config files.
