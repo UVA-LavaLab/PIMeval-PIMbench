@@ -37,7 +37,7 @@ This repository contains three different implementations of the histogram benchm
 
 ### Baseline Implementation
 
-CPU and GPU has been used as baselines.
+CPU and GPU have been used as baselines.
 
 #### CPU
 
@@ -80,14 +80,6 @@ To compile for the PIM variant, use:
 ```bash
 cd PIM
 make
-```
-
-## Compilation Instructions
-
-To compile, simply run:
-
-```bash
-make 
 ```
 
 ## Execution Instructions
