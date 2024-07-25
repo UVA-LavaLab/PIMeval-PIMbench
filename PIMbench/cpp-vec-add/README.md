@@ -1,34 +1,96 @@
 # Vector Addition (VA)
 
-Vector addition implementation using C++. Supports parallel execution using OpenMP.
+Vector addition is a fundamental kernel in Linear Algebra that can be expressed as following equation:
 
-## Compilation Instructions
+$C[i] \leftarrow A[i] + B[i]$
 
-To compile with the default data type (`int32_t`), simply run:
+where:
+- $A$ and $B$ are input vectors.
+- $C$ is the output vector.
 
-```bash
-make 
+## Directory Structure
 ```
-To specify a different data type (e.g., float or double), use the DATA_TYPE variable during compilation:
+cpp-vec-add/
+├── PIM/
+│   ├── Makefile
+│   ├── vec-add.cpp
+├── baselines/
+│   ├── CPU/
+│   │   ├── Makefile
+│   │   ├── vec_add.cpp
+│   ├── GPU/
+│   │   ├── Makefile
+│   │   ├── vec-add-gpu.cu
+├── README.md
+```
+
+## Implementation Description
+
+This repository contains three different implementation of vector addition benchmark: 1. CPU baseline, 2. GPU baseline, 3. PIM
+
+### Baseline Implementation
+
+#### CPU
+
+The CPU variant of vector addition has been implemented using standard C++ and OpenMP for parallel execution. The reason OpenBLAS was not used is OpenBLAS does not support $int$ datatype and PIMeval currently does not support $float$ or $double$
+
+#### GPU
+
+The GPU variant leverages cuBLAS to perform element-wise addition of two vectors on NVIDIA GPU.
+
+### PIM Implementation
+
+The PIM (Processing In Memory) variant utilizes PIM architecture to perform element-wise addition of two vectors directly within the memory. The operation is defined as:
+
+For a detailed description of vector addition using PIM, you can refer to the specific PIM architecture documentation.
+  
+## Compilation Instructions for Specific Variants
+
+### CPU Variant
+
+To compile for the CPU variant, use:
 
 ```bash
-make DATA_TYPE=float
+make CPU
+```
+
+### GPU Variant
+
+To compile for the GPU variant, use:
+
+```bash
+make GPU
+```
+
+### PIM Variant
+
+To compile for the PIM variant, use:
+
+```bash
+make PIM
 ```
 
 ## Execution Instructions
 
-After compiling, run the executable using the following command:
+### Running the Executable
+
+After compiling, run the executable with the following command:
 
 ```bash
 ./vec_add.out
 ```
 
-You can also specify the input size using the -i option:
+### Specifying Input Size
+
+You can specify the input size using the `-i` option:
 
 ```bash
 ./vec_add.out -i <input_size>
 ```
-If you need help or want to see usage options, use the -h option:
+
+### Help and Usage Options
+
+For help or to see usage options, use the `-h` option:
 
 ```bash
 ./vec_add.out -h
