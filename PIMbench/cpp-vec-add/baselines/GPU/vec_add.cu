@@ -73,17 +73,16 @@ __global__ void vecAdd(int* x, int* y, int* z)
 
 int main(int argc, char *argv[])
 {
-    
     // Parse input parameters
     Params params = parseParams(argc, argv);
-    uint64_t n = params.vectorSize;
-    getVector<int32_t>(n, A);
-    getVector<int32_t>(n, B);
-    C.resize(n);
-
+    uint64_t vectorSize = params.vectorSize;
+    getVector<int32_t>(vectorSize, A);
+    getVector<int32_t>(vectorSize, B);
+    C.resize(vectorSize);
+    std::cout << "Running vector addition for GPU on vector of size: " << vectorSize << std::endl;
     int *x, *y, *z;
     int blockSize = 1024;
-    int numBlock = (n + blockSize - 1) / blockSize;
+    int numBlock = (vectorSize + blockSize - 1) / blockSize;
 
     int n_pad = numBlock * blockSize;
     cudaError_t errorCode;
@@ -121,6 +120,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    std::cout << "Launching CUDA Kernel." << std::endl;
+
     // Event creation
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -146,15 +147,15 @@ int main(int argc, char *argv[])
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&timeElapsed, start, stop);
 
-    printf("Execution time = %f ms\n", timeElapsed);
-    errorCode = cudaMemcpy(C.data(), z, n * sizeof(int), cudaMemcpyDeviceToHost);
+    printf("Execution time of vector addition = %f ms\n", timeElapsed);
+    errorCode = cudaMemcpy(C.data(), z, vectorSize * sizeof(int), cudaMemcpyDeviceToHost);
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
 
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < vectorSize; i++)
     {
         if (C[i] != A[i] + B[i])
         {

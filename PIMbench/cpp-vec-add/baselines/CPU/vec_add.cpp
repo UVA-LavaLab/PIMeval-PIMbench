@@ -43,7 +43,7 @@ void usage()
 {
     cerr << "\nUsage:  ./vec_add.out [options]\n"
          << "\nOptions:\n"
-         << "    -l    vector size (default=65536 elements)\n"
+         << "    -l    vector size (default=1024 elements)\n"
          << "    -h    display this help message\n";
 }
 
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     std::cout << "Running vector addition for CPU on vector of size: " << vectorSize << std::endl;
 
     C.resize(vectorSize);
-    
+
     // Initialize vectors
     getVector<int32_t>(vectorSize, A);
     getVector<int32_t>(vectorSize, B);

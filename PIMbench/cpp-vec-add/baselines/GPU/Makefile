@@ -7,21 +7,22 @@ CUDA_LIB := -lcublas
 ARCH_FLAG := -arch=sm_80
 
 # Target executable
-TARGET := vec_add.out
+EXEC := vec_add.out
 
 # Source files
 SOURCES := vec_add.cu
 
 # Compiler flags
 CFLAGS := -G
+CXXFLAGS := -std=c++11
 
 # Default target
-all: $(TARGET)
+all: $(EXEC)
 
 # Rule to build the target executable
-$(TARGET): $(SOURCES)
-	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(CFLAGS) -o $(TARGET)
+$(EXEC): $(SOURCES)
+	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 
 # Rule to clean the project
 clean:
-	rm -f $(TARGET)
+	rm -f $(EXEC)
