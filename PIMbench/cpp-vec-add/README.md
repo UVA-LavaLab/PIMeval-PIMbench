@@ -34,7 +34,7 @@ This repository contains three different implementations of the vector addition 
 
 ### Baseline Implementation
 
-CPU and GPU has been used as baselines.
+CPU and GPU have been used as baselines.
 
 #### CPU
 
@@ -46,9 +46,7 @@ The GPU variant has been implemented using CUDA to perform element-wise addition
 
 ### PIM Implementation
 
-The PIM variant is implemented using C++ and PIM architecture to perform element-wise addition of two vectors directly within the memory. The operation is defined as:
-
-For a detailed description of vector addition using PIM, you can refer to the specific PIM architecture documentation.
+The PIM variant is implemented using C++ and three different PIM architectures can be tested with this.
   
 ## Compilation Instructions for Specific Variants
 
@@ -92,7 +90,7 @@ After compiling, run the each executable with the following command that will ru
 
 To see help text use following command
 ```bash
-./vec_add.out
+./vec_add.out -h
 ```
 
 ### Specifying Input Size
