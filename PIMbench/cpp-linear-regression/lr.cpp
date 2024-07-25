@@ -77,7 +77,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::vector<int> &Y, int64_t &SX, int64_t &SY, int64_t &SXX, int64_t &SXY, int64_t &SYY)
+void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::vector<int> &Y, int64_t &SX, int64_t &SY, int64_t &SXX, int64_t &SXY)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
 
@@ -116,8 +116,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  std::vector<int> dst(dataSize);
-  status = pimCopyDeviceToHost(srcObj2, (void *)dst.data());
+  status = pimRedSumInt(srcObj2, &SXX);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -131,14 +130,14 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimMul(srcObj1, srcObj2, srcObj1);
+  status = pimRedSumInt(srcObj2, &SY);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
+  status = pimMul(srcObj1, srcObj2, srcObj1);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -152,34 +151,6 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimMul(srcObj2, srcObj2, srcObj1);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimCopyDeviceToHost(srcObj1, (void *)dst.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimRedSumInt(srcObj1, &SYY);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  status = pimRedSumInt(srcObj2, &SY);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
   pimFree(srcObj1);
   pimFree(srcObj2);
 }
@@ -187,7 +158,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
 int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Data Size: " << params.dataSize << "\n";
+  std::cout << "Running Linear Regression on PIM for data size: " << params.dataSize << "\n";
   std::vector<int> dataPointsX, dataPointsY;
   if (params.inputFile == nullptr)
   {
@@ -203,34 +174,34 @@ int main(int argc, char *argv[])
   if (!createDevice(params.configFile))
     return 1;
 
-  int64_t SX_device = 0, SY_device = 0, SXX_device = 0, SYY_device = 0, SXY_device = 0;
+  int64_t SX_device = 0, SY_device = 0, SXX_device = 0, SXY_device = 0;
 
   // TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
-  linearRegression(params.dataSize, dataPointsX, dataPointsY, SX_device, SY_device, SXX_device, SXY_device, SYY_device);
+  linearRegression(params.dataSize, dataPointsX, dataPointsY, SX_device, SY_device, SXX_device, SXY_device);
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto slope_device = (params.dataSize * SXY_device - SX_device * SY_device) / (params.dataSize * SXX_device - SX_device * SX_device);
-  auto intercept_device = (SY_device - slope_device * SX_device) / params.dataSize;
+  auto slope_device = (double)(params.dataSize * SXY_device - SX_device * SY_device) / (params.dataSize * SXX_device - SX_device * SX_device);
+  auto intercept_device = (double)(SY_device - slope_device * SX_device) / params.dataSize;
   auto end = std::chrono::high_resolution_clock::now();
   hostElapsedTime += (end - start);
 
   if (params.shouldVerify)
   {
     // verify result
-    int SX = 0, SY = 0, SXX = 0, SYY = 0, SXY = 0;
+    int64_t SX = 0, SY = 0, SXX = 0, SXY = 0;
 #pragma omp parallel for reduction(+ : SX, SXX, SY, SYY, SXY)
     for (uint64_t i = 0; i < params.dataSize; ++i)
     {
       SX += dataPointsX[i];
       SXX += dataPointsX[i] * dataPointsX[i];
       SY += dataPointsY[i];
-      SYY += dataPointsY[i] * dataPointsY[i];
       SXY += dataPointsX[i] * dataPointsY[i];
     }
+
     // Calculate slope and intercept
-    auto slope = (params.dataSize * SXY - SX * SY) / (params.dataSize * SXX - SX * SX);
-    auto intercept = (SY - slope * SX) / params.dataSize;
-    if (intercept != intercept_device)
+    auto slope = (double)(params.dataSize * SXY - SX * SY) / (params.dataSize * SXX - SX * SX);
+    auto intercept = (double)(SY - slope * SX) / params.dataSize;
+    if ((int)intercept != intercept_device)
     {
       cout << "\nWrong answer. Expected: " << intercept << " . Calculated: " << intercept_device << "\n";
     }
