@@ -169,7 +169,6 @@ int main(int argc, char *argv[])
 
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size), resultData(imgDataBytes);
 
-  THRUST_CHECK();
   thrust::device_vector<uint8_t> thrustImgData = imgData;
   THRUST_CHECK();
   
@@ -181,7 +180,6 @@ int main(int argc, char *argv[])
   // Start timer
   cudaEventRecord(start, 0);
 
-  THRUST_CHECK();
   thrust::transform(thrustImgData.begin(), thrustImgData.end(), thrustImgData.begin(), calculateBrightness(brightnessCoefficient));
   THRUST_CHECK();
 
@@ -192,7 +190,6 @@ int main(int argc, char *argv[])
 
   printf("Execution time = %f ms\n", timeElapsed);
 
-  THRUST_CHECK();
   thrust::copy(thrustImgData.begin(), thrustImgData.end(), resultData.begin());
   THRUST_CHECK();
 

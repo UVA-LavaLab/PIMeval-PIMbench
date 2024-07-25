@@ -209,14 +209,6 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  // Check for kernel launch errors
-  errorCode = cudaGetLastError();
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
-
   // End timer
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
