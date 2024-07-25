@@ -83,7 +83,6 @@ private:
   bool m_isInit = false;
   pimResMgr* m_resMgr = nullptr;
   std::vector<pimCore> m_cores;
-  std::string m_memConfigFileName = nullptr;
 
 #ifdef DRAMSIM3_INTEG
   dramsim3::PIMCPU* m_hostMemory = nullptr;

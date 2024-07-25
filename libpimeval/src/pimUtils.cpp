@@ -11,6 +11,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <string>
+#include <filesystem>
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -245,3 +246,9 @@ pimUtils::getParam(const std::unordered_map<std::string, std::string>& params, c
   return it->second;
 }
 
+//! @brief Returns the directory path of the input file.
+std::string
+pimUtils::getDirectoryPath(const std::string& filePath) {
+    std::filesystem::path path(filePath);
+    return path.parent_path().string() + "/";
+}

@@ -12,11 +12,16 @@
 #include "pimUtils.h"
 #include <cstdio>
 #include <memory>
-
+#include <algorithm>
+#include <cctype>
+#include <locale>
+#include <stdexcept>
+#include <sstream>
+#include <filesystem>
+#include <string>
 
 // The pimSim singleton
 pimSim* pimSim::s_instance = nullptr;
-
 
 //! @brief  Get or create the pimSim singleton
 pimSim*
@@ -41,9 +46,6 @@ pimSim::destroy()
 //! @brief  pimSim ctor
 pimSim::pimSim()
 {
-  m_paramsDram = new pimParamsDram();
-  m_paramsPerf = new pimParamsPerf(m_paramsDram);
-  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
 }
 
 //! @brief  pimSim dtor
@@ -53,6 +55,32 @@ pimSim::~pimSim()
   delete m_statsMgr;
   delete m_paramsDram;
   delete m_paramsPerf;
+}
+
+//! @brief  Initialize pimSim member classes from the config file
+void
+pimSim::init(const std::string& simConfig)
+{
+  bool success = parseConfigFromFile(simConfig);
+  assert(success);
+
+  std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
+  std::string fileContent;
+  success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
+  assert(success);
+
+  m_paramsDram = new pimParamsDram(fileContent);
+  m_paramsPerf = new pimParamsPerf(m_paramsDram);
+  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+}
+
+//! @brief  Initialize pimSim member classes with default values
+void
+pimSim::init()
+{
+  m_paramsDram = new pimParamsDram();
+  m_paramsPerf = new pimParamsPerf(m_paramsDram);
+  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
 }
 
 //! @brief  Determine num threads and init thread pool
@@ -82,6 +110,7 @@ bool
 pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
+  init();
   if (m_device != nullptr) {
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
@@ -94,6 +123,8 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
+  unsigned maxNumThreads = 0; // use max hardware parallelism by default
+  initThreadPool(maxNumThreads);
   return true;
 }
 
@@ -102,6 +133,23 @@ bool
 pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName)
 {
   pimPerfMon perfMon("createDeviceFromConfig");
+  bool success = false;
+  if (!configFileName) {
+    std::printf("PIM-Error: Null PIM device config file name\n");
+    return false;
+  }
+  if (!std::filesystem::exists(configFileName)) {
+    std::printf("PIM-Error: Config file not found.\n");
+    return false;
+  }
+
+  std::string fileContent;
+  success = pimUtils::readFileContent(configFileName, fileContent);
+  assert(success);
+
+  m_configFilesPath = pimUtils::getDirectoryPath(configFileName);
+
+  init(fileContent);
   if (m_device) {
     std::printf("PIM-Error: PIM Device is already created\n");
     return false;
@@ -114,6 +162,8 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
+  unsigned maxNumThreads = m_numThreads;
+  initThreadPool(maxNumThreads);
   return true;
 }
 
@@ -886,6 +936,37 @@ pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
 
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AAP, srcRows, destRows);
   return m_device->executeCmd(std::move(cmd));
+}
+
+//! @breif parse config file to get memory config file path and maximum number of threads
+bool
+pimSim::parseConfigFromFile(const std::string& simConfig) {
+  std::istringstream configStream(simConfig);
+  std::string line;
+  std::unordered_map<std::string, std::string> params;
+
+  while (std::getline(configStream, line)) {
+    if (line.empty() || line[0] == '[') {
+      continue;
+    }
+    size_t equalPos = line.find('=');
+    if (equalPos != std::string::npos) {
+      std::string key = line.substr(0, equalPos);
+      std::string value = line.substr(equalPos + 1);
+      params[pimUtils::trim(key)] = pimUtils::trim(value);
+    }
+  }
+  try {
+    m_numThreads = std::stoi(pimUtils::getParam(params, "max_num_threads"));
+    m_memConfigFileName = pimUtils::getParam(params, "memory_config_file");
+  } catch (const std::invalid_argument& e) {
+    std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
+    errorMessage += e.what();
+    errorMessage += "\n";
+    std::printf("%s", errorMessage.c_str());
+    return false;
+  }
+  return true;
 }
 
 // Explicit template instantiations

@@ -20,6 +20,7 @@
 #include <cctype>
 #include <locale>
 #include <stdexcept>
+#include <filesystem> 
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice()
@@ -185,10 +186,6 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
 
   std::printf("PIM-Info: Created PIM device with %u cores, each with %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
-  unsigned maxNumThreads = 0; // use max hardware parallelism by default
-  // TODO: read max num threads from config file
-  pimSim::get()->initThreadPool(maxNumThreads);
-
   m_isInit = true;
   return m_isValid;
 }
@@ -296,7 +293,11 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
-    m_memConfigFileName = pimUtils::getParam(params, "memory_config_file");
+    m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
+    if (m_simTarget == PIM_DEVICE_UNKNOWN) {
+      std::printf("PIM-Error: Invalid simulation target in config file\n");
+      return false;
+    }
   } catch (const std::invalid_argument& e) {
     std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
     errorMessage += e.what(); 
