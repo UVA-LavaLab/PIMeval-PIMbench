@@ -7,4 +7,4 @@
 #SBATCH --mem=250GB
 #SBATCH --output=output_1035544320.txt
 
-./vec-add.out -l 1035544320
+./PIM/vec-add.out -l 1035544320
