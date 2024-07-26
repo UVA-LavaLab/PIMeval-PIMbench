@@ -146,10 +146,12 @@ private:
   pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
   pimUtils::threadPool* m_threadPool = nullptr;
-  unsigned m_numThreads = 1;
+  unsigned m_numThreads = 0;
   std::string m_memConfigFileName;
   std::string m_configFilesPath;
   bool m_initCalled = false;
+
+  static constexpr const char* m_defaultMemConfig = "DDR4_8Gb_x16_3200.ini";
 };
 
 #endif

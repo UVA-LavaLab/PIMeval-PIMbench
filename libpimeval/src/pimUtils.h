@@ -33,6 +33,7 @@ namespace pimUtils
   std::string& trim(std::string& s);
   bool readFileContent(const char* fileName, std::string& fileContent);
   std::string getParam(const std::unordered_map<std::string, std::string>& params, const std::string& key);
+  std::string getOptionalParam(const std::unordered_map<std::string, std::string>& params, const std::string& key, bool& returnStatus);
 
   std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
@@ -72,7 +73,6 @@ namespace pimUtils
   static constexpr const char* envVarPimEvalTarget = "PIMEVAL_TARGET";
   static constexpr const char* envVarPimEvalConfigPath = "PIMEVAL_CONFIG_PATH";
   static constexpr const char* envVarPimEvalConfigSim = "PIMEVAL_CONFIG_SIM";
-  static constexpr const char* envVarPimEvalConfigMem = "PIMEVAL_CONFIG_MEM";
 
   //! @class  threadWorker
   //! @brief  Thread worker base class

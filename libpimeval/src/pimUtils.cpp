@@ -259,6 +259,18 @@ pimUtils::getParam(const std::unordered_map<std::string, std::string>& params, c
   return it->second;
 }
 
+//! @brief Returns the values of each parameter in the config files. Return empty string and false return status if the parameter value is not found
+std::string 
+pimUtils::getOptionalParam(const std::unordered_map<std::string, std::string>& params, const std::string& key, bool& returnStatus) {
+  returnStatus = false;  
+  auto it = params.find(key);
+  if (it == params.end()) {
+    return "";
+  }
+  returnStatus = true;
+  return it->second;
+} 
+
 //! @brief Returns the directory path of the input file.
 std::string
 pimUtils::getDirectoryPath(const std::string& filePath) {
