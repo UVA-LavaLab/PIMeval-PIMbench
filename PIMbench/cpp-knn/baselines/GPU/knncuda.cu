@@ -238,19 +238,19 @@ bool knn_cuda_global(const float * ref,
     const unsigned int size_of_int   = sizeof(int);
 
     // Return variables
-    cudaError_t err0, err1, err2, err3, err4;
+    cudaError_t err;
 
     // Check that we have at least one CUDA device 
     int nb_devices;
-    err0 = cudaGetDeviceCount(&nb_devices);
-    if (err0 != cudaSuccess || nb_devices == 0) {
+    err = cudaGetDeviceCount(&nb_devices);
+    if (err != cudaSuccess || nb_devices == 0) {
         printf("ERROR: No CUDA device found\n");
         return false;
     }
 
     // Select the first CUDA device as default
-    err0 = cudaSetDevice(0);
-    if (err0 != cudaSuccess) {
+    err = cudaSetDevice(0);
+    if (err != cudaSuccess) {
         printf("ERROR: Cannot set the chosen CUDA device\n");
         return false;
     }
@@ -267,37 +267,37 @@ bool knn_cuda_global(const float * ref,
     size_t  index_pitch_in_bytes;
     printf("Attempting to allocate memory...\n");
 
-    err0 = cudaMallocPitch((void**)&ref_dev,   &ref_pitch_in_bytes,   ref_nb   * size_of_float, dim);
-    if (err0 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for ref_dev: %s\n", cudaGetErrorString(err0));
+    err = cudaMallocPitch((void**)&ref_dev,   &ref_pitch_in_bytes,   ref_nb   * size_of_float, dim);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for ref_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
 
-    err1 = cudaMallocPitch((void**)&query_dev, &query_pitch_in_bytes, query_nb * size_of_float, dim);
-    if (err1 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for query_dev: %s\n", cudaGetErrorString(err1));
+    err = cudaMallocPitch((void**)&query_dev, &query_pitch_in_bytes, query_nb * size_of_float, dim);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for query_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
 
-    err2 = cudaMallocPitch((void**)&dist_dev,  &dist_pitch_in_bytes,  query_nb * size_of_float, ref_nb);
-    if (err2 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for dist_dev: %s\n", cudaGetErrorString(err2));
+    err = cudaMallocPitch((void**)&dist_dev,  &dist_pitch_in_bytes,  query_nb * size_of_float, ref_nb);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for dist_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
 
-    err3 = cudaMallocPitch((void**)&index_dev, &index_pitch_in_bytes, query_nb * size_of_int,   k);
-    if (err3 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for index_dev: %s\n", cudaGetErrorString(err3));
+    err = cudaMallocPitch((void**)&index_dev, &index_pitch_in_bytes, query_nb * size_of_int,   k);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for index_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
 
-    err4 = cudaMalloc((void**)&query_labels_dev, query_nb * size_of_int);
-    if (err4 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for query_labels_dev: %s\n", cudaGetErrorString(err4));
+    err = cudaMalloc((void**)&query_labels_dev, query_nb * size_of_int);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for query_labels_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
@@ -317,16 +317,16 @@ bool knn_cuda_global(const float * ref,
     }
 
     // Copy reference and query data from the host to the device
-    err0 = cudaMemcpy2D(ref_dev,   ref_pitch_in_bytes,   ref,   ref_nb * size_of_float,   ref_nb * size_of_float,   dim, cudaMemcpyHostToDevice);
-    if (err0 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for ref_dev: %s\n", cudaGetErrorString(err0));
+    err = cudaMemcpy2D(ref_dev,   ref_pitch_in_bytes,   ref,   ref_nb * size_of_float,   ref_nb * size_of_float,   dim, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for ref_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
 
-    err1 = cudaMemcpy2D(query_dev, query_pitch_in_bytes, query, query_nb * size_of_float, query_nb * size_of_float, dim, cudaMemcpyHostToDevice);
-    if (err1 != cudaSuccess) {
-        printf("ERROR: Memory allocation error for query_dev: %s\n", cudaGetErrorString(err1));
+    err = cudaMemcpy2D(query_dev, query_pitch_in_bytes, query, query_nb * size_of_float, query_nb * size_of_float, dim, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        printf("ERROR: Memory allocation error for query_dev: %s\n", cudaGetErrorString(err));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false;
     }
@@ -404,8 +404,8 @@ bool knn_cuda_global(const float * ref,
     elapsed_time=((msecTotal)/1000);
 
     // Copy classifcation results from the device to the host
-    err0 = cudaMemcpy(query_labels, query_labels_dev, query_nb * size_of_int, cudaMemcpyDeviceToHost);
-    if (err0 != cudaSuccess) {
+    err = cudaMemcpy(query_labels, query_labels_dev, query_nb * size_of_int, cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess) {
         printf("ERROR: Unable to copy results from device to host: %s\n", cudaGetErrorString(cudaGetLastError()));
         knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
         return false; 

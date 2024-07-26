@@ -20,11 +20,6 @@ extern bool noWarmUp;
 
 void printOutput(){
 		//Anay change in the format of the output should also change the format of the parser script
-		/*
-        printf(
-            "GBInputPerSecond = %.10f \n ",
-            gigaProcessedInSec);
-            */
 	   printf("nIter = %d \n",nIter);
 
         printf(

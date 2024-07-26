@@ -1,11 +1,25 @@
-# Compiler
-CXX := nvcc
+# Compiler settings
+NVCC := nvcc
+CUDA_DIR ?= $(shell dirname $(shell dirname $(shell which nvcc)))
+CUDA_INCLUDE := $(CUDA_DIR)/include
+CUDA_LIB_DIR := $(CUDA_DIR)/lib64
+CUDA_LIB := -lcublas
+ARCH_FLAG := -arch=sm_80
 
 # Executable name
 EXEC := knn.out
 
-all:
-	$(CXX) -o $(EXEC) -I./inc -I/sw/ubuntu-22.04/cuda/extras/CUPTI/include -L/sw/ubuntu-22.04/cuda/extras/CUPTI/lib64 -DONLY_TIME_KERNELS test.cpp -I./inc knncuda.cu -lcuda -lcublas -lcudart -Wno-deprecated-gpu-targets
+# Source files
+SOURCES = knncuda.cu test.cpp
 
+# Compiler flags
+CFLAGS := -G
+CXXFLAGS := -std=c++11
+
+# Default target
+all: $(EXEC)
+
+$(EXEC): $(SOURCES)
+	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I./inc $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 clean:
 	rm -f $(EXEC)
