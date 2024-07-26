@@ -26,3 +26,4 @@ $(EXEC): $(SOURCES)
 # Rule to clean the project
 clean:
 	rm -f $(EXEC)
+	

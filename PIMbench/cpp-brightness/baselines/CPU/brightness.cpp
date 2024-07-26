@@ -76,16 +76,11 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-uint8_t truncate(uint8_t pixelValue, int brightnessCoefficient)
-{
-  return static_cast<uint8_t> (std::min(MAXCOLORVALUE, std::max(MINCOLORVALUE, pixelValue + brightnessCoefficient)));
-}
-
 void brightness(std::vector<uint8_t> &resultData, uint64_t imgDataBytes, int brightnessCoefficient)
 { 
   #pragma omp parallel for
   for (uint64_t i = 0; i < imgDataBytes; ++i) {
-    resultData[i] = truncate(resultData[i], brightnessCoefficient);
+    resultData[i] = static_cast<uint8_t> (std::min(MAXCOLORVALUE, std::max(MINCOLORVALUE, resultData[i] + brightnessCoefficient)));
   }
 }
 
@@ -103,7 +98,7 @@ int main(int argc, char *argv[])
   int imgDataOffsetPosition;
 
   // Start data parsing
-  if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
+  if (fn.substr(fn.find_last_of(".")) != ".bmp")
   {
     // TODO: reading in other types of input files
     std::cout << "Need work reading in other file types" << std::endl;
@@ -138,7 +133,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %ld bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
+  printf("This file has %lu bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
 
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
   std::vector<uint8_t> resultData = imgData;
@@ -160,7 +155,7 @@ int main(int argc, char *argv[])
     for (uint64_t i = 0; i < imgDataBytes; ++i) 
     { 
       // baseline calculation
-      imgData[i] = truncate(imgData[i], params.brightnessCoefficient); 
+      imgData[i] = static_cast<uint8_t> (std::min(MAXCOLORVALUE, std::max(MINCOLORVALUE, imgData[i] + params.brightnessCoefficient)));
 
       // comparison between baseline and OpenMP implementation from brightness()
       if (imgData[i] != resultData[i])
