@@ -158,14 +158,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-      return;
-    }
-
-    status = pimAdd(srcObj2, dstObj, dstObj);
+    status = pimScaledAdd(srcObj1, dstObj, dstObj, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -180,7 +173,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     std::cout << "Abort" << std::endl;
   }
 
-  dst.reserve(row);
+  dst.resize(row);
   status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
   if (status != PIM_OK)
   {
@@ -286,11 +279,9 @@ int main(int argc, char **argv) {
   vector<int> layers = p.layer_sizes;
   vector<vector<vector<T>>> weight(num_layers - 1);  // store the weight of each layer in a flattend matrix format 
 
-  // getMatrix(params.row, params.columnA, 0, srcMatrixA);
   vector<vector<T>> input;
   getMatrix(p.num_examples, layers[0], 0, input);
   vector<vector<T>> outputResult;
-
 
   // Create an input file with arbitrary data.
   init_weights(weight, layers, num_layers);
@@ -298,13 +289,14 @@ int main(int argc, char **argv) {
     return 1;
 
   bool correctPimResult = mlp_pim(weight, input, outputResult, layers, num_layers, p.shouldVerify);
+
+  pimShowStats();
+  
   if(p.shouldVerify && correctPimResult) {
     cout << "KNN was succesfully verified against host result\n";
   } else if(p.shouldVerify && !correctPimResult) {
     cerr << "MLP verification failed!\n";
   }
-
-  pimShowStats();
 
   return 0;
 }
