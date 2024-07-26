@@ -42,10 +42,11 @@ public:
 
   void showStats() const;
 
-  void recordCmd(const std::string& cmdName, double msRuntime) {
+  void recordCmd(const std::string& cmdName, pimParamsPerf::perfEnergy mPerfEnergy) {
     auto& item = m_cmdPerf[cmdName];
     item.first++;
-    item.second += msRuntime;
+    item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
+    item.second.m_mjEnergy += mPerfEnergy.m_mjEnergy;
   }
 
   void recordMsElapsed(const std::string& tag, double elapsed) {
@@ -69,7 +70,7 @@ private:
   const pimParamsDram* m_paramsDram;
   const pimParamsPerf* m_paramsPerf;
 
-  std::map<std::string, std::pair<int, double>> m_cmdPerf;
+  std::map<std::string, std::pair<int, pimParamsPerf::perfEnergy>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;
 
   uint64_t m_bitsCopiedMainToDevice = 0;

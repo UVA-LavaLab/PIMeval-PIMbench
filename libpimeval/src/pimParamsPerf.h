@@ -21,15 +21,22 @@ public:
   pimParamsPerf(pimParamsDram* paramsDram);
   ~pimParamsPerf() {}
 
-  double getMsRuntimeForBytesTransfer(uint64_t numBytes) const;
-  double getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  double getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  double getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
-  double getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  double getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  class perfEnergy
+  {
+    public:
+      double m_msRuntime;
+      double m_mjEnergy;
+  };
+
+  perfEnergy getPerfEnergyForBytesTransfer(uint64_t numBytes) const;
+  perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  perfEnergy getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
+  perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 
 private:
-  double getMsRuntimeBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass) const;
+  perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass) const;
 
   const pimParamsDram* m_paramsDram;
   const double m_nano_to_milli = 1000000.0;
@@ -39,9 +46,16 @@ private:
   double m_tGDL; // Fetch data from local row buffer to global row buffer
   int m_GDLWidth; // Number of bits that can be fetched from local to global row buffer.
   double m_fulcrumAluLatency = 0.00000609; // 6.09ns
+  
   unsigned m_flucrumAluBitWidth = 32;
   double m_blimpCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper
   unsigned m_blimpCoreBitWidth = 64; 
+
+  double m_eR; // Row read(ACT) energy in mJ microjoule
+  double m_eL; // Logic energy in mJ microjoule
+  double m_pB; // background power in W
+  double m_fulcrumAluEnergy = m_fulcrumAluLatency * 999999999.9; // todo: ALU power
+  double m_blimpCoreEnergy = m_blimpCoreLatency * 999999999.9; // todo: core Power
 };
 
 #endif

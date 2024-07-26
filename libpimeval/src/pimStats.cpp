@@ -101,11 +101,11 @@ pimStatsMgr::showCopyStats() const
   uint64_t bytesCopiedDeviceToMain = m_bitsCopiedDeviceToMain / 8;
   uint64_t bytesCopiedDeviceToDevice = m_bitsCopiedDeviceToDevice / 8;
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
-  double totalMsRuntime = m_paramsPerf->getMsRuntimeForBytesTransfer(totalBytes);
-  std::printf(" %30s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
-  std::printf(" %30s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
-  std::printf(" %30s : %llu bytes %14f ms Estimated Runtime\n", "TOTAL ---------", totalBytes, totalMsRuntime);
-  std::printf(" %30s : %llu bytes\n", "Device to Device", bytesCopiedDeviceToDevice);
+  pimParamsPerf::perfEnergy mPerfEnergy = m_paramsPerf->getPerfEnergyForBytesTransfer(totalBytes);
+  std::printf(" %44s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
+  std::printf(" %44s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
+  std::printf(" %44s : %llu bytes %14f ms Estimated Runtime %14f mj Estimated Energy\n", "TOTAL ---------", totalBytes, mPerfEnergy.m_msRuntime, mPerfEnergy.m_mjEnergy);
+  std::printf(" %44s : %llu bytes\n", "Device to Device", bytesCopiedDeviceToDevice);
 }
 
 //! @brief  Show PIM cmd and perf stats
@@ -113,15 +113,17 @@ void
 pimStatsMgr::showCmdStats() const
 {
   std::printf("PIM Command Stats:\n");
-  std::printf(" %30s : %10s %14s\n", "PIM-CMD", "CNT", "EstimatedRuntime(ms)");
+  std::printf(" %44s : %10s %14s %14s\n", "PIM-CMD", "CNT", "EstimatedRuntime(ms)", "EstimatedEnergyConsumption(mJ)");
   int totalCmd = 0;
   double totalMsRuntime = 0.0;
+  double totalMjEnergy = 0.0;
   for (const auto& it : m_cmdPerf) {
-    std::printf(" %30s : %10d %14f\n", it.first.c_str(), it.second.first, it.second.second);
+    std::printf(" %44s : %10d %14f %14f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy);
     totalCmd += it.second.first;
-    totalMsRuntime += it.second.second;
+    totalMsRuntime += it.second.second.m_msRuntime;
+    totalMjEnergy += it.second.second.m_mjEnergy;
   }
-  std::printf(" %30s : %10d %14f\n", "TOTAL ---------", totalCmd, totalMsRuntime);
+  std::printf(" %44s : %10d %14f %14f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy);
 
   // analyze micro-ops
   int numR = 0;
