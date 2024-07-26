@@ -1,13 +1,6 @@
 # Brightness
 
-Brightness is a basic image processing algorithm that increments the color channel components for all image pixels by a specified degree. The PIM, CPU, and GPU implementations all use the same process of accomplishing this. The adjustment is made by adding the brightness coefficient to each pixel of image data and peforming a check to see if the change goes out of bounds for valid pixel values. If out of bounds situations occur, the pixel is rounded to the nearest max/min value, such as 276 rounding down to 255 or -20 rounding up to 0. The operation is defined as:
-
-$ \forall p \in Image , \space p_{new}[r,g,b] \space \texttt{+}\texttt{=} \space BC \space | \space 0 \space \texttt{<}\texttt{=} \space p_{new}[r,g,b] \space \texttt{<}\texttt{=} \space 255$
-
-where:
-- $p$ is a pixel in the $Image$ input
-- $r,g,b$ are the red, green, and blue color channels of a pixel
-- $BC$ is the brightness coefficient, set by the user
+Brightness is a basic image processing algorithm that increments the color channel components for all image pixels by a specified degree. The PIM, CPU, and GPU implementations all use the same process of accomplishing this. The adjustment is made by adding the brightness coefficient to each pixel of image data and peforming a check to see if the change goes out of bounds for valid pixel values. If out of bounds situations occur, the pixel is rounded to the nearest max/min value, such as 276 rounding down to 255 or -20 rounding up to 0. The inclusion of this benchmark was inspired by previous works, such as the SIMDRAM framework paper [[1]](#1).
 
 For a detailed description of the Brightness algorithm, refer to the OpenCV brightness [documentation](https://docs.opencv.org/4.x/d3/dc1/tutorial_basic_linear_transform.html).
 
@@ -118,3 +111,8 @@ If you want to change the brightness coefficient (i.e. the amount the color chan
 ```bash
 $ ./brightness.out -b <value>
 ```
+
+## References
+
+<a id = "1">1.</a>
+Nastaran Hajinazar, Geraldo F. Oliveira, Sven Gregorio, João Dinis Ferreira, Nika Mansouri Ghiasi, Minesh Patel, Mohammed Alser, Saugata Ghose, Juan Gómez-Luna, and Onur Mutlu. 2021. SIMDRAM: a framework for bit-serial SIMD processing using DRAM. In Proceedings of the 26th ACM International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '21). Association for Computing Machinery, New York, NY, USA, 329–345. https://doi.org/10.1145/3445814.3446749
