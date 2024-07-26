@@ -51,36 +51,49 @@ pimSim::pimSim()
 //! @brief  pimSim dtor
 pimSim::~pimSim()
 {
-  delete m_threadPool;
-  delete m_statsMgr;
-  delete m_paramsDram;
-  delete m_paramsPerf;
+  uninit(); 
 }
 
 //! @brief  Initialize pimSim member classes from the config file
 void
 pimSim::init(const std::string& simConfig)
 {
-  bool success = parseConfigFromFile(simConfig);
-  assert(success);
+  if (!m_initCalled) {
+    bool success = parseConfigFromFile(simConfig);
+    assert(success);
 
-  std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
-  std::string fileContent;
-  success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
-  assert(success);
+    std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
+    std::string fileContent;
+    success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
+    assert(success);
 
-  m_paramsDram = new pimParamsDram(fileContent);
-  m_paramsPerf = new pimParamsPerf(m_paramsDram);
-  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+    m_paramsDram = new pimParamsDram(fileContent);
+    m_paramsPerf = new pimParamsPerf(m_paramsDram);
+    m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+    m_initCalled = true;
+  }
 }
 
 //! @brief  Initialize pimSim member classes with default values
 void
 pimSim::init()
 {
-  m_paramsDram = new pimParamsDram();
-  m_paramsPerf = new pimParamsPerf(m_paramsDram);
-  m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+  if (!m_initCalled) {
+    m_paramsDram = new pimParamsDram();
+    m_paramsPerf = new pimParamsPerf(m_paramsDram);
+    m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+    m_initCalled = true;
+  }
+}
+
+//! @brief  Uninitialize pimSim member claasses 
+void 
+pimSim::uninit()
+{
+  delete m_threadPool;
+  delete m_statsMgr;
+  delete m_paramsDram;
+  delete m_paramsPerf;
 }
 
 //! @brief  Determine num threads and init thread pool
@@ -112,6 +125,7 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
   pimPerfMon perfMon("createDevice");
   init();
   if (m_device != nullptr) {
+    uninit();
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
@@ -120,6 +134,7 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
   m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
     delete m_device;
+    uninit();
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }
@@ -170,6 +185,7 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
 
   init(fileContent);
   if (m_device) {
+    uninit();
     std::printf("PIM-Error: PIM Device is already created\n");
     return false;
   }
@@ -178,6 +194,7 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
   m_device->init(deviceType, correctConfigFileName.c_str());
   if (!m_device->isValid()) {
     delete m_device;
+    uninit();
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
   }

@@ -135,6 +135,7 @@ private:
   pimSim operator=(const pimSim&) = delete;
   void init();
   void init(const std::string& simConfig);
+  void uninit();
   bool parseConfigFromFile(const std::string& simConfig);
 
   static pimSim* s_instance;
@@ -148,6 +149,7 @@ private:
   unsigned m_numThreads = 1;
   std::string m_memConfigFileName;
   std::string m_configFilesPath;
+  bool m_initCalled = false;
 };
 
 #endif
