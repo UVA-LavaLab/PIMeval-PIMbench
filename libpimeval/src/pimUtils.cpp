@@ -42,7 +42,7 @@ pimUtils::strToPimDeviceEnum(const std::string& deviceTypeStr) {
   if (it != strToEnumMap.end()) {
     return it->second;
   }
-  return PIM_DEVICE_UNKNOWN;
+  return PIM_DEVICE_NONE;
 }
 
 //! @brief  Convert PimAllocEnum to string

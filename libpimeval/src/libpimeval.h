@@ -30,7 +30,6 @@ enum PimDeviceEnum {
   PIM_DEVICE_BITSIMD_H,
   PIM_DEVICE_FULCRUM,
   PIM_DEVICE_BANK_LEVEL,
-  PIM_DEVICE_UNKNOWN,
 };
 
 //! @brief  PIM allocation types

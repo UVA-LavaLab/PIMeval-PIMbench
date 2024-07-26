@@ -75,15 +75,15 @@ pimDevice::configDevice(PimDeviceEnum curDevice, PimDeviceEnum simTarget)
 {
   m_deviceType = curDevice;
   m_simTarget = curDevice;
+  // from 'make PIM_SIM_TARGET=...'
+  #if defined(PIM_SIM_TARGET)
+  if (simTarget == PIM_DEVICE_NONE) {
+    simTarget = PIM_SIM_TARGET;
+  }
+  #endif
 
   // determine simulation target for functional device
   if (curDevice == PIM_FUNCTIONAL) {
-    // from 'make PIM_SIM_TARGET=...'
-    #if defined(PIM_SIM_TARGET)
-    if (simTarget == PIM_DEVICE_NONE) {
-      simTarget = PIM_SIM_TARGET;
-    }
-    #endif
     // default sim target
     if (simTarget == PIM_DEVICE_NONE || simTarget == PIM_FUNCTIONAL) {
       simTarget = PIM_DEVICE_BITSIMD_V;
@@ -159,11 +159,11 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
     std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
   }
   m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
-  if (m_simTarget == PIM_DEVICE_UNKNOWN) {
+  if (m_simTarget == PIM_DEVICE_NONE) {
     std::printf("PIM-Error: Invalid simulation target %s\n", pimEvalTarget.c_str());
     assert (true);
   }
-  if (m_simTarget == PIM_DEVICE_NONE || m_simTarget == PIM_DEVICE_UNKNOWN) {
+  if (m_simTarget == PIM_DEVICE_NONE) {
     configDevice(deviceType);
   }
   std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
@@ -312,7 +312,7 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
     m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
-    if (m_simTarget == PIM_DEVICE_UNKNOWN) {
+    if (m_simTarget == PIM_DEVICE_NONE) {
       std::printf("PIM-Error: Invalid simulation target in config file\n");
       return false;
     }
@@ -327,7 +327,7 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
         return true;
       }
       m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
-      if (m_simTarget == PIM_DEVICE_UNKNOWN) {
+      if (m_simTarget == PIM_DEVICE_NONE) {
         std::printf("PIM-Error: Invalid simulation target %s\n", pimEvalTarget.c_str());
         return false;
       }
