@@ -69,26 +69,21 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
   return true;
 }
 
-//! @brief  Config device type and simulation target
+//! @brief  Config the simulation target
 void
-pimDevice::configDevice(PimDeviceEnum curDevice, PimDeviceEnum simTarget)
+pimDevice::configSimTarget(PimDeviceEnum simTarget)
 {
-  m_deviceType = curDevice;
-  m_simTarget = curDevice;
+  m_simTarget = simTarget;
   // from 'make PIM_SIM_TARGET=...'
   #if defined(PIM_SIM_TARGET)
-  if (simTarget == PIM_DEVICE_NONE) {
-    simTarget = PIM_SIM_TARGET;
+  if (m_simTarget == PIM_DEVICE_NONE) {
+    m_simTarget = PIM_SIM_TARGET;
   }
   #endif
 
-  // determine simulation target for functional device
-  if (curDevice == PIM_FUNCTIONAL) {
-    // default sim target
-    if (simTarget == PIM_DEVICE_NONE || simTarget == PIM_FUNCTIONAL) {
-      simTarget = PIM_DEVICE_BITSIMD_V;
-    }
-    m_simTarget = simTarget;
+  // Default simulation target
+  if (m_simTarget == PIM_DEVICE_NONE) {
+    m_simTarget = PIM_DEVICE_BITSIMD_V;
   }
 }
 
@@ -150,21 +145,30 @@ bool
 pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   assert(!m_isInit);
-  assert(deviceType != PIM_DEVICE_NONE);
 
-  std::printf("PIM-Info: Trying to read it from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
-  // Read envirnment variable for the simulation target
-  std::string pimEvalTarget;
-  if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget)) {
-    std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
+  // Determine simulation target
+  m_simTarget = deviceType;
+  if (m_simTarget == PIM_FUNCTIONAL) {
+    m_simTarget = PIM_DEVICE_BITSIMD_V;
   }
-  m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
-  if (m_simTarget == PIM_DEVICE_NONE) {
-    std::printf("PIM-Error: Invalid simulation target %s\n", pimEvalTarget.c_str());
-    assert (true);
-  }
-  if (m_simTarget == PIM_DEVICE_NONE) {
-    configDevice(deviceType);
+  if (deviceType == PIM_DEVICE_NONE) {
+    // Read envirnment variable for the simulation target
+    bool readSimTargetFromMakeArgument = false;
+    std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+    std::string pimEvalTarget;
+    bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
+    if (!readEnvVarStatus) {
+      std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
+      readSimTargetFromMakeArgument = true;
+    }
+    m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
+    if (m_simTarget == PIM_DEVICE_NONE) {
+      std::printf("PIM-Warning: Invalid value %s for environment varialbe %s\n", pimEvalTarget.c_str(), pimUtils::envVarPimEvalTarget);
+      readSimTargetFromMakeArgument = true;
+    }
+    if (readSimTargetFromMakeArgument){
+      configSimTarget(m_simTarget);
+    }
   }
   std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
               pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
@@ -209,8 +213,6 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 {
   bool success = false;
   assert(!m_isInit);
-  assert(deviceType != PIM_DEVICE_NONE);
-  configDevice(deviceType);
 
   if (!configFileName) {
     std::printf("PIM-Error: Null PIM device config file name\n");
@@ -221,8 +223,12 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
     return false;
   }
 
-  m_deviceType = deviceType;
-  
+  // Assign simulation target based on the input argument
+  m_simTarget = deviceType;
+  if (m_simTarget == PIM_FUNCTIONAL) {
+    m_simTarget = PIM_DEVICE_BITSIMD_V;
+  }
+
   // Read file content
   unsigned numRanks;
   unsigned numBankPerRank;
@@ -311,27 +317,33 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
-    m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
     if (m_simTarget == PIM_DEVICE_NONE) {
-      std::printf("PIM-Error: Invalid simulation target in config file\n");
-      return false;
+      m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
+      if (m_simTarget == PIM_DEVICE_NONE) {
+        std::printf("PIM-Error: Invalid simulation target in config file\n");
+        return false;
+      }
     }
   } catch (const std::invalid_argument& e) {
     std::string missing = e.what();
     if (missing == "simulation_target") {
-    std::printf("PIM-Info: Simulation target could not be located in PIMeval config file. Trying to read it from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
       // Read envirnment variable for the simulation target
+      bool readSimTargetFromMakeArgument = false;
+      std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
       std::string pimEvalTarget;
-      if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget)) {
+      bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
+      if (!readEnvVarStatus) {
         std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
-        return true;
+        readSimTargetFromMakeArgument = true;
       }
       m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
       if (m_simTarget == PIM_DEVICE_NONE) {
-        std::printf("PIM-Error: Invalid simulation target %s\n", pimEvalTarget.c_str());
-        return false;
+        std::printf("PIM-Warning: Invalid value %s for environment varialbe %s\n", pimEvalTarget.c_str(), pimUtils::envVarPimEvalTarget);
+        readSimTargetFromMakeArgument = true;
       }
-      std::printf("PIM-Info: Read simulation from the envirnment variables is \"%s\".\n", pimEvalTarget.c_str());
+      if (readSimTargetFromMakeArgument){
+        configSimTarget(m_simTarget);
+      }
     }
     else {
       std::string errorMessage("PIM-Error: Missing or invalid parameter: ");

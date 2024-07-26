@@ -103,7 +103,7 @@ bool createDevice(char *configFile)
     unsigned numRows = 1024;
     unsigned numCols = 8192;
 
-    PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+    PimStatus status = pimCreateDevice(PIM_DEVICE_NONE, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
