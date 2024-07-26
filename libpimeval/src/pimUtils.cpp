@@ -271,6 +271,16 @@ pimUtils::getOptionalParam(const std::unordered_map<std::string, std::string>& p
   return it->second;
 } 
 
+//! @brief Returns a substring from the beginning of the input string up to the first ';' character, or the entire string if ';' is not found
+std::string 
+pimUtils::removeAfterSemicolon(const std::string &input) {
+    size_t pos = input.find(';');
+    if (pos != std::string::npos) {
+        return input.substr(0, pos);
+    }
+    return input;
+}
+
 //! @brief Returns the directory path of the input file.
 std::string
 pimUtils::getDirectoryPath(const std::string& filePath) {

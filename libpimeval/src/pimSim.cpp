@@ -982,6 +982,7 @@ pimSim::parseConfigFromFile(const std::string& simConfig) {
   std::unordered_map<std::string, std::string> params;
 
   while (std::getline(configStream, line)) {
+    line = pimUtils::removeAfterSemicolon(line);
     if (line.empty() || line[0] == '[') {
       continue;
     }

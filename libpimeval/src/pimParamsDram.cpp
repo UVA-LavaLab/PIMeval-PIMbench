@@ -87,6 +87,7 @@ pimParamsDram::pimParamsDram(const std::string& config)
   std::string line;
   std::unordered_map<std::string, std::string> params;
   while (std::getline(configStream, line)) {
+    line = pimUtils::removeAfterSemicolon(line);
     if (line.empty() || line[0] == '[') {
       continue;
     }
