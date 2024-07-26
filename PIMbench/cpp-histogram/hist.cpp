@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
   unsigned short* dataPos;
 
   // Start data parsing
-  if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
+  if (fn.substr(fn.find_last_of(".") + 1) != "bmp")
   {
     // TODO: reading in other types of input files
     std::cout << "Need work reading in other file types" << std::endl;
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %ld bytes of image data, %ld pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
+  printf("This file has %llu bytes of image data, %llu pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
 
   if (!createDevice(params.configFile))
   {

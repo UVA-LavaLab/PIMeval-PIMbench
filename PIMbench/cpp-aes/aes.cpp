@@ -107,10 +107,10 @@ const uint8_t sboxinv[256] = {
 typedef struct Params
 {
     uint64_t inputSize;
-    char *keyFile;
-    char *inputFile;
-    char *cipherFile;
-    char *outputFile;
+    const char *keyFile;
+    const char *inputFile;
+    const char *cipherFile;
+    const char *outputFile;
     bool shouldVerify;
 } Params;
  

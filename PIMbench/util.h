@@ -92,7 +92,7 @@ void flatten3DMat(std::vector<std::vector<std::vector<int>>>& inputMatrix, std::
   }
 }
 
-bool createDevice(char *configFile)
+bool createDevice(const char *configFile)
 {
   if (configFile == nullptr)
   {
