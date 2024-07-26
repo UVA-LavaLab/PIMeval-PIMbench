@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
   unsigned short* dataPos;
 
   // Start data parsing
-  if (fn.substr(fn.find_last_of(".") + 1) != "bmp")
+  if (fn.substr(fn.find_last_of(".")) != ".bmp")
   {
     // TODO: reading in other types of input files
     std::cout << "Need work reading in other file types" << std::endl;
