@@ -133,7 +133,7 @@ struct CompareDistance {
     }
 };
 
-void runKNN(int numPoints, int numTests, int k, int dim, int numThreads, int target, vector<int> testPredictions)
+void runKNN(uint64_t numPoints, uint64_t numTests, int k, int dim, int numThreads, int target, vector<int> testPredictions)
 {
     omp_set_num_threads(numThreads);
 #pragma omp parallel
@@ -142,9 +142,9 @@ void runKNN(int numPoints, int numTests, int k, int dim, int numThreads, int tar
             vector<priority_queue<DistancePoint, vector<DistancePoint>, CompareDistance>> localMinHeaps(numTests);
 
 #pragma omp for schedule(static)
-            for (int i = 0; i < numTests; ++i)
+            for (uint64_t i = 0; i < numTests; ++i)
             {
-                for (int j = 0; j < numPoints; ++j) {
+                for (uint64_t j = 0; j < numPoints; ++j) {
                     double dist = calculateDistance(dataPoints[i], dataPoints[j], dim, target);
                     if (int(localMinHeaps[i].size()) < k) {
                         localMinHeaps[i].emplace(dist, j);
@@ -157,7 +157,7 @@ void runKNN(int numPoints, int numTests, int k, int dim, int numThreads, int tar
             }
 #pragma omp critical
             {
-                for (int i = 0; i < numTests; ++i) {
+                for (uint64_t i = 0; i < numTests; ++i) {
                     // Tally the labels of the k nearest neighbors
                     unordered_map<int, int> labelCount;
                     while (!localMinHeaps[i].empty()) {
@@ -251,7 +251,8 @@ int main(int argc, char **argv)
 
         dataPoints = vector<vector<int>>(train_data_int.begin(), train_data_int.end());
     }
-    int k = params.k, numPoints = params.numDataPoints, numTests = params.numTestPoints, dim = params.dimension;
+    uint64_t numPoints = params.numDataPoints, numTests = params.numTestPoints;
+    int k = params.k, dim = params.dimension;
     int target = params.target;
     vector<int> testPredictions(numTests);
 
