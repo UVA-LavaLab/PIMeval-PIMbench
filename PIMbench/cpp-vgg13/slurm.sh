@@ -1,13 +1,10 @@
 #!/bin/bash
 
 #SBATCH -n 1
-#SBATCH -t 3-00:00:00
-#SBATCH -p gpu
-#SBATCH --cpus-per-task=60
-#SBATCH --job-name=vgg_fulcrum
-#SBATCH --mem=700GB
-#SBATCH --reservation=fas9nw_98
+#SBATCH -t 6:00:00
+#SBATCH -p cpu
+#SBATCH --job-name=vgg13
+#SBATCH --mem=250000
+#SBATCH --output=output_vgg13.txt
 
-./vgg13.out
-../cpp-vgg16/vgg16.out
-../cpp-vgg19/vgg19.out
+./PIM/vgg13.out
