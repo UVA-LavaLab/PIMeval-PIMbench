@@ -20,3 +20,4 @@ $(EXEC): $(SRC_FILES) |
 
 clean:
 	rm -rf $(EXEC)
+	
