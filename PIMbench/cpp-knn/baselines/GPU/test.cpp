@@ -142,22 +142,18 @@ bool test(const float * ref,
           int           query_nb,
           int           dim,
           int           k,
-          bool (*knn)(const float *, int, const float *, int, int, int, float *, int *, int *, double &),
+          bool (*knn)(const float *, int, const float *, int, int, int, int *, double &),
           double &elapsed_time) {
 
     // Display k-NN function name
     printf("- global memory: ");
 
     // Allocate memory for computed k-NN neighbors
-    float * test_knn_dist  = (float*) malloc(query_nb * k * sizeof(float));
-    int   * test_knn_index = (int*)   malloc(query_nb * k * sizeof(int));
     int   * test_knn_result = (int*)   malloc(query_nb * sizeof(int));
 
     // Allocation check
-    if (!test_knn_dist || !test_knn_index || !test_knn_result) {
+    if (!test_knn_result) {
         printf("ALLOCATION ERROR\n");
-        free(test_knn_dist);
-        free(test_knn_index);
         free(test_knn_result);
         return false;
     }
@@ -165,9 +161,9 @@ bool test(const float * ref,
     struct timeval tic;
     gettimeofday(&tic, NULL);
 
-    if (!knn(ref, ref_nb, query, query_nb, dim, k, test_knn_dist, test_knn_index, test_knn_result, elapsed_time)) {
-        free(test_knn_dist);
-        free(test_knn_index);
+    if (!knn(ref, ref_nb, query, query_nb, dim, k, test_knn_result, elapsed_time)) {
+
+
         free(test_knn_result);
         return false;
     }
@@ -191,8 +187,6 @@ bool test(const float * ref,
     printOutput();
 
     // Free memory
-    free(test_knn_dist);
-    free(test_knn_index);
     free(test_knn_result);
 
     return true;

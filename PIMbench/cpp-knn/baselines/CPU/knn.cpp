@@ -27,8 +27,8 @@ vector<vector<int>> testPoints;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-    int numTestPoints;
-    int numDataPoints;
+    uint64_t numTestPoints;
+    uint64_t numDataPoints;
     int dimension;
     int k;
     int numThreads;
@@ -113,8 +113,9 @@ inline int calculateDistance(const vector<int> &pointA, const vector<int> &point
     int sum = 0;
     for (int i = 0; i < dim; i++)
     {
-        if (i == target) {continue;}
-        sum += abs(pointA[i] - pointB[i]);
+        if (i != target) {
+            sum += abs(pointA[i] - pointB[i]);
+        }
     }
     return sum;
 }
@@ -217,18 +218,6 @@ vector<vector<int>> readCSV(const string& filename) {
     return data;
 }
 
-void printData(int **dataArray, int row, int col)
-{
-    for (int i = 0; i < row; i++)
-    {
-        for (int j = 0; j < col; j++)
-        {
-            cout << dataArray[i][j] << "\t";
-        }
-        cout << "\n";
-    }
-}
-
 /**
  * @brief Main of the Host Application.
  */
@@ -239,8 +228,7 @@ int main(int argc, char **argv)
 
     if (params.inputTestFile == nullptr)
     {
-        //getMatrix(params.numTestPoints, params.dimension, 0, testPoints);
-        getMatrix(params.numTestPoints, params.dimension, testPoints);
+        getMatrix<int>(params.numTestPoints, params.dimension, testPoints);
     }
     else
     {
@@ -252,8 +240,7 @@ int main(int argc, char **argv)
     }
     if (params.inputDataFile == nullptr)
     {
-        //getMatrix(params.numDataPoints, params.dimension, 0, dataPoints);
-        getMatrix(params.numDataPoints, params.dimension, dataPoints);
+        getMatrix<int>(params.numDataPoints, params.dimension, dataPoints);
     }
     else
     {
@@ -268,13 +255,13 @@ int main(int argc, char **argv)
     int target = params.target;
     vector<int> testPredictions(numTests);
 
-    cout << "Set up done!\n";
+    std::cout << "Set up done!\n";
     
     auto start = chrono::high_resolution_clock::now();
     runKNN(numPoints, numTests, k, dim, params.numThreads, target, testPredictions);
     auto end = chrono::high_resolution_clock::now();
 
     chrono::duration<double, milli> elapsedTime = (end - start);
-    cout << "Duration: " << fixed << setprecision(3) << elapsedTime.count() << " ms." << endl;
+    std::cout << "Duration: " << fixed << setprecision(3) << elapsedTime.count() << " ms." << endl;
     return 0;
 }

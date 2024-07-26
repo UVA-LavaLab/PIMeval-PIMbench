@@ -17,6 +17,4 @@ bool knn_cuda_global(const float * ref,
                      int           query_nb,
                      int           dim,
                      int           k,
-                     float *       knn_dist,
-                     int *         knn_index, 
                      int *         query_labels, double & elapsed_time);
