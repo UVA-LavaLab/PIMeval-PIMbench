@@ -28,7 +28,8 @@ CPU and GPU have been used as baselines.
 
 #### CPU & GPU
 
-The CPU and GPU variants of VGG13 have been implemented using standard Python and PyTorch framework for machine learning. The same script is used for both, the device is specified from the command line by the user. The script performs inference using a pre-trained VGG13 model on the CIFAR-100 dataset, supporting both CPU and CUDA-enabled GPU devices. It preprocesses the data, adjusts the model's classifier for 100 classes, and optimizes it with TorchScript. The script evaluates the model's top-1 and top-5 accuracy and measures the execution time per image. Results, including accuracy percentages and timing, are printed at the end. Command-line arguments specify the device and the number of test images which is by default 1000.
+* The CPU and GPU variants of VGG13 have been implemented using standard Python and PyTorch framework for machine learning. The same script is used for both, the device is specified from the command line by the user. The script performs inference using a pre-trained VGG13 model on the CIFAR-100 dataset, supporting both CPU and CUDA-enabled GPU devices. The CIFAR-100 dataset is chosen because it is open-source and relatively small compared to other datasets. The entire dataset (both training and test sets) requires about 170 MB of storage. When downloaded, it should easily fit within the storage capacity of most modern systems. 
+* The script preprocesses the data, adjusts the model's classifier for 100 classes, and optimizes it with TorchScript. The script evaluates the model's top-1 and top-5 accuracy and measures the execution time per image. Results, including accuracy percentages and execution time in ms, are printed at the end. Command-line arguments specify the device and the number of test images which is by default 1000.
 
 ### PIM Implementation
 
@@ -44,6 +45,9 @@ To run the script for the CPU variant, use command like the following example:
 cd baselines
 python3 vgg13.py -s cpu -n 100
 ```
+Note: 
+ * "-s" to specify the device to use for inference (cpu/cuda).
+ * "-n" to specify number of images to be testing in the inferencing.
 
 ### GPU Variant
 
