@@ -24,6 +24,9 @@ public:
   class perfEnergy
   {
     public:
+      perfEnergy() : m_msRuntime(0.0), m_mjEnergy(0.0) {}
+      perfEnergy(double msRuntime, double mjEnergy) : m_msRuntime(msRuntime), m_mjEnergy(mjEnergy) {}
+
       double m_msRuntime;
       double m_mjEnergy;
   };

@@ -19,9 +19,9 @@ pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
   m_tL = m_paramsDram->getNsTCCD_S() / m_nano_to_milli;
   m_tGDL = m_paramsDram->getNsTCAS() / m_nano_to_milli;
   m_GDLWidth = m_paramsDram->getBurstLength() * m_paramsDram->getDeviceWidth();
-  m_eR = m_paramsDram->getPjRowRead() / 1000000000.0; //convert pJ to mJ
-  m_eL = m_paramsDram->getPjLogic() / 1000000000.0; //convert pJ to mJ
-  m_pB = m_paramsDram->getMwBackground() / 1000.0; //Convert mW to W, so that W * ms = mJ
+  m_eR = m_paramsDram->getPjRowRead() / 1000000000.0; // Convert pJ to mJ
+  m_eL = m_paramsDram->getPjLogic() / 1000000000.0; // Convert pJ to mJ
+  m_pB = m_paramsDram->getMwBackground() / 1000.0; // Convert mW to W, so that W * ms = mJ
 }
 
 //! @brief  Get ms runtime for bytes transferred between host and device
@@ -32,10 +32,9 @@ pimParamsPerf::getPerfEnergyForBytesTransfer(uint64_t numBytes) const
   int numActiveRank = numRanks;
   double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
   double totalMsRuntime = static_cast<double>(numBytes) / (typicalRankBW * numActiveRank * 1024 * 1024 * 1024 / 1000);
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = 999999999.0; // todo
-  m_perfEnergy.m_msRuntime = totalMsRuntime;
-  return m_perfEnergy;
+  double totalMjEnergy = 999999999.9; // todo
+
+  return  perfEnergy(totalMsRuntime, totalMjEnergy);
 }
 
 //! @brief  Get ms runtime for bit-serial PIM devices
@@ -68,7 +67,7 @@ pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTy
           msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
           mjEnergy += m_eR * numR + m_eL *numL;
           mjEnergy += m_pB * msRuntime ;
-          mjEnergy *= 8 * numRanks;  // todo: 8 device per rank
+          mjEnergy *= 8 * numRanks;  // todo: 8 device per rank, better to get this number from a function in the future
           ok = true;
         }
       }
@@ -96,10 +95,7 @@ pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTy
   }
   msRuntime *= numPass;
 
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = mjEnergy;
-  m_perfEnergy.m_msRuntime = msRuntime;
-  return m_perfEnergy;
+  return perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for func1
@@ -156,7 +152,7 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
     // Additionally, using the walker-renaming technique (refer to the Fulcrum paper for details),
     // the write operation is also pipelined. Thus, only one row write operation is needed.
     msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
-    mjEnergy = (m_eR + maxElementsPerRegion * m_fulcrumAluEnergy * numberOfALUOperationPerElement * numPass) * obj.getNumCoresUsed(); // todo: the last multiplyer should be the number of simlutaneously-executing subarrays in one device, the following function calls are the same.
+    mjEnergy = (m_eR + maxElementsPerRegion * m_fulcrumAluEnergy * numberOfALUOperationPerElement * numPass) * obj.getNumCoresUsed();
     mjEnergy += m_pB * msRuntime;
     mjEnergy *= 8 * numRanks;
     break;
@@ -204,10 +200,7 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
     mjEnergy = 999999999.9; // todo
   }
 
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = mjEnergy;
-  m_perfEnergy.m_msRuntime = msRuntime;
-  return m_perfEnergy;
+  return perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for func2
@@ -290,10 +283,7 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     mjEnergy = 999999999.9;
   }
 
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = mjEnergy;
-  m_perfEnergy.m_msRuntime = msRuntime;
-  return m_perfEnergy;
+  return perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for reduction sum
@@ -367,10 +357,7 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
     mjEnergy = 999999999.9; // todo
   }
 
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = mjEnergy;
-  m_perfEnergy.m_msRuntime = msRuntime;
-  return m_perfEnergy;
+  return perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for broadcast
@@ -444,15 +431,11 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     mjEnergy = 999999999.9;
   }
 
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = mjEnergy;
-  m_perfEnergy.m_msRuntime = msRuntime;
-  return m_perfEnergy;
+  return perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for rotate
 pimParamsPerf::perfEnergy
-//pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, unsigned bitsPerElement, unsigned numRegions) const
 pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
@@ -497,9 +480,6 @@ pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj)
     mjEnergy = 999999999.9; // todo
   }
 
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = mjEnergy;
-  m_perfEnergy.m_msRuntime = msRuntime;
-  return m_perfEnergy;
+  return perfEnergy(msRuntime, mjEnergy);
 }
 
