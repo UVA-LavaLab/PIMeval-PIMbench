@@ -33,8 +33,8 @@ using namespace std;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  char *configFile;
-  char *inputFile;
+  const char *configFile;
+  const char *inputFile;
   bool shouldVerify;
 } Params;
 
