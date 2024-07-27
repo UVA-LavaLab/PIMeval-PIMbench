@@ -88,23 +88,15 @@ After compiling, run the each executable with the following command that will ru
 ./vec_add.out
 ```
 
-To see help text use following command
+To see help text on all usages, use following command
 ```bash
 ./vec_add.out -h
 ```
 
 ### Specifying Input Size
 
-You can specify the input size using the `-` option:
+You can specify the input size using the `-l` option:
 
 ```bash
 ./vec_add.out -l <input_size>
-```
-
-### Help and Usage Options
-
-For help or to see usage options, use the `-h` option:
-
-```bash
-./vec_add.out -h
 ```

@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -37,7 +37,7 @@ void usage()
           "\nUsage:  ./brightness.out [options]"
           "\n"
           "\n    -c    dramsim config file"
-          "\n    -i    24-bit .bmp input file (default=uses 'sample1.bmp' from '../cpp-histogram/histogram_datafiles/' directory)"
+          "\n    -i    24-bit .bmp input file (default=uses 'sample1.bmp' from '/cpp-histogram/histogram_datafiles/' directory)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n    -b    brightness coefficient value (default=20)"
           "\n");
@@ -47,7 +47,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "../cpp-histogram/histogram_datafiles/sample1.bmp";
+  p.inputFile = "../../cpp-histogram/histogram_datafiles/sample1.bmp";
   p.shouldVerify = false;
   p.brightnessCoefficient = 20;
 
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
   int imgDataOffsetPosition;
 
   // Start data parsing
-  if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
+  if (fn.substr(fn.find_last_of(".")) != ".bmp")
   {
     // TODO: reading in other types of input files
     std::cout << "Need work reading in other file types" << std::endl;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %ld bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
+  printf("This file has %llu bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
 
   if (!createDevice(params.configFile))
   {

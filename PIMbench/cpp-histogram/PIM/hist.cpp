@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -45,7 +45,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "histogram_datafiles/sample1.bmp";
+  p.inputFile = "../histogram_datafiles/sample1.bmp";
   p.shouldVerify = false;
 
   int opt;
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
   unsigned short* dataPos;
 
   // Start data parsing
-  if (!fn.substr(fn.find_last_of(".") + 1).compare("bmp") == 0)
+  if (fn.substr(fn.find_last_of(".")) != ".bmp")
   {
     // TODO: reading in other types of input files
     std::cout << "Need work reading in other file types" << std::endl;
