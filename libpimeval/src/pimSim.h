@@ -151,7 +151,7 @@ private:
   std::string m_configFilesPath;
   bool m_initCalled = false;
 
-  static constexpr const char* m_defaultMemConfig = "DDR4_8Gb_x16_3200.ini";
+  static constexpr const char* m_defaultMemConfig = "";
 };
 
 #endif

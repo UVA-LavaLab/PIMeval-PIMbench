@@ -62,12 +62,17 @@ pimSim::init(const std::string& simConfig)
     bool success = parseConfigFromFile(simConfig);
     assert(success);
 
-    std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
-    std::string fileContent;
-    success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
-    assert(success);
-
-    m_paramsDram = new pimParamsDram(fileContent);
+    if (m_memConfigFileName != m_defaultMemConfig) {
+      std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
+      std::string fileContent;
+      success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
+      assert(success);
+      m_paramsDram = new pimParamsDram(fileContent);
+    }
+    else {
+      m_paramsDram = new pimParamsDram();
+    }
+    
     m_paramsPerf = new pimParamsPerf(m_paramsDram);
     m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
     m_initCalled = true;
@@ -123,13 +128,11 @@ bool
 pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
-  init();
   if (m_device != nullptr) {
-    uninit();
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
-
+  init();
   m_device = new pimDevice();
   m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
@@ -185,7 +188,6 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
 
   init(fileContent);
   if (m_device) {
-    uninit();
     std::printf("PIM-Error: PIM Device is already created\n");
     return false;
   }
@@ -1007,7 +1009,7 @@ pimSim::parseConfigFromFile(const std::string& simConfig) {
     
     temp = pimUtils::getOptionalParam(params, "memory_config_file", success);
     if (!success) {
-      std::printf("PIM-Info: PIM device params config file name could not be located in PIMeval config file. Using default config file name %s\n", m_defaultMemConfig);
+      std::printf("PIM-Info: PIM device params config file name could not be located in PIMeval config file. Using default values for memory config\n");
       m_memConfigFileName = m_defaultMemConfig;
     }
     else {
