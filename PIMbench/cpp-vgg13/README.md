@@ -47,7 +47,7 @@ python3 vgg13.py -s cpu -n 100
 ```
 Note: 
  * "-s" to specify the device to use for inference (cpu/cuda).
- * "-n" to specify number of images to be testing in the inferencing.
+ * "-n" to specify the number of images to be tested in the inferencing.
 
 ### GPU Variant
 
