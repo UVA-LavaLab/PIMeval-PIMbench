@@ -1035,10 +1035,8 @@ pimCmdReadRowToSa::execute()
   }
 
   // Update stats
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = 0.0;
-  m_perfEnergy.m_msRuntime = 0.0;
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), m_perfEnergy);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1063,10 +1061,8 @@ pimCmdWriteSaToRow::execute()
   }
 
   // Update stats
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = 0.0;
-  m_perfEnergy.m_msRuntime = 0.0;
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), m_perfEnergy);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1169,10 +1165,8 @@ pimCmdRRegOp::execute()
   }
 
   // Update stats
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = 0.0;
-  m_perfEnergy.m_msRuntime = 0.0;
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), m_perfEnergy);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1224,10 +1218,8 @@ pimCmdRRegRotate::execute()
   }
 
   // Update stats
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = 0.0;
-  m_perfEnergy.m_msRuntime = 0.0;
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), m_perfEnergy);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1314,10 +1306,8 @@ pimCmdAnalogAAP::execute()
   // Update stats
   std::string cmdName = getName();
   cmdName += "@" + std::to_string(m_srcRows.size()) + "," + std::to_string(m_destRows.size());
-  pimParamsPerf::perfEnergy m_perfEnergy;
-  m_perfEnergy.m_mjEnergy = 0.0;
-  m_perfEnergy.m_msRuntime = 0.0;
-  pimSim::get()->getStatsMgr()->recordCmd(cmdName, m_perfEnergy);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(cmdName, prfEnrgy);
   return true;
 }
 
