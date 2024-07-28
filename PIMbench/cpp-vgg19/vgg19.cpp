@@ -13,9 +13,9 @@
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
-#include "../../util.h"
-#include "../../utilML.h"
-#include "../../utilFixedPoint.h"
+#include "../util.h"
+#include "../utilML.h"
+#include "../utilFixedPoint.h"
 #include <iomanip>
 #include <chrono>
 #include <cassert>

@@ -1,16 +1,31 @@
-# Makefile: VGG19
+# Makefile: C++ version of vgg19
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-SUBDIRS := PIM
+include ../Makefile.common
 
-.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
-.DEFAULT_GOAL := perf
-
+# make USE_OPENMP=1
 USE_OPENMP ?= 0
+ifeq ($(USE_OPENMP),1)
+	CXXFLAGS += -fopenmp
+endif
 
-debug perf dramsim3_integ clean: $(SUBDIRS)
+EXEC := vgg19.out
+SRC := vgg19.cpp
 
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)
+COMPILE_WITH_JPEG ?= 1
+ifeq ($(COMPILE_WITH_JPEG), 1)
+    CXXFLAGS += -DCOMPILE_WITH_JPEG
+    # Add linker flags for libjpeg
+    LDFLAGS += -ljpeg
+endif
+
+debug perf dramsim3_integ: $(EXEC)
+
+$(EXEC): $(SRC) $(DEPS)
+	$(CXX) $< $(CXXFLAGS) $(LDFLAGS) -o $@
+
+clean:
+	rm -rf $(EXEC) *.dSYM
+
