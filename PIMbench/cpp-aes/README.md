@@ -87,10 +87,10 @@ To run the AES encryption executable, use the following syntax:
 ### Options
 
 - `-l`: Input size (default=65536 bytes)
-- `-k`: Key file containing two vectors (default=generates key with random numbers)
-- `-i`: Input file containing two vectors (default=generates input with random numbers)
-- `-c`: Cipher file containing two vectors (default=./cipher.txt)
-- `-o`: Output file containing two vectors (default=./output.txt)
+- `-k`: Key file containing AES key (default=generates key with random numbers)
+- `-i`: Input file containing AES input (default=generates input with random numbers)
+- `-c`: Cipher file containing cipher text (default=./cipher.txt)
+- `-o`: Output file containing output text (default=./output.txt)
 - `-v`: (true/false) Validates if the input file and output file are the same (default=false)
 
 ### Running the Executable
