@@ -133,53 +133,46 @@ struct CompareDistance {
 
 void runKNN(uint64_t numPoints, uint64_t numTests, int k, int dim, int numThreads, int target, vector<int> testPredictions)
 {
+    vector<priority_queue<DistancePoint, vector<DistancePoint>, CompareDistance>> localMinHeaps(numTests);
     omp_set_num_threads(numThreads);
-#pragma omp parallel
-        {
-            // Use thread-private variables
-            vector<priority_queue<DistancePoint, vector<DistancePoint>, CompareDistance>> localMinHeaps(numTests);
 
-#pragma omp for schedule(static)
-            for (uint64_t i = 0; i < numTests; ++i)
-            {
-                for (uint64_t j = 0; j < numPoints; ++j) {
-                    double dist = calculateDistance(dataPoints[i], dataPoints[j], dim);
-                    if (int(localMinHeaps[i].size()) < k) {
-                        localMinHeaps[i].emplace(dist, j);
-                    } else if (dist < localMinHeaps[i].top().distance) {
-                        localMinHeaps[i].pop();
-                        localMinHeaps[i].emplace(dist, j);
-                    }
-
-                }
+#pragma omp parallel for
+    for (uint64_t i = 0; i < numTests; ++i)
+    {
+        for (uint64_t j = 0; j < numPoints; ++j) {
+            double dist = calculateDistance(dataPoints[i], dataPoints[j], dim);
+            if (int(localMinHeaps[i].size()) < k) {
+                localMinHeaps[i].emplace(dist, j);
+            } else if (dist < localMinHeaps[i].top().distance) {
+                localMinHeaps[i].pop();
+                localMinHeaps[i].emplace(dist, j);
             }
-#pragma omp critical
-            {
-                for (uint64_t i = 0; i < numTests; ++i) {
-                    // Tally the labels of the k nearest neighbors
-                    unordered_map<int, int> labelCount;
-                    while (!localMinHeaps[i].empty()) {
-                        int index = localMinHeaps[i].top().index;
-                        int label = dataPoints[index][target];
-                        labelCount[label]++;
-                        localMinHeaps[i].pop();
-                    }
-                    
-                    // Find the label with the highest count
-                    int maxCount = 0;
-                    int bestLabel = -1;
-                    for (const auto& entry : labelCount) {
-                        if (entry.second > maxCount) {
-                            maxCount = entry.second;
-                            bestLabel = entry.first;
-                        }
-                    }
 
-                    // Assign the most frequent label to the test point
-                    testPredictions[i] = bestLabel;
-                }
+        }
+    }
+    for (uint64_t i = 0; i < numTests; ++i) {
+        // Tally the labels of the k nearest neighbors
+        unordered_map<int, int> labelCount;
+        while (!localMinHeaps[i].empty()) {
+            int index = localMinHeaps[i].top().index;
+            int label = dataPoints[index][target];
+            labelCount[label]++;
+            localMinHeaps[i].pop();
+        }
+        
+        // Find the label with the highest count
+        int maxCount = 0;
+        int bestLabel = -1;
+        for (const auto& entry : labelCount) {
+            if (entry.second > maxCount) {
+                maxCount = entry.second;
+                bestLabel = entry.first;
             }
         }
+
+        // Assign the most frequent label to the test point
+        testPredictions[i] = bestLabel;
+    }
 
     
 }
