@@ -86,7 +86,7 @@ pimStatsMgr::showDeviceParams() const
   std::printf(" %30s : %f GB/s\n", "Typical Rank BW", m_paramsDram->getTypicalRankBW());
   std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
   std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());
-  std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD());
+  std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD_S());
   #if defined(DEBUG)
   std::printf(" %30s : %f\n", "AAP (ns)", m_paramsDram->getNsAAP());
   #endif

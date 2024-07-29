@@ -9,15 +9,17 @@
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
 #include <cstdio>
-
+#include <cmath>
 
 //! @brief  pimParamsPerf ctor
 pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
   : m_paramsDram(paramsDram)
 {
-  m_tR = m_paramsDram->getNsRowRead() / 1000000.0;
-  m_tW = m_paramsDram->getNsRowWrite() / 1000000.0;
-  m_tL = m_paramsDram->getNsTCCD() / 1000000.0;
+  m_tR = m_paramsDram->getNsRowRead() / m_nano_to_milli;
+  m_tW = m_paramsDram->getNsRowWrite() / m_nano_to_milli;
+  m_tL = m_paramsDram->getNsTCCD_S() / m_nano_to_milli;
+  m_tGDL = m_paramsDram->getNsTCCD_L() / m_nano_to_milli;
+  m_GDLWidth = m_paramsDram->getBurstLength() * m_paramsDram->getDeviceWidth();
 }
 
 //! @brief  Get ms runtime for bytes transferred between host and device
@@ -142,8 +144,9 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    // Refer to fulcrum documentation
-    msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+    double totalGDLOverhead = std::ceil(m_tGDL / (m_blimpCoreLatency * numberOfOperationPerElement * m_GDLWidth)) * m_tGDL;
+    // Refer to fulcrum documentation 
+    msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
     switch (cmdType)
     {
     case PimCmdEnum::POPCOUNT:
