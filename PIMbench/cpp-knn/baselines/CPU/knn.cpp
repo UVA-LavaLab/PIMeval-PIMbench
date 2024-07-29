@@ -109,13 +109,11 @@ struct Params input_params(int argc, char **argv)
     return p;
 }
 
-inline int calculateDistance(const vector<int> &pointA, const vector<int> &pointB, int dim, int target) {
+inline int calculateDistance(const vector<int> &pointA, const vector<int> &pointB, int dim) {
     int sum = 0;
     for (int i = 0; i < dim; i++)
     {
-        if (i != target) {
-            sum += abs(pointA[i] - pointB[i]);
-        }
+        sum += abs(pointA[i] - pointB[i]);
     }
     return sum;
 }
@@ -145,7 +143,7 @@ void runKNN(uint64_t numPoints, uint64_t numTests, int k, int dim, int numThread
             for (uint64_t i = 0; i < numTests; ++i)
             {
                 for (uint64_t j = 0; j < numPoints; ++j) {
-                    double dist = calculateDistance(dataPoints[i], dataPoints[j], dim, target);
+                    double dist = calculateDistance(dataPoints[i], dataPoints[j], dim);
                     if (int(localMinHeaps[i].size()) < k) {
                         localMinHeaps[i].emplace(dist, j);
                     } else if (dist < localMinHeaps[i].top().distance) {
