@@ -26,15 +26,16 @@ typedef struct Params
     char *outputFile;
     bool shouldVerify;
 } Params;
+
 void usage() {
     fprintf(stderr,
         "\nUsage:  ./aes.out [options]"
         "\n"
         "\n    -l    input size (default=65536 bytes)"
-        "\n    -k    key file containing two vectors (default=generates key with random numbers)"
-        "\n    -i    input file containing two vectors (default=generates input with random numbers)"
-        "\n    -c    cipher file containing two vectors (default=./cipher.txt)"
-        "\n    -o    output file containing two vectors (default=./output.txt)"
+        "\n    -k    key file containing AES key (default=generates key with random numbers)"
+        "\n    -i    input file containing AES encrption input(default=generates input with random numbers)"
+        "\n    -c    cipher file containing AES encryption output (default=./cipher.txt)"
+        "\n    -o    output file containing AES decryption output (default=./output.txt)"
         "\n    -v    (true/false) validates if the input file and outputfile are the same. (default=false)"
         "\n");
 }
@@ -75,7 +76,6 @@ struct Params getInputParams(int argc, char **argv) {
     }
     return p;
 }
-
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
@@ -160,32 +160,23 @@ int main(int argc, char *argv[]) {
     int padding;
     uint8_t key[32]; // Encryption/Decryption key.
 
-    // Open and read the key file.
-    bool generateRandomKey = false;
     if (params.keyFile == NULL) {
-        generateRandomKey = true;
         printf("INFO: Key file is not specifed. Random key will be used.\n");
-    }
-    if (!generateRandomKey) {
+        for (unsigned int i = 0; i < 32; ++i) {
+            key[i] = rand() && 0xff;
+        }
+    } else {
+        // Open and read the key file.
         file = fopen(params.keyFile, "r");
         if (file == NULL) {
             printf("ERROR: Error opening key file %s\n", params.keyFile);
         }
-    }
-
-    // Read the key from the key file.
-    if (!generateRandomKey && fread(key, 1, 32, file) != 32) {
-        printf("ERROR: The key length in %s is not 32 characters\n", params.keyFile);
-        fclose(file);
-        return EXIT_FAILURE;
-    } else {
-        for (unsigned int i = 0; i < 32; ++i) {
-            key[i] = rand() && 0xff;
-        }
-    }
-
-    // Verify that there are no extra characters.
-    if (!generateRandomKey) {
+        if (fread(key, 1, 32, file) != 32) {
+          printf("ERROR: The key length in %s is not 32 characters\n", params.keyFile);
+          fclose(file);
+          return EXIT_FAILURE;
+        } 
+        // Verify that there are no extra characters.
         char extra;
         if (fread(&extra, 1, 1, file) != 0) {
             printf("ERROR: The key length in %s is more than 32 characters\n", params.keyFile);
@@ -194,27 +185,9 @@ int main(int argc, char *argv[]) {
         }
         fclose(file);
     }
-   
-    // Open and read the input file.
-    bool generateRandomInput = false;
-    if (params.inputFile == NULL) {
-        generateRandomInput = true;
-        numbytes = params.inputSize;
-        printf("INFO: Input file is not specifed. Random input will be used.\n");
-    }
-    if (!generateRandomInput) {
-        file = fopen(params.inputFile, "r");
-        if (file == NULL) {
-            printf("ERROR: Error opening input file %s\n", params.inputFile);
-        } 
-    }
-    if (!generateRandomInput) {
-        fseek(file, 0L, SEEK_END);
-        numbytes = ftell(file);
-        fseek(file, 0L, SEEK_SET);
-    }
 
     // Allocate memory for the file content.
+    numbytes = params.inputSize;
     plaintext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
     ciphertext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
     decryptedtext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
@@ -224,19 +197,28 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Read the file into the buffer.
-    if (!generateRandomInput && fread(plaintext, 1, numbytes, file) != numbytes) {
-        printf("ERROR: Unable to read all bytes from file %s\n", params.inputFile);
-        fclose(file);
-        free(plaintext);
-        return EXIT_FAILURE;
-    }
-    if (!generateRandomInput) { 
-        fclose(file);
-    } else {
+    // Open and read the input file.
+    if (params.inputFile == NULL) {
+        printf("INFO: Input file is not specifed. Random input will be used.\n");
         for (unsigned int i = 0; i < params.inputSize; ++i) {
             plaintext[i] = rand() && 0xff;
         }
+    }
+    else {
+        file = fopen(params.inputFile, "r");
+        if (file == NULL) {
+            printf("ERROR: Error opening input file %s\n", params.inputFile);
+        } 
+        fseek(file, 0L, SEEK_END);
+        numbytes = ftell(file);
+        fseek(file, 0L, SEEK_SET);
+        if (fread(plaintext, 1, numbytes, file) != numbytes) {
+          printf("ERROR: Unable to read all bytes from file %s\n", params.inputFile);
+          fclose(file);
+          free(plaintext);
+          return EXIT_FAILURE;
+        }
+        fclose(file);
     }
 
     unsigned int ciphertextLen; 
