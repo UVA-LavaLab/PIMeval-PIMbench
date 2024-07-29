@@ -14,6 +14,7 @@
 #include <getopt.h>
 #define MEASUREMENT_TIMES (1 << 8)
 #define AES_BLOCK_SIZE 16 
+#define AES_KEY_BUFFER_SIZE 32
 
 
 // Params 
@@ -158,28 +159,29 @@ int main(int argc, char *argv[]) {
     uint8_t *decryptedtext;
     unsigned long numbytes;
     int padding;
-    uint8_t key[32]; // Encryption/Decryption key.
+    uint8_t key[AES_KEY_BUFFER_SIZE]; // Encryption/Decryption key.
 
     if (params.keyFile == NULL) {
         printf("INFO: Key file is not specifed. Random key will be used.\n");
-        for (unsigned int i = 0; i < 32; ++i) {
-            key[i] = rand() && 0xff;
+        for (unsigned int i = 0; i < AES_KEY_BUFFER_SIZE; ++i) {
+            key[i] = rand() & 0xff;
         }
     } else {
         // Open and read the key file.
         file = fopen(params.keyFile, "r");
         if (file == NULL) {
             printf("ERROR: Error opening key file %s\n", params.keyFile);
+            return EXIT_FAILURE;
         }
-        if (fread(key, 1, 32, file) != 32) {
-          printf("ERROR: The key length in %s is not 32 characters\n", params.keyFile);
+        if (fread(key, 1, AES_KEY_BUFFER_SIZE, file) != AES_KEY_BUFFER_SIZE) {
+          printf("ERROR: The key length in %s is not %d characters\n", params.keyFile, AES_KEY_BUFFER_SIZE);
           fclose(file);
           return EXIT_FAILURE;
         } 
         // Verify that there are no extra characters.
         char extra;
         if (fread(&extra, 1, 1, file) != 0) {
-            printf("ERROR: The key length in %s is more than 32 characters\n", params.keyFile);
+            printf("ERROR: The key length in %s is more than %d characters\n", params.keyFile, AES_KEY_BUFFER_SIZE);
             fclose(file);
             return EXIT_FAILURE;
         }
@@ -189,25 +191,36 @@ int main(int argc, char *argv[]) {
     // Allocate memory for the file content.
     numbytes = params.inputSize;
     plaintext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
-    ciphertext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
-    decryptedtext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
     if (plaintext == NULL) {
         printf("ERROR: Memory allocation error\n");
-        fclose(file);
         return EXIT_FAILURE;
     }
-
+    ciphertext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
+    if (ciphertext == NULL) {
+        printf("ERROR: Memory allocation error\n");
+        return EXIT_FAILURE;
+    }
+    decryptedtext = (uint8_t*)malloc((numbytes + 100) * sizeof(uint8_t));
+    if (decryptedtext == NULL) {
+        printf("ERROR: Memory allocation error\n");
+        return EXIT_FAILURE;
+    }
+ 
     // Open and read the input file.
     if (params.inputFile == NULL) {
         printf("INFO: Input file is not specifed. Random input will be used.\n");
         for (unsigned int i = 0; i < params.inputSize; ++i) {
-            plaintext[i] = rand() && 0xff;
+            plaintext[i] = rand() & 0xff;
         }
     }
     else {
         file = fopen(params.inputFile, "r");
         if (file == NULL) {
             printf("ERROR: Error opening input file %s\n", params.inputFile);
+            free(plaintext);
+            free(ciphertext);
+            free(decryptedtext);
+            return EXIT_FAILURE;
         } 
         fseek(file, 0L, SEEK_END);
         numbytes = ftell(file);
@@ -216,6 +229,8 @@ int main(int argc, char *argv[]) {
           printf("ERROR: Unable to read all bytes from file %s\n", params.inputFile);
           fclose(file);
           free(plaintext);
+          free(ciphertext);
+          free(decryptedtext);
           return EXIT_FAILURE;
         }
         fclose(file);
@@ -233,15 +248,21 @@ int main(int argc, char *argv[]) {
 
     // Write the ciphertext to file
     file = fopen(params.cipherFile, "w");
+    if (file == NULL) {
+        printf("ERROR: Error opening cipher file %s\n", params.cipherFile);
+        free(plaintext);
+        free(ciphertext);
+        free(decryptedtext);
+        return EXIT_FAILURE;
+    } 
     fwrite(ciphertext, 1, ciphertextLen, file);
     fclose(file);
 
-    unsigned int decryptedtextLen;
     // Start decrypt in CPU
+    unsigned int decryptedtextLen;
     start = std::chrono::high_resolution_clock::now();
     for (int k = 0; k < MEASUREMENT_TIMES; k++) {
         decryptedtextLen = decrypt(ciphertext, ciphertextLen, key, decryptedtext);
-
     }
     end = std::chrono::high_resolution_clock::now();
     elapsedTime = (end - start) / MEASUREMENT_TIMES;
@@ -249,6 +270,13 @@ int main(int argc, char *argv[]) {
 
     // Write to output file
     file = fopen(params.outputFile, "w");
+    if (file == NULL) {
+          printf("ERROR: Error opening output file %s\n", params.outputFile);
+          free(plaintext);
+          free(ciphertext);
+          free(decryptedtext);
+          return EXIT_FAILURE;
+    } 
     fwrite(decryptedtext, 1, numbytes, file);
     fclose(file);
 

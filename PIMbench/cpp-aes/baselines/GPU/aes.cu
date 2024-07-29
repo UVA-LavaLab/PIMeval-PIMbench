@@ -20,6 +20,7 @@ uint8_t ctx_deckey[32];
 
 #define AES_BLOCK_SIZE 16
 #define THREADS_PER_BLOCK 512
+#define AES_KEY_BUFFER_SIZE 32
 
 
 #define F(x)   (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
@@ -302,7 +303,7 @@ __device__ __host__ void aes_expandEncKey(uint8_t *k, uint8_t *rc, const uint8_t
   k[3] ^= sb[k[28]];
   *rc = F( *rc);
 
-  for(i = 4; i < 16; i += 4){
+  for(i = 4; i < AES_BLOCK_SIZE; i += 4){
     k[i] ^= k[i-4];
     k[i+1] ^= k[i-3];
     k[i+2] ^= k[i-2];
@@ -314,7 +315,7 @@ __device__ __host__ void aes_expandEncKey(uint8_t *k, uint8_t *rc, const uint8_t
   k[18] ^= sb[k[14]];
   k[19] ^= sb[k[15]];
 
-  for(i = 20; i < 32; i += 4){
+  for(i = 20; i < AES_KEY_BUFFER_SIZE; i += 4){
     k[i] ^= k[i-4];
     k[i+1] ^= k[i-3];
     k[i+2] ^= k[i-2];
@@ -434,7 +435,7 @@ __global__ void aes256_decrypt_ecb(uint8_t *buf_d, unsigned long numbytes, uint8
 
 
 // aes encrypt demo
-void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
+void encryptdemo(uint8_t key[AES_KEY_BUFFER_SIZE], uint8_t *buf, unsigned long numbytes){
   uint8_t *buf_d;
   uint8_t *ctx_key_d, *ctx_enckey_d;
 
@@ -464,7 +465,7 @@ void encryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
 
 
 // aes decrypt demo
-void decryptdemo(uint8_t key[32], uint8_t *buf, unsigned long numbytes){
+void decryptdemo(uint8_t key[AES_KEY_BUFFER_SIZE], uint8_t *buf, unsigned long numbytes){
   uint8_t *buf_d;
   uint8_t *ctx_key_d, *ctx_deckey_d;
 
@@ -500,7 +501,7 @@ __global__ void GPU_init() { }
 // Tester function
 void test_encryptdemo_parallel() {
     const unsigned long SIZE = 1UL * 1024 * 1024 * 1024; // 1 GB
-    uint8_t key[32];
+    uint8_t key[AES_KEY_BUFFER_SIZE];
 
     // Fill the key with random bytes
     std::random_device rd;
@@ -534,7 +535,7 @@ void test_encryptdemo_parallel() {
 
 void test_decryptdemo_parallel() {
     const unsigned long SIZE = 1UL * 1024 * 1024 * 1024; // 1 GB
-    uint8_t key[32];
+    uint8_t key[AES_KEY_BUFFER_SIZE];
 
     // Fill the key with random bytes
     std::random_device rd;
@@ -573,7 +574,7 @@ int main(int argc, char *argv[]) {
     
     FILE *file; uint8_t *buf; 
     int padding;
-    uint8_t key[32];
+    uint8_t key[AES_KEY_BUFFER_SIZE];
     unsigned long long numbytes; 
     int deviceCount = 0;
     cudaError_t error_id = cudaGetDeviceCount(&deviceCount);
@@ -591,24 +592,25 @@ int main(int argc, char *argv[]) {
 
     if (params.keyFile == NULL) {
         printf("INFO: Key file is not specifed. Random key will be used.\n");
-        for (unsigned int i = 0; i < 32; ++i) {
-            key[i] = rand() && 0xff;
+        for (unsigned int i = 0; i < AES_KEY_BUFFER_SIZE; ++i) {
+            key[i] = rand() & 0xff;
         }
     } else {
         // Open and read the key file.
         file = fopen(params.keyFile, "r");
         if (file == NULL) {
             printf("ERROR: Error opening key file %s\n", params.keyFile);
+            return EXIT_FAILURE;
         }
-        if (fread(key, 1, 32, file) != 32) {
-          printf("ERROR: The key length in %s is not 32 characters\n", params.keyFile);
+        if (fread(key, 1, AES_KEY_BUFFER_SIZE, file) != AES_KEY_BUFFER_SIZE) {
+          printf("ERROR: The key length in %s is not %d characters\n", params.keyFile, AES_KEY_BUFFER_SIZE);
           fclose(file);
           return EXIT_FAILURE;
         } 
         // Verify that there are no extra characters.
         char extra;
         if (fread(&extra, 1, 1, file) != 0) {
-            printf("ERROR: The key length in %s is more than 32 characters\n", params.keyFile);
+            printf("ERROR: The key length in %s is more than %d characters\n", params.keyFile, AES_KEY_BUFFER_SIZE);
             fclose(file);
             return EXIT_FAILURE;
         }
@@ -619,8 +621,7 @@ int main(int argc, char *argv[]) {
     numbytes = params.inputSize;
     buf = (uint8_t*)calloc(numbytes, sizeof(uint8_t));
     if (buf == NULL) {
-        printf("Memory allocation error\n");
-        fclose(file);
+        printf("ERROR: Memory allocation error\n");
         return EXIT_FAILURE;
     }
  
@@ -628,12 +629,14 @@ int main(int argc, char *argv[]) {
     if (params.inputFile == NULL) {
         printf("INFO: Input file is not specifed. Random input will be used.\n");
         for (unsigned int i = 0; i < params.inputSize; ++i) {
-            buf[i] = rand() && 0xff;
+            buf[i] = rand() & 0xff;
         }
     } else {
         file = fopen(params.inputFile, "r");
         if (file == NULL) {
             printf("ERROR: Error opening input file %s\n", params.inputFile);
+            free(buf);
+            return EXIT_FAILURE;
         } 
         fseek(file, 0L, SEEK_END);
         numbytes = ftell(file);
@@ -670,9 +673,13 @@ int main(int argc, char *argv[]) {
 
     // Write the ciphertext to file
     file = fopen(params.cipherFile, "w");
+    if (file == NULL) {
+        printf("ERROR: Error opening cipher file %s\n", params.cipherFile);
+        free(buf);
+        return EXIT_FAILURE;
+    } 
     fwrite(buf, 1, numbytes, file);
     fclose(file);
-
 
     // Decryption.
     start = std::chrono::high_resolution_clock::now();
@@ -686,6 +693,11 @@ int main(int argc, char *argv[]) {
 
     // Write to output file
     file = fopen(params.outputFile, "w");
+    if (file == NULL) {
+        printf("ERROR: Error opening output file %s\n", params.outputFile);
+        free(buf);
+        return EXIT_FAILURE;
+    } 
     fwrite(buf, 1, numbytes - padding, file);
     fclose(file);
 
