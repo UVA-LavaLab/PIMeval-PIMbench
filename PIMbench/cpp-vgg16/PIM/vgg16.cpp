@@ -1,4 +1,4 @@
-// Test: C++ version of vgg19
+// Test: C++ version of vgg16
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -13,9 +13,9 @@
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
-#include "../util.h"
-#include "../utilML.h"
-#include "../utilFixedPoint.h"
+#include "../../util.h"
+#include "../../utilML.h"
+#include "../../utilFixedPoint.h"
 #include <iomanip>
 #include <chrono>
 #include <cassert>
@@ -35,7 +35,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./vgg19.out [options]"
+          "\nUsage:  ./vgg16.out [options]"
           "\n"
           "\n    -v    should verify result with CPU"
           "\n    -i    input image file (default=generates matrix with random numbers)"
@@ -115,8 +115,8 @@ int main(int argc, char *argv[])
   }
   else // Get inputMatrix from the input image
   {
-    #ifdef COMPILE_WITH_JPEG
-    // If JPEG lib is not supported, below code will not work. In that case disable JPEG by adding COMPILE_WITH_JPEG=0 during make.      
+    #ifdef COMPILE_WITH_JPEG 
+    // If JPEG lib is not supported, below code will not work. In that case disable JPEG by adding COMPILE_WITH_JPEG=0 during make. 
     std::string outputFile = "resized_output.jpg";
     // Matrix to store resized image data
     std::vector<std::vector<std::vector<int>>> inputMatrixBeforePadding;
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);     
-  }  
+  }    
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv3-2........\n";
 
@@ -440,44 +440,6 @@ int main(int argc, char *argv[])
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv3-3........\n";
 
-  // conv3-4
-  kernelMatrix.clear();
-  if (params.kernelMatrixFile == nullptr)
-  {
-    kernelMatrix.resize(256);
-    for (auto &mat : kernelMatrix)
-    {
-      getMatrix(3, 3, 0, mat);
-    }
-  }
-  else
-  {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.16.weight");	      
-    if (params.shouldVerify == true) {
-      kernelMatrix = floatToFixed(kernelMatrix_f);
-    } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
-    }  
-  }  
-  inputMatrix.clear();
-  inputMatrix.resize(256);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
-  {
-    addPadding(56, 56, 1, resultMatrix1[i], inputMatrix[i]);
-  }
-  resultMatrix1.clear();
-  resultMatrix1.shrink_to_fit();
-  std::cout << "........starting conv3-4........\n";
-  if (params.moreDebugPrints == true) { 
-    // Check the dimensions of the input and kernel matrices  
-    std::cout << "Input matrix dimensions after padding: ";
-    printMatrixDimensions(inputMatrix);
-    std::cout << "Kernel matrix dimensions: ";
-    printMatrixDimensions(kernelMatrix);     
-  } 
-  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
-  std::cout << "........ending conv3-4........\n";
-
   // RELU
   std::cout << "........starting RELU........\n";
   relu(resultMatrix1);
@@ -500,7 +462,7 @@ int main(int argc, char *argv[])
     }
   }  else
   {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.19.weight");	      
+    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.17.weight");	      
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
@@ -543,7 +505,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.21.weight");	      
+    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.19.weight");	      
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
@@ -586,7 +548,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.23.weight");	      
+    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.21.weight");	      
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
@@ -617,49 +579,6 @@ int main(int argc, char *argv[])
   relu(resultMatrix1);
   std::cout << "........ending RELU........\n";
 
-  // conv4-4
-  kernelMatrix.clear();
-  if (params.kernelMatrixFile == nullptr)
-  {
-    kernelMatrix.resize(512);
-    for (auto &mat : kernelMatrix)
-    {
-      getMatrix(3, 3, 0, mat);
-    }
-  }
-  else
-  {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.25.weight");	      
-    if (params.shouldVerify == true) {
-      kernelMatrix = floatToFixed(kernelMatrix_f);
-    } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
-    }  
-  }  
-  inputMatrix.clear();
-  inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
-  {
-    addPadding(28, 28, 1, resultMatrix1[i], inputMatrix[i]);
-  }
-  resultMatrix1.clear();
-  resultMatrix1.shrink_to_fit();
-  std::cout << "........starting conv4-4........\n";
-  if (params.moreDebugPrints == true) { 
-    // Check the dimensions of the input and kernel matrices  
-    std::cout << "Input matrix dimensions after padding: ";
-    printMatrixDimensions(inputMatrix);
-    std::cout << "Kernel matrix dimensions: ";
-    printMatrixDimensions(kernelMatrix);        
-  }  
-  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
-  std::cout << "........ending conv4-4........\n";
-
-  // RELU
-  std::cout << "........starting RELU........\n";
-  relu(resultMatrix1);
-  std::cout << "........ending RELU........\n";
-
   // pool
   resultMatrix2.clear();
   std::cout << "........starting pooling........\n";
@@ -678,7 +597,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.28.weight");	      
+    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.24.weight");	      
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
@@ -700,7 +619,7 @@ int main(int argc, char *argv[])
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);      
-  } 
+  }  
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv5-1........\n";
 
@@ -721,7 +640,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.30.weight");	      
+    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.26.weight");	      
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
@@ -743,7 +662,7 @@ int main(int argc, char *argv[])
     printMatrixDimensions(inputMatrix);
     std::cout << "Kernel matrix dimensions: ";
     printMatrixDimensions(kernelMatrix);     
-  }
+  } 
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv5-2........\n";
 
@@ -764,7 +683,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.32.weight");	      
+    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.28.weight");	      
     if (params.shouldVerify == true) {
       kernelMatrix = floatToFixed(kernelMatrix_f);
     } else {
@@ -789,44 +708,6 @@ int main(int argc, char *argv[])
   }  
   conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
   std::cout << "........ending conv5-3........\n";
-
-  // conv5-4
-  kernelMatrix.clear();
-  if (params.kernelMatrixFile == nullptr)
-  {
-    kernelMatrix.resize(512);
-    for (auto &mat : kernelMatrix)
-    {
-      getMatrix(3, 3, 0, mat);
-    }
-  }
-  else
-  {
-    kernelMatrix_f = read_conv_layer_weights_from_csv(params.kernelMatrixFile, "features.34.weight");	      
-    if (params.shouldVerify == true) {
-      kernelMatrix = floatToFixed(kernelMatrix_f);
-    } else {
-      kernelMatrix = binarizeMatrix(kernelMatrix_f);
-    }  
-  }  
-  inputMatrix.clear();
-  inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
-  {
-    addPadding(14, 14, 1, resultMatrix1[i], inputMatrix[i]);
-  }
-  resultMatrix1.clear();
-  resultMatrix1.shrink_to_fit();
-  std::cout << "........starting conv5-4........\n";
-  if (params.moreDebugPrints == true) { 
-    // Check the dimensions of the input and kernel matrices  
-    std::cout << "Input matrix dimensions after padding: ";
-    printMatrixDimensions(inputMatrix);
-    std::cout << "Kernel matrix dimensions: ";
-    printMatrixDimensions(kernelMatrix);     
-  }
-  conv2(inputMatrix, kernelMatrix, resultMatrix1, 1, 1);
-  std::cout << "........ending conv5-4........\n";
 
   // RELU
   std::cout << "........starting RELU........\n";
@@ -863,7 +744,7 @@ int main(int argc, char *argv[])
     // Check the dimensions of the input and weight matrices  
     std::cout << "Input matrix dimensions: " << flattenedMat.size() << std::endl;
     std::cout << "Weight matrix dimensions: ";
-    printMatrixDimensions(denseWeight);    
+    printMatrixDimensions(denseWeight);       
   }   
   gemv(4096, 25088, flattenedMat, denseWeight, denseOutput1);
   std::cout << "........ending dense1........\n";
@@ -925,7 +806,7 @@ int main(int argc, char *argv[])
     // Check the dimensions of the input and weight matrices  
     std::cout << "Input matrix dimensions: " << denseOutput2.size() << std::endl;
     std::cout << "Weight matrix dimensions: ";
-    printMatrixDimensions(denseWeight);      
+    printMatrixDimensions(denseWeight);     
   }  
   gemv(1000, 4096, denseOutput2, denseWeight, denseOutput3);
   std::cout << "........ending dense3........\n";
@@ -948,7 +829,7 @@ int main(int argc, char *argv[])
   //  Verification Process:
   //  The following code initializes a vector of pairs, fills it with the softmax output values and their corresponding indices.
   //  Then sorts the pairs by value in descending order, and prints out the top 5 values along with their indices. 
-  //  These indices can be used to map back to the original 1000 output classes of the VGG19 model.  
+  //  These indices can be used to map back to the original 1000 output classes of the VGG16 model.  
   //  The top 5 results are printed as the goal is to see if the correct class label is among the indices of the top 5 values.
   //  This is important in many classification tasks where the top prediction might not always be correct, 
   //  but the correct label might still be within the top 5 highest probability predictions.    
