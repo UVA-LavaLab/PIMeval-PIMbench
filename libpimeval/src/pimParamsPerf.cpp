@@ -18,8 +18,8 @@ pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
   m_tW = m_paramsDram->getNsRowWrite() / m_nano_to_milli;
   m_tL = m_paramsDram->getNsTCCD_S() / m_nano_to_milli;
   m_tGDL = m_paramsDram->getNsTCAS() / m_nano_to_milli;
-  m_eR = m_paramsDram->getPjRowRead() / m_nano_to_milli; // Convert pJ to mJ
-  m_eL = m_paramsDram->getPjLogic() / m_nano_to_milli; // Convert pJ to mJ
+  m_eR = m_paramsDram->getPjRowRead() / m_pico_to_milli; // Convert pJ to mJ
+  m_eL = m_paramsDram->getPjLogic() / m_pico_to_milli; // Convert pJ to mJ
   m_pB = m_paramsDram->getMwBackground() / 1000.0; // Convert mW to W, so that W * ms = mJ
   m_GDLWidth = m_paramsDram->getBurstLength() * m_paramsDram->getDeviceWidth();
   m_numDevice = m_paramsDram->getNumDevice();

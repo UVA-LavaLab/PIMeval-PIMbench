@@ -43,6 +43,7 @@ private:
 
   const pimParamsDram* m_paramsDram;
   const double m_nano_to_milli = 1000000.0;
+  const double m_pico_to_milli = 1000000000.0;
   double m_tR; // Row read latency in ms
   double m_tW; // Row write latency in ms
   double m_tL; // Logic operation for bitserial / tCCD in ms
