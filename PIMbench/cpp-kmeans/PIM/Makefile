@@ -6,12 +6,6 @@
 LIBPIMEVAL_PATH = ../../../libpimeval
 include ../../Makefile.common
 
-# make USE_OPENMP=1
-USE_OPENMP ?= 0
-ifeq ($(USE_OPENMP),1)
-	CXXFLAGS += -fopenmp
-endif
-
 EXEC := km.out
 SRC := km.cpp
 

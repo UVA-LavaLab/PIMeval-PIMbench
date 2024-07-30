@@ -45,7 +45,7 @@ void usage()
           "\nUsage:  ./km.out [options]"
           "\n"
           "\n    -t    # of threads (default=8)"
-          "\n    -p    number of points (default=10M points)"
+          "\n    -p    number of points (default=1024 points)"
           "\n    -k    value of K (default=20)"
           "\n    -d    number of features (default=2 dimensions)"
           "\n    -i    max iteration (default=5 iteration)"
@@ -55,11 +55,11 @@ void usage()
 struct Params input_params(int argc, char **argv)
 {
   struct Params p;
-  p.numPoints = 10000000;
+  p.numPoints = 1024;
   p.k = 20;
   p.dimension = 2;
-  p.numThreads = 6;
-  p.maxItr = 2;
+  p.numThreads = 8;
+  p.maxItr = 5;
 
   int opt;
   while ((opt = getopt(argc, argv, "p:k:d:i:t:")) >= 0)

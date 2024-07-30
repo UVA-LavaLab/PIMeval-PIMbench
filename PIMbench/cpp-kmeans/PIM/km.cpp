@@ -37,9 +37,9 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./km.out [options]"
           "\n"
-          "\n    -n    number of points (default=1024 points)"
+          "\n    -p    number of points (default=1024 points)"
+          "\n    -k    centroid (default=5)"         
           "\n    -d    dimension (default=2)"
-          "\n    -k    centroid (default=5)"
           "\n    -r    max iteration (default=2)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing datapoints (default=generates datapoints with random numbers)"
@@ -51,15 +51,15 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.numPoints = 1024;
+  p.k = 20;
   p.dimension = 2;
-  p.k = 5;
-  p.maxItr = 2;
+  p.maxItr = 5;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:n:d:k:r:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:p:k:d:r:c:i:v:")) >= 0)
   {
     switch (opt)
     {
@@ -67,14 +67,14 @@ struct Params getInputParams(int argc, char **argv)
       usage();
       exit(0);
       break;
-    case 'n':
+    case 'p':
       p.numPoints = strtoull(optarg, NULL, 0);
-      break;
-    case 'd':
-      p.dimension = atoll(optarg);
       break;
     case 'k':
       p.k = atoll(optarg);
+      break;    
+    case 'd':
+      p.dimension = atoll(optarg);
       break;
     case 'r':
       p.maxItr = atoll(optarg);
