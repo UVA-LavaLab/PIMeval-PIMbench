@@ -71,18 +71,18 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
 
 //! @brief  Config the simulation target
 void
-pimDevice::configSimTarget(PimDeviceEnum simTarget)
+pimDevice::configSimTarget(PimDeviceEnum deviceType)
 {
-  m_simTarget = simTarget;
+  m_simTarget = deviceType;
   // from 'make PIM_SIM_TARGET=...'
   #if defined(PIM_SIM_TARGET)
-  if (m_simTarget == PIM_DEVICE_NONE) {
+  if (deviceType == PIM_FUNCTIONAL) {
     m_simTarget = PIM_SIM_TARGET;
   }
   #endif
 
   // Default simulation target
-  if (m_simTarget == PIM_DEVICE_NONE) {
+  if (m_simTarget == PIM_FUNCTIONAL || m_simTarget == PIM_DEVICE_NONE) {
     m_simTarget = PIM_DEVICE_BITSIMD_V;
   }
 }
@@ -147,11 +147,9 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   assert(!m_isInit);
 
   // Determine simulation target
+  m_deviceType = deviceType;
   m_simTarget = deviceType;
-  if (m_simTarget == PIM_FUNCTIONAL) {
-    m_simTarget = PIM_DEVICE_BITSIMD_V;
-  }
-  if (deviceType == PIM_DEVICE_NONE) {
+  if (deviceType == PIM_FUNCTIONAL) {
     // Read envirnment variable for the simulation target
     bool readSimTargetFromMakeArgument = false;
     std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
@@ -167,7 +165,7 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
       readSimTargetFromMakeArgument = true;
     }
     if (readSimTargetFromMakeArgument){
-      configSimTarget(m_simTarget);
+      configSimTarget(m_deviceType);
     }
   }
   std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
@@ -224,10 +222,8 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   }
 
   // Assign simulation target based on the input argument
+  m_deviceType = deviceType;
   m_simTarget = deviceType;
-  if (m_simTarget == PIM_FUNCTIONAL) {
-    m_simTarget = PIM_DEVICE_BITSIMD_V;
-  }
 
   // Read file content
   unsigned numRanks;
@@ -243,6 +239,11 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   // input params
   success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   assert(success);
+
+  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
+              pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
+              pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
+
   m_numRanks = numRanks;
   m_numBankPerRank = numBankPerRank;
   m_numSubarrayPerBank = numSubarrayPerBank;
@@ -280,11 +281,7 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   }
 
   m_resMgr = new pimResMgr(this);
-
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
@@ -318,7 +315,7 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
-    if (m_simTarget == PIM_DEVICE_NONE) {
+    if (m_deviceType == PIM_FUNCTIONAL) {
       m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
       if (m_simTarget == PIM_DEVICE_NONE) {
         std::printf("PIM-Error: Invalid simulation target in config file\n");
@@ -343,10 +340,9 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
         readSimTargetFromMakeArgument = true;
       }
       if (readSimTargetFromMakeArgument){
-        configSimTarget(m_simTarget);
+        configSimTarget(m_deviceType);
       }
-    }
-    else {
+    } else {
       std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
       errorMessage += missing;
       errorMessage += "\n";

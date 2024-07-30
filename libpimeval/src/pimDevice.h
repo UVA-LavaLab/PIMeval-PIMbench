@@ -66,7 +66,7 @@ public:
 
 private:
   bool adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
-  void configSimTarget(PimDeviceEnum simTarget = PIM_DEVICE_NONE);
+  void configSimTarget(PimDeviceEnum deviceType = PIM_FUNCTIONAL);
   bool parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
 
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;

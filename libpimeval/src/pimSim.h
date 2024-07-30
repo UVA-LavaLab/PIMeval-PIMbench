@@ -133,10 +133,9 @@ private:
   ~pimSim();
   pimSim(const pimSim&) = delete;
   pimSim operator=(const pimSim&) = delete;
-  void init();
-  void init(const std::string& simConfig);
+  void init(const std::string& simConfigFileContent = "");
   void uninit();
-  bool parseConfigFromFile(const std::string& simConfig);
+  bool parseConfigFromFile(const std::string& simConfigFileContent);
 
   static pimSim* s_instance;
 
@@ -151,7 +150,6 @@ private:
   std::string m_configFilesPath;
   bool m_initCalled = false;
 
-  static constexpr const char* m_defaultMemConfig = "";
 };
 
 #endif
