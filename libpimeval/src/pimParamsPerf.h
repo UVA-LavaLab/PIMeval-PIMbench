@@ -39,7 +39,7 @@ public:
   perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 
 private:
-  perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass) const;
+  perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const;
 
   const pimParamsDram* m_paramsDram;
   const double m_nano_to_milli = 1000000.0;
@@ -57,6 +57,7 @@ private:
   double m_eR; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
   double m_pB; // background power in W
+  double m_eGDL = 0.0000102; // CAS energy in mJ
   // Following values are taken from fulcrum paper. 
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ
