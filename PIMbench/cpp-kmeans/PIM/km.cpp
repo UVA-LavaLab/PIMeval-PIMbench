@@ -13,7 +13,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
@@ -129,7 +129,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
 void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector<PimObjId> &pimObjectList)
 {
 
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint32_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)dataPoints[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -142,7 +142,7 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
 
 void copyCentroid(std::vector<int64_t> &currCentroid, std::vector<PimObjId> &pimObjectList)
 {
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint32_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimBroadcastInt(pimObjectList[i], currCentroid[i]);
     if (status != PIM_OK)
@@ -254,7 +254,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         return;
       }
 
-      for (int b = 0; b < dataPointObjectList.size(); ++b)
+      for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
       {
         status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
         if (status != PIM_OK)
@@ -274,17 +274,17 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
   }
 
   pimFree(tempObj);
-  for (int i = 0; i < resultObjectList.size(); ++i)
+  for (uint32_t i = 0; i < resultObjectList.size(); ++i)
   {
     pimFree(resultObjectList[i]);
   }
 
-  for (int i = 0; i < dataPointObjectList.size(); ++i)
+  for (uint32_t i = 0; i < dataPointObjectList.size(); ++i)
   {
     pimFree(dataPointObjectList[i]);
   }
 
-  for (int i = 0; i < centroidObjectList.size(); ++i)
+  for (uint32_t i = 0; i < centroidObjectList.size(); ++i)
   {
     pimFree(centroidObjectList[i]);
   }
