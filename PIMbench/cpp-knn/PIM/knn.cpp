@@ -20,7 +20,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -119,7 +119,7 @@ float compute_distance(const vector<vector<int>>& ref,
                       int           query_index) {
   int sum = 0;
   // the last dim is the target dim, so don't include it
-  for (int d=0; d<dim-1; ++d) {
+  for (int d=0; d<dim; ++d) {
       const float diff = ref[d][ref_index] - query[d][query_index];
       sum += abs(diff);
   }
@@ -269,20 +269,19 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
 
 void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, vector<vector<int>> &dataPoints, vector<vector<int>> &testPoints, vector<int> &testPredictions)
 {
-  int adjusted_dim = dimension - 1; // Force the user to specficy the target index to the last column in the data and test points
-  vector<PimObjId> dataPointObjectList(adjusted_dim);
+  vector<PimObjId> dataPointObjectList(dimension);
   // allocate data into the PIM space, like declaring variable
-  allocatePimObject(numOfPoints, adjusted_dim, dataPointObjectList, -1);
+  allocatePimObject(numOfPoints, dimension, dataPointObjectList, -1);
   copyDataPoints(dataPoints, dataPointObjectList);
 
-  vector<PimObjId> resultObjectList(adjusted_dim);
-  allocatePimObject(numOfPoints, adjusted_dim, resultObjectList, dataPointObjectList[0]);
+  vector<PimObjId> resultObjectList(dimension);
+  allocatePimObject(numOfPoints, dimension, resultObjectList, dataPointObjectList[0]);
 
 
   vector<vector<int>> distMat(numOfTests, vector<int>(numOfPoints));
   
   for(int j = 0; j < (int) numOfTests; ++j){
-    for (int i = 0; i < adjusted_dim; ++i){
+    for (int i = 0; i < dimension; ++i){
       // for each point calculate manhattan distance. Not using euclidean distance to avoid multiplication.
 
       PimStatus status = pimSubScalar(dataPointObjectList[i], resultObjectList[i], testPoints[i][j]);
@@ -315,6 +314,8 @@ void runKNN(uint64_t numOfPoints, uint64_t numOfTests, int dimension, int k, vec
       cout << "Abort" << endl;
     }
   }
+
+  int adjusted_dim = dimension - 1; // Force the user to specficy the target index to the last dimensions in the data and test points
 
   auto start = std::chrono::high_resolution_clock::now();
   
