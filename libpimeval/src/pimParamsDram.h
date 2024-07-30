@@ -25,12 +25,13 @@ public:
   float getNsAAP() const { return m_tCK * (m_tRAS + m_tRP); }
   int getDeviceWidth() const { return m_deviceWidth;}
   int getBurstLength() const { return m_BL;}
-  int getNumDevice() const {return m_busWidth / m_deviceWidth; }
+  int getNumChips() const {return m_busWidth / m_deviceWidth; }
   double getTypicalRankBW() const { return m_typicalRankBW; }
 
   double getPjRowRead() const { return m_VDD * (m_IDD0 * (m_tRAS + m_tRP) - (m_IDD3N * m_tRAS + m_IDD2N * m_tRP)); } // Energy for 1 Activate command (and the correspound precharge command) in one subarray of one bank of one chip
   double getPjLogic() const { return 0.007 * m_tCK * m_tCCD_S ; } // 0.007 mW is the total power per BSLU, 0.007 * m_tCK * m_tCCD_S is the energy of one BSLU during one logic operation in pJ.
-  double getMwBackground() const {return m_VDD * m_IDD3N; } // Background power in mW. Assuming all ranks are always active whenever PIM is used.
+  double getMwIDD2N() const {return m_VDD * m_IDD2N; }
+  double getMwIDD3N() const {return m_VDD * m_IDD3N; }
 
 private:
   // [dram_structure]

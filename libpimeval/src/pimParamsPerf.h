@@ -58,7 +58,8 @@ private:
 
   double m_eR; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
-  double m_pB; // background power in W
+  double m_pBCore; // background power for each core in W
+  double m_pBChip; // background power for each core in W
   double m_eGDL = 0.0000102; // CAS energy in mJ
   // Following values are taken from fulcrum paper. 
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
