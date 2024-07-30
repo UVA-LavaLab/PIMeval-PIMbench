@@ -18,14 +18,21 @@ public:
   pimParamsDram(const std::string& configFile);
   ~pimParamsDram() {}
 
+  int getDeviceWidth() const { return m_deviceWidth;}
+  int getBurstLength() const { return m_BL;}
+  int getNumChipsPerRank() const {return m_busWidth / m_deviceWidth; }
   float getNsRowRead() const { return m_tCK * (m_tRCD + m_tRP); }
   float getNsRowWrite() const { return m_tCK * (m_tWR + m_tRP); }
   float getNsTCCD_S() const { return m_tCK * m_tCCD_S; }
   float getNsTCAS() const { return m_tCK * m_CL; }
   float getNsAAP() const { return m_tCK * (m_tRAS + m_tRP); }
-  int getDeviceWidth() const { return m_deviceWidth;}
-  int getBurstLength() const { return m_BL;}
   double getTypicalRankBW() const { return m_typicalRankBW; }
+  double getPjRowRead() const { return m_VDD * (m_IDD0 * (m_tRAS + m_tRP) - (m_IDD3N * m_tRAS + m_IDD2N * m_tRP)); } // Energy for 1 Activate command (and the correspound precharge command) in one subarray of one bank of one chip
+  double getPjLogic() const { return 0.007 * m_tCK * m_tCCD_S ; } // 0.007 mW is the total power per BSLU, 0.007 * m_tCK * m_tCCD_S is the energy of one BSLU during one logic operation in pJ.
+  double getMwIDD2N() const {return m_VDD * m_IDD2N; }
+  double getMwIDD3N() const {return m_VDD * m_IDD3N; }
+  double getMwRead() const { return m_VDD * (m_IDD4R - m_IDD3N); } // read power per chip (data copy)
+  double getMwWrite() const { return m_VDD * (m_IDD4W - m_IDD3N); } // write power per chip (data copy)
 
 private:
   // [dram_structure]

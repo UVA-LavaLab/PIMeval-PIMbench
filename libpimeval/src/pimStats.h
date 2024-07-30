@@ -41,11 +41,13 @@ public:
   ~pimStatsMgr() {}
 
   void showStats() const;
-
-  void recordCmd(const std::string& cmdName, double msRuntime) {
+  void resetStats();
+  
+  void recordCmd(const std::string& cmdName, pimParamsPerf::perfEnergy mPerfEnergy) {
     auto& item = m_cmdPerf[cmdName];
     item.first++;
-    item.second += msRuntime;
+    item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
+    item.second.m_mjEnergy += mPerfEnergy.m_mjEnergy;
   }
 
   void recordMsElapsed(const std::string& tag, double elapsed) {
@@ -54,11 +56,23 @@ public:
     item.second += elapsed;
   }
 
-  void recordCopyMainToDevice(uint64_t numBits) { m_bitsCopiedMainToDevice += numBits; }
-  void recordCopyDeviceToMain(uint64_t numBits) { m_bitsCopiedDeviceToMain += numBits; }
-  void recordCopyDeviceToDevice(uint64_t numBits) { m_bitsCopiedDeviceToDevice += numBits; }
+  void recordCopyMainToDevice(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+    m_bitsCopiedMainToDevice += numBits;
+    m_elapsedTimeCopiedMainToDevice += mPerfEnergy.m_msRuntime;
+    m_mJCopiedMainToDevice += mPerfEnergy.m_mjEnergy;
+  }
 
-  void resetStats();
+  void recordCopyDeviceToMain(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+    m_bitsCopiedDeviceToMain += numBits; 
+    m_elapsedTimeCopiedDeviceToMain += mPerfEnergy.m_msRuntime;
+    m_mJCopiedDeviceToMain += mPerfEnergy.m_mjEnergy;
+  }
+  
+  void recordCopyDeviceToDevice(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+    m_bitsCopiedDeviceToDevice += numBits;
+    m_elapsedTimeCopiedDeviceToDevice += mPerfEnergy.m_msRuntime;
+    m_mJCopiedDeviceToDevice += mPerfEnergy.m_mjEnergy;
+  }
 
 private:
   void showApiStats() const;
@@ -69,12 +83,18 @@ private:
   const pimParamsDram* m_paramsDram;
   const pimParamsPerf* m_paramsPerf;
 
-  std::map<std::string, std::pair<int, double>> m_cmdPerf;
+  std::map<std::string, std::pair<int, pimParamsPerf::perfEnergy>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;
 
   uint64_t m_bitsCopiedMainToDevice = 0;
   uint64_t m_bitsCopiedDeviceToMain = 0;
   uint64_t m_bitsCopiedDeviceToDevice = 0;
+  double m_elapsedTimeCopiedMainToDevice = 0.0;
+  double m_elapsedTimeCopiedDeviceToMain = 0.0;
+  double m_elapsedTimeCopiedDeviceToDevice = 0.0;
+  double m_mJCopiedMainToDevice = 0.0;
+  double m_mJCopiedDeviceToMain = 0.0;
+  double m_mJCopiedDeviceToDevice = 0.0;
 };
 
 #endif
