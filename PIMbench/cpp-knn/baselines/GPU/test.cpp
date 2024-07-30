@@ -157,34 +157,12 @@ bool test(const float * ref,
         free(test_knn_result);
         return false;
     }
-    // Start timer
-    struct timeval tic;
-    gettimeofday(&tic, NULL);
 
+    // See if knn returns any errors
     if (!knn(ref, ref_nb, query, query_nb, dim, k, test_knn_result, elapsed_time)) {
-
-
         free(test_knn_result);
         return false;
     }
-
-
-    // Stop timer
-    struct timeval toc;
-    gettimeofday(&toc, NULL);
-
-    // Elapsed time in ms
-    elapsed_time = toc.tv_sec - tic.tv_sec;
-    elapsed_time += (toc.tv_usec - tic.tv_usec) / 1000000.;
-
-    timeInMsec=(elapsed_time)*1000.0f;
-
-    sizeInGBytes= (ref_nb   * dim * sizeof(float)+ query_nb * dim * sizeof(float)  )* 1.0e-9;
-    outPutSizeInGBytes=(query_nb * k   * sizeof(float)+query_nb * k   * sizeof(int))*1.0e-9;
-    if(timeInMsec!=0){
-    	  gigaProcessedInSec=( sizeInGBytes) / (timeInMsec / 1000.0f);
-   }
-    printOutput();
 
     // Free memory
     free(test_knn_result);
