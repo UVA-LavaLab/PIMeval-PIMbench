@@ -10,26 +10,22 @@
 #include <vector>
 #include <random>
 #include <getopt.h>
+#include <cuda_runtime.h>
 #define MEASUREMENT_TIMES (1 << 4) 
-
 
 uint8_t ctx_key[32]; 
 uint8_t ctx_enckey[32]; 
 uint8_t ctx_deckey[32];
 
-
 #define AES_BLOCK_SIZE 16
 #define THREADS_PER_BLOCK 512
 #define AES_KEY_BUFFER_SIZE 32
 
-
 #define F(x)   (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
 #define FD(x)  (((x) >> 1) ^ (((x) & 1) ? 0x8d : 0))
 
-
 // Function to compare two files
 int compare_files(const char *file1, const char *file2);
-
 
 // S table
 __constant__ static const uint8_t sbox[256] = {
@@ -67,7 +63,6 @@ __constant__ static const uint8_t sbox[256] = {
     0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-
 // inv S table
 __constant__ static const uint8_t sboxinv[256] = {
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
@@ -104,7 +99,6 @@ __constant__ static const uint8_t sboxinv[256] = {
     0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 };
 
-
 // Params 
 typedef struct Params
 {
@@ -115,6 +109,7 @@ typedef struct Params
     char *outputFile;
     bool shouldVerify;
 } Params;
+
 void usage() {
     fprintf(stderr,
         "\nUsage:  ./aes.out [options]"
@@ -170,7 +165,6 @@ __device__ uint8_t rj_xtime(uint8_t x){
   return (x & 0x80) ? ((x << 1) ^ 0x1b) : (x << 1);
 }
 
-
 // subbyte operation
 __device__ void aes_subBytes(uint8_t *buf){
   register uint8_t i, b;
@@ -179,7 +173,6 @@ __device__ void aes_subBytes(uint8_t *buf){
     buf[i] = sbox[b];
   }
 } 
-
 
 // inv subbyte operation
 __device__ void aes_subBytes_inv(uint8_t *buf){
@@ -190,7 +183,6 @@ __device__ void aes_subBytes_inv(uint8_t *buf){
   }
 } 
 
-
 // add round key operation
 __device__ void aes_addRoundKey(uint8_t *buf, uint8_t *key){
   register uint8_t i = 16;
@@ -198,7 +190,6 @@ __device__ void aes_addRoundKey(uint8_t *buf, uint8_t *key){
     buf[i] ^= key[i];
   }
 } 
-
 
 // add round key at beginning
 __device__ void aes_addRoundKey_cpy(uint8_t *buf, uint8_t *key, uint8_t *cpk){
@@ -208,8 +199,6 @@ __device__ void aes_addRoundKey_cpy(uint8_t *buf, uint8_t *key, uint8_t *cpk){
     cpk[16+i] = key[16 + i];
   }
 } 
-
-
 
 // shift row operation
 __device__ void aes_shiftRows(uint8_t *buf){
@@ -232,8 +221,6 @@ __device__ void aes_shiftRows(uint8_t *buf){
   buf[6]  = j;
 }
 
-
-
 // inv shift row operation
 __device__ void aes_shiftRows_inv(uint8_t *buf){
   register uint8_t i, j; 
@@ -255,7 +242,6 @@ __device__ void aes_shiftRows_inv(uint8_t *buf){
   buf[14] = j;
 } 
 
-
 // mix column operation
 __device__ void aes_mixColumns(uint8_t *buf){
   register uint8_t i, a, b, c, d, e;
@@ -271,7 +257,6 @@ __device__ void aes_mixColumns(uint8_t *buf){
     buf[i+3] ^= e ^ rj_xtime(d^a);
   }
 } 
-
 
 // inv mix column operation
 __device__ void aes_mixColumns_inv(uint8_t *buf){
@@ -291,7 +276,6 @@ __device__ void aes_mixColumns_inv(uint8_t *buf){
     buf[i+3] ^= y ^ rj_xtime(d^a);
   }
 } 
-
 
 // add expand key operation
 __device__ __host__ void aes_expandEncKey(uint8_t *k, uint8_t *rc, const uint8_t *sb){
@@ -323,8 +307,6 @@ __device__ __host__ void aes_expandEncKey(uint8_t *k, uint8_t *rc, const uint8_t
   }
 
 } 
-
-
 
 // inv add expand key operation
 __device__ void aes_expandDecKey(uint8_t *k, uint8_t *rc){
@@ -370,8 +352,6 @@ void aes256_init(uint8_t *k){
   }
 } 
 
-
-
 // aes encrypt algorithm one thread/one block with AES_BLOCK_SIZE 
 __global__ void aes256_encrypt_ecb(uint8_t *buf_d, unsigned long numbytes, uint8_t *ctx_enckey_d, uint8_t *ctx_key_d){
   uint8_t i, rcon;
@@ -402,8 +382,6 @@ __global__ void aes256_encrypt_ecb(uint8_t *buf_d, unsigned long numbytes, uint8
   __syncthreads();
 } 
 
-
-
 // aes decrypt algorithm
 __global__ void aes256_decrypt_ecb(uint8_t *buf_d, unsigned long numbytes, uint8_t *ctx_deckey_d, uint8_t *ctx_key_d){
   uint8_t i, rcon;
@@ -432,71 +410,169 @@ __global__ void aes256_decrypt_ecb(uint8_t *buf_d, unsigned long numbytes, uint8
   __syncthreads();
 } 
 
-
-
 // aes encrypt demo
 void encryptdemo(uint8_t key[AES_KEY_BUFFER_SIZE], uint8_t *buf, unsigned long numbytes){
   uint8_t *buf_d;
   uint8_t *ctx_key_d, *ctx_enckey_d;
+  cudaError_t errorCode;
 
-  cudaMemcpyToSymbol(sbox, sbox, sizeof(uint8_t)*256);
+  errorCode = cudaMemcpyToSymbol(sbox, sbox, sizeof(uint8_t)*256);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
 
+  errorCode = cudaMalloc((void**)&buf_d, numbytes);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+  errorCode = cudaMalloc((void**)&ctx_enckey_d, sizeof(ctx_enckey));
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+  errorCode = cudaMalloc((void**)&ctx_key_d, sizeof(ctx_key));
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+ 
+  errorCode = cudaMemcpy(buf_d, buf, numbytes, cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
 
-  cudaMalloc((void**)&buf_d, numbytes);
-  cudaMalloc((void**)&ctx_enckey_d, sizeof(ctx_enckey));
-  cudaMalloc((void**)&ctx_key_d, sizeof(ctx_key));
+  errorCode = cudaMemcpy(ctx_enckey_d, ctx_enckey, sizeof(ctx_enckey), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
 
-  cudaMemcpy(buf_d, buf, numbytes, cudaMemcpyHostToDevice);
-  cudaMemcpy(ctx_enckey_d, ctx_enckey, sizeof(ctx_enckey), cudaMemcpyHostToDevice);
-  cudaMemcpy(ctx_key_d, ctx_key, sizeof(ctx_key), cudaMemcpyHostToDevice);
+  errorCode = cudaMemcpy(ctx_key_d, ctx_key, sizeof(ctx_key), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
   aes256_encrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_enckey_d, ctx_key_d);
 
-  cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
-  // print(buf);
-  cudaMemcpy(ctx_enckey, ctx_enckey_d, sizeof(ctx_enckey), cudaMemcpyDeviceToHost);
-  cudaMemcpy(ctx_key, ctx_key_d, sizeof(ctx_key), cudaMemcpyDeviceToHost);
+  errorCode = cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  errorCode = cudaMemcpy(ctx_enckey, ctx_enckey_d, sizeof(ctx_enckey), cudaMemcpyDeviceToHost);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  errorCode = cudaMemcpy(ctx_key, ctx_key_d, sizeof(ctx_key), cudaMemcpyDeviceToHost);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
 
   cudaFree(buf_d);
   cudaFree(ctx_key_d);
   cudaFree(ctx_enckey_d);
 }
 
-
 // aes decrypt demo
 void decryptdemo(uint8_t key[AES_KEY_BUFFER_SIZE], uint8_t *buf, unsigned long numbytes){
   uint8_t *buf_d;
   uint8_t *ctx_key_d, *ctx_deckey_d;
+  cudaError_t errorCode;
 
-  cudaMemcpyToSymbol(sboxinv, sboxinv, sizeof(uint8_t)*256);
-
+  errorCode = cudaMemcpyToSymbol(sboxinv, sboxinv, sizeof(uint8_t)*256);
 
   cudaMalloc((void**)&buf_d, numbytes);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
   cudaMalloc((void**)&ctx_deckey_d, sizeof(ctx_deckey));
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
   cudaMalloc((void**)&ctx_key_d, sizeof(ctx_key));
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
 
-  cudaMemcpy(buf_d, buf, numbytes, cudaMemcpyHostToDevice);
-  cudaMemcpy(ctx_deckey_d, ctx_deckey, sizeof(ctx_deckey), cudaMemcpyHostToDevice);
-  cudaMemcpy(ctx_key_d, ctx_key, sizeof(ctx_key), cudaMemcpyHostToDevice);
+  errorCode = cudaMemcpy(buf_d, buf, numbytes, cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  errorCode = cudaMemcpy(ctx_deckey_d, ctx_deckey, sizeof(ctx_deckey), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  errorCode = cudaMemcpy(ctx_key_d, ctx_key, sizeof(ctx_key), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
 
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
   aes256_decrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_deckey_d, ctx_key_d);
 
-  cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
-  cudaMemcpy(ctx_deckey, ctx_deckey_d, sizeof(ctx_deckey), cudaMemcpyDeviceToHost);
-  cudaMemcpy(ctx_key, ctx_key_d, sizeof(ctx_key), cudaMemcpyDeviceToHost);
+  errorCode = cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  errorCode = cudaMemcpy(ctx_deckey, ctx_deckey_d, sizeof(ctx_deckey), cudaMemcpyDeviceToHost);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  errorCode = cudaMemcpy(ctx_key, ctx_key_d, sizeof(ctx_key), cudaMemcpyDeviceToHost);
+  if (errorCode != cudaSuccess)
+  {
+      std::cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
 
   cudaFree(buf_d);
   cudaFree(ctx_key_d);
   cudaFree(ctx_deckey_d);
 }
 
-
 __global__ void GPU_init() { }
-
-
 
 // Tester function
 void test_encryptdemo_parallel() {
@@ -567,7 +643,6 @@ void test_decryptdemo_parallel() {
     std::cout << "Decryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
 
 }
-
 
 int main(int argc, char *argv[]) {
     struct Params params = getInputParams(argc, argv);
@@ -713,7 +788,6 @@ int main(int argc, char *argv[]) {
     free(buf);
     return EXIT_SUCCESS;
 }
-
 
 int compare_files(const char *file1, const char *file2) {
     FILE *f1 = fopen(file1, "r");
