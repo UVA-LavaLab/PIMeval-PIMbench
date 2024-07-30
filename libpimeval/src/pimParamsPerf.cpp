@@ -18,7 +18,7 @@ pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
   m_tR = m_paramsDram->getNsRowRead() / m_nano_to_milli;
   m_tW = m_paramsDram->getNsRowWrite() / m_nano_to_milli;
   m_tL = m_paramsDram->getNsTCCD_S() / m_nano_to_milli;
-  m_tGDL = m_paramsDram->getNsTCCD_L() / m_nano_to_milli;
+  m_tGDL = m_paramsDram->getNsTCAS() / m_nano_to_milli;
   m_GDLWidth = m_paramsDram->getBurstLength() * m_paramsDram->getDeviceWidth();
 }
 
@@ -144,7 +144,10 @@ pimParamsPerf::getMsRuntimeForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) c
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
     double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    double totalGDLOverhead = std::ceil(m_tGDL / (m_blimpCoreLatency * numberOfOperationPerElement * m_GDLWidth)) * m_tGDL;
+
+    // How many iteration require to read / write max elements per region
+    unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+    double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
     // Refer to fulcrum documentation 
     msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
     switch (cmdType)
@@ -206,13 +209,19 @@ pimParamsPerf::getMsRuntimeForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) c
   case PIM_DEVICE_BANK_LEVEL:
   {
     unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfALUOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * m_blimpCoreLatency * numberOfALUOperationPerElement;
+    double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+
+    // How many iteration require to read / write max elements per region
+    unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+    double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
+
+    msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
+    
     switch (cmdType)
     {
     case PimCmdEnum::SCALED_ADD:
     {
-      msRuntime += maxElementsPerRegion * numberOfALUOperationPerElement * m_blimpCoreLatency;
+      msRuntime += maxElementsPerRegion * numberOfOperationPerElement * m_blimpCoreLatency;
       break;
     }
     case PimCmdEnum::ADD:
@@ -288,7 +297,7 @@ pimParamsPerf::getMsRuntimeForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, 
   case PIM_DEVICE_BANK_LEVEL:
   {
     double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    msRuntime = m_tR + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+    msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
     // reduction for all regions
     msRuntime += static_cast<double>(numCore) / 3200000;
     break;
@@ -345,7 +354,7 @@ pimParamsPerf::getMsRuntimeForBroadcast(PimCmdEnum cmdType, const pimObjInfo& ob
   {
     // assume taking 1 ALU latency to write an element
     double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    msRuntime = m_tW + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement);
+    msRuntime = m_tW + m_tGDL + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement);
     msRuntime *= numPass;
     break;
   }
@@ -385,6 +394,7 @@ pimParamsPerf::getMsRuntimeForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) 
   case PIM_DEVICE_BANK_LEVEL:
     // rotate within subarray:
     // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
+    // TODO: separate bank level and GDL
     msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
     msRuntime *= numPass;
     // boundary handling
