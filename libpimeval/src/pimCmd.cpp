@@ -401,7 +401,8 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objDest.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement);
+    pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
     std::printf("PIM-Info: Copied %llu elements of %u bits from host to PIM obj %d\n",
@@ -415,7 +416,8 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement);
+    pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
     std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to host\n",
@@ -429,7 +431,8 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement);
+    pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
     std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to PIM obj %d\n",

@@ -101,11 +101,12 @@ pimStatsMgr::showCopyStats() const
   uint64_t bytesCopiedDeviceToMain = m_bitsCopiedDeviceToMain / 8;
   uint64_t bytesCopiedDeviceToDevice = m_bitsCopiedDeviceToDevice / 8;
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
-  pimParamsPerf::perfEnergy mPerfEnergy = m_paramsPerf->getPerfEnergyForBytesTransfer(totalBytes);
+  double totalMsRuntime = m_elapsedTimeCopiedMainToDevice + m_elapsedTimeCopiedDeviceToMain + m_elapsedTimeCopiedDeviceToDevice;
+  double totalMjEnergy = m_mJCopiedMainToDevice + m_mJCopiedDeviceToMain + m_mJCopiedDeviceToDevice;
   std::printf(" %44s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
   std::printf(" %44s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
-  std::printf(" %44s : %llu bytes %14f ms Estimated Runtime %14f mj Estimated Energy\n", "TOTAL ---------", totalBytes, mPerfEnergy.m_msRuntime, mPerfEnergy.m_mjEnergy);
   std::printf(" %44s : %llu bytes\n", "Device to Device", bytesCopiedDeviceToDevice);
+  std::printf(" %44s : %llu bytes %14f ms Estimated Runtime %14f mj Estimated Energy\n", "TOTAL ---------", totalBytes, totalMsRuntime, totalMjEnergy);
 }
 
 //! @brief  Show PIM cmd and perf stats

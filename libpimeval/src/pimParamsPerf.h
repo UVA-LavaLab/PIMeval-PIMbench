@@ -31,7 +31,7 @@ public:
       double m_mjEnergy;
   };
 
-  perfEnergy getPerfEnergyForBytesTransfer(uint64_t numBytes) const;
+  perfEnergy getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const;
   perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   perfEnergy getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
@@ -49,24 +49,29 @@ private:
   double m_tL; // Logic operation for bitserial / tCCD in ms
   double m_tGDL; // Fetch data from local row buffer to global row buffer
   int m_GDLWidth; // Number of bits that can be fetched from local to global row buffer.
-  int m_numDevice; // Number of devices per rank
+  int m_numChips; // Number of chips per rank
   double m_fulcrumAluLatency = 0.00000609; // 6.09ns
   
   unsigned m_flucrumAluBitWidth = 32;
   double m_blimpCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper
   unsigned m_blimpCoreBitWidth = 64; 
 
-  double m_eR; // Row read(ACT) energy in mJ microjoule
+  double m_eAP; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
+  double m_eR; // Read data from PIM
+  double m_eW; // Write data to PIM
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
   double m_eGDL = 0.0000102; // CAS energy in mJ
+
   // Following values are taken from fulcrum paper. 
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ
   double m_fulcrumShiftEnergy = 0.0000075; // mJ
 
-  double m_blimpCoreEnergy = 0.000050; // mJ; mJ = millijoules; value taken from datasheet for 200MHZ RISCV cores.
+  // Following values are taken from fulcrum paper as BLIMP paper does not model energy
+  double m_blimpArithmeticEnergy = 0.0000000004992329586; // mJ
+  double m_blimpLogicalEnergy = 0.0000000001467846411; // mJ
 };
 
 #endif

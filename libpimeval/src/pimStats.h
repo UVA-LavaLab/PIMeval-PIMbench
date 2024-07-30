@@ -41,7 +41,8 @@ public:
   ~pimStatsMgr() {}
 
   void showStats() const;
-
+  void resetStats();
+  
   void recordCmd(const std::string& cmdName, pimParamsPerf::perfEnergy mPerfEnergy) {
     auto& item = m_cmdPerf[cmdName];
     item.first++;
@@ -55,11 +56,23 @@ public:
     item.second += elapsed;
   }
 
-  void recordCopyMainToDevice(uint64_t numBits) { m_bitsCopiedMainToDevice += numBits; }
-  void recordCopyDeviceToMain(uint64_t numBits) { m_bitsCopiedDeviceToMain += numBits; }
-  void recordCopyDeviceToDevice(uint64_t numBits) { m_bitsCopiedDeviceToDevice += numBits; }
+  void recordCopyMainToDevice(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+    m_bitsCopiedMainToDevice += numBits;
+    m_elapsedTimeCopiedMainToDevice += mPerfEnergy.m_msRuntime;
+    m_mJCopiedMainToDevice += mPerfEnergy.m_mjEnergy;
+  }
 
-  void resetStats();
+  void recordCopyDeviceToMain(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+    m_bitsCopiedDeviceToMain += numBits; 
+    m_elapsedTimeCopiedDeviceToMain += mPerfEnergy.m_msRuntime;
+    m_mJCopiedDeviceToMain += mPerfEnergy.m_mjEnergy;
+  }
+  
+  void recordCopyDeviceToDevice(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+    m_bitsCopiedDeviceToDevice += numBits;
+    m_elapsedTimeCopiedDeviceToDevice += mPerfEnergy.m_msRuntime;
+    m_mJCopiedDeviceToDevice += mPerfEnergy.m_mjEnergy;
+  }
 
 private:
   void showApiStats() const;
@@ -76,6 +89,12 @@ private:
   uint64_t m_bitsCopiedMainToDevice = 0;
   uint64_t m_bitsCopiedDeviceToMain = 0;
   uint64_t m_bitsCopiedDeviceToDevice = 0;
+  double m_elapsedTimeCopiedMainToDevice = 0.0;
+  double m_elapsedTimeCopiedDeviceToMain = 0.0;
+  double m_elapsedTimeCopiedDeviceToDevice = 0.0;
+  double m_mJCopiedMainToDevice = 0.0;
+  double m_mJCopiedDeviceToMain = 0.0;
+  double m_mJCopiedDeviceToDevice = 0.0;
 };
 
 #endif
