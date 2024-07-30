@@ -57,8 +57,12 @@ private:
   double m_eR; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
   double m_pB; // background power in W
-  double m_fulcrumAluEnergy = m_fulcrumAluLatency * 999999999.9; // todo: ALU power
-  double m_blimpCoreEnergy = m_blimpCoreLatency * 999999999.9; // todo: core Power
+  // Following values are taken from fulcrum paper. 
+  double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
+  double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ
+  double m_fulcrumShiftEnergy = 0.0000075; // mJ
+
+  double m_blimpCoreEnergy = 0.000050; // mJ; mJ = millijoules; value taken from datasheet for 200MHZ RISCV cores.
 };
 
 #endif

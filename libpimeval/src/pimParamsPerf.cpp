@@ -109,12 +109,12 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
+  pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass);
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-    pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass);
     msRuntime += perfEnergyBS.m_msRuntime;
     mjEnergy += perfEnergyBS.m_mjEnergy;
     break;
@@ -214,13 +214,13 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
+  pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass);
 
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
-    pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass);
     msRuntime += perfEnergyBS.m_msRuntime;
     mjEnergy += perfEnergyBS.m_mjEnergy;
     break;
@@ -444,7 +444,8 @@ pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj)
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
-
+  // boundary handling
+  pimParamsPerf::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(numRegions * bitsPerElement / 8);
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
@@ -453,8 +454,6 @@ pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj)
     msRuntime = (m_tR + 3 * m_tL + m_tW) * bitsPerElement; // for one pass
     msRuntime *= numPass;
     mjEnergy = (m_eR + 3 * m_eL) * bitsPerElement * numPass; // for one pass
-    // boundary handling
-    pimParamsPerf::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(numRegions * bitsPerElement / 8);
     msRuntime += 2 * perfEnergyBT.m_msRuntime;
     mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
     break;
@@ -470,8 +469,6 @@ pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj)
     msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
     msRuntime *= numPass;
     mjEnergy = (m_eR + (bitsPerElement + 2) * m_eL) * numPass;
-    // boundary handling
-    pimParamsPerf::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(numRegions * bitsPerElement / 8);
     msRuntime += 2 * perfEnergyBT.m_msRuntime;
     mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
     break;
