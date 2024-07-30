@@ -20,7 +20,7 @@ public:
 
   int getDeviceWidth() const { return m_deviceWidth;}
   int getBurstLength() const { return m_BL;}
-  int getNumChips() const {return m_busWidth / m_deviceWidth; }
+  int getNumChipsPerRank() const {return m_busWidth / m_deviceWidth; }
   float getNsRowRead() const { return m_tCK * (m_tRCD + m_tRP); }
   float getNsRowWrite() const { return m_tCK * (m_tWR + m_tRP); }
   float getNsTCCD_S() const { return m_tCK * m_tCCD_S; }

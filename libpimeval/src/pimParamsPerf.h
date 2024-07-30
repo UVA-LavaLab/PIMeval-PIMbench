@@ -49,7 +49,7 @@ private:
   double m_tL; // Logic operation for bitserial / tCCD in ms
   double m_tGDL; // Fetch data from local row buffer to global row buffer
   int m_GDLWidth; // Number of bits that can be fetched from local to global row buffer.
-  int m_numChips; // Number of chips per rank
+  int m_numChipsPerRank; // Number of chips per rank
   double m_fulcrumAluLatency = 0.00000609; // 6.09ns
   
   unsigned m_flucrumAluBitWidth = 32;
