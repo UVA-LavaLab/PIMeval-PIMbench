@@ -9,7 +9,6 @@
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
 #include <cstdio>
-#include <cmath>
 
 //! @brief  pimParamsPerf ctor
 pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
