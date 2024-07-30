@@ -1,6 +1,6 @@
 # K-means Clustering
 
-
+K-means clustering is an unsupervised machine learning algorithm to divide $n$ input data points into $k$ number of clusterings. Associations are determined by finding the nearest mean between point and centroids, updating the point's location, and repeating the process for a specified number of times.
 
 ## Directory Structure
 
