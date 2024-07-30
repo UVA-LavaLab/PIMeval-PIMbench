@@ -20,8 +20,11 @@ public:
 
   float getNsRowRead() const { return m_tCK * (m_tRCD + m_tRP); }
   float getNsRowWrite() const { return m_tCK * (m_tWR + m_tRP); }
-  float getNsTCCD() const { return m_tCK * m_tCCD_S; }
+  float getNsTCCD_S() const { return m_tCK * m_tCCD_S; }
+  float getNsTCAS() const { return m_tCK * m_CL; }
   float getNsAAP() const { return m_tCK * (m_tRAS + m_tRP); }
+  int getDeviceWidth() const { return m_deviceWidth;}
+  int getBurstLength() const { return m_BL;}
   double getTypicalRankBW() const { return m_typicalRankBW; }
 
 private:
