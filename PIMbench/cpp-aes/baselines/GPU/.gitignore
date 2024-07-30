@@ -1,0 +1,6 @@
+!*.cu
+!Makefile
+*.txt
+*.err
+*.out
+build/

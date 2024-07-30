@@ -2568,10 +2568,10 @@ void usage() {
         "\nUsage:  ./aes.out [options]"
         "\n"
         "\n    -l    input size (default=65536 bytes)"
-        "\n    -k    key file containing two vectors (default=generates key with random numbers)"
-        "\n    -i    input file containing two vectors (default=generates input with random numbers)"
-        "\n    -c    cipher file containing two vectors (default=./cipher.txt)"
-        "\n    -o    output file containing two vectors (default=./output.txt)"
+        "\n    -k    key file containing AES key (default=generates key with random numbers)"
+        "\n    -i    input file containing AES encrption input(default=generates input with random numbers)"
+        "\n    -c    cipher file containing AES encryption output (default=./cipher.txt)"
+        "\n    -o    output file containing AES decryption output (default=./output.txt)"
         "\n    -v    (true/false) validates if the input file and outputfile are the same. (default=false)"
         "\n");
 }
