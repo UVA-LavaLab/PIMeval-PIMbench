@@ -25,6 +25,7 @@ public:
   float getNsAAP() const { return m_tCK * (m_tRAS + m_tRP); }
   int getDeviceWidth() const { return m_deviceWidth;}
   int getBurstLength() const { return m_BL;}
+  int getNumDevice() const {return m_busWidth / m_deviceWidth; }
   double getTypicalRankBW() const { return m_typicalRankBW; }
 
   double getPjRowRead() const { return m_VDD * (m_IDD0 * (m_tRAS + m_tRP) - (m_IDD3N * m_tRAS + m_IDD2N * m_tRP)); } // Energy for 1 Activate command (and the correspound precharge command) in one subarray of one bank of one chip
