@@ -7,10 +7,10 @@ CUDA_LIB := -lcublas
 ARCH_FLAG := -arch=sm_80
 
 # Target executable
-EXEC := axpy.out
+EXEC := gemv.out
 
 # Source files
-SOURCES := axpy.cu
+SOURCES := gemv.cu
 
 # Compiler flags
 CFLAGS := -G

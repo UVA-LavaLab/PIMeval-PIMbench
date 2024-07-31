@@ -1,5 +1,5 @@
-/* File:     axpy.cu
- * Purpose:  Implement  on a gpu using cuda
+/* File:     gemv.cu
+ * Purpose:  Implement matrix vector multiplication on a gpu using cuda
  *
  */
 
@@ -12,36 +12,40 @@
 
 #include "../../../utilBaselines.h"
 
+#define TOLERANCE 200.0f
+
 using namespace std;
 
 vector<int32_t> A;
 vector<int32_t> B;
 vector<int32_t> C;
 
-#define TOLERANCE	200.0f
-
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  uint64_t vector_size;
+  uint64_t row, column;
+  bool shouldVerify;
 } Params;
 
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./axpy.out [options]"
+          "\nUsage:  ./gemv.out [options]"
           "\n"
-          "\n    -i    vector size (default=65536)"
+          "\n    -r    row size (default=16384)"
+          "\n    -c    column size (default=16384)"
+          "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
 
 struct Params input_params(int argc, char **argv)
 {
   struct Params p;
-  p.vector_size = 65536;
+  p.row = 16384;
+  p.column = 16384;
 
   int opt;
-  while ((opt = getopt(argc, argv, ":h:i:")) >= 0)
+  while ((opt = getopt(argc, argv, ":r:c:h:v:")) >= 0)
   {
     switch (opt)
     {
@@ -49,8 +53,14 @@ struct Params input_params(int argc, char **argv)
       usage();
       exit(0);
       break;
-    case 'i':
-      p.vector_size = atoll(optarg);
+    case 'r':
+      p.row = atoll(optarg);
+      break;
+    case 'c':
+      p.column = atoll(optarg);
+      break;
+    case 'v':
+      p.shouldVerify = (*optarg == 't') ? true : false;
       break;
     default:
       fprintf(stderr, "\nUnrecognized option!\n");
@@ -65,42 +75,50 @@ int main(int argc, char *argv[])
 {
   struct Params p = input_params(argc, argv);
 
-  uint64_t vector_size = p.vector_size;
-  getVector(vector_size, A);
-  getVector(vector_size, B);
-  const float a = rand() % 5;
+  uint64_t row = p.row, col = p.column;
+  getVector(row * col, A);
+  getVector(col, B);
+  C.resize(row);
 
-  float *x, *y;
+  float *x, *y, *z;
 
   cudaError_t errorCode;
 
-  errorCode = cudaMalloc((void **)&x, vector_size * sizeof(int32_t));
+  errorCode = cudaMalloc((void **)&x, row * col * sizeof(int32_t));
   if (errorCode != cudaSuccess)
   {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
-  errorCode = cudaMalloc((void **)&y, vector_size * sizeof(int32_t));
+  errorCode = cudaMalloc((void **)&y, col * sizeof(int32_t));
   if (errorCode != cudaSuccess)
   {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
-
-  errorCode = cudaMemcpy(x, A.data(), vector_size * sizeof(float), cudaMemcpyHostToDevice);
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
-
-  errorCode = cudaMemcpy(y, B.data(), vector_size * sizeof(float), cudaMemcpyHostToDevice);
+  errorCode = cudaMalloc((void **)&z, row * sizeof(int32_t));
   if (errorCode != cudaSuccess)
   {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
 
+  errorCode = cudaMemcpy(x, A.data(), row * col * sizeof(float), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+    exit(1);
+  }
+
+  errorCode = cudaMemcpy(y, B.data(), col * sizeof(float), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
+  {
+    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+    exit(1);
+  }
+
+  const float alpha = 1.0;
+  const float beta = 0.0;
   cublasHandle_t handle;
   cublasStatus_t status = cublasCreate(&handle);
   if (status != CUBLAS_STATUS_SUCCESS)
@@ -118,8 +136,7 @@ int main(int argc, char *argv[])
   // Start timer
   cudaEventRecord(start, 0);
   /* Kernel Call */
-  status = cublasSaxpy(handle, vector_size, &a, x, 1, y, 1);
-
+  status = cublasSgemv(handle, CUBLAS_OP_N, row, col, &alpha, x, row, y, 1, &beta, z, 1);
   if (status != CUBLAS_STATUS_SUCCESS)
   {
     std::cerr << "CUBLAS SGEMV failed\n";
@@ -141,29 +158,37 @@ int main(int argc, char *argv[])
 
   printf("Execution time = %f ms\n", timeElapsed);
 
-  vector<int32_t> C(vector_size);
-  errorCode = cudaMemcpy(C.data(), y, vector_size * sizeof(int32_t), cudaMemcpyDeviceToHost);
+  errorCode = cudaMemcpy(C.data(), z, row * sizeof(int32_t), cudaMemcpyDeviceToHost);
   if (errorCode != cudaSuccess)
   {
-    cerr << "Cuda Error Copy from device to host: " << cudaGetErrorString(errorCode) << "\n";
+    cerr << "Cuda Error Copy from host to device: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
 
-  cout.precision(0);
-  for (size_t i = 0; i < A.size(); ++i)
+  if (p.shouldVerify)
   {
-    int32_t sum = a * B[i] + A[i];
-    if (abs(C[i] - sum) > TOLERANCE)
+    cout.precision(0);
+    for (int i = 0; i < row; ++i)
     {
-      cout << fixed << "AXPY failed at index: " << i << "\t" << C[i] << "\t" << sum << endl;
-      break;
+      int32_t sum = 0;
+      for (int j = 0; j < col; ++j)
+      {
+        sum += A[i + j * row] * B[j];
+      }
+      if (abs(C[i] - sum) > TOLERANCE)
+      {
+        cout << fixed << "Multiplication failed at index: " << i << "\t" << C[i] << "\t" << sum << endl;
+        break;
+      }
     }
+    cout << "All correct!" << endl;
   }
 
   /* Free memory */
   cublasDestroy(handle);
   cudaFree(x);
   cudaFree(y);
+  cudaFree(z);
 
   return 0;
 } /* main */

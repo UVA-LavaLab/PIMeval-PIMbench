@@ -26,10 +26,10 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./program [options]"
+          "\nUsage:  ./axpy.out [options]"
           "\n"
-          "\n    -t <T>    # of threads (default=8)"
-          "\n    -i <I>    input size (default=8M elements)"
+          "\n    -t    # of threads (default=8)"
+          "\n    -i    input size (default=65536 elements)"
           "\n");
 }
 
