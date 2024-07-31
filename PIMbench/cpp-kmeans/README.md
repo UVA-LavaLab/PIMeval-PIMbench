@@ -22,7 +22,7 @@ cpp-kmeans/
 
 ## Implementation Description
 
-This repository contains three different implementations of the histogram benchmark:
+This repository contains three different implementations of the K-means benchmark:
 
 1. CPU
 2. GPU
@@ -34,7 +34,7 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of histogram has been implemented using standard C++ library and OpenMP for parallel execution.
+The CPU variant of K-means has been implemented using standard C++ library and OpenMP for parallel execution.
 
 #### GPU
 
