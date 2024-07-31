@@ -1,28 +1,36 @@
-# K-means Clustering
+# General Matrix Multiplication (GEMM)
 
-K-means clustering is an unsupervised machine learning algorithm to divide $n$ input data points into $k$ number of clusterings. Associations are determined by finding the nearest mean between point and centroids, updating the point's location, and repeating the process for a specified number of times.
+The GEMM is a Basic Linear Algebra Subprograms (BLAS) routine that performs a matrix-matrix multiplication followed by a matrix addition. The operation is defined as:
+
+$C \leftarrow \alpha A B + \beta C$
+
+where:
+-  $\alpha$ and $\beta$ are scalars.
+- $A$, $B$ and $C$ are matrices.
+
+For a detailed description of GEMM, you can refer to the [BLAS documentation](http://www.netlib.org/blas/).
 
 ## Directory Structure
 
 ```
-cpp-kmeans/
+cpp-gemm/
 ├── PIM/
 │   ├── Makefile
-│   ├── kmeans.cpp
+│   ├── gemm.cpp
 ├── baselines/
 │   ├── CPU/
 │   │   ├── Makefile
-│   │   ├── kmeans.cpp
+│   │   ├── gemm.cpp
 │   ├── GPU/
 │   │   ├── Makefile
-│   │   ├── kmeans.cu
+│   │   ├── gemm.cu
 ├── README.md
 ├── Makefile
 ```
 
 ## Implementation Description
 
-This repository contains three different implementations of the K-means benchmark:
+This repository contains three different implementations of the GEMM benchmark:
 
 1. CPU
 2. GPU
@@ -34,15 +42,15 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of K-means has been implemented using standard C++ library and OpenMP for parallel execution.
+The CPU variant of GEMM has been implemented using standard C++ library and OpenBLAS for parallel execution.
 
 #### GPU
 
-The GPU variant leverages CUDA C++ Core Libaries (CCCL) to perform K-means clustering on NVIDIA GPU.
+The GPU variant leverages CUDA C++ Core Libaries (CCCL) to perform GEMM on NVIDIA GPU.
 
 ### PIM Implementation
 
-The PIM variant is implemented using C++ and three different PIM architectures can be tested with this.
+The PIM variant is implemented using C++ with some speedup from OpenMP. Three different PIM architectures can be tested with this.
 
 ## Compilation Instructions for Specific Variants
 
@@ -82,11 +90,11 @@ make
 After compiling, run the each executable with the following command that will run it for default parameters:
 
 ```bash
-./km.out
+./gemm.out
 ```
 
 To see help text on all usages and how to modify any of the input parameters, use following command:
 
 ```bash
-./km.out -h
+./gemm.out -h
 ```

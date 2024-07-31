@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 // Params ---------------------------------------------------------------------
@@ -109,7 +109,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     return;
   }
 
-  for (int i = 0; i < col; ++i)
+  for (uint64_t i = 0; i < col; ++i)
   {
     status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
     if (status != PIM_OK)
@@ -125,7 +125,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    //Let's not remove this following commented block
+    // Let's not remove this following commented block
     // status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
     // if (status != PIM_OK)
     // {
@@ -171,7 +171,9 @@ int main(int argc, char *argv[])
   }
 
   if (!createDevice(params.configFile))
+  {
     return 1;
+  }
 
   // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   gemv(params.row, params.column, srcVector, srcMatrix, resultVector);
@@ -179,8 +181,9 @@ int main(int argc, char *argv[])
   if (params.shouldVerify)
   {
     bool shouldBreak = false; // shared flag variable
-// verify result
-#pragma omp parallel for
+
+    // verify result
+    #pragma omp parallel for
     for (size_t i = 0; i < params.row; ++i)
     {
       if (shouldBreak) continue;
@@ -191,7 +194,7 @@ int main(int argc, char *argv[])
       }
       if (result != resultVector[i])
       {
-#pragma omp critical
+        #pragma omp critical
         {
           if (!shouldBreak)
           { // check the flag again in a critical section
@@ -201,6 +204,7 @@ int main(int argc, char *argv[])
         }
       }
     }
+
     if (!shouldBreak) {
       std::cout << "\n\nCorrect Answer!!\n\n";
     }
