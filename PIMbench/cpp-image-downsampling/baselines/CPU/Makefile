@@ -4,8 +4,8 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall
 
-EXEC := image_downsampling.out
-SRC := image_downsampling.cpp
+EXEC := image-downsampling.out
+SRC := image-downsampling.cpp
 
 .PHONY: debug perf dramsim3_integ clean
 .DEFAULT_GOAL := perf

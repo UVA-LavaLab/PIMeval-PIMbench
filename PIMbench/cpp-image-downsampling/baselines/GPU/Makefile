@@ -5,8 +5,8 @@ NVCC := nvcc
 # NVCCFLAGS := 
 CXXFLAGS := -std=c++17
 
-EXEC := image_downsampling.out
-SRC := image_downsampling.cu
+EXEC := image-downsampling.out
+SRC := image-downsampling.cu
 
 .PHONY: debug perf dramsim3_integ clean
 .DEFAULT_GOAL := perf
