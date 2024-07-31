@@ -13,7 +13,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
@@ -37,9 +37,9 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./km.out [options]"
           "\n"
-          "\n    -n    number of points (default=1024 points)"
+          "\n    -p    number of points (default=1024 points)"
+          "\n    -k    centroid (default=5)"         
           "\n    -d    dimension (default=2)"
-          "\n    -k    centroid (default=5)"
           "\n    -r    max iteration (default=2)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing datapoints (default=generates datapoints with random numbers)"
@@ -51,15 +51,15 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.numPoints = 1024;
+  p.k = 20;
   p.dimension = 2;
-  p.k = 5;
-  p.maxItr = 2;
+  p.maxItr = 5;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:n:d:k:r:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:p:k:d:r:c:i:v:")) >= 0)
   {
     switch (opt)
     {
@@ -67,14 +67,14 @@ struct Params getInputParams(int argc, char **argv)
       usage();
       exit(0);
       break;
-    case 'n':
+    case 'p':
       p.numPoints = strtoull(optarg, NULL, 0);
-      break;
-    case 'd':
-      p.dimension = atoll(optarg);
       break;
     case 'k':
       p.k = atoll(optarg);
+      break;    
+    case 'd':
+      p.dimension = atoll(optarg);
       break;
     case 'r':
       p.maxItr = atoll(optarg);
@@ -129,7 +129,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
 void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector<PimObjId> &pimObjectList)
 {
 
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint32_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)dataPoints[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -142,7 +142,7 @@ void copyDataPoints(const std::vector<std::vector<int>> &dataPoints, std::vector
 
 void copyCentroid(std::vector<int64_t> &currCentroid, std::vector<PimObjId> &pimObjectList)
 {
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint32_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimBroadcastInt(pimObjectList[i], currCentroid[i]);
     if (status != PIM_OK)
@@ -254,7 +254,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         return;
       }
 
-      for (int b = 0; b < dataPointObjectList.size(); ++b)
+      for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
       {
         status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
         if (status != PIM_OK)
@@ -274,17 +274,17 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
   }
 
   pimFree(tempObj);
-  for (int i = 0; i < resultObjectList.size(); ++i)
+  for (uint32_t i = 0; i < resultObjectList.size(); ++i)
   {
     pimFree(resultObjectList[i]);
   }
 
-  for (int i = 0; i < dataPointObjectList.size(); ++i)
+  for (uint32_t i = 0; i < dataPointObjectList.size(); ++i)
   {
     pimFree(dataPointObjectList[i]);
   }
 
-  for (int i = 0; i < centroidObjectList.size(); ++i)
+  for (uint32_t i = 0; i < centroidObjectList.size(); ++i)
   {
     pimFree(centroidObjectList[i]);
   }
