@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <cassert>
 
 class pimDevice;
 

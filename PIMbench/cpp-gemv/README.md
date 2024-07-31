@@ -1,28 +1,37 @@
-# K-means Clustering
+# General Matrix Vector Multiplication (GEMV)
 
-K-means clustering is an unsupervised machine learning algorithm to divide $n$ input data points into $k$ number of clusterings. Associations are determined by finding the nearest mean between point and centroids, updating the point's location, and repeating the process for a specified number of times.
+The GEMV is a Basic Linear Algebra Subprograms (BLAS) routine that performs a matrix-vector multiplication followed by a vector addition. The operation is defined as:
+
+$y \leftarrow \alpha A x + \beta y$
+
+where:
+-  $\alpha$ and $\beta$ are scalars.
+- $A$ is a matrix.
+- $x$ and $y$ are vectors.
+
+For a detailed description of GEMV, you can refer to the [BLAS GEMV documentation](http://www.netlib.org/blas/).
 
 ## Directory Structure
 
 ```
-cpp-kmeans/
+cpp-gemv/
 ├── PIM/
 │   ├── Makefile
-│   ├── kmeans.cpp
+│   ├── gemv.cpp
 ├── baselines/
 │   ├── CPU/
 │   │   ├── Makefile
-│   │   ├── kmeans.cpp
+│   │   ├── gemv.cpp
 │   ├── GPU/
 │   │   ├── Makefile
-│   │   ├── kmeans.cu
+│   │   ├── gemv.cu
 ├── README.md
 ├── Makefile
 ```
 
 ## Implementation Description
 
-This repository contains three different implementations of the K-means benchmark:
+This repository contains three different implementations of the GEMV benchmark:
 
 1. CPU
 2. GPU
@@ -34,11 +43,11 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of K-means has been implemented using standard C++ library and OpenMP for parallel execution.
+The CPU variant of GEMV has been implemented using standard C++ library and OpenBLAS for parallel execution.
 
 #### GPU
 
-The GPU variant leverages CUDA C++ Core Libaries (CCCL) to perform K-means clustering on NVIDIA GPU.
+The GPU variant leverages CUDA C++ Core Libaries (CCCL) to perform GEMV on NVIDIA GPU.
 
 ### PIM Implementation
 
@@ -82,11 +91,11 @@ make
 After compiling, run the each executable with the following command that will run it for default parameters:
 
 ```bash
-./km.out
+./gemv.out
 ```
 
 To see help text on all usages and how to modify any of the input parameters, use following command:
 
 ```bash
-./km.out -h
+./gemv.out -h
 ```

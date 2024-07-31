@@ -1,28 +1,36 @@
-# K-means Clustering
+# AXPY (axpy)
 
-K-means clustering is an unsupervised machine learning algorithm to divide $n$ input data points into $k$ number of clusterings. Associations are determined by finding the nearest mean between point and centroids, updating the point's location, and repeating the process for a specified number of times.
+The AXPY operation is a Basic Linear Algebra Subprograms (BLAS) routine that performs a vector-scalar multiplication followed by a vector addition. The operation is defined as:
+
+$\ y \leftarrow \alpha x + y \$
+
+where:
+- $\alpha$ is a scalar.
+- $x$ and $y$ are vectors.
+
+For a detailed description of AXPY, you can refer to the [BLAS AXPY documentation](http://www.netlib.org/blas/).
 
 ## Directory Structure
 
 ```
-cpp-kmeans/
+cpp-axpy/
 ├── PIM/
 │   ├── Makefile
-│   ├── kmeans.cpp
+│   ├── axpy.cpp
 ├── baselines/
 │   ├── CPU/
 │   │   ├── Makefile
-│   │   ├── kmeans.cpp
+│   │   ├── axpy.cpp
 │   ├── GPU/
 │   │   ├── Makefile
-│   │   ├── kmeans.cu
+│   │   ├── axpy.cu
 ├── README.md
 ├── Makefile
 ```
 
 ## Implementation Description
 
-This repository contains three different implementations of the K-means benchmark:
+This repository contains three different implementations of the AXPY benchmark:
 
 1. CPU
 2. GPU
@@ -34,11 +42,11 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of K-means has been implemented using standard C++ library and OpenMP for parallel execution.
+The CPU variant of AXPY has been implemented using standard C++ library and OpenMP for parallel execution.
 
 #### GPU
 
-The GPU variant leverages CUDA C++ Core Libaries (CCCL) to perform K-means clustering on NVIDIA GPU.
+The GPU variant leverages CUDA C++ Core Libaries (CCCL) to perform AXPY on NVIDIA GPU.
 
 ### PIM Implementation
 
@@ -82,11 +90,11 @@ make
 After compiling, run the each executable with the following command that will run it for default parameters:
 
 ```bash
-./km.out
+./axpy.out
 ```
 
 To see help text on all usages and how to modify any of the input parameters, use following command:
 
 ```bash
-./km.out -h
+./axpy.out -h
 ```

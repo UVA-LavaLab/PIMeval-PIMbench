@@ -1,4 +1,4 @@
-// Test: C++ version of vector addition
+// Test: C++ version of AXPY
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -8,13 +8,13 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <iomanip>
+#include <cassert>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
-#include <cassert>
 
 using namespace std;
 
@@ -30,7 +30,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./axpy [options]"
+          "\nUsage:  ./axpy.out [options]"
           "\n"
           "\n    -l    input size (default=2048 elements)"
           "\n    -c    dramsim config file"
@@ -112,18 +112,24 @@ int main(int argc, char* argv[])
   {
     getVector(params.vectorLength, X);
     getVector(params.vectorLength, Y);
-  } else {
+  } 
+  else 
+  {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
     return 1;
   }
   
-  if (!createDevice(params.configFile)) return 1;
+  if (!createDevice(params.configFile))
+  {
+    return 1;
+  }
 
   //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   int A = rand() % 50;
   axpy(params.vectorLength, X, Y, A, Y_device);
 
-  if (params.shouldVerify) {
+  if (params.shouldVerify) 
+  {
     // verify result
     #pragma omp parallel for
     for (unsigned i = 0; i < params.vectorLength; ++i)

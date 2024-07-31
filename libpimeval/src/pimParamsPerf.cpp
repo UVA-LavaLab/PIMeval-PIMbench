@@ -295,10 +295,33 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     case PimCmdEnum::SUB:
     case PimCmdEnum::MUL:
     case PimCmdEnum::DIV:
-    case PimCmdEnum::SCALED_ADD:
     {
       msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       msRuntime *= numPass;
+      mjEnergy = ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);   
+      mjEnergy += m_eAP * 3; 
+      mjEnergy *= obj.getNumCoresUsed() * numPass;
+      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
+    case PimCmdEnum::SCALED_ADD:
+    {
+      /**
+       * Performs a multiply-add operation on rows in DRAM.
+       *
+       * This command executes the following steps:
+       * 1. Multiply the elements of a source row by a scalar value.
+       * 2. Add the result of the multiplication to the elements of another row.
+       * 3. Write the final result back to a row in DRAM.
+       *
+       * Performance Optimizations:
+       * - While performing the multiplication, the next row to be added can be fetched without any additional overhead.
+       * - During the addition, the next row to be multiplied can be fetched concurrently.
+       * - Total execution time for one region of multiplication and addition >>>> reading/writing three DRAM rows as a result using walker renaming, row write is also pipelined
+       *
+       * As a result, only one read operation and one write operation is necessary for the entire pass.
+      */
+      msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency) * numPass;
       mjEnergy = ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);   
       mjEnergy += m_eAP * 3; 
       mjEnergy *= obj.getNumCoresUsed() * numPass;
@@ -335,8 +358,6 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
     // How many iteration require to read / write max elements per region
     unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-    double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
-    msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
     
     switch (cmdType)
     {
@@ -345,14 +366,36 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     case PimCmdEnum::MUL:
     case PimCmdEnum::DIV:
     {
+      double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
+      msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
+      msRuntime *= numPass;
       mjEnergy = (m_eAP * 3 + m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
+      mjEnergy *= numPass;
+      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::SCALED_ADD:
     {
-      msRuntime += maxElementsPerRegion * numberOfOperationPerElement * m_blimpCoreLatency;
+      /**
+       * Performs a multiply-add operation on rows in DRAM.
+       *
+       * This command executes the following steps:
+       * 1. Multiply the elements of a source row by a scalar value.
+       * 2. Add the result of the multiplication to the elements of another row.
+       * 3. Write the final result back to a row in DRAM.
+       *
+       * Performance Optimizations:
+       * - While performing the multiplication, the next row to be added can be fetched without any additional overhead.
+       * - During the addition, the next row to be multiplied can be fetched concurrently.
+       * 
+       * As a result, only one read operation is necessary for the entire pass.
+      */
+      double totalGDLOverhead = m_tGDL * numGDLItr; // both read can be pipelined as multiplication and addition takes twice the time to execute.
+      msRuntime = m_tR + (m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2) * numPass;
       mjEnergy = (m_eAP * 3 + m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_blimpArithmeticEnergy * obj.getNumCoresUsed();
+      mjEnergy *= numPass;
+      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND:
@@ -365,16 +408,18 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {
+      double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
+      msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
+      msRuntime *= numPass;
       mjEnergy = (m_eAP * 3 + m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
+      mjEnergy *= numPass;
+      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     default:
        std::printf("PIM-Warning: Unsupported PIM command.\n");
        break;
     }
-    msRuntime *= numPass;
-    mjEnergy *= numPass;
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   default:
