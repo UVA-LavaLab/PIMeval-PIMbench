@@ -53,7 +53,7 @@ private:
   double m_fulcrumAluLatency = 0.00000609; // 6.09ns
   
   unsigned m_flucrumAluBitWidth = 32;
-  double m_blimpCoreLatency = 0.000005; // 200 MHz. Reference: BLIMP paper
+  double m_blimpCoreLatency = 0.000005; // ms; 200 MHz. Reference: BLIMP paper
   unsigned m_blimpCoreBitWidth = 64; 
 
   double m_eAP; // Row read(ACT) energy in mJ microjoule
