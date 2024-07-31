@@ -132,13 +132,13 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
   unsigned numCores = obj.getNumCoresUsed();
   unsigned numRanks = pimSim::get()->getNumRanks();
   PimDataType dataType = obj.getDataType();
-  pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
   {
+    pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
     msRuntime += perfEnergyBS.m_msRuntime;
     mjEnergy += perfEnergyBS.m_mjEnergy;
     break;
@@ -273,7 +273,6 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRanks = pimSim::get()->getNumRanks();
   PimDataType dataType = obj.getDataType();
-  pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
 
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
@@ -281,6 +280,7 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
   {
+    pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
     msRuntime += perfEnergyBS.m_msRuntime;
     mjEnergy += perfEnergyBS.m_mjEnergy;
     break;
