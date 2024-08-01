@@ -451,6 +451,7 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
   unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
+  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
@@ -467,7 +468,9 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
       mjEnergy = m_eAP + mjEnergyPerPcl * numPclPerCore; // energy of one row read and row-wide popcount
       mjEnergy *= bitsPerElement * numCore * numPass;
       // reduction for all regions
-      msRuntime += static_cast<double>(numCore) / 3200000;
+      double aggregateMs = static_cast<double>(numRegions) / 3200000;
+      msRuntime += aggregateMs;
+      mjEnergy += aggregateMs * cpuTDP;
       mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     } else {
       assert(0);
@@ -492,7 +495,9 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
     mjEnergy = m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement);   
     mjEnergy *= numCore * numPass;
     // reduction for all regions
-    msRuntime += static_cast<double>(numCore) / 3200000;
+    double aggregateMs = static_cast<double>(numCore) / 3200000;
+    msRuntime += aggregateMs;
+    mjEnergy += aggregateMs * cpuTDP;
     mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
@@ -506,8 +511,9 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
     // Refer to fulcrum documentation 
     mjEnergy = (m_eAP * 1 + m_eGDL * numGDLItr + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numPass * obj.getNumCoresUsed();
     // reduction for all regions
-    msRuntime += static_cast<double>(numCore) / 3200000;
-    mjEnergy = 999999999.9; // todo
+    double aggregateMs = static_cast<double>(numCore) / 3200000;
+    msRuntime += aggregateMs;
+    mjEnergy += aggregateMs * cpuTDP;
     mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
