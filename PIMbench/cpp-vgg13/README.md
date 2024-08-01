@@ -11,6 +11,9 @@ cpp-vgg13/
 │   ├── vgg13_weights.py
 ├── baselines/
 │   ├── vgg13.py
+│   ├── categories.txt
+│   ├── data
+|       |- test/ 
 ├── README.md
 ├── Makefile
 ├── slurm.h
@@ -28,8 +31,8 @@ CPU and GPU have been used as baselines.
 
 #### CPU & GPU
 
-* The CPU and GPU variants of VGG13 have been implemented using standard Python and PyTorch framework for machine learning. The same script is used for both, the device is specified from the command line by the user. The script performs inference using a pre-trained VGG13 model on the CIFAR-100 dataset, supporting both CPU and CUDA-enabled GPU devices. The CIFAR-100 dataset is chosen because it is open-source and relatively small compared to other datasets. The entire dataset (both training and test sets) requires about 170 MB of storage. When downloaded, it should easily fit within the storage capacity of most modern systems. 
-* The script preprocesses the data, adjusts the model's classifier for 100 classes, and optimizes it with TorchScript. The script evaluates the model's top-1 and top-5 accuracy and measures the execution time per image. Results, including accuracy percentages and execution time in ms, are printed at the end. Command-line arguments specify the device and the number of test images which is by default 1000.
+* The CPU and GPU variants of VGG13 have been implemented using standard Python and PyTorch framework for machine learning. The same script is used for both, the device is specified from the command line by the user. The script performs image classification using a pre-trained VGG13 model, supporting both CPU and CUDA-enabled GPU devices. It loads and preprocesses images from a specified directory (default: ./data/test), then performs inference to classify the images, outputting the top 5 predicted categories with their probabilities. The test directory currently has 5 images which consume a total space of ~700 KB.
+* Since the model is trained on ImageNet dataset, the output from the softmax layer has 1000 classes. The 1000 classes are specified in a categories.txt file (default: ./categories.txt). The script then uses the categories.txt file to determine the top 5 results. Results, including the top 5 results with the labels and their probabilities and execution time in ms, are printed at the end. Command-line arguments specify the device, and cpu is chosen as the default device. If the device is specified as cuda, and cuda is not available, cpu is chosen as the fallback option.
 
 ### PIM Implementation
 
@@ -43,11 +46,12 @@ To run the script for the CPU variant, use command like the following example:
 
 ```bash
 cd baselines
-python3 vgg13.py -s cpu -n 100
+python3 vgg13.py -cuda f -c categories.txt -d data/test/
 ```
 Note: 
- * "-s" to specify the device to use for inference (cpu/cuda).
- * "-n" to specify the number of images to be tested in the inferencing.
+ * "-cuda" to specify the device to use for inference. 't' -> cuda, 'f' -> cpu.
+ * "-c" to specify the text file with the 1000 classes and their corresponding labels.
+ * "-d" to specify the directory containing the images to be used for the inference.
 
 ### GPU Variant
 
@@ -55,7 +59,7 @@ To run the script for the GPU variant, use command like the following example:
 
 ```bash
 cd baselines
-python3 vgg13.py -s cuda -n 100
+python3 vgg13.py -cuda t -c categories.txt -d data/test/
 ```
 Note: For GPU, it is assumed that the system has a GPU with CUDA support.
 
