@@ -59,7 +59,7 @@ pimParamsPerf::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numByt
     }
     default:
     {
-      std::printf("PIM-Warning: Unsupported PIM command.\n");
+      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
     }
   }
@@ -205,8 +205,8 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
       break;
     }
     default:
-       std::printf("PIM-Warning: Unsupported PIM command.\n");
-       break;
+      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      break;
     }
     break;
   }
@@ -254,8 +254,8 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
       break;
     }
     default:
-       std::printf("PIM-Warning: Unsupported PIM command.\n");
-       break;
+      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      break;
     }
     break;
   }
@@ -354,8 +354,8 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
       break;
     }
     default:
-       std::printf("PIM-Warning: Unsupported PIM command.\n");
-       break;
+      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      break;
     }
     break;
   }
@@ -424,8 +424,8 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
       break;
     }
     default:
-       std::printf("PIM-Warning: Unsupported PIM command.\n");
-       break;
+      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      break;
     }
     break;
   }
