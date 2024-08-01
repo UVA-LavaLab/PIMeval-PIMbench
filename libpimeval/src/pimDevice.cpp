@@ -20,7 +20,7 @@
 #include <cctype>
 #include <locale>
 #include <stdexcept>
-#include <filesystem> 
+#include <filesystem>
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice()
@@ -140,7 +140,7 @@ pimDevice::isHybridLayoutDevice() const
   return false;
 }
 
-//! @brief  Init pim device, with input arguments 
+//! @brief  Init pim device, with input arguments
 bool
 pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
@@ -234,11 +234,17 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
   std::string fileContent;
   success = pimUtils::readFileContent(configFileName, fileContent);
-  assert(success);
-  
+  if (!success) {
+    std::printf("PIM-Error: Failed to read config file %s\n", configFileName);
+    return false;
+  }
+
   // input params
   success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
-  assert(success);
+  if (!success) {
+    std::printf("PIM-Error: Failed to parse config file %s\n", configFileName);
+    return false;
+  }
 
   std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
               pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
@@ -290,8 +296,8 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 }
 
 //! @brief Initilize the device config parameters by parsing the config file
-bool 
-pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols) 
+bool
+pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
 {
   std::istringstream configStream(config);
   std::string line;

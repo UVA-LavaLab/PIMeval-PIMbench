@@ -4,7 +4,7 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
@@ -457,13 +457,17 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
   case PIM_DEVICE_BITSIMD_V_AP:
   {
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
-      // Assume pop count reduction circut in tR runtime
-      msRuntime = ((m_tR + m_tR) * bitsPerElement);
-      msRuntime *= numPass;
-      mjEnergy = m_eAP * bitsPerElement * numPass;
+      // Assume row-wide popcount capability for integer reduction, with a 64-bit popcount logic unit per PIM core
+      // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
+      // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
+      double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
+      int numPclPerCore = (numElements + 63) / 64; // number of 64-bit popcount needed for a row
+      msRuntime = m_tR + m_pclNsDelay * numPclPerCore;
+      msRuntime *= bitsPerElement * numPass;
+      mjEnergy = m_eAP + mjEnergyPerPcl * numPclPerCore; // energy of one row read and row-wide popcount
+      mjEnergy *= bitsPerElement * numCore * numPass;
       // reduction for all regions
-      msRuntime += static_cast<double>(numRegions) / 3200000;
-      mjEnergy += 999999999.9; // todo
+      msRuntime += static_cast<double>(numCore) / 3200000;
       mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     } else {
       assert(0);

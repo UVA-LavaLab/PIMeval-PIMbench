@@ -10,7 +10,7 @@
 #include "libpimeval.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "pimStats.h"
 #include <vector>
 #include <cstdarg>
@@ -133,7 +133,7 @@ private:
   ~pimSim();
   pimSim(const pimSim&) = delete;
   pimSim operator=(const pimSim&) = delete;
-  void init(const std::string& simConfigFileContent = "");
+  bool init(const std::string& simConfigFileContent = "");
   void uninit();
   bool parseConfigFromFile(const std::string& simConfigFileContent);
 
