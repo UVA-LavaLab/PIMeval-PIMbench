@@ -1,4 +1,4 @@
-# Radix Sort
+# Filter By Key
 
 'Filter by key' application is a typical application seen in DBMS where a certain (or a group of) critaria(s) were applied to a data set and only the data that satisfies the critaria are 'filtered' as the output, in this implementation, we simply apply a 'smaller than' comparison between each element of an int vector and an int 'key'.
 
