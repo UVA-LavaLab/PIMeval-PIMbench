@@ -12,12 +12,13 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 using namespace std;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -189,7 +190,8 @@ int main(int argc, char *argv[])
   {
     // verify result
     int64_t SX = 0, SY = 0, SXX = 0, SXY = 0;
-#pragma omp parallel for reduction(+ : SX, SXX, SY, SXY)
+    
+    #pragma omp parallel for reduction(+ : SX, SXX, SY, SXY)
     for (uint64_t i = 0; i < params.dataSize; ++i)
     {
       SX += dataPointsX[i];
