@@ -51,10 +51,10 @@ private:
   int m_GDLWidth; // Number of bits that can be fetched from local to global row buffer.
   int m_numChipsPerRank; // Number of chips per rank
   double m_fulcrumAluLatency = 0.00000609; // 6.09ns
-  
+
   unsigned m_flucrumAluBitWidth = 32;
   double m_blimpCoreLatency = 0.000005; // ms; 200 MHz. Reference: BLIMP paper
-  unsigned m_blimpCoreBitWidth = 64; 
+  unsigned m_blimpCoreBitWidth = 64;
 
   double m_eAP; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
@@ -64,7 +64,7 @@ private:
   double m_pBChip; // background power for each core in W
   double m_eGDL = 0.0000102; // CAS energy in mJ
 
-  // Following values are taken from fulcrum paper. 
+  // Following values are taken from fulcrum paper.
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ
   double m_fulcrumShiftEnergy = 0.0000075; // mJ
