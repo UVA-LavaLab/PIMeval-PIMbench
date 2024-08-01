@@ -3,6 +3,7 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
+#include "test-functional.h"
 #include "libpimeval.h"
 #include <iostream>
 #include <vector>
@@ -12,18 +13,11 @@
 #include <cstdlib>
 
 
-void createPimDevice()
+void
+testFunctional::testU8()
 {
-  unsigned numCores = 4;
-  unsigned numRows = 1024;
-  unsigned numCols = 256;
+  pimResetStats();
 
-  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, 1, numCores, numRows, numCols);
-  assert(status == PIM_OK);
-}
-
-void testFunctional()
-{
   unsigned numElements = 3000;
   unsigned bitsPerElement = 8;
 
@@ -514,18 +508,7 @@ void testFunctional()
     }
     std::cout << "[PASSED] pimShiftBitsLeft" << std::endl;
   }
-}
-
-int main()
-{
-  std::cout << "PIM Regression Test: Functional" << std::endl;
-
-  createPimDevice();
-
-  testFunctional();
 
   pimShowStats();
-
-  return 0;
 }
 
