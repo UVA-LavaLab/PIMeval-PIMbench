@@ -133,7 +133,7 @@ private:
   ~pimSim();
   pimSim(const pimSim&) = delete;
   pimSim operator=(const pimSim&) = delete;
-  void init(const std::string& simConfigFileContent = "");
+  bool init(const std::string& simConfigFileContent = "");
   void uninit();
   bool parseConfigFromFile(const std::string& simConfigFileContent);
 

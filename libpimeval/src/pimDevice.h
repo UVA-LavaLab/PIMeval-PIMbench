@@ -15,7 +15,7 @@
 #endif
 #include <memory>
 #include <filesystem>
-#include <string> 
+#include <string>
 
 class pimResMgr;
 
