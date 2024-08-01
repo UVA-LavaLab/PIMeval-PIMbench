@@ -64,6 +64,10 @@ private:
   double m_pBChip; // background power for each core in W
   double m_eGDL = 0.0000102; // CAS energy in mJ
 
+  // Popcount logc Params from DRAM-CAM paper
+  double m_pclNsDelay = 0.76; // 64-bit popcount logic ns delay, using LUT no pipeline design
+  double m_pclUwPower = 0.03; // 64-bit popcount logic uW power, using LUT no pipeline design
+
   // Following values are taken from fulcrum paper. 
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ
