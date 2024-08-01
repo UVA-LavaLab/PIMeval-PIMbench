@@ -95,9 +95,14 @@ void
 pimSim::uninit()
 {
   delete m_threadPool;
+  m_threadPool = nullptr;
   delete m_statsMgr;
+  m_statsMgr = nullptr;
   delete m_paramsDram;
+  m_paramsDram = nullptr;
   delete m_paramsPerf;
+  m_paramsPerf = nullptr;
+  m_initCalled = false;
 }
 
 //! @brief  Determine num threads and init thread pool
@@ -240,6 +245,7 @@ pimSim::deleteDevice()
   }
   delete m_device;
   m_device = nullptr;
+  uninit();
   return true;
 }
 
