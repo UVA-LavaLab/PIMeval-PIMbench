@@ -10,7 +10,7 @@
 #include "libpimeval.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "pimStats.h"
 #include <vector>
 #include <cstdarg>

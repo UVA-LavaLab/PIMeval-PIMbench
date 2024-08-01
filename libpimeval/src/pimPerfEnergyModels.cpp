@@ -4,7 +4,7 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"

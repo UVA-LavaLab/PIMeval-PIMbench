@@ -7,7 +7,7 @@
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimParamsDram.h"
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "pimStats.h"
 #include "pimUtils.h"
 #include <cstdio>

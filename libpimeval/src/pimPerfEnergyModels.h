@@ -4,8 +4,8 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#ifndef LAVA_PIM_PARAMS_PERF_H
-#define LAVA_PIM_PARAMS_PERF_H
+#ifndef LAVA_PIM_PERF_ENERGY_MODELS_H
+#define LAVA_PIM_PERF_ENERGY_MODELS_H
 
 #include "libpimeval.h"
 #include "pimParamsDram.h"
