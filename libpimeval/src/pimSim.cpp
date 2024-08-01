@@ -65,7 +65,7 @@ pimSim::init(const std::string& simConfigFileConetnt)
         return false;
       }
 
-      if (m_memConfigFileName.empty()) {
+      if (!m_memConfigFileName.empty()) {
         std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
         std::string fileContent;
         success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
