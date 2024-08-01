@@ -15,7 +15,7 @@ class pimParamsDram
 {
 public:
   pimParamsDram();
-  pimParamsDram(const std::string& configFile);
+  pimParamsDram(const std::string& config);
   ~pimParamsDram() {}
 
   int getDeviceWidth() const { return m_deviceWidth;}

@@ -112,8 +112,6 @@ bool createDevice(const char *configFile)
   }
   else
   {
-    std::cout << "Creating device from config file is not supported yet.\n";
-    return 0;
     PimStatus status = pimCreateDeviceFromConfig(PIM_FUNCTIONAL, configFile);
     if (status != PIM_OK)
     {
