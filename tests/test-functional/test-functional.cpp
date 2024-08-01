@@ -42,6 +42,7 @@ testFunctional::runAllTests()
   testU32();
   testU64();
   deletePimDevice();
+  return true;
 }
 
 //! @brief  Main entry

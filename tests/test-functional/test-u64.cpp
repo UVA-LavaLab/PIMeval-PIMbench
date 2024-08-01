@@ -510,5 +510,12 @@ testFunctional::testU64()
   }
 
   pimShowStats();
+
+  status = pimFree(obj1);
+  assert(status == PIM_OK);
+  status = pimFree(obj2);
+  assert(status == PIM_OK);
+  status = pimFree(obj3);
+  assert(status == PIM_OK);
 }
 
