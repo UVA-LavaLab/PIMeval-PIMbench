@@ -50,6 +50,13 @@ pimParamsPerf::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numByt
       mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
+    case PimCmdEnum::COPY_D2D:
+    {
+      // One row read, one row write within a subarray
+      mjEnergy = m_eAP * msRuntime * m_numChipsPerRank * numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
     default:
     {  
       std::printf("PIM-Warning: Unsupported PIM command.\n");
