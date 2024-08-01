@@ -1,4 +1,4 @@
-# Inferencing using a pre-trained VGG13 model on CPU or GPU with CUDA support
+# Inference using a pre-trained VGG13 model on CPU or GPU with CUDA support
 import argparse
 import os
 import time
@@ -7,14 +7,10 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 
-# Load and preprocess an image from a given file path
-def load_image(image_path):
-
-    print(f"[INFO] Loading image from: {image_path}")
-    # Open the image file
-    image = Image.open(image_path)
+# Load and preprocess a batch of images from a given list of file paths
+def load_images(image_paths, batch_size):
+    print(f"[INFO] Loading images from: {image_paths}")
     
-    # Define preprocessing transformations
     preprocess = transforms.Compose([
         transforms.Resize(256),           # Resize the image to 256x256 pixels
         transforms.CenterCrop(224),       # Crop the center 224x224 pixels of the image
@@ -22,15 +18,22 @@ def load_image(image_path):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # Normalize the image tensor
     ])
     
-    # Apply the preprocessing transformations and add a batch dimension
-    image = preprocess(image).unsqueeze(0)  # Add batch dimension (1, C, H, W)
-    return image
+    images = []
+    for image_path in image_paths:
+        image = Image.open(image_path)
+        image = preprocess(image)
+        images.append(image)
+
+    # Handle case where batch size is greater than the number of test images
+    while len(images) < batch_size:
+        images += images[:batch_size - len(images)]
+    
+    images = torch.stack(images[:batch_size])  # Stack images to create a batch (B, C, H, W)
+    return images
 
 # Get the appropriate device (CPU or GPU) based on user preference and availability
 def get_device(use_cuda):
-
     print("[INFO] Determining computation device")
-    # Check if GPU is available and if the user wants to use it
     if use_cuda and not torch.cuda.is_available():
         print("[WARNING] cuda is not available. Falling back to cpu.")
         return torch.device("cpu") 
@@ -39,21 +42,19 @@ def get_device(use_cuda):
     else:
         return torch.device("cpu")
 
-# Perform inference on a given image using the specified model and device
-def predict(image, model, device):
-
+# Perform inference on a batch of images using the specified model and device
+def predict(images, model, device):
     print("[INFO] Performing inference")
     model.eval()  # Set the model to evaluation mode
-    image = image.to(device)  # Move the image tensor to the appropriate device
+    images = images.to(device)  # Move the image tensor to the appropriate device
     with torch.no_grad():  # Disable gradient calculation for inference
-        output = model(image)  # Perform inference
-    # Apply softmax to get class probabilities
-    probabilities = torch.nn.functional.softmax(output[0], dim=0)
+        output = model(images)  # Perform inference
+    # Apply softmax to get class probabilities        
+    probabilities = torch.nn.functional.softmax(output, dim=1)
     return probabilities
 
 # Load category names from a file into a list
 def load_categories(file_path):
-
     print(f"[INFO] Loading categories from: {file_path}")
     categories = [None] * 1000  # Assuming 1000 categories as VGG13 is trained on ImageNet dataset
     with open(file_path, 'r') as file:
@@ -65,67 +66,78 @@ def load_categories(file_path):
     return categories
 
 # Process all images in a given directory and perform classification
-def process_directory(directory, model, categories, device):
-
+def process_directory(directory, model, categories, device, batch_size):
     print(f"[INFO] Processing images in directory: {directory}")
-    times = []  # List to store the execution times for each image
-    
-    # Iterate through all files in the directory
-    for image_name in os.listdir(directory):
-        image_path = os.path.join(directory, image_name)  # Full path to the image file
-        
-        # Skip files that are not images
-        if not image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-            print(f"[INFO] Skipping non-image file: {image_name}")
-            continue
+    print(f"[INFO] Batch size: {batch_size}");
+    total_time = 0  # Total execution time
+    total_images = 0  # Total number of images processed
 
-        print(f"[INFO] Processing image: {image_name}")
-        # Load and preprocess the image
-        image = load_image(image_path)
+    # Iterate through all files in the directory    
+    image_paths = []
+    for image_name in os.listdir(directory):
+        image_path = os.path.join(directory, image_name)
+        if image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            image_paths.append(image_path)
+    
+    # Warm-up iterations to allow the GPU to complete any initialization steps (data movement) and optimize its execution pipeline
+    if device.type == 'cuda':
+        for i in range(0, len(image_paths[:batch_size]), batch_size):
+            batch_paths = image_paths[i:i+batch_size]
+            images = load_images(batch_paths, batch_size)
+            _ = predict(images, model, device)
+        torch.cuda.synchronize()
+
+    for i in range(0, len(image_paths), batch_size):
+        batch_paths = image_paths[i:i+batch_size]
+        images = load_images(batch_paths, batch_size)
         
-        # Measure execution time for inference
         start_time = time.time()
-        probabilities = predict(image, model, device)
+        probabilities = predict(images, model, device)
+        if device.type == 'cuda':
+            torch.cuda.synchronize()  # Wait for all GPU operations to complete
         end_time = time.time()
         elapsed_time = end_time - start_time
-        times.append(elapsed_time)  # Record the time taken for inference
         
-        # Get the top 5 predictions
-        top5_prob, top5_catid = torch.topk(probabilities, 5)
-        print(f"Results for image {image_name}:")
-        for i in range(top5_prob.size(0)):
-            print(f"  {categories[top5_catid[i]]}: {top5_prob[i].item():.4f}")
-        print()
+        total_time += elapsed_time  # Record the time taken for inference
+        total_images += len(batch_paths)
 
-    # Calculate and print the average execution time per image
-    avg_time = sum(times) / len(times) if times else 0
-    print(f"Average execution time per image: {avg_time * 1000:.4f} ms")
+        # Get the top 5 predictions        
+        for j in range(len(batch_paths)):
+            print(f"Results for image {os.path.basename(batch_paths[j])}:")
+            top5_prob, top5_catid = torch.topk(probabilities[j], 5)
+            for k in range(top5_prob.size(0)):
+                print(f"  {categories[top5_catid[k]]}: {top5_prob[k].item():.4f}")
+            print()
+
+    avg_time_per_image = total_time / total_images if total_images else 0
+    print(f"Average execution time per image: {avg_time_per_image * 1000:.4f} ms")
 
 # Main function to handle command line arguments, load the model, and process images
 def main(args):
-
     print("[INFO] Starting main function")
     # Load the categories from the provided file
     categories = load_categories(args.categories)
 
     # Get the appropriate device (CPU or GPU)
-    device = get_device(args.cuda == 't')
+    device = get_device(args.cuda)
     print(f"[INFO] Using device: {device}")
 
     # Load the pre-trained VGG13 model
     print("[INFO] Loading VGG13 model")
     model = models.vgg13(weights=models.VGG13_Weights.IMAGENET1K_V1).to(device)
 
-    # Process all images in the specified directory
-    process_directory(args.directory, model, categories, device)
+    # Process all images in the specified directory in batches
+    batch_size = args.cuda_batch_size if device.type == 'cuda' else args.cpu_batch_size
+    process_directory(args.directory, model, categories, device, batch_size=batch_size)
 
 if __name__ == "__main__":
-    # Parse command line arguments
     print("[INFO] Parsing command line arguments")
     parser = argparse.ArgumentParser(description="Image classification using VGG13")
     parser.add_argument("-d", "--directory", type=str, default="./data/test/", help="Path to the directory containing images")
     parser.add_argument("-c", "--categories", type=str, default="./categories.txt", help="Path to the categories text file")
-    parser.add_argument("-cuda", type=str, choices=['t', 'f'], default='f', help="Use GPU if available ('t' for true, 'f' for false)")
+    parser.add_argument("-cuda", action='store_true', help="Use GPU if available")
+    parser.add_argument("-cuda_batch_size", type=int, default=64, help="Batch size for inference on GPU")
+    parser.add_argument("-cpu_batch_size", type=int, default=64, help="Batch size for inference on CPU")
     args = parser.parse_args()
     print("[INFO] Starting the process")
     main(args)
