@@ -31,8 +31,9 @@ CPU and GPU have been used as baselines.
 
 #### CPU & GPU
 
-* The CPU and GPU variants of VGG16 have been implemented using standard Python and PyTorch framework for machine learning. The same script is used for both, the device is specified from the command line by the user. The script performs image classification using a pre-trained VGG16 model, supporting both CPU and CUDA-enabled GPU devices. It loads and preprocesses images from a specified directory (default: ../../cpp-vgg13/baselines/data/test/), then performs inference to classify the images, outputting the top 5 predicted categories with their probabilities. The test directory currently has 5 images which consume a total space of ~700 KB.
-* Since the model is trained on ImageNet dataset, the output from the softmax layer has 1000 classes. The 1000 classes are specified in a categories.txt file (default: ../../cpp-vgg13/baselines/categories.txt). The script then uses the categories.txt file to determine the top 5 results. Results, including the top 5 results with the labels and their probabilities and execution time in ms, are printed at the end. Command-line arguments specify the device, and cpu is chosen as the default device. If the device is specified as cuda, and cuda is not available, cpu is chosen as the fallback option.
+* The CPU and GPU variants of VGG16 have been implemented using standard Python and PyTorch framework for machine learning. The same script is used for both, the device is specified from the command line by the user. The script performs image classification in batches using a pre-trained VGG16 model, supporting both CPU and CUDA-enabled GPU devices. It loads and preprocesses images from a specified directory (default: ../../cpp-vgg13/baselines/data/test/) in batches, then performs inference to classify the images, outputting the top 5 predicted categories with their probabilities. The test directory currently has 5 images which consume a total space of ~700 KB. 
+* GPU and CPU by default have a batch size of 64, and the batch size can be specified differently for CPU and GPU from the command line. If the number of images in the test directory is lower than the batch size, the existing images are replicated so that the number of images equals the batch size.
+* Since the model is trained on ImageNet dataset, the output from the softmax layer has 1000 classes. The 1000 classes are specified in a categories.txt file (default: ../../cpp-vgg13/baselines/categories.txt). The script then uses the categories.txt file to determine the top 5 results. Results, including the top 5 results with the labels and their probabilities and execution time per image in ms, are printed at the end. Command-line arguments specify the device, and cpu is chosen as the default device. If the device is specified as cuda, and cuda is not available, cpu is chosen as the fallback option.
 
 ### PIM Implementation
 
@@ -46,22 +47,23 @@ To run the script for the CPU variant, use command like the following example:
 
 ```bash
 cd baselines
-python3 vgg16.py -cuda f -c categories.txt -d data/test/
+python3 vgg16.py -c categories.txt -d data/test/ 
 ```
 Note: 
- * "-cuda" to specify the device to use for inference. 't' -> cuda, 'f' -> cpu.
  * "-c" to specify the text file with the 1000 classes and their corresponding labels.
  * "-d" to specify the directory containing the images to be used for the inference.
-
+ 
 ### GPU Variant
 
 To run the script for the GPU variant, use command like the following example:
 
 ```bash
 cd baselines
-python3 vgg16.py -cuda t -c categories.txt -d data/test/
+python3 vgg16.py -cuda -c categories.txt -d data/test/
 ```
-Note: For GPU, it is assumed that the system has a GPU with CUDA support.
+Note: 
+ * "-cuda" is specified to use GPU for inference. Default -> CPU.
+ * For GPU, it is assumed that the system has a GPU with CUDA support.
 
 ### PIM Variant
 
