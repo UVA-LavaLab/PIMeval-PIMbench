@@ -328,7 +328,7 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
        *
        * As a result, only one read operation and one write operation is necessary for the entire pass.
       */
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency) * numPass;
+      msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * numPass;
       mjEnergy = ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
       mjEnergy += m_eAP * 3;
       mjEnergy *= obj.getNumCoresUsed() * numPass;
