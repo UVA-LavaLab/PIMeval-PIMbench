@@ -462,7 +462,7 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
       // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
       // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
       double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
-      int numPclPerCore = (numElements + 63) / 64; // number of 64-bit popcount needed for a row
+      int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
       msRuntime = m_tR + (m_pclNsDelay * 1e-6) * numPclPerCore;
       msRuntime *= bitsPerElement * numPass;
       mjEnergy = m_eAP + mjEnergyPerPcl * numPclPerCore; // energy of one row read and row-wide popcount
