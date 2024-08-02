@@ -3,6 +3,7 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
+#include "test-functional.h"
 #include "libpimeval.h"
 #include <iostream>
 #include <vector>
@@ -12,36 +13,29 @@
 #include <cstdlib>
 
 
-void createPimDevice()
+void
+testFunctional::testI32()
 {
-  unsigned numCores = 4;
-  unsigned numRows = 1024;
-  unsigned numCols = 256;
+  pimResetStats();
 
-  PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, 1, numCores, numRows, numCols);
-  assert(status == PIM_OK);
-}
-
-void testFunctional()
-{
   unsigned numElements = 3000;
-  unsigned bitsPerElement = 64;
+  unsigned bitsPerElement = 32;
 
-  std::vector<int64_t> src1(numElements);
-  std::vector<int64_t> src2(numElements);
-  std::vector<int64_t> dest(numElements);
+  std::vector<int> src1(numElements);
+  std::vector<int> src2(numElements);
+  std::vector<int> dest(numElements);
 
   // Assign some initial values
   for (unsigned i = 0; i < numElements; ++i) {
     src1[i] = i;
-    src2[i] = i * 2 + 2;
+    src2[i] = i * 2 - 9;
   }
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT64);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT64);
+  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj2 != -1);
-  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT64);
+  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
   assert(obj3 != -1);
 
   PimStatus status = PIM_OK;
@@ -93,7 +87,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == ((src1[i] * 2) + src2[i]));
+      assert(dest[i] == (src1[i] * 2) + src2[i]);
     }
     std::cout << "[PASSED] pimMulAggregate" << std::endl;
   }
@@ -237,7 +231,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(src1[i] + 9));
+      assert(dest[i] == static_cast<int>(src1[i] + 9));
     }
     std::cout << "[PASSED] pimAddScaler" << std::endl;
   }
@@ -249,7 +243,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(src1[i] - 126));
+      assert(dest[i] == static_cast<int>(src1[i] - 126));
     }
     std::cout << "[PASSED] pimSubScaler" << std::endl;
   }
@@ -261,7 +255,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(src1[i] * 99));
+      assert(dest[i] == static_cast<int>(src1[i] * 99));
     }
     std::cout << "[PASSED] pimMulScaler" << std::endl;
   }
@@ -273,7 +267,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(src1[i] / 23));
+      assert(dest[i] == static_cast<int>(src1[i] / 23));
     }
     std::cout << "[PASSED] pimDivScaler" << std::endl;
   }
@@ -285,7 +279,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>((src1[i] & 35)));
+      assert(dest[i] == static_cast<int>((src1[i] & 35)));
     }
     std::cout << "[PASSED] pimAndScaler" << std::endl;
   }
@@ -297,7 +291,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(src1[i] | 100));
+      assert(dest[i] == static_cast<int>(src1[i] | 100));
     }
     std::cout << "[PASSED] pimOrScaler" << std::endl;
   }
@@ -309,7 +303,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(src1[i] ^ 60));
+      assert(dest[i] == static_cast<int>(src1[i] ^ 60));
     }
     std::cout << "[PASSED] pimXorScaler" << std::endl;
   }
@@ -321,7 +315,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == static_cast<int64_t>(~(src1[i] ^ 55)));
+      assert(dest[i] == static_cast<int>(~(src1[i] ^ 55)));
     }
     std::cout << "[PASSED] pimXnorScaler" << std::endl;
   }
@@ -369,7 +363,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == std::min(src1[i], (int64_t)-1));
+      assert(dest[i] == std::min(src1[i], -1));
     }
     std::cout << "[PASSED] pimMinScaler" << std::endl;
   }
@@ -381,7 +375,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      assert(dest[i] == std::max(src1[i], (int64_t)127));
+      assert(dest[i] == std::max(src1[i], 127));
     }
     std::cout << "[PASSED] pimMaxScaler" << std::endl;
   }
@@ -393,7 +387,7 @@ void testFunctional()
     status = pimCopyDeviceToHost(obj3, (void *)dest.data());
     assert(status == PIM_OK);
     for (unsigned i = 0; i < numElements; ++i) {
-      int64_t cnt = std::bitset<32>(src1[i]).count();
+      int cnt = std::bitset<32>(src1[i]).count();
       assert(dest[i] == cnt);
     }
     std::cout << "[PASSED] pimPopCount" << std::endl;
@@ -526,18 +520,14 @@ void testFunctional()
     }
     std::cout << "[PASSED] pimShiftBitsLeft" << std::endl;
   }
-}
-
-int main()
-{
-  std::cout << "PIM Regression Test: Functional" << std::endl;
-
-  createPimDevice();
-
-  testFunctional();
 
   pimShowStats();
 
-  return 0;
+  status = pimFree(obj1);
+  assert(status == PIM_OK);
+  status = pimFree(obj2);
+  assert(status == PIM_OK);
+  status = pimFree(obj3);
+  assert(status == PIM_OK);
 }
 
