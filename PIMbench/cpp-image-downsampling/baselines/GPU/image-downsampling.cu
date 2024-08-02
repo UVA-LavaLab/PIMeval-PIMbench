@@ -28,7 +28,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./image_downsampling [options]"
+          "\nUsage:  ./image_downsampling.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
