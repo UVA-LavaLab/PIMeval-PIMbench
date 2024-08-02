@@ -1015,7 +1015,7 @@ pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
     std::string temp;
     temp = pimUtils::getOptionalParam(params, "max_num_threads", success);
     if (!success) {
-      std::printf("PIM-Info: Maximum number of threads could not be located in PIMeval config file. Using maximum number of availale threads\n");
+      std::printf("PIM-Info: Maximum number of threads could not be located in PIMeval config file. Using maximum number of available threads\n");
       m_numThreads = std::thread::hardware_concurrency();
     } else {
       m_numThreads = std::stoi(temp);
