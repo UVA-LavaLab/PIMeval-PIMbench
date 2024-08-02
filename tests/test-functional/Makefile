@@ -3,22 +3,16 @@
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-SUBDIRS := $(wildcard */*/)
+include ../Makefile.common
 
-.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
-.DEFAULT_GOAL := perf
+EXEC := test-functional.out
+SRCS := $(wildcard *.cpp) 
 
-debug: $(SUBDIRS)
-	@echo "INFO: tests target = debug"
+debug perf dramsim3_integ: $(EXEC)
 
-perf: $(SUBDIRS)
-	@echo "INFO: tests target = perf"
+$(EXEC): $(SRCS) $(DEPS)
+	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
 
-dramsim3_integ: $(SUBDIRS)
-	@echo "INFO: tests target = dramsim3_integ"
-
-clean: $(SUBDIRS)
-
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+clean:
+	rm -rf $(EXEC) *.dSYM
 
