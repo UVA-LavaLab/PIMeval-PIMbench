@@ -4,8 +4,8 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#ifndef LAVA_PIM_PARAMS_PERF_H
-#define LAVA_PIM_PARAMS_PERF_H
+#ifndef LAVA_PIM_PERF_ENERGY_MODELS_H
+#define LAVA_PIM_PERF_ENERGY_MODELS_H
 
 #include "libpimeval.h"
 #include "pimParamsDram.h"
@@ -63,6 +63,10 @@ private:
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
   double m_eGDL = 0.0000102; // CAS energy in mJ
+
+  // Popcount logc Params from DRAM-CAM paper
+  double m_pclNsDelay = 0.76; // 64-bit popcount logic ns delay, using LUT no pipeline design
+  double m_pclUwPower = 0.03; // 64-bit popcount logic uW power, using LUT no pipeline design
 
   // Following values are taken from fulcrum paper.
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ

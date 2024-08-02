@@ -8,7 +8,7 @@
 #define LAVA_PIM_STATS_H
 
 #include "pimParamsDram.h"
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "libpimeval.h"
 #include <cstdint>
 #include <string>

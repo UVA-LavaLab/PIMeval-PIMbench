@@ -18,7 +18,7 @@ endif
 debug perf dramsim3_integ: $(EXEC)
 
 $(EXEC): $(SRCS) $(DEPS)
-	$(CXX) $(SRCS) $(DEPS) $(CXXFLAGS) -o $@
+	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
 
 clean:
 	rm -rf $(EXEC) *.dSYM
