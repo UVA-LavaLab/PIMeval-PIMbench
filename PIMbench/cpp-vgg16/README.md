@@ -11,9 +11,6 @@ cpp-vgg16/
 │   ├── vgg16_weights.py
 ├── baselines/
 │   ├── vgg16.py
-│   ├── categories.txt
-│   ├── data
-|       |- test/ 
 ├── README.md
 ├── Makefile
 ├── slurm.h
