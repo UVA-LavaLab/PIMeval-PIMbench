@@ -84,7 +84,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void gemvBatched(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
+void gemvBatched(uint64_t row, uint64_t col, std::vector<std::vector<int>> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
 {
   unsigned bitsPerElement = sizeof(int) * 8;
   PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
@@ -107,13 +107,20 @@ void gemvBatched(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::v
     return;
   }
 
+  PimObjId dstObj1 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  if (dstObj1 == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
   PimStatus status = pimBroadcastInt(dstObj, 0);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-
+  
   for (uint64_t i = 0; i < col; ++i)
   {
     status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
@@ -123,14 +130,21 @@ void gemvBatched(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::v
       return;
     }
 
-    status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
+    status = pimCopyHostToDevice((void *)srcVector[i].data(), srcObj2);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
       return;
     }
 
-    status = pimAdd(srcObj2, dstObj, dstObj);
+    status = pimMul(srcObj1, srcObj2, dstObj1);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+
+    status = pimAdd(dstObj1, dstObj, dstObj);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
@@ -138,7 +152,7 @@ void gemvBatched(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::v
     }
   }
 
-  dst.reserve(row);
+  //dst.reserve(row);
   status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
   if (status != PIM_OK)
   {
@@ -147,6 +161,7 @@ void gemvBatched(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::v
   pimFree(srcObj1);
   pimFree(srcObj2);
   pimFree(dstObj);
+  pimFree(dstObj1);
 }
 
 void transposeMatrix(uint64_t row, uint64_t col, std::vector<std::vector<int>> &srcMatrix, std::vector<std::vector<int>> &dstMatrix)
@@ -163,6 +178,7 @@ void transposeMatrix(uint64_t row, uint64_t col, std::vector<std::vector<int>> &
 
 void verifyResult(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<int>> &srcMatrixAT, std::vector<std::vector<int>> &srcMatrixBT, std::vector<std::vector<int>> &dstMatrix)
 {
+  printMatrix(dstMatrix);
   cout << "Starting verification......\n";
   std::vector<std::vector<int>> C(row, std::vector<int>(colB, 0));
   for (uint64_t i = 0; i < row; ++i)
@@ -175,6 +191,7 @@ void verifyResult(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::v
       }
     }
   }
+  printMatrix(C);
   bool shouldContinue = true;
   for (uint64_t i = 0; i < row && shouldContinue; ++i)
   {
@@ -182,7 +199,7 @@ void verifyResult(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::v
     {
       if (C[i][j] != dstMatrix[i][j])
       {
-        std::cout << "Error: Incorrect Result.\nHost: " << C[i][j] << "\t PIM: " << dstMatrix[i][j] << "\n";
+        std::cout << "Error: Incorrect Result for:" << i << ".\nHost: " << C[i][j] << "\t PIM: " << dstMatrix[i][j] << "\n";
         shouldContinue = false;
         break;
       }
@@ -195,6 +212,7 @@ void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<in
   dstMatrix.resize(row, std::vector<int>(colB, 0));
   std::vector<std::vector<int>> transposedDstMat(colB, std::vector<int>(row, 0));
   vector<std::vector<int>> srcMatrixAT(colA, std::vector<int>(row, 0)), srcMatrixBT(colB, std::vector<int>(colA, 0));
+
   // TODO: Do we actually need to transpose matrices
   transposeMatrix(row, colA, srcMatrixA, srcMatrixAT);
   transposeMatrix(colA, colB, srcMatrixB, srcMatrixBT);
@@ -206,40 +224,89 @@ void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<in
     std::cout << "Abort" << std::endl;
     return;
   }
-
   // How many GEMVs can be processed in parallel?
   // Following calculation is done based on bit serial data layout
   uint64_t totalAvailableBitsPerItr = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank * deviceProp.numColPerSubarray;
   uint64_t totalBitsRequired = colB * row * 32; // assuming 32bits INT
-  uint64_t batchSize = std::ceil(totalAvailableBitsPerItr * 1.0 / totalBitsRequired);
-  std::cout << "Processing " << batchSize << " GEMVs in parallel" << std::endl;
+  uint64_t batchSize = std::min(colB, (uint64_t)std::ceil(totalAvailableBitsPerItr * 1.0 / totalBitsRequired));
 
   // Concatenate matrices. Needs to be done once
   std::vector<std::vector<int>> batchedSrcMatA;
-  for (uint64_t i = 0; i < batchSize; ++i)
+  for (uint64_t i = 0; i < colA; ++i)
   {
-    batchedSrcMatA.insert(batchedSrcMatA.end(), srcMatrixAT.begin(), srcMatrixAT.end());
+    std::vector<int> temp;
+    for (uint64_t j = 0; j < batchSize; ++j) {
+      // TODO: Add replicate a pattern API in the simulator
+      for (uint64_t k = 0; k < row; ++k) {
+        temp.push_back(srcMatrixAT[i][k]);
+      }
+    }
+    batchedSrcMatA.push_back(temp);
   }
 
-  for (uint64_t i = 0; i < colB; ++i)
+  std::cout << "Done concatenating A." << std::endl;
+
+  for (uint64_t i = 0; i < colB; i += batchSize)
   {
+    uint64_t currBatchSize = std::min(batchSize, colB - i);
+
+    std::cout << "Starting Gemv for batch size: " << currBatchSize << std::endl;
+
     std::vector<std::vector<int>> batchedSrcMatB(colA, std::vector<int>(row * batchSize));
     for (uint64_t j = 0; j < colA; ++j)
     {
-      for (uint64_t k = 0; k < row * batchSize; k += row) {
-      int valueT = srcMatrixBT[j][k];
-        for (uint64_t l = k; l < row; ++l) {
-          batchedSrcMatB[j][l] = valueT;
+      for (uint64_t k = 0; k < currBatchSize; ++k) {
+        int valueT = srcMatrixBT[i + k][j];
+        uint64_t idx = k * row;
+        // replicate valueT row times
+        for (uint64_t l = 0; l < row; ++l) {
+          batchedSrcMatB[j][idx + l] = valueT;
         }
       }
-
     }
-    gemvBatched(row, colA, srcMatrixBT[i], srcMatrixAT, transposedDstMat[i]);
+
+    std::cout << "Done concatenating B." << std::endl;
+    std::vector<int> tempDst(row * currBatchSize, 0);
+    gemvBatched(row*currBatchSize, colA, batchedSrcMatB, batchedSrcMatA, tempDst);
+    std::cout << "Done Running GEMV." << std::endl;
+
+    for (uint64_t j = 0; j < currBatchSize; ++j)
+    {
+      for (uint64_t k = 0; k < row; ++k) {
+        transposedDstMat[i+j][k] = tempDst[j * row + k];
+      }
+    }
   }
   transposeMatrix(colB, row, transposedDstMat, dstMatrix);
+  
   if (shouldVerify)
   {
-    verifyResult(row, colA, colB, srcMatrixAT, srcMatrixBT, dstMatrix);
+    //verifyResult(row, colA, colB, srcMatrixAT, srcMatrixBT, dstMatrix);
+    cout << "Starting verification......\n";
+    std::vector<std::vector<int>> C(row, std::vector<int>(colB, 0));
+    for (uint64_t i = 0; i < row; ++i)
+    {
+      for (uint64_t j = 0; j < colB; ++j)
+      {
+        for (uint64_t k = 0; k < colA; ++k)
+        {
+          C[i][j] += srcMatrixAT[k][i] * srcMatrixBT[j][k];
+        }
+      }
+    }
+    bool shouldContinue = true;
+    for (uint64_t i = 0; i < row && shouldContinue; ++i)
+    {
+      for (uint64_t j = 0; j < colB; ++j)
+      {
+        if (C[i][j] != dstMatrix[i][j])
+        {
+          std::cout << "Error: Incorrect Result.\nHost: " << C[i][j] << "\t PIM: " << dstMatrix[i][j] << "\n";
+          shouldContinue = false;
+          break;
+        }
+      }
+    }
   }
 }
 
