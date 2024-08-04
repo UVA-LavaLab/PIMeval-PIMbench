@@ -417,6 +417,7 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
                 src1.assign(operandMaxNumberOfWords, 0);
                 src2.assign(operandMaxNumberOfWords, 0);
                 dst.clear();
+                popCountSrc.clear();
                 count += sum;
             }
         }
