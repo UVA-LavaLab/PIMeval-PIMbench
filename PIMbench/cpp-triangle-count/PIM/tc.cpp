@@ -53,16 +53,6 @@ void usage()
           "\n");
 }
 
-template <typename T>
-void printNestedVector(const std::vector<std::vector<T>>& nestedVec) {
-    for (const std::vector<T>& innerVec : nestedVec) {
-        for (const T& element : innerVec) {
-            std::cout << element << " ";
-        }
-        std::cout << std::endl; // Print a newline after each inner vector
-    }
-}
-
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
