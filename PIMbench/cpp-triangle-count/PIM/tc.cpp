@@ -385,37 +385,46 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
     int V = adjList.size();
     uint64_t wordsPerMatrixRow = (V + BITS_PER_INT - 1) / BITS_PER_INT; // Number of 32-bit integers needed per row
     assert(wordsPerMatrixRow <=  operandMaxNumberOfWords && "Number of vertices cannot exceed (words_per_device / 2)");
-    int oneCount = 0;
     uint64_t words = 0;
     int step = V / 10; // Each 10 percent of the total iterations
     uint16_t iterations = 0;
     uint32_t i = 0;
-    vector<uint32_t> src1(operandMaxNumberOfWords, 0);
-    vector<uint32_t> src2(operandMaxNumberOfWords, 0);
+    vector<uint32_t> src1(wordsPerMatrixRow, 0);
+    vector<uint32_t> src2(wordsPerMatrixRow, 0);
+    vector<uint32_t> opt_src1, opt_src2;
     for (auto it_u = adjList.begin(); it_u != adjList.end(); ++it_u) {
         const auto& u = it_u->first;
         const auto& neighborsU = it_u->second;
         for (auto it_v = neighborsU.begin(); it_v != neighborsU.end(); ++it_v) {
             const auto& neighborsV = adjList.find(*it_v)->second;
-            convertToBitMap(neighborsU, words, src1);
-            convertToBitMap(neighborsV, words, src2);
-            words += wordsPerMatrixRow;
+            convertToBitMap(neighborsU, 0, src1);
+            convertToBitMap(neighborsV, 0, src2);
+            // words += wordsPerMatrixRow;
+            for (int j = 0; j < wordsPerMatrixRow; ++j) {
+                if(src1[j] == 0 || src2[j] == 0) 
+                    continue;
+                ++words;
+                opt_src1.push_back(src1[j]);
+                opt_src2.push_back(src2[j]);
+            }
+            src1.assign(wordsPerMatrixRow, 0);
+            src2.assign(wordsPerMatrixRow, 0);
             bool isLastIteration = (std::next(it_u) == adjList.end()) && (std::next(it_v) == neighborsU.end());
             if((words + wordsPerMatrixRow > operandMaxNumberOfWords) || (isLastIteration && words > 0)){
                 cout << "-------------itr[" << iterations << "]-------------" << endl;
                 cout << "Number of words that are processed in this iteration: " << words << endl;
                 std::vector<unsigned int> dst(operandMaxNumberOfWords);
                 std::vector<unsigned int> popCountSrc(operandMaxNumberOfWords);
-                int sum = vectorAndPopCntRedSum((uint64_t) words, src1, src2, dst, popCountSrc);
+                int sum = vectorAndPopCntRedSum((uint64_t) words, opt_src1, opt_src2, dst, popCountSrc);
 
                 if(sum < 0)
                     return -1;
                 
                 words = 0;
                 iterations++;
-                    // Reset the vectors
-                src1.assign(operandMaxNumberOfWords, 0);
-                src2.assign(operandMaxNumberOfWords, 0);
+                // Reset the vectors
+                opt_src1.clear();
+                opt_src2.clear();
                 dst.clear();
                 popCountSrc.clear();
                 count += sum;
