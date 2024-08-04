@@ -392,6 +392,7 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
     vector<uint32_t> src1(wordsPerMatrixRow, 0);
     vector<uint32_t> src2(wordsPerMatrixRow, 0);
     vector<uint32_t> opt_src1, opt_src2;
+    double host_time_if = 0.0;
     for (auto it_u = adjList.begin(); it_u != adjList.end(); ++it_u) {
         const auto& u = it_u->first;
         const auto& neighborsU = it_u->second;
@@ -401,8 +402,16 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
             convertToBitMap(neighborsV, 0, src2);
             // words += wordsPerMatrixRow;
             for (int j = 0; j < wordsPerMatrixRow; ++j) {
-                if(src1[j] == 0 || src2[j] == 0) 
+                auto ifstart = std::chrono::high_resolution_clock::now();
+                if(src1[j] == 0 || src2[j] == 0) {
+                    auto ifend = std::chrono::high_resolution_clock::now();
+                    auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                    host_time_if += ifelapsedTime.count();
                     continue;
+                }
+                auto ifend = std::chrono::high_resolution_clock::now();
+                auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                host_time_if += ifelapsedTime.count();
                 ++words;
                 opt_src1.push_back(src1[j]);
                 opt_src2.push_back(src2[j]);
@@ -436,6 +445,7 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
         i++;
     }
     // Each triangle is counted 6 times (once at each vertex), so divide the count by 6
+    cout << "Host time (if): " << std::fixed << std::setprecision(3) << host_time_if << " ms." << endl;
     return count / 6;
 }
 
