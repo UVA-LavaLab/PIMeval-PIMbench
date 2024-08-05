@@ -26,7 +26,7 @@ void initVector(uint64_t vectorSize, vector<int32_t>& vectorPoints)
     srand(8746219);
     for (uint64_t i = 0; i < vectorSize; i++)
     {
-        vectorPoints[i] = rand() % MAX_NUMBER;
+        vectorPoints[i] = rand() % INT32_MAX;
     }
 }
 
