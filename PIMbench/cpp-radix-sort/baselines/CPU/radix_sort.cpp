@@ -31,20 +31,21 @@ void initVector(uint64_t vectorSize, vector<int32_t>& vectorPoints)
 }
 
 // Function to perform counting sort on the array based on the digit represented by exp
-void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t> &output, std::vector<int32_t> &count)
+void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t> &output, std::vector<int> &count)
 {
     uint64_t n = dataArray.size();
     int numThreads = omp_get_max_threads();
     std::vector<std::vector<int>> localCount(numThreads, std::vector<int>(10, 0));
 
 // Store count of occurrences in localCount[]
+// int threadNum = omp_get_thread_num();
 #pragma omp parallel
     {
-        int threadNum = omp_get_thread_num();
 #pragma omp for nowait
         for (uint64_t i = 0; i < n; i++)
         {
-            localCount[threadNum][(dataArray[i] / exp) % 10]++;
+            int tid = omp_get_thread_num();
+            localCount[tid][(dataArray[i] / exp) % 10]++;
         }
     }
 
@@ -63,16 +64,15 @@ void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t>
     {
         count[i] += count[i - 1];
     }
-
     for (uint64_t i = 0; i < n; i++)
     {
         int digit = (dataArray[n - i - 1] / exp) % 10;
         int idx = count[digit]--;
         output[idx - 1] = dataArray[n - i - 1];
     }
-
     // Copy the output array to dataArray[], so that dataArray[] now
     // contains sorted numbers according to the current digit
+    // dataArray = output;
     std::copy(output.begin(), output.end(), dataArray.begin());
 }
 
@@ -91,7 +91,7 @@ void radixSort(const vector<int32_t> &dataArray, vector<int32_t> &sortedArray)
     // Do counting sort for every digit. Note that instead
     // of passing the digit number, exp is passed. exp is 10^i
     // where i is the current digit number
-    for (int exp = 1; m / exp > 0; exp *= 10)
+    for (uint64_t exp = 1; m / exp > 0; exp *= 10)
     {
         countingSort(sortedArray, exp, tempArray, count);
         std::fill(count.begin(), count.end(), 0);
@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
     uint64_t n = atoll(argv[1]);
     vector<int32_t> dataArray;
     initVector(n, dataArray);
+
     vector<int32_t> sortedArray(n);
     cout << "Done initializing data\n";
 
