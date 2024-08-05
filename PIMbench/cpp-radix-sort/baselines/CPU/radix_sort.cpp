@@ -31,21 +31,20 @@ void initVector(uint64_t vectorSize, vector<int32_t>& vectorPoints)
 }
 
 // Function to perform counting sort on the array based on the digit represented by exp
-void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t> &output, std::vector<int> &count)
+void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t> &output, std::vector<int32_t> &count)
 {
     uint64_t n = dataArray.size();
     int numThreads = omp_get_max_threads();
     std::vector<std::vector<int>> localCount(numThreads, std::vector<int>(10, 0));
 
 // Store count of occurrences in localCount[]
-// int threadNum = omp_get_thread_num();
 #pragma omp parallel
     {
+        int threadNum = omp_get_thread_num();
 #pragma omp for nowait
         for (uint64_t i = 0; i < n; i++)
         {
-            int tid = omp_get_thread_num();
-            localCount[tid][(dataArray[i] / exp) % 10]++;
+            localCount[threadNum][(dataArray[i] / exp) % 10]++;
         }
     }
 
@@ -64,6 +63,7 @@ void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t>
     {
         count[i] += count[i - 1];
     }
+
     for (uint64_t i = 0; i < n; i++)
     {
         int digit = (dataArray[n - i - 1] / exp) % 10;
@@ -72,7 +72,6 @@ void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t>
     }
     // Copy the output array to dataArray[], so that dataArray[] now
     // contains sorted numbers according to the current digit
-    // dataArray = output;
     std::copy(output.begin(), output.end(), dataArray.begin());
 }
 
