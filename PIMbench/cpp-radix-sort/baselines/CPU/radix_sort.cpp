@@ -26,7 +26,7 @@ void initVector(uint64_t vectorSize, vector<int32_t>& vectorPoints)
     srand(8746219);
     for (uint64_t i = 0; i < vectorSize; i++)
     {
-        vectorPoints[i] = rand() % MAX_NUMBER;
+        vectorPoints[i] = rand() % INT32_MAX;
     }
 }
 
@@ -131,9 +131,9 @@ int main(int argc, char *argv[])
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedTime = (end - start)/WARMUP;
     cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
-    // cout << "Original Array:\n";
-    // printArray(dataArray);
-    // cout << "\n\nSorted array:\n";
-    // printArray(sortedArray);
+    cout << "Original Array:\n";
+    printArray(dataArray);
+    cout << "\n\nSorted array:\n";
+    printArray(sortedArray);
     return 0;
 } /* main */
