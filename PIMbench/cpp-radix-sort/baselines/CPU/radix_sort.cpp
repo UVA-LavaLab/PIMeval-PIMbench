@@ -70,6 +70,7 @@ void countingSort(std::vector<int32_t> &dataArray, int exp, std::vector<int32_t>
         int idx = count[digit]--;
         output[idx - 1] = dataArray[n - i - 1];
     }
+
     // Copy the output array to dataArray[], so that dataArray[] now
     // contains sorted numbers according to the current digit
     std::copy(output.begin(), output.end(), dataArray.begin());
@@ -119,7 +120,6 @@ int main(int argc, char *argv[])
     uint64_t n = atoll(argv[1]);
     vector<int32_t> dataArray;
     initVector(n, dataArray);
-
     vector<int32_t> sortedArray(n);
     cout << "Done initializing data\n";
 
