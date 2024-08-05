@@ -164,6 +164,10 @@ bool test(const float * ref,
         return false;
     }
 
+    for(int i = 0; i < query_nb; i++) {
+        printf("query nummber %i: here is res classification: %i\n", i, test_knn_result[i]);
+    }
+
     // Free memory
     free(test_knn_result);
 

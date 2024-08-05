@@ -9,4 +9,4 @@
 #SBATCH --output=output_slurm.txt
 
 module load cuda-toolkit
-./knn.out
+./knn.out -n 6710886
