@@ -28,7 +28,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./image_downsampling [options]"
+          "\nUsage:  ./image_downsampling.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
@@ -41,7 +41,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = (char*) "input_1.bmp";
+  p.inputFile = (char*) "../../Dataset/input_1.bmp";
   p.shouldVerify = false;
   p.outputFile = nullptr;
 
@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
   std::cout << "GPU test: Image Downsampling" << std::endl;
   
   string input_file = params.inputFile;
-  input_file = "./../../Dataset/" + input_file;
+  std::cout << "Input file: '" << input_file << "'" << std::endl;
   std::vector<uint8_t> img = read_file_bytes(input_file);
 
   if(!check_image(img)) {

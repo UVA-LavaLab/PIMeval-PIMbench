@@ -1,4 +1,4 @@
-# Makefile: C++ version of linear regression
+# Makefile: C++ version of matrix matrix multiplication
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.

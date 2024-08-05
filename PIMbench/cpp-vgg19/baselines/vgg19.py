@@ -1,114 +1,143 @@
-# Inferencing using a pre-trained VGG19 on CPU or GPU with CUDA support
-import numpy as np
-import torch
-import torch.nn as nn
-from torchvision import datasets, transforms, models
-from torch.utils.data import Subset
-import time
+# Inference using a pre-trained VGG19 model on CPU or GPU with CUDA support
 import argparse
 import os
+import time
+import torch
+import torchvision.models as models
+import torchvision.transforms as transforms
+from PIL import Image
 
-# Command-line argument parsing for specifying device and number of images
-parser = argparse.ArgumentParser(description='VGG19 Inference')
-parser.add_argument('-s', '--device', required=True, choices=['cpu', 'cuda'], help='Device to use for inference (cpu/cuda)')
-parser.add_argument('-n', '--num_images', type=int, default=1000, help='Number of images to test')
-args = parser.parse_args()
-
-# Determine the device to use for inference
-deviceStr = args.device
-if deviceStr != 'cpu' and deviceStr != 'cuda':
-    print("[ERROR] Invalid device! Must be either cpu or cuda.")
-    exit(-1)
-if deviceStr == 'cuda' and not torch.cuda.is_available():
-    print("[WARNING] cuda is not available. Falling back to cpu.")
-    deviceStr = 'cpu'
-print("[INFO] Using " + deviceStr)
-device = torch.device(deviceStr)
-
-# Function to load data
-def data_loader(data_dir, batch_size, num_images, shuffle=True, test=False):
-    print("[INFO] Starting data loader")
-
-    # Normalization parameters for the images    
-    normalize = transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225],
-    )
-
-    # Transformation to apply to the images
-    transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            normalize,
+# Load and preprocess a batch of images from a given list of file paths
+def load_images(image_paths, batch_size):
+    print(f"[INFO] Loading images from: {image_paths}")
+    
+    preprocess = transforms.Compose([
+        transforms.Resize(256),           # Resize the image to 256x256 pixels
+        transforms.CenterCrop(224),       # Crop the center 224x224 pixels of the image
+        transforms.ToTensor(),            # Convert the image to a tensor
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # Normalize the image tensor
     ])
+    
+    images = []
+    for image_path in image_paths:
+        image = Image.open(image_path)
+        image = preprocess(image)
+        images.append(image)
 
-    # Load the test dataset
-    dataset = datasets.CIFAR100(root=data_dir, train=False, download=True, transform=transform)
-    dataset = Subset(dataset, range(num_images))
+    # Handle case where batch size is greater than the number of test images
+    while len(images) < batch_size:
+        images += images[:batch_size - len(images)]
+    
+    images = torch.stack(images[:batch_size])  # Stack images to create a batch (B, C, H, W)
+    return images
 
-    # num_workers specifies the number of subprocesses used for data loading. 
-    # Each subprocess independently loads and preprocesses data, which can then be fed to the GPU for training or inference.
-    num_workers = os.cpu_count() # This will create a subprocess for each CPU core
-    data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True if device == 'cuda' else False
-    )
+# Get the appropriate device (CPU or GPU) based on user preference and availability
+def get_device(use_cuda):
+    print("[INFO] Determining computation device")
+    if use_cuda and not torch.cuda.is_available():
+        print("[WARNING] cuda is not available. Falling back to cpu.")
+        return torch.device("cpu") 
+    if use_cuda and torch.cuda.is_available():
+        return torch.device("cuda")
+    else:
+        return torch.device("cpu")
 
-    print("[INFO] Data loader finished")
-    return data_loader
+# Perform inference on a batch of images using the specified model and device
+def predict(images, model, device):
+    print("[INFO] Performing inference")
+    model.eval()  # Set the model to evaluation mode
+    images = images.to(device)  # Move the image tensor to the appropriate device
+    with torch.no_grad():  # Disable gradient calculation for inference
+        output = model(images)  # Perform inference
+    # Apply softmax to get class probabilities        
+    probabilities = torch.nn.functional.softmax(output, dim=1)
+    return probabilities
 
-num_classes = 100  # CIFAR-100 has 100 classes
+# Load category names from a file into a list
+def load_categories(file_path):
+    print(f"[INFO] Loading categories from: {file_path}")
+    categories = [None] * 1000  # Assuming 1000 categories as VGG19 is trained on ImageNet dataset
+    with open(file_path, 'r') as file:
+        for line in file:
+            index, category = line.strip().split(": ")  # Split line into index and category
+            index = int(index)  # Convert index to integer
+            category = category.strip("'")  # Remove extra quotes around category
+            categories[index] = category  # Assign category to the correct index
+    return categories
 
-# Adjust the batch_size below based on the CPU or GPU's memory capacity.
-# Memory capacity refers to the amount of memory (RAM) available on the CPU or GPU, typically measured in gigabytes (GB).
-# The batch size needs to be adjusted so that it fits within the system's memory. If the batch size is too large, it can result in out-of-memory (OOM) errors.
-if deviceStr == 'cpu':
-    batch_size = 128 
-if deviceStr == 'cuda':
-    batch_size = 2 
+# Process all images in a given directory and perform classification
+def process_directory(directory, model, categories, device, batch_size):
+    print(f"[INFO] Processing images in directory: {directory}")
+    print(f"[INFO] Batch size: {batch_size}");
+    total_time = 0  # Total execution time
+    total_images = 0  # Total number of images processed
 
-# Load the test data
-print("[INFO] Loading test data")
-test_loader = data_loader(data_dir='./data', batch_size=batch_size, num_images=args.num_images, test=True)
-print("[INFO] Test data loaded")
+    # Iterate through all files in the directory    
+    image_paths = []
+    for image_name in os.listdir(directory):
+        image_path = os.path.join(directory, image_name)
+        if image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            image_paths.append(image_path)
+    
+    # Warm-up iterations to allow the GPU to complete any initialization steps (data movement) and optimize its execution pipeline
+    if device.type == 'cuda':
+        for i in range(0, len(image_paths[:batch_size]), batch_size):
+            batch_paths = image_paths[i:i+batch_size]
+            images = load_images(batch_paths, batch_size)
+            _ = predict(images, model, device)
+        torch.cuda.synchronize()
 
-# Load pre-trained VGG19 model
-print("[INFO] Loading pre-trained VGG19 model")
-model = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1)
-print("[INFO] Pre-trained VGG19 model loaded")
+    for i in range(0, len(image_paths), batch_size):
+        batch_paths = image_paths[i:i+batch_size]
+        images = load_images(batch_paths, batch_size)
+        
+        start_time = time.time()
+        probabilities = predict(images, model, device)
+        if device.type == 'cuda':
+            torch.cuda.synchronize()  # Wait for all GPU operations to complete
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        
+        total_time += elapsed_time  # Record the time taken for inference
+        total_images += len(batch_paths)
 
-# Modify the classifier to match the number of classes
-# classifier[6] corresponds to the last dense layer
-model.classifier[6] = nn.Linear(4096, num_classes)
-model = model.to(device)
+        # Get the top 5 predictions        
+        for j in range(len(batch_paths)):
+            print(f"Results for image {os.path.basename(batch_paths[j])}:")
+            top5_prob, top5_catid = torch.topk(probabilities[j], 5)
+            for k in range(top5_prob.size(0)):
+                print(f"  {categories[top5_catid[k]]}: {top5_prob[k].item():.4f}")
+            print()
 
-# Optimize the model with TorchScript
-model = torch.jit.script(model)
+    avg_time_per_image = total_time / total_images if total_images else 0
+    print(f"Average execution time per image: {avg_time_per_image * 1000:.4f} ms")
 
-model.eval() # Set model to evaluation mode
-with torch.no_grad():
-    correct_top1 = 0
-    correct_top5 = 0
-    total = 0
-    tm = 0
-    for images, labels in test_loader:
-        images = images.to(device)
-        labels = labels.to(device)
-        start = time.time()
-        outputs = model(images)
-        _, predicted_top1 = torch.max(outputs.data, 1)
-        _, predicted_top5 = torch.topk(outputs, 5, dim=1)
-        end = time.time()
-        tm += end - start
-        total += labels.size(0)
-        correct_top1 += (predicted_top1 == labels).sum().item()
-        correct_top5 += sum([1 if labels[i] in predicted_top5[i] else 0 for i in range(len(labels))])
+# Main function to handle command line arguments, load the model, and process images
+def main(args):
+    print("[INFO] Starting main function")
+    # Load the categories from the provided file
+    categories = load_categories(args.categories)
 
-    # Calculate accuracy
-    top1_accuracy = 100 * correct_top1 / total
-    top5_accuracy = 100 * correct_top5 / total
+    # Get the appropriate device (CPU or GPU)
+    device = get_device(args.cuda)
+    print(f"[INFO] Using device: {device}")
 
-    # Print the results
-    print(f'Accuracy of the network on the test images (Top-1): {top1_accuracy:.2f} %')
-    print(f'Accuracy of the network on the test images (Top-5): {top5_accuracy:.2f} %')
-    print(f"Number of images: {args.num_images}")
-    print(f"Execution time per image: {(tm / args.num_images * 1000):.4f} ms")
+    # Load the pre-trained VGG19 model
+    print("[INFO] Loading VGG19 model")
+    model = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1).to(device)
+
+    # Process all images in the specified directory in batches
+    batch_size = args.cuda_batch_size if device.type == 'cuda' else args.cpu_batch_size
+    process_directory(args.directory, model, categories, device, batch_size=batch_size)
+
+if __name__ == "__main__":
+    print("[INFO] Parsing command line arguments")
+    parser = argparse.ArgumentParser(description="Image classification using VGG19")
+    parser.add_argument("-d", "--directory", type=str, default="../../cpp-vgg13/baselines/data/test/", help="Path to the directory containing images")
+    parser.add_argument("-c", "--categories", type=str, default="../../cpp-vgg13/baselines/categories.txt", help="Path to the categories text file")
+    parser.add_argument("-cuda", action='store_true', help="Use GPU if available")
+    parser.add_argument("-cuda_batch_size", type=int, default=64, help="Batch size for inference on GPU")
+    parser.add_argument("-cpu_batch_size", type=int, default=64, help="Batch size for inference on CPU")
+    args = parser.parse_args()
+    print("[INFO] Starting the process")
+    main(args)

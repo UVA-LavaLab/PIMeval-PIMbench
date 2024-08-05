@@ -8,7 +8,7 @@ SUBDIRS := $(wildcard */.)
 .PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
 .DEFAULT_GOAL := perf
 
-USE_OPENMP ?= 1
+USE_OPENMP ?= 0
 
 COMPILE_WITH_JPEG ?= 0
 
