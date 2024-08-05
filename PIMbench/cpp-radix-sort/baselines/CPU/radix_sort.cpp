@@ -131,9 +131,9 @@ int main(int argc, char *argv[])
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedTime = (end - start)/WARMUP;
     cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
-    cout << "Original Array:\n";
-    printArray(dataArray);
-    cout << "\n\nSorted array:\n";
-    printArray(sortedArray);
+    // cout << "Original Array:\n";
+    // printArray(dataArray);
+    // cout << "\n\nSorted array:\n";
+    // printArray(sortedArray);
     return 0;
 } /* main */
