@@ -401,7 +401,8 @@ bool knn_cuda_global(const float * ref,
     checkCudaErrors(cudaEventSynchronize(stop));
 
     checkCudaErrors(cudaEventElapsedTime(&msecTotal, start, stop));
-    elapsed_time=((msecTotal)/1000);
+    elapsed_time=((msecTotal));
+    printf("Completed! Here is the time %f\n", msecTotal);
 
     // Copy classifcation results from the device to the host
     err = cudaMemcpy(query_labels, query_labels_dev, query_nb * size_of_int, cudaMemcpyDeviceToHost);

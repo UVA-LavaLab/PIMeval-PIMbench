@@ -179,12 +179,7 @@ bool test(const float * ref,
 
     timeInMsec=(elapsed_time)*1000.0f;
 
-    sizeInGBytes= (ref_nb   * dim * sizeof(float)+ query_nb * dim * sizeof(float)  )* 1.0e-9;
-    outPutSizeInGBytes=(query_nb * k   * sizeof(float)+query_nb * k   * sizeof(int))*1.0e-9;
-    if(timeInMsec!=0){
-    	  gigaProcessedInSec=( sizeInGBytes) / (timeInMsec / 1000.0f);
-   }
-    printOutput();
+    printf("here is time from test.cpp %8.5f\n", elapsed_time);
 
     // Free memory
     free(test_knn_result);

@@ -20,6 +20,6 @@ CXXFLAGS := -std=c++11
 all: $(EXEC)
 
 $(EXEC): $(SOURCES)
-	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I./inc $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
+	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I./inc -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 clean:
 	rm -f $(EXEC)
