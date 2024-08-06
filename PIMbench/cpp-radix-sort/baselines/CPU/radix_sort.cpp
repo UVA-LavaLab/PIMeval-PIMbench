@@ -26,7 +26,7 @@ void initVector(uint64_t vectorSize, vector<int32_t>& vectorPoints)
     srand(8746219);
     for (uint64_t i = 0; i < vectorSize; i++)
     {
-        vectorPoints[i] = rand() % MAX_NUMBER;
+        vectorPoints[i] = rand() % INT32_MAX;
     }
 }
 
@@ -91,7 +91,7 @@ void radixSort(const vector<int32_t> &dataArray, vector<int32_t> &sortedArray)
     // Do counting sort for every digit. Note that instead
     // of passing the digit number, exp is passed. exp is 10^i
     // where i is the current digit number
-    for (int exp = 1; m / exp > 0; exp *= 10)
+    for (uint64_t exp = 1; m / exp > 0; exp *= 10)
     {
         countingSort(sortedArray, exp, tempArray, count);
         std::fill(count.begin(), count.end(), 0);
