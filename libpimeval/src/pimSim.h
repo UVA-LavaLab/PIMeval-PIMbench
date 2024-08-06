@@ -10,7 +10,7 @@
 #include "libpimeval.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
-#include "pimParamsPerf.h"
+#include "pimPerfEnergyModels.h"
 #include "pimStats.h"
 #include <vector>
 #include <cstdarg>
@@ -133,6 +133,9 @@ private:
   ~pimSim();
   pimSim(const pimSim&) = delete;
   pimSim operator=(const pimSim&) = delete;
+  bool init(const std::string& simConfigFileContent = "");
+  void uninit();
+  bool parseConfigFromFile(const std::string& simConfigFileContent);
 
   static pimSim* s_instance;
 
@@ -142,7 +145,11 @@ private:
   pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
   pimUtils::threadPool* m_threadPool = nullptr;
-  unsigned m_numThreads = 1;
+  unsigned m_numThreads = 0;
+  std::string m_memConfigFileName;
+  std::string m_configFilesPath;
+  bool m_initCalled = false;
+
 };
 
 #endif

@@ -401,7 +401,8 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objDest.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement);
+    pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
     std::printf("PIM-Info: Copied %llu elements of %u bits from host to PIM obj %d\n",
@@ -415,7 +416,8 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement);
+    pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
     std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to host\n",
@@ -429,7 +431,8 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement);
+    pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
     std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to PIM obj %d\n",
@@ -500,8 +503,8 @@ pimCmdFunc1::computeRegion(unsigned index)
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
-      auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElementSrc);
-      auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementDest);
+      auto locSrc = srcRegion.locateIthElemInRegion(j);
+      auto locDest = destRegion.locateIthElemInRegion(j);
       auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
       bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
       if (isSigned) {
@@ -530,9 +533,9 @@ pimCmdFunc1::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc1(m_cmdType, objSrc);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
+  
+  pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForFunc1(m_cmdType, objSrc);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
 
@@ -597,9 +600,9 @@ pimCmdFunc2::computeRegion(unsigned index)
   // perform the computation
   unsigned numElementsInRegion = src1Region.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locSrc1 = locateNthElement(src1Region, isVLayout, j, bitsPerElementSrc1);
-    auto locSrc2 = locateNthElement(src2Region, isVLayout, j, bitsPerElementSrc2);
-    auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElementdest);
+    auto locSrc1 = src1Region.locateIthElemInRegion(j);
+    auto locSrc2 = src2Region.locateIthElemInRegion(j);
+    auto locDest = destRegion.locateIthElemInRegion(j);
 
     if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
@@ -705,8 +708,8 @@ pimCmdFunc2::updateStats() const
   PimDataType dataType = objSrc1.getDataType();
   bool isVLayout = objSrc1.isVLayout();
 
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForFunc2(m_cmdType, objSrc1);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
+  pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForFunc2(m_cmdType, objSrc1);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
 
@@ -767,7 +770,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   uint64_t currIdx = srcRegion.getElemIdxBegin();
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
-      auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
+      auto locSrc = srcRegion.locateIthElemInRegion(j);
       auto operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElement);
       T operand = getOperand(operandBits, objSrc.getDataType());
       m_regionSum[index] += operand;
@@ -809,8 +812,8 @@ pimCmdRedSum<T>::updateStats() const
     numPass = objSrc.getMaxNumRegionsPerCore();
   }
 
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRedSum(m_cmdType, objSrc, numPass);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
+  pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
 
@@ -862,7 +865,7 @@ pimCmdBroadcast<T>::computeRegion(unsigned index)
 
   uint64_t val = *reinterpret_cast<uint64_t *>(&m_val);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locDest = locateNthElement(destRegion, isVLayout, j, bitsPerElement);
+    auto locDest = destRegion.locateIthElemInRegion(j);
     setBits(core, isVLayout, locDest.first, locDest.second, val, bitsPerElement);
   }
   return true;
@@ -876,8 +879,8 @@ pimCmdBroadcast<T>::updateStats() const
   PimDataType dataType = objDest.getDataType();
   bool isVLayout = objDest.isVLayout();
 
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForBroadcast(m_cmdType, objDest);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
+  pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForBroadcast(m_cmdType, objDest);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
 
@@ -908,7 +911,7 @@ pimCmdRotate::execute()
       const pimRegion &srcRegion = objSrc.getRegions()[i];
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
-      auto locSrc = locateNthElement(srcRegion, isVLayout, 0, bitsPerElement);
+      auto locSrc = srcRegion.locateIthElemInRegion(0);
       uint64_t val = 0;
       if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
         val = m_regionBoundary[numRegions - 1];
@@ -923,9 +926,9 @@ pimCmdRotate::execute()
       unsigned coreId = srcRegion.getCoreId();
       pimCore &core = m_device->getCore(coreId);
       unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
-      auto locSrc = locateNthElement(srcRegion, isVLayout, numElementsInRegion - 1, bitsPerElement);
+      auto locSrc = srcRegion.locateIthElemInRegion(numElementsInRegion - 1);
       uint64_t val = 0;
-      if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
+      if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_L) {
         val = m_regionBoundary[0];
       } else if (i < numRegions - 1) {
         val = m_regionBoundary[i + 1];
@@ -967,7 +970,7 @@ pimCmdRotate::computeRegion(unsigned index)
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   std::vector<uint64_t> regionVector(numElementsInRegion);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
+    auto locSrc = srcRegion.locateIthElemInRegion(j);
     regionVector[j] = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElement);
   }
 
@@ -994,7 +997,7 @@ pimCmdRotate::computeRegion(unsigned index)
 
   // write back values
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    auto locSrc = locateNthElement(srcRegion, isVLayout, j, bitsPerElement);
+    auto locSrc = srcRegion.locateIthElemInRegion(j);
     setBits(core, isVLayout, locSrc.first, locSrc.second, regionVector[j], bitsPerElement);
   }
   return true;
@@ -1008,8 +1011,8 @@ pimCmdRotate::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  double msRuntime = pimSim::get()->getParamsPerf()->getMsRuntimeForRotate(m_cmdType, objSrc);
-  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), msRuntime);
+  pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForRotate(m_cmdType, objSrc);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
 
@@ -1035,7 +1038,8 @@ pimCmdReadRowToSa::execute()
   }
 
   // Update stats
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), 0.0);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1060,7 +1064,8 @@ pimCmdWriteSaToRow::execute()
   }
 
   // Update stats
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), 0.0);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1163,7 +1168,8 @@ pimCmdRRegOp::execute()
   }
 
   // Update stats
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), 0.0);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1215,7 +1221,8 @@ pimCmdRRegRotate::execute()
   }
 
   // Update stats
-  pimSim::get()->getStatsMgr()->recordCmd(getName(), 0.0);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
 
@@ -1302,7 +1309,8 @@ pimCmdAnalogAAP::execute()
   // Update stats
   std::string cmdName = getName();
   cmdName += "@" + std::to_string(m_srcRows.size()) + "," + std::to_string(m_destRows.size());
-  pimSim::get()->getStatsMgr()->recordCmd(cmdName, 0.0);
+  pimParamsPerf::perfEnergy prfEnrgy;
+  pimSim::get()->getStatsMgr()->recordCmd(cmdName, prfEnrgy);
   return true;
 }
 

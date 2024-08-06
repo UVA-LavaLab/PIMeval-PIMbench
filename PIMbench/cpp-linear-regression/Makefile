@@ -1,18 +1,16 @@
-# Makefile: C++ version of vector addition
+# Makefile: C++ version of linear regression
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-include ../Makefile.common
+SUBDIRS := PIM
 
-EXEC := lr.out
-SRC := lr.cpp
+.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
+.DEFAULT_GOAL := perf
 
-debug perf dramsim3_integ: $(EXEC)
+USE_OPENMP ?= 0
 
-$(EXEC): $(SRC) $(DEPS)
-	$(CXX) $< $(CXXFLAGS) -o $@
+debug perf dramsim3_integ clean: $(SUBDIRS)
 
-clean:
-	rm -rf $(EXEC) *.dSYM
-
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)

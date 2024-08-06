@@ -12,6 +12,7 @@
 #include <time.h> 
 #include <algorithm>
 #include <chrono>
+#include <omp.h>
 
 #define MY_RANGE 100
 
@@ -34,7 +35,7 @@ void usage()
           "\n    Usage:  ./db-filtering.out [options]"
           "\n"
           "\n    -n    database size (default=2048 elements)"
-          "\n    -k    value of key (default = 70)"
+          "\n    -k    value of key (default = 1)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing the database (default=generates datapoints with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=true)"
@@ -45,7 +46,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.inVectorSize = 2048;
-  p.key = 70;
+  p.key = 1;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = true;
@@ -163,11 +164,32 @@ int main(int argc, char **argv){
 
     auto start_cpu = std::chrono::high_resolution_clock::now();
 
-    // select data whose bitmap is '1' on host based on bitmap from PIM
-    for (uint64_t i = 0; i < inVectorSize; i++){
-        if(bitMap[i] == 1){
-            outVector.push_back(inVector[i]);
+    // select data whose bitmap is '1'
+    // Do parallel reduction with a degree of (32) by creating 32 subarrays and then combining the results in these 32 array serially.
+    uint64_t nThreads = 16;
+    cout << "nThreads = " << nThreads << endl;
+    uint64_t outSubSize = inVectorSize/nThreads;
+    vector<vector<int32_t>> outSubVector(nThreads);
+
+#pragma omp parallel num_threads(nThreads)
+    for (uint64_t i = 0; i < outSubSize; i++){
+        int tid = omp_get_thread_num();
+        uint64_t index = tid * outSubSize + i;
+        if(index < inVectorSize){
+          if(bitMap[index] == true){
+            outSubVector[tid].push_back(inVector[index]);
+          }
         }
+    }
+    int outSize = 0;
+
+#pragma omp critical
+    for (uint64_t i = 0; i < nThreads; i++){
+      outSize += outSubVector[i].size();
+    }
+#pragma omp critical
+    for (uint64_t i = 0; i < nThreads; i++){
+      outVector.insert(outVector.end(), outSubVector[i].begin(), outSubVector[i].end());
     }
 
     auto stop_cpu = std::chrono::high_resolution_clock::now();
