@@ -402,7 +402,6 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
             const auto& neighborsV = adjList.find(*it_v)->second;
             convertToBitMap(neighborsU, 0, src1);
             convertToBitMap(neighborsV, 0, src2);
-            // words += wordsPerMatrixRow;
             for (int j = 0; j < wordsPerMatrixRow; ++j) {
                 if(USE_OPT) {
                     auto ifstart = std::chrono::high_resolution_clock::now();
