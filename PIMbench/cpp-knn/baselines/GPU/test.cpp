@@ -4,8 +4,6 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
-#include <time.h>
 #include <helper_string.h>  // helper for shared functions common to CUDA Samples
 
 #include "knncuda.h"
@@ -157,29 +155,13 @@ bool test(const float * ref,
         free(test_knn_result);
         return false;
     }
-    // Start timer
-    struct timeval tic;
-    gettimeofday(&tic, NULL);
 
     if (!knn(ref, ref_nb, query, query_nb, dim, k, test_knn_result, elapsed_time)) {
-
-
         free(test_knn_result);
         return false;
     }
 
 
-    // Stop timer
-    struct timeval toc;
-    gettimeofday(&toc, NULL);
-
-    // Elapsed time in ms
-    elapsed_time = toc.tv_sec - tic.tv_sec;
-    elapsed_time += (toc.tv_usec - tic.tv_usec) / 1000000.;
-
-    timeInMsec=(elapsed_time)*1000.0f;
-
-    printf("here is time from test.cpp %8.5f\n", elapsed_time);
 
     // Free memory
     free(test_knn_result);
