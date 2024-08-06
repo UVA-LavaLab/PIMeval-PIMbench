@@ -226,8 +226,8 @@ void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<in
   }
   // How many GEMVs can be processed in parallel?
   // Following calculation is done based on bit serial data layout
-  uint64_t totalAvailableBitsPerItr = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank * deviceProp.numColPerSubarray;
-  uint64_t totalBitsRequired = colB * row * 32; // assuming 32bits INT
+  uint64_t totalAvailableBitsPerItr = (uint64_t)deviceProp.numRanks * (uint64_t)deviceProp.numBankPerRank * (uint64_t)deviceProp.numSubarrayPerBank * (uint64_t)deviceProp.numRowPerSubarray * (uint64_t)deviceProp.numColPerSubarray;
+  uint64_t totalBitsRequired = colB * row * 32 * 4; // assuming 32bits INT
   uint64_t batchSize = std::min(colB, (uint64_t)std::ceil(totalAvailableBitsPerItr * 1.0 / totalBitsRequired));
 
   // Concatenate matrices. Needs to be done once
