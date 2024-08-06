@@ -35,7 +35,7 @@ void usage()
           "\n    Usage:  ./db-filtering.out [options]"
           "\n"
           "\n    -n    database size (default=2048 elements)"
-          "\n    -k    value of key (default = 70)"
+          "\n    -k    value of key (default = 1)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing the database (default=generates datapoints with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=true)"
@@ -46,7 +46,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.inVectorSize = 2048;
-  p.key = 70;
+  p.key = 1;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = true;

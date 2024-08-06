@@ -22,7 +22,7 @@ public:
   int getBurstLength() const { return m_BL;}
   int getNumChipsPerRank() const {return m_busWidth / m_deviceWidth; }
   float getNsRowRead() const { return m_tCK * (m_tRCD + m_tRP); }
-  float getNsRowWrite() const { return m_tCK * (m_tWR + m_tRP); }
+  float getNsRowWrite() const { return m_tCK * (m_tWR + m_tRP + m_tRCD); }
   float getNsTCCD_S() const { return m_tCK * m_tCCD_S; }
   float getNsTCAS() const { return m_tCK * m_CL; }
   float getNsAAP() const { return m_tCK * (m_tRAS + m_tRP); }
