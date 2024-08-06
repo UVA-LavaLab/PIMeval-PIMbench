@@ -28,6 +28,8 @@
 #define ADJ_LIST 1
 #define INPUT_MODE ADJ_LIST
 
+#define USE_OPT 0
+
 typedef uint32_t UINT32;
 
 
@@ -402,16 +404,18 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
             convertToBitMap(neighborsV, 0, src2);
             // words += wordsPerMatrixRow;
             for (int j = 0; j < wordsPerMatrixRow; ++j) {
-                auto ifstart = std::chrono::high_resolution_clock::now();
-                if(src1[j] == 0 || src2[j] == 0) {
+                if(USE_OPT) {
+                    auto ifstart = std::chrono::high_resolution_clock::now();
+                    if(src1[j] == 0 || src2[j] == 0) {
+                        auto ifend = std::chrono::high_resolution_clock::now();
+                        auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
+                        host_time_if += ifelapsedTime.count();
+                        continue;
+                    }
                     auto ifend = std::chrono::high_resolution_clock::now();
                     auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
                     host_time_if += ifelapsedTime.count();
-                    continue;
                 }
-                auto ifend = std::chrono::high_resolution_clock::now();
-                auto ifelapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(ifend - ifstart);
-                host_time_if += ifelapsedTime.count();
                 ++words;
                 opt_src1.push_back(src1[j]);
                 opt_src2.push_back(src2[j]);
