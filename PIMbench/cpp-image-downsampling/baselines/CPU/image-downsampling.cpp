@@ -8,6 +8,7 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -238,6 +239,15 @@ int main(int argc, char* argv[])
   std::cout << "CPU test: Image Downsampling" << std::endl;
   
   string input_file = params.inputFile;
+
+
+  // Check if file exists [2]
+  struct stat exists_buffer;
+  if(stat(input_file.c_str(), &exists_buffer)) {
+    std::cout << "Input file \"" << input_file << "\" does not exist!" << endl;
+    exit(1);
+  }
+
   std::cout << "Input file: '" << input_file << "'" << std::endl;
   std::vector<uint8_t> img = read_file_bytes(input_file);
 
@@ -254,3 +264,6 @@ int main(int argc, char* argv[])
 
 // [1] N. Liesch, The bmp file format. [Online]. Available:
 // https://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm.
+
+// [2] Vincent, “Fastest way to check if a file exists using standard C++/C++11,14,17/C?,” Stack Overflow, 2024.
+// https://stackoverflow.com/a/12774387 (accessed Aug. 07, 2024).
