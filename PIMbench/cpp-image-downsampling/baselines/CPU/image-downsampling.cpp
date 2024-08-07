@@ -7,15 +7,9 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <iomanip>
 
 using namespace std;
-
-auto current_time_ns() {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = now.time_since_epoch();
-    auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
-    return nanoseconds;
-}
 
 typedef struct Params
 {
@@ -163,6 +157,9 @@ std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
 {
   //    Averaging Kernel
   NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img);
+
+  auto start = std::chrono::high_resolution_clock::now();
+
   char* pixels_out_averaged = (char*)avg_out.new_img.data() + avg_out.new_data_offset;
   char* pixels_in = (char*)img.data() + avg_out.data_offset;
 
@@ -185,6 +182,11 @@ std::vector<uint8_t> avg_cpu(std::vector<uint8_t> img)
       pixels_out_averaged[avg_out.new_scanline_size * y + x] = 0;
     }
   }
+
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> elapsedTime = end - start;
+  std::cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
+
   return avg_out.new_img;
 }
 
@@ -243,13 +245,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  auto start_time = current_time_ns();
   vector<uint8_t> cpu_averaged = avg_cpu(img);
-  auto end_time = current_time_ns();
-
-  auto dur = ((double) (end_time - start_time))/1000000;
-
-  cout << "Time: " << dur << " ms" << endl;
 
   if(params.outputFile != nullptr) {
     write_img(cpu_averaged, params.outputFile);
