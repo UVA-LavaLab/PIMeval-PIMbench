@@ -7,15 +7,9 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <sys/stat.h>
 
 using namespace std;
-
-auto current_time_ns() {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = now.time_since_epoch();
-    auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
-    return nanoseconds;
-}
 
 typedef struct Params
 {
@@ -187,29 +181,73 @@ __global__ void imgDSAverage(char* pix_in , char* pix_out , int new_height , int
 }
 
 std::vector<uint8_t> avg_gpu(std::vector<uint8_t> img) {
-
+  
     NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img, true);
+    
     char* pixels_out_averaged = (char*) avg_out.new_img.data() + avg_out.new_data_offset;
 
     char* pixels_in = (char*) img.data() + avg_out.data_offset;
 
 
-    dim3 dimGrid (( avg_out.new_width + 255) / 256 , avg_out.new_height , 1);
-    dim3 dimBlock (256 , 1 , 1);
+    dim3 dimGrid (( avg_out.new_width + 1023) / 1024 , avg_out.new_height , 1);
+    dim3 dimBlock (1024 , 1 , 1);
 
     char* new_pixels_gpu_average;
     char* old_pixels_gpu;
 
     int new_pixels_size = avg_out.new_height*avg_out.new_scanline_size;
 
-    cudaMalloc((void**)&new_pixels_gpu_average, new_pixels_size);
-    cudaMalloc((void**)&old_pixels_gpu, avg_out.old_pixels_size);
+    cudaError_t errorCode;
+
+    errorCode = cudaMalloc((void**)&new_pixels_gpu_average, new_pixels_size);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    errorCode = cudaMalloc((void**)&old_pixels_gpu, avg_out.old_pixels_size);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
     
-    cudaMemcpy(old_pixels_gpu, pixels_in, avg_out.old_pixels_size, cudaMemcpyHostToDevice);
+    errorCode = cudaMemcpy(old_pixels_gpu, pixels_in, avg_out.old_pixels_size, cudaMemcpyHostToDevice);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float timeElapsed = 0;
+
+    cudaEventRecord(start, 0);
 
     imgDSAverage<<<dimGrid, dimBlock>>>(old_pixels_gpu, new_pixels_gpu_average, avg_out.new_height, avg_out.new_width, avg_out.scanline_size, avg_out.new_scanline_size, avg_out.new_pixel_data_width);
     
-    cudaMemcpy(pixels_out_averaged, new_pixels_gpu_average, new_pixels_size, cudaMemcpyDeviceToHost);
+    errorCode = cudaGetLastError();
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&timeElapsed, start, stop);
+
+    printf("Execution time of image downsampling = %f ms\n", timeElapsed);
+
+    errorCode = cudaMemcpy(pixels_out_averaged, new_pixels_gpu_average, new_pixels_size, cudaMemcpyDeviceToHost);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
     
     cudaFree(old_pixels_gpu);
     cudaFree(new_pixels_gpu_average);
@@ -298,8 +336,6 @@ bool check_image(std::vector<uint8_t>& img) {
   return true;
 }
 
-__global__ void GPU_init() { }
-
 int main(int argc, char* argv[])
 {
 
@@ -309,6 +345,14 @@ int main(int argc, char* argv[])
   std::cout << "GPU test: Image Downsampling" << std::endl;
   
   string input_file = params.inputFile;
+
+  // Check if file exists [2]
+  struct stat exists_buffer;
+  if(stat(input_file.c_str(), &exists_buffer)) {
+    std::cout << "Input file \"" << input_file << "\" does not exist!" << endl;
+    exit(1);
+  }
+
   std::cout << "Input file: '" << input_file << "'" << std::endl;
   std::vector<uint8_t> img = read_file_bytes(input_file);
 
@@ -316,22 +360,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  GPU_init<<<1,1>>>();
-
-  auto start_time = current_time_ns();
   vector<uint8_t> gpu_averaged = avg_gpu(img);
-  auto end_time = current_time_ns();
-
-  auto dur = ((double) (end_time - start_time))/1000000;
-  
-  cudaError_t cuda_error = cudaGetLastError();
-
-  if(cuda_error != cudaSuccess) {
-    printf("Cuda Error: %s\n", cudaGetErrorString(cuda_error));
-    return -1;
-  }
-
-  cout << "Time: " << dur << " ms" << endl;
 
   if(params.outputFile != nullptr) {
     write_img(gpu_averaged, params.outputFile);
@@ -357,3 +386,7 @@ int main(int argc, char* argv[])
 
 // [1] N. Liesch, The bmp file format. [Online]. Available:
 // https://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm.
+
+
+// [2] Vincent, “Fastest way to check if a file exists using standard C++/C++11,14,17/C?,” Stack Overflow, 2024.
+// https://stackoverflow.com/a/12774387 (accessed Aug. 07, 2024).
