@@ -111,7 +111,7 @@ constexpr int bmp_scanline_padding_multiple = 4; // BMP file format specifies th
 constexpr int bits_per_element = 8;
 constexpr int shift_amount = 2;
 
-NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img)
+NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img, bool print_size=false)
 {
   // Parse input BMP file and create header for output BMP file
   // Parse BMP file [1]
@@ -122,7 +122,10 @@ NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img)
   int img_width = *((int*)(img.data() + width_location));
   int img_height = *((int*)(img.data() + height_location));
 
-  printf("Input Image: %dx%d\n", img_width, img_height);
+  if(print_size)
+  {
+    printf("Input Image: %dx%d\n", img_width, img_height);
+  }
 
   int x_pixels_per_m = *((int*)(img.data() + x_pixels_per_m_location));
   int y_pixels_per_m = *((int*)(img.data() + y_pixels_per_m_location));
@@ -235,7 +238,7 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
 
 std::vector<uint8_t> image_downsampling_pim(std::vector<uint8_t>& img)
 {
-  NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img);
+  NewImgWrapper avg_out = parseInputImageandSetupOutputImage(img, true);
   size_t needed_elements = avg_out.new_height * avg_out.new_scanline_size;
   uint8_t* pixels_out_avg = (uint8_t*)avg_out.new_img.data() + avg_out.new_data_offset;
   uint8_t* pixels_in = (uint8_t*)img.data() + avg_out.data_offset;
