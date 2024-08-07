@@ -367,34 +367,34 @@ int main(int argc, char *argv[])
   uint64_t numOfBits = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;  
 
   // Calculate the input, kernel and the output dimensions 
-  int inputHeight = inputMatrix[0][0].size();
-  int inputWidth = inputMatrix[0][0][0].size();
-  int kernelHeight = kernelMatrix[0].size();
-  int kernelWidth = kernelMatrix[0][0].size(); 
-  int outMatDim = params.kernelDim;
-  int outputHeight = std::floor((inputHeight - kernelHeight) / params.stride) + 1;
-  int outputWidth = std::floor((inputWidth - kernelWidth) / params.stride) + 1;
+  uint64_t inputHeight = inputMatrix[0][0].size();
+  uint64_t inputWidth = inputMatrix[0][0][0].size();
+  uint64_t kernelHeight = kernelMatrix[0].size();
+  uint64_t kernelWidth = kernelMatrix[0][0].size(); 
+  uint64_t outMatDim = params.kernelDim;
+  uint64_t outputHeight = std::floor((inputHeight - kernelHeight) / params.stride) + 1;
+  uint64_t outputWidth = std::floor((inputWidth - kernelWidth) / params.stride) + 1;
 
   // Calculate the required number of PIM rows and number of matrices per row   
-  int numOfPIMRow = params.kernelSize * params.kernelSize;
-  int numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfBits) / (outputHeight * outputWidth * params.batchSize))), params.dim);  
+  uint64_t numOfPIMRow = params.kernelSize * params.kernelSize;
+  uint64_t numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfBits) / (outputHeight * outputWidth * params.batchSize))), params.dim);  
 
   std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
   std::vector<std::vector<std::vector<std::vector<int>>>> resultMatrix(params.batchSize);
-  for (int b = 0; b < params.batchSize; ++b) {
+  for (uint64_t b = 0; b < params.batchSize; ++b) {
     resultMatrix[b].resize(outMatDim, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
   }
 
-  for (int i = 0; i < params.kernelDim; i++)
+  for (uint64_t i = 0; i < params.kernelDim; i++)
   {
     int tempcol = 0;
     std::vector<int> dstVec(outputHeight * outputWidth * params.batchSize);
-    for (int j = 0; j < params.dim; j += numOfMatPerRow)
+    for (uint64_t j = 0; j < params.dim; j += numOfMatPerRow)
     {
       int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-      for (int k = j; k < matChunk; k++)
+      for (uint64_t k = j; k < matChunk; k++)
       { 
         for (int b = 0; b < params.batchSize; ++b) 
         {
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
             std::cout << "[INFO]: Decomposed Matrix:" << std::endl;
             printMatrix(decompMat);
           }
-          for (int idx = 0; idx < mergedMat.size(); idx++)
+          for (u_int64_t idx = 0; idx < mergedMat.size(); idx++)
           {
             mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
             mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
@@ -437,9 +437,9 @@ int main(int argc, char *argv[])
         std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
       }
 
-      for (int m = 0; m < hopSize; ++m)
+      for (uint64_t m = 0; m < hopSize; ++m)
       {
-        for (int n = m + hopSize; n < outVector.size(); n += hopSize)
+        for (uint64_t n = m + hopSize; n < outVector.size(); n += hopSize)
         {
           dstVec[m] += outVector[n];
         }
@@ -456,9 +456,9 @@ int main(int argc, char *argv[])
     int ddx = 0;
     for (int b = 0; b < params.batchSize; ++b) 
     {
-    for (int r = 0; r < outputHeight; ++r)
+    for (uint64_t r = 0; r < outputHeight; ++r)
       {
-        for (int c = 0; c < outputWidth; ++c)
+        for (uint64_t c = 0; c < outputWidth; ++c)
         {
           resultMatrix[b][i][r][c] = dstVec[ddx++];
         }
