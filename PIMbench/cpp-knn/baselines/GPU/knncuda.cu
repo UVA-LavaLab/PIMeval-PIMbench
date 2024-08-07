@@ -1,418 +1,351 @@
 #include <stdio.h>
+#include <getopt.h>
+#include <stdlib.h>
+#include <string.h>
 #include <cuda.h>
 #include <cublas.h>
 #include <sys/time.h>
 #include <time.h>
 #include <cuda_runtime.h>
-//#include <cublas_v2.h>
 
 // CUDA and CUBLAS functions
-#include <helper_functions.h>
-#include <helper_cuda.h>
-#define BLOCK_DIM 32
+#include "helper_cuda.h"
 
-/**
- * Computes the manhatten distance matrix between the query points and the reference points.
- *
- * @param ref          refence points stored in the global memory
- * @param ref_width    number of reference points
- * @param ref_pitch    pitch of the reference points array in number of column
- * @param query        query points stored in the global memory
- * @param query_width  number of query points
- * @param query_pitch  pitch of the query points array in number of columns
- * @param height       dimension of points = height of texture `ref` and of the array `query`
- * @param dist         array containing the query_width x ref_width computed distances
- * @param offset       the segment of the reference array to start at, if any
- */
-__global__ void compute_distances_segment(float * ref,
-                                  int     ref_width,
-                                  int     ref_pitch,
-                                  float * query,
-                                  int     query_width,
-                                  int     query_pitch,
-                                  int     height,
-                                  float * dist,
-                                  int offset) {
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#include <thrust/sort.h>
+#include <thrust/sequence.h>
+#include <thrust/transform.h>
+#include <thrust/gather.h>
+#include <thrust/pair.h>
+#include <thrust/iterator/constant_iterator.h>
+#include <iostream>
 
-    // Declaration of the shared memory arrays As and Bs used to store the sub-matrix of A and B
-    __shared__ float shared_A[BLOCK_DIM][BLOCK_DIM];
-    __shared__ float shared_B[BLOCK_DIM][BLOCK_DIM];
+typedef struct Params
+{
+    int numTestPoints;
+    int numDataPoints;
+    int dimension;
+    int k;
+    char *inputTestFile;
+    char *inputDataFile;
+} Params;
 
-    // Sub-matrix of A (begin, step, end) and Sub-matrix of B (begin, step)
-    __shared__ int begin_A;
-    __shared__ int begin_B;
-    __shared__ int step_A;
-    __shared__ int step_B;
-    __shared__ int end_A;
-
-    // Thread index
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-
-    // Initializarion of the SSD for the current thread
-    float ssd = 0.f;
-
-    // Loop parameters
-    begin_A = BLOCK_DIM * blockIdx.y + offset;  // account for segment offset
-    begin_B = BLOCK_DIM * blockIdx.x;
-    step_A  = BLOCK_DIM * ref_pitch;
-    step_B  = BLOCK_DIM * query_pitch;
-    end_A   = begin_A + (height - 1) * ref_pitch;
-
-    // Conditions
-    int cond0 = (begin_A + tx < ref_width);  // used to write in shared memory
-    int cond1 = (begin_B + tx < query_width);  // used to write in shared memory & to computations and to write in output array 
-    int cond2 = (begin_A + ty < ref_width);  // used to computations and to write in output matrix
-
-    // Loop over all the sub-matrices of A and B required to compute the block sub-matrix
-    for (int a = begin_A, b = begin_B; a <= end_A; a += step_A, b += step_B) {
-
-        // Load the matrices from device memory to shared memory; each thread loads one element of each matrix
-        if (a/ref_pitch + ty < height) {
-            shared_A[ty][tx] = (cond0)? ref[a + ref_pitch * ty + tx] : 0;
-            shared_B[ty][tx] = (cond1)? query[b + query_pitch * ty + tx] : 0;
-        }
-        else {
-            shared_A[ty][tx] = 0;
-            shared_B[ty][tx] = 0;
-        }
-
-        // Synchronize to make sure the matrices are loaded
-        __syncthreads();
-
-        // Compute the difference between the two matrixes; each thread computes one element of the block sub-matrix
-        if (cond2 && cond1) {
-            for (int k = 0; k < BLOCK_DIM; ++k){
-                float tmp = shared_A[k][ty] - shared_B[k][tx];
-                ssd += fabsf(tmp);
-            }
-        }
-
-        // Synchronize to make sure that the preceeding computation is done before loading two new sub-matrices of A and B in the next iteration
-        __syncthreads();
-    }
-
-    // Write the block sub-matrix to device memory; each thread writes one element
-    if (cond2 && cond1) {
-        dist[ (begin_A + ty) * query_pitch + begin_B + tx ] = ssd;
-    }
-
+void usage()
+{
+    fprintf(stderr,
+            "\nUsage:  ./program [options]"
+            "\n"
+            "\n    -n    number of data points (default=65536 points)"
+            "\n    -m    number of test points (default=100 points)"
+            "\n    -d    dimension (default=2)"
+            "\n    -k    value of K (default=20)"
+            "\n    -i    input file containing training datapoints (default=generates datapoints with random numbers)"
+            "\n    -j    input file containing testing datapoints (default=generates datapoints with random numbers)"
+            "\n");
 }
 
+struct Params input_params(int argc, char **argv)
+{
+    struct Params p;
+    p.numDataPoints = 65536;
+    p.numTestPoints = 100;
+    p.dimension = 2;
+    p.k = 20;
+    p.inputTestFile = nullptr;
+    p.inputDataFile = nullptr;
 
-/**
- * For each reference point (i.e. each column) finds the k-th smallest distances
- * of the distance matrix and their respective indexes and gathers them at the top
- * of the 2 arrays.
- *
- * Since we only need to locate the k smallest distances, sorting the entire array
- * would not be very efficient if k is relatively small. Instead, we perform a
- * simple insertion sort by eventually inserting a given distance in the first
- * k values.
- *
- * @param dist         distance matrix
- * @param dist_pitch   pitch of the distance matrix given in number of columns
- * @param index        index matrix
- * @param index_pitch  pitch of the index matrix given in number of columns
- * @param width        width of the distance matrix and of the index matrix
- * @param height       height of the distance matrix
- * @param k            number of values to find
- */
-__global__ void modified_insertion_sort(float * dist,
-                                        int     dist_pitch,
-                                        int *   index,
-                                        int     index_pitch,
-                                        int     width,
-                                        int     height,
-                                        int     k){
-
-    // Column position
-    unsigned int xIndex = blockIdx.x * blockDim.x + threadIdx.x;
-    // Do nothing if we are out of bounds
-    if (xIndex >= width) {
-        return;
+    int opt;
+    while ((opt = getopt(argc, argv, "h:k:n:m:d:i:j:")) >= 0)
+    {
+        switch (opt)
+        {
+        case 'h':
+            usage();
+            exit(0);
+            break;
+        case 'n':
+            p.numDataPoints = atoll(optarg);
+            break;
+        case 'm':
+            p.numTestPoints = atoll(optarg);
+            break;
+        case 'd':
+            p.dimension = atoll(optarg);
+            break;
+        case 'k':
+            p.k = atoi(optarg);
+            break;
+        case 'i':
+            p.inputDataFile = optarg;
+            break;
+        case 'j':
+            p.inputTestFile = optarg;
+            break;
+        default:
+            fprintf(stderr, "\nUnrecognized option!\n");
+            usage();
+            exit(0);
+        }
     }
 
-    // Pointer shift
-    float * p_dist  = dist  + xIndex;
-    int *   p_index = index + xIndex;
-
-    // Initialise the first index
-    p_index[0] = 0;
-
-    // Go through all points
-    for (int i=0; i < height; ++i) {
-
-        // Store current distance and associated index
-        int   curr_index  = i;
-        float curr_dist = p_dist[curr_index*dist_pitch];
-        // Skip the current value if its index is >= k and if it's higher the k-th slready sorted smallest value
-        if (curr_index >= k && curr_dist >= p_dist[(k-1)*dist_pitch]) {
-            continue;
-        }
-
-        // Shift values (and indexes) higher that the current distance to the right
-        int j = min(curr_index, k-1);
-        while (j > 0 && p_dist[(j-1)*dist_pitch] > curr_dist) {
-            p_dist[(j)*dist_pitch]  = p_dist[(j -1)*dist_pitch];
-            p_index[(j)*index_pitch] = p_index[(j-1)*index_pitch];
-            --j;
-        }
-
-        // Write the current distance and index at their position
-        p_dist[(j)*dist_pitch]   = curr_dist;
-        p_index[(j)*index_pitch] = curr_index;
-    }
-
+    return p;
 }
 
 /**
- * Classify each query point by utilizing the k smallest distances stored in the ref and index arrays.
+ * Initializes randomly the reference and query points.
  *
- * @param index        index matrix   
- * @param ref          refence points stored in the global memory
- * @param ref_pitch    pitch of the reference points array in number of column
- * @param index_pitch  pitch of the index matrix given in number of columns
- * @param query_labels the result array
- * @param query_nb     number of query points
- * @param height       height of the ref matrix
- * @param k            number of values to find
+ * @param ref        refence points
+ * @param ref_nb     number of reference points
+ * @param query      query points
+ * @param query_nb   number of query points
+ * @param dim        dimension of points
  */
-__global__ void majority_voting_kernel(const int* index, const float * ref, int ref_pitch, int* query_labels, int index_pitch, int query_nb, int height, int k) {
-    // Get the query point index
-    int query_idx = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    if (query_idx < query_nb) {
-        // Use shared memory to count votes
-        extern __shared__ int shared_mem[];
-        int* vote_count = shared_mem + threadIdx.x * k;
+void initialize_data(float * ref,
+                     int     ref_nb,
+                     float * query,
+                     int     query_nb,
+                     int     dim) {
 
-        // Initialize vote counts to zero
-        for (int i = 0; i < k; i += 1) {
-            vote_count[i] = 0;
-        }
-        __syncthreads();
+    // Initialize random number generator
+    srand(time(NULL));
 
-        // Count votes for each label
-        for (int j = 0; j < k; ++j) {
-            int ref_index = index[query_idx + j*index_pitch];
-            int label = ref[ref_index + (height)*ref_pitch];
-            atomicAdd(&vote_count[label], 1);
-        }
-        __syncthreads();
-
-        // Determine the majority label
-        int majority_label = 0;
-        int max_count = 0;
-        for (int i = 0; i < k; ++i) {
-            if (vote_count[i] > max_count) {
-                max_count = vote_count[i];
-                majority_label = i;
-            }
-        }
-        // Assign the majority label to the query point
-        query_labels[query_idx] = majority_label;
+    // Generate random reference points
+    for (int i=0; i<ref_nb*dim; ++i) {
+        ref[i] = 10. * (float)(rand() / (double)RAND_MAX);
     }
 
+    // Generate random query points
+    for (int i=0; i<query_nb*dim; ++i) {
+        query[i] = 10. * (float)(rand() / (double)RAND_MAX);
+    }
 }
 
-void knn_cuda_free(float *ref_dev, float *query_dev, float *dist_dev, int *index_dev, int *query_labels_dev) {
-    cudaFree(ref_dev);
-    cudaFree(query_dev);
-    cudaFree(dist_dev);
-    cudaFree(index_dev);
-    cudaFree(query_labels_dev);
-}
+struct manhatten_distance_functor {
+    const float* query;
+    const float* ref;
+    int dim;
 
+    manhatten_distance_functor(const float* _query, const float* _ref, int _dim)
+        : query(_query), ref(_ref), dim(_dim) {}
 
-bool knn_cuda_global(const float * ref,
+    __device__ float operator()(int idx) const {
+        float dist = 0.0f;
+        for (int i = 0; i < dim; ++i) {
+            float diff = ref[idx * dim + i] - query[i];
+            dist += fabsf(diff);
+        }
+        return dist;
+    }
+};
+
+// Functor to extract the label from the last dimension of the reference data
+struct label_extraction_functor {
+    const float* ref;
+    int dim;
+
+    label_extraction_functor(const float* _ref, int _dim)
+        : ref(_ref), dim(_dim) {}
+
+    __device__ int operator()(int idx) const {
+        return static_cast<int>(ref[idx * dim + (dim - 1)]);
+    }
+};
+
+bool knn(const float * ref,
                      int           ref_nb,
                      const float * query,
                      int           query_nb,
                      int           dim,
                      int           k,
-                     int *         query_labels, double &elapsed_time) {
-
-    // Constants
-    const unsigned int size_of_float = sizeof(float);
-    const unsigned int size_of_int   = sizeof(int);
-
-    // Return variables
-    cudaError_t err;
-
-    // Check that we have at least one CUDA device 
-    int nb_devices;
-    err = cudaGetDeviceCount(&nb_devices);
-    if (err != cudaSuccess || nb_devices == 0) {
-        printf("ERROR: No CUDA device found\n");
-        return false;
-    }
-
-    // Select the first CUDA device as default
-    err = cudaSetDevice(0);
-    if (err != cudaSuccess) {
-        printf("ERROR: Cannot set the chosen CUDA device\n");
-        return false;
-    }
-
-    // Allocate global memory
-    float * ref_dev   = NULL;
-    float * query_dev = NULL;
-    float * dist_dev  = NULL;
-    int   * index_dev = NULL;
-    int   * query_labels_dev = NULL;
-    size_t  ref_pitch_in_bytes;
-    size_t  query_pitch_in_bytes;
-    size_t  dist_pitch_in_bytes;
-    size_t  index_pitch_in_bytes;
-    printf("Attempting to allocate memory...\n");
-
-    err = cudaMallocPitch((void**)&ref_dev,   &ref_pitch_in_bytes,   ref_nb   * size_of_float, dim);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for ref_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
-
-    err = cudaMallocPitch((void**)&query_dev, &query_pitch_in_bytes, query_nb * size_of_float, dim);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for query_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
-
-    err = cudaMallocPitch((void**)&dist_dev,  &dist_pitch_in_bytes,  query_nb * size_of_float, ref_nb);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for dist_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
-
-    err = cudaMallocPitch((void**)&index_dev, &index_pitch_in_bytes, query_nb * size_of_int,   k);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for index_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
-
-    err = cudaMalloc((void**)&query_labels_dev, query_nb * size_of_int);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for query_labels_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
+                     int *         query_labels) {
 
 
-    // Deduce pitch values
-    size_t ref_pitch   = ref_pitch_in_bytes   / size_of_float;
-    size_t query_pitch = query_pitch_in_bytes / size_of_float;
-    size_t dist_pitch  = dist_pitch_in_bytes  / size_of_float;
-    size_t index_pitch = index_pitch_in_bytes / size_of_int;
-
-    // Check pitch values
-    if (query_pitch != dist_pitch || query_pitch != index_pitch) {
-        printf("ERROR: Invalid pitch value\n");
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false; 
-    }
-
-    // Copy reference and query data from the host to the device
-    err = cudaMemcpy2D(ref_dev,   ref_pitch_in_bytes,   ref,   ref_nb * size_of_float,   ref_nb * size_of_float,   dim, cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for ref_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
-
-    err = cudaMemcpy2D(query_dev, query_pitch_in_bytes, query, query_nb * size_of_float, query_nb * size_of_float, dim, cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) {
-        printf("ERROR: Memory allocation error for query_dev: %s\n", cudaGetErrorString(err));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
+    // Copy data to device
+    thrust::device_vector<float> d_ref(ref, ref + ref_nb * dim);
+    thrust::device_vector<float> d_query(query, query + query_nb * dim);
+    // Vectors to store k nearest neighbors
+    thrust::device_vector<int> indices;
+    thrust::device_vector<float> distances;
+    thrust::device_vector<int> classifications;
+    // Extract top k distances and corresponding indices
+    indices.resize(query_nb * k);
+    distances.resize(query_nb * k);
+    classifications.resize(query_nb);
+    // Allocate memory for distances and indices
+    thrust::device_vector<float> dist_matrix(query_nb * ref_nb);
+    thrust::device_vector<int> index_matrix(query_nb * ref_nb);
 
     cudaEvent_t start, stop;
     checkCudaErrors(cudaEventCreate(&start));
     checkCudaErrors(cudaEventCreate(&stop));
+
     // Record the start event
     checkCudaErrors(cudaEventRecord(start, NULL));
 
+    // Compute distances
+    for (int i = 0; i < query_nb; ++i) {
+        const float* query_ptr = thrust::raw_pointer_cast(&d_query[i * dim]);
+        const float* ref_ptr = thrust::raw_pointer_cast(d_ref.data());
+        manhatten_distance_functor dist_functor(query_ptr, ref_ptr, dim);
 
-    dim3 block0(BLOCK_DIM, BLOCK_DIM, 1);
-    dim3 grid0((query_nb + BLOCK_DIM - 1) / BLOCK_DIM, (ref_nb + BLOCK_DIM - 1) / BLOCK_DIM, 1);
-
-    // segment the grid if we have a large amount of ref points
-    int maxGridDimY = 65535;
-    int numSegments = (grid0.y + maxGridDimY - 1) / maxGridDimY;
-    for(int seg = 0; seg < numSegments; seg++) {
-        int offset = seg * maxGridDimY * BLOCK_DIM;
-        
-        dim3 gridSegment(grid0.x,
-            min(grid0.y - seg*maxGridDimY, maxGridDimY),
-            1
+        thrust::transform(
+            thrust::counting_iterator<int>(0),
+            thrust::counting_iterator<int>(ref_nb),
+            dist_matrix.begin() + i * ref_nb,
+            dist_functor
         );
-        compute_distances_segment<<<gridSegment, block0>>>(ref_dev, ref_nb, ref_pitch, query_dev, query_nb, query_pitch, dim, dist_dev, offset);
-        cudaDeviceSynchronize();
-        cudaError_t err = cudaGetLastError();
+        // Initialize the indices for each row
+        thrust::sequence( index_matrix.begin() + i*ref_nb, index_matrix.begin() + (i + 1) * ref_nb);
+    }
+    cudaDeviceSynchronize();
 
-        if (err != cudaSuccess) {
-            printf("ERROR: Unable to execute distance kernel: %s\n", cudaGetErrorString(err));
-            knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
+
+    // Sort the distances and indices
+    for (int i = 0; i < query_nb; ++i) {
+        thrust::sort_by_key(dist_matrix.begin() + i * ref_nb, dist_matrix.begin() + (i + 1) * ref_nb, index_matrix.begin() + i * ref_nb);
+    }
+
+    // Gather the k-nearest neighbor labels
+    thrust::device_vector<int> knn_labels(query_nb * k);
+    label_extraction_functor label_functor(thrust::raw_pointer_cast(d_ref.data()), dim);
+
+    for (int i = 0; i < query_nb; ++i) {
+        thrust::copy(dist_matrix.begin() + i * ref_nb, dist_matrix.begin() + i * ref_nb + k, distances.begin() + i * k);
+        thrust::copy(index_matrix.begin() + i * ref_nb, index_matrix.begin() + i * ref_nb + k, indices.begin() + i * k);
+    }
+
+    for (int i = 0; i < query_nb; ++i) {
+
+        if (i * ref_nb + k > index_matrix.size() || i * k + k > knn_labels.size()) {
+            std::cerr << "Error: Index out of bounds before transform!" << std::endl;
             return false;
         }
-
+        thrust::transform(
+            index_matrix.begin() + i * ref_nb,
+            index_matrix.begin() + i * ref_nb + k,
+            knn_labels.begin() + i * k,
+            label_functor
+        );
     }
 
-    int sortBlockDim = 256;
-    dim3 block1(sortBlockDim, 1, 1);
-    dim3 grid1((query_nb + sortBlockDim - 1) / sortBlockDim, 1, 1);
+    // Count the occurrence of each label and classify based on the majority label
+    thrust::device_vector<int> label_counts(k);
 
-    // Sort the distances with their respective indexes in parallel
-    modified_insertion_sort<<<grid1, block1>>>(dist_dev, dist_pitch, index_dev, index_pitch, query_nb, ref_nb, k);
-    cudaDeviceSynchronize();
-    cudaError_t sortError = cudaGetLastError();
+    for (int i = 0; i < query_nb; ++i) {
+        thrust::device_vector<int> unique_labels(k);
+        thrust::device_vector<int> label_counts(k);
 
-    if (sortError != cudaSuccess) {
-        printf("ERROR: Unable to execute sort kernel: %s\n",  cudaGetErrorString(sortError));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
+        // Sort the k-nearest labels to group identical labels together
+        thrust::sort(knn_labels.begin() + i * k, knn_labels.begin() + i * k + k);
+
+        // Reduce by key: Count the occurrence of each label
+        auto end_pair = thrust::reduce_by_key(knn_labels.begin() + i * k,
+                                            knn_labels.begin() + i * k + k,
+                                            thrust::constant_iterator<int>(1),
+                                            unique_labels.begin(),
+                                            label_counts.begin());
+
+        int num_unique_labels = end_pair.first - unique_labels.begin();
+
+        // Find the label with the maximum count
+        int max_label_idx = thrust::max_element(label_counts.begin(), label_counts.begin() + num_unique_labels) - label_counts.begin();
+
+        // Assign the classification for this query
+        classifications[i] = unique_labels[max_label_idx];
     }
-
-
-    // Perform majority voting and classification on the GPU
-    int threads_per_block = 256;
-    int num_blocks = (query_nb + threads_per_block - 1) / threads_per_block;
-    int shared_memory_size = k * sizeof(int) * threads_per_block; // Adjust based on the number of classes
-
-    majority_voting_kernel<<<num_blocks, threads_per_block, shared_memory_size>>>(index_dev, ref_dev, ref_pitch, query_labels_dev, index_pitch, query_nb, dim - 1, k);
-    cudaDeviceSynchronize();
-    cudaError_t votingError = cudaGetLastError();
-    if (votingError != cudaSuccess) {
-        printf("ERROR: Unable to execute voting kernel: %s\n", cudaGetErrorString(votingError));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false;
-    }
-
-    float msecTotal = 0.0f;
-    // Record the stop event
     checkCudaErrors(cudaEventRecord(stop, NULL));
 
     // Wait for the stop event to complete
     checkCudaErrors(cudaEventSynchronize(stop));
+    float msecTotal = 0.0f;
 
+    // Record the stop event
     checkCudaErrors(cudaEventElapsedTime(&msecTotal, start, stop));
-    elapsed_time=((msecTotal)/1000);
-
-    // Copy classifcation results from the device to the host
-    err = cudaMemcpy(query_labels, query_labels_dev, query_nb * size_of_int, cudaMemcpyDeviceToHost);
-    if (err != cudaSuccess) {
-        printf("ERROR: Unable to copy results from device to host: %s\n", cudaGetErrorString(cudaGetLastError()));
-        knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
-        return false; 
-    }
-
-    // Memory clean-up
-    knn_cuda_free(ref_dev, query_dev, dist_dev, index_dev, query_labels_dev);
+    printf("Execution time of k nearest neighbor = %f ms\n", msecTotal);
+    // Copy data to host
+    thrust::copy(classifications.begin(), classifications.end(), query_labels);
 
     return true;
+}
+
+
+int main(int argc, char **argv)
+{
+    struct Params p = input_params(argc, argv);
+    // Parameters
+    int ref_nb   = p.numDataPoints;
+    int query_nb = p.numTestPoints;
+    int dim      = p.dimension;
+    int k        = p.k;
+
+    // Display
+
+    printf("PARAMETERS\n");
+         printf("- Number reference points : %d\n",   ref_nb);
+         printf("- Number query points     : %d\n",   query_nb);
+         printf("- Dimension of points     : %d\n",   dim);
+         printf("- Number of neighbors     : %d\n\n", k);
+    // Sanity check
+    if (ref_nb<k) {
+        printf("Error: k value is larger that the number of reference points\n");
+        return EXIT_FAILURE;
+    }
+
+    // Allocate input points and output k-NN distances / indexes
+    float * ref        = (float*) malloc(ref_nb   * dim * sizeof(float));
+    if (!ref) {
+        printf("Error allocating ref: %s\n", strerror(errno));
+        return EXIT_FAILURE;
+    }
+    float * query      = (float*) malloc(query_nb * dim * sizeof(float));
+    if (!query) {
+        printf("Error allocating query: %s\n", strerror(errno));
+        free(ref);
+        return EXIT_FAILURE;
+    }
+    float * knn_dist   = (float*) malloc(query_nb * k   * sizeof(float));
+    if (!knn_dist) {
+        printf("Error allocating knn_dist: %s\n", strerror(errno));
+        free(ref);
+        free(query);
+        return EXIT_FAILURE;
+    }
+    int   * knn_index  = (int*)   malloc(query_nb * k   * sizeof(int));
+    if (!knn_index) {
+        printf("Error allocating knn_index: %s\n", strerror(errno));
+        free(ref);
+        free(query);
+        free(knn_dist);
+        return EXIT_FAILURE;
+    }
+
+
+    // Initialize reference and query points with random values
+    initialize_data(ref, ref_nb, query, query_nb, dim);
+
+    printf("TESTS\n");
+    // Allocate memory for computed k-NN neighbors
+    int   * test_knn_result = (int*)   malloc(query_nb * sizeof(int));
+
+    // Allocation check
+    if (!test_knn_result) {
+        printf("ALLOCATION ERROR\n");
+        free(test_knn_result);
+        return false;
+    }
+
+    // See if knn returns any errors
+    if (!knn(ref, ref_nb, query, query_nb, dim, k, test_knn_result)) {
+        free(test_knn_result);
+        return false;
+    }
+
+
+    // Deallocate memory 
+    free(ref);
+    free(query);
+    free(knn_dist);
+    free(knn_index);
+    free(test_knn_result);
 }
