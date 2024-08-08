@@ -269,10 +269,14 @@ int main(int argc, char *argv[]) {
   // Get the device parameters
   uint64_t numCols = deviceProp.numColPerSubarray;
   uint64_t numRows = deviceProp.numRowPerSubarray;
+<<<<<<< HEAD
   uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t (deviceProp.numSubarrayPerBank);
+=======
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t (deviceProp.numSubarrayPerBank) * numCols * numRows;
+>>>>>>> 4c98f23 (Cosmetic change)
 
   uint64_t numOfPIMRow = 1;
-  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numCols * numRows * numOfBits) / (inputHeight * inputWidth * 32))), static_cast<uint64_t>(inputWidth));
+  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numOfBits) / (inputHeight * inputWidth * 32))), static_cast<uint64_t>(inputWidth));
 
   // Initialize result matrix with the same dimensions as input matrix
   std::vector<std::vector<std::vector<int>>> resultMatrix(inputDepth, std::vector<std::vector<int>>(inputHeight, std::vector<int>(inputWidth)));
