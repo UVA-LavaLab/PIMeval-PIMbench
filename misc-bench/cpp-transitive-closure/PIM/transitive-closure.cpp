@@ -15,13 +15,11 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
+#include "../transitive-closure.hpp"
 
 using namespace std;
-
-// max edge value acting as INF, can be set to a much greater value
-#define MAX_EDGE_VALUE 10000  
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -88,70 +86,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-bool readCSV(const std::string &filename, std::vector<int> &inputList, int &numVertices) 
-{
-  std::ifstream file(filename);
-  if (!file.is_open()) 
-  {
-    std::cerr << "Error opening file: " << filename << std::endl;
-    return false;
-  }
-    
-  std::string line;
-  if (std::getline(file, line)) {
-    std::istringstream iss(line);
-    iss >> numVertices;
-  } 
-  else 
-  {
-    std::cerr << "Error reading number of vertices from file: " << filename << std::endl;
-    return false;
-  }
-    
-  while (std::getline(file, line)) 
-  {
-    std::istringstream iss(line);
-    std::string value;
-
-    while (std::getline(iss, value, ',')) {
-      if (value.find("inf") != std::string::npos) {
-        inputList.push_back(MAX_EDGE_VALUE);
-      } 
-      else 
-      {
-        try 
-        {
-          inputList.push_back(std::stoi(value));
-        } catch (const std::invalid_argument& e) {
-          std::cerr << "Invalid value in file: " << value << std::endl;
-          return false;
-        } catch (const std::out_of_range& e) {
-          std::cerr << "Value out of range in file: " << value << std::endl;
-          return false;
-        }
-      }
-    }
-  }  
-
-  file.close();
-  return true;
-}
-
-void loadVector(std::vector<uint16_t> &keySegment, std::vector<uint16_t> &additionSegment, std::vector<uint16_t> adjList, int numVertices, int index)
-{
-  #pragma omp parallel for collapse(2) schedule(static)
-  for (int i = 0; i < numVertices; ++i)
-  {
-    for (int j = 0; j < numVertices; ++j)
-    {
-      int segmentIndex = (i * numVertices) + j;
-
-      keySegment[segmentIndex] = adjList[(i * numVertices) + index];
-      additionSegment[segmentIndex] = adjList[(index * numVertices) + j];
-    }
-  }
-}
-
 void transitiveClosure(std::vector<uint16_t> &adjList, int numVertices)
 {
   int bitsPerElement = sizeof(uint16_t) * 8;
@@ -171,8 +105,18 @@ void transitiveClosure(std::vector<uint16_t> &adjList, int numVertices)
   
   for (int i = 0; i < numVertices; ++i)
   {
-    // Timing of loadVector() not considered as functionality is possible using PIM architecture
-    loadVector(keySegment, additionSegment, adjList, numVertices, i);
+    // Timing of loading the vectors is not considered as functionality is possible using PIM architecture
+    #pragma omp parallel for collapse(2) schedule(static)
+    for (int j = 0; j < numVertices; ++j)
+    {
+      for (int k = 0; k < numVertices; ++k)
+      {
+        int segmentIndex = (j * numVertices) + k;
+
+        keySegment[segmentIndex] = adjList[(j * numVertices) + i];
+        additionSegment[segmentIndex] = adjList[(i * numVertices) + k];
+      }
+    }
 
     status = pimCopyHostToDevice((void *) keySegment.data(), keyObj);
     assert(status == PIM_OK);

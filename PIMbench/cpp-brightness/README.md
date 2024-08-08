@@ -84,7 +84,7 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command that will run it for default parameters:
+After compiling, run each executable with the following command that will run it with default parameters:
 
 ```bash
 ./brightness.out
@@ -101,7 +101,7 @@ To see help text on all usages, use following command:
 By default, `sample1.bmp` from the `cpp-histogram/histogram_datafiles/` directory is used as the input file; however, you can specify a valid .bmp file using the `-i` flag:
 
 ```bash
-$ ./brightness.out -i <input_file>
+./brightness.out -i <input_file>
 ```
 
 ### Specifying Brightness Coefficient
@@ -109,7 +109,7 @@ $ ./brightness.out -i <input_file>
 If you want to change the brightness coefficient (i.e. the amount the color channel values change by), use the `-b` option:
 
 ```bash
-$ ./brightness.out -b <value>
+./brightness.out -b <value>
 ```
 
 ## References

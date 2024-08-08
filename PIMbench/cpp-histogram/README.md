@@ -86,7 +86,7 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command that will run it for default parameters:
+After compiling, run each executable with the following command that will run it with default parameters:
 
 ```bash
 ./hist.out
@@ -103,7 +103,7 @@ To see help text on all usages, use following command:
 By default, `sample1.bmp` from the `/histogram_datafiles/` directory is used as the input file; however, you can specify a valid .bmp file using the `-i` flag:
 
 ```bash
-$ ./hist.out -i <input_file>
+./hist.out -i <input_file>
 ```
 
 ## References
