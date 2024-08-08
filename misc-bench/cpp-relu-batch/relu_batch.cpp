@@ -267,8 +267,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // Get the device parameters
-  uint64_t numCols = uint64_t (deviceProp.numColPerSubarray);
-  uint64_t numRows = uint64_t (deviceProp.numRowPerSubarray);
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
   uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t (deviceProp.numSubarrayPerBank);
 
   uint64_t numOfPIMRow = 1;
