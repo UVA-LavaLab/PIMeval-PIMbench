@@ -18,7 +18,7 @@
 ### Quick Start
 ```bash
 git clone <url_to_your_fork>
-cd PIMeval/
+cd PIMeval-PIMbench/
 make -j<n_proc>
 cd /PIMbench/<application_dir>/PIM
 ./<application_executable_name>.out
