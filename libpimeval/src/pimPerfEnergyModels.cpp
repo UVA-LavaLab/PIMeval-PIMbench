@@ -22,8 +22,8 @@ pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
   m_eL = m_paramsDram->getPjLogic() / m_pico_to_milli; // Convert pJ to mJ
   m_eR = m_paramsDram->getMwRead() / 1000.0;
   m_eW = m_paramsDram->getMwWrite() / 1000.0;
-  m_pBCore = (m_paramsDram->getMwIDD3N() - m_paramsDram->getMwIDD2N()) / 1000.0; // Convert mW to W, so that W * ms = mJ
-  m_pBChip = m_paramsDram->getMwIDD2N() / 1000.0; // Convert mW to W, so that W * ms = mJ
+  // m_pBCore = (m_paramsDram->getMwIDD3N() - m_paramsDram->getMwIDD2N()) / 1000.0; // Convert mW to W, so that W * ms = mJ
+  m_pBChip = m_paramsDram->getMwIDD3N() / 1000.0; // Convert mW to W, so that W * ms = mJ
   m_GDLWidth = m_paramsDram->getBurstLength() * m_paramsDram->getDeviceWidth();
   m_numChipsPerRank = m_paramsDram->getNumChipsPerRank();
 }
@@ -94,8 +94,8 @@ pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTy
         if (it3 != it2->second.end()) {
           const auto& [numR, numW, numL] = it3->second;
           msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
-          mjEnergy += (m_eAP * numR + m_eAP * numW + m_eL * numL * obj.getMaxElementsPerRegion() * obj.getBitsPerElement()) * obj.getNumCoresUsed();
-          mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+          mjEnergy += (m_eL * numL * obj.getMaxElementsPerRegion() * obj.getBitsPerElement()) * obj.getNumCoresUsed() + (m_eAP * numR + m_eAP * numW) * m_numChipsPerRank * numRanks;
+          mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
           ok = true;
         }
       }
@@ -168,8 +168,8 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
       double energyArithmetic = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * 4);
       double energyLogical = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * 8);
-      mjEnergy = (energyArithmetic + energyLogical + m_eAP * 2) * numCores * numPass;
-      mjEnergy += m_pBCore * numCores + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = ((energyArithmetic + energyLogical * 2) * numCores + m_eAP * m_numChipsPerRank * numRanks)* numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::ADD_SCALAR:
@@ -179,10 +179,9 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
     case PimCmdEnum::ABS:
     {
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
-      mjEnergy = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
-      mjEnergy += m_eAP * 2;
-      mjEnergy *= numCores * numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = numCores * numPass * ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
+      mjEnergy += m_eAP * 2 * m_numChipsPerRank * numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND_SCALAR:
@@ -198,10 +197,9 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
     case PimCmdEnum::SHIFT_BITS_R:
     {
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
-      mjEnergy = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement);
-      mjEnergy += m_eAP * 2;
-      mjEnergy *= numCores * numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = numCores * numPass * ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement);
+      mjEnergy += m_eAP * 2 * m_numChipsPerRank * numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     default:
@@ -228,8 +226,8 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
       double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
       // Refer to fulcrum documentation
       msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
-      mjEnergy = (m_eAP * 2 + m_eGDL * numGDLItr * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numPass * obj.getNumCoresUsed();
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = (m_eAP * 2 * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))* obj.getNumCoresUsed()) * numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND_SCALAR:
@@ -249,8 +247,8 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
       double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
       // Refer to fulcrum documentation
       msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
-      mjEnergy = (m_eAP * 2 + m_eGDL * numGDLItr * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numPass * obj.getNumCoresUsed();
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = (m_eAP * 2 * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed()) * numPass ;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     default:
@@ -305,10 +303,9 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     {
       msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       msRuntime *= numPass;
-      mjEnergy = ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
-      mjEnergy += m_eAP * 3;
-      mjEnergy *= obj.getNumCoresUsed() * numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = obj.getNumCoresUsed() * numPass * ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
+      mjEnergy += m_eAP * 3 * m_numChipsPerRank * numRanks ;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -329,10 +326,9 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
        * As a result, only one read operation and one write operation is necessary for the entire pass.
       */
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * numPass;
-      mjEnergy = ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
-      mjEnergy += m_eAP * 3;
-      mjEnergy *= obj.getNumCoresUsed() * numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = obj.getNumCoresUsed() * numPass * ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement);
+      mjEnergy += m_eAP * 3 * m_numChipsPerRank * numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND:
@@ -347,10 +343,9 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     {
       msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       msRuntime *= numPass;
-      mjEnergy = ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement);
-      mjEnergy += m_eAP * 3;
-      mjEnergy *= obj.getNumCoresUsed() * numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy = obj.getNumCoresUsed() * numPass * ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement);
+      mjEnergy += m_eAP * 3 * m_numChipsPerRank * numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     default:
@@ -376,9 +371,9 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
       double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
       msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
       msRuntime *= numPass;
-      mjEnergy = (m_eAP * 3 + m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
+      mjEnergy = m_eAP * 3 * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
       mjEnergy *= numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -399,10 +394,10 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
       */
       double totalGDLOverhead = m_tGDL * numGDLItr; // both read can be pipelined as multiplication and addition takes twice the time to execute.
       msRuntime = m_tR + (m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2) * numPass;
-      mjEnergy = (m_eAP * 3 + m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
+      mjEnergy = m_eAP * 3 * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_blimpArithmeticEnergy * obj.getNumCoresUsed();
       mjEnergy *= numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND:
@@ -418,9 +413,9 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
       double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
       msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
       msRuntime *= numPass;
-      mjEnergy = (m_eAP * 3 + m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
+      mjEnergy = m_eAP * 3 * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr * 3 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed();
       mjEnergy *= numPass;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
       break;
     }
     default:
@@ -465,13 +460,13 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
       int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
       msRuntime = m_tR + (m_pclNsDelay * 1e-6) * numPclPerCore;
       msRuntime *= bitsPerElement * numPass;
-      mjEnergy = m_eAP + mjEnergyPerPcl * numPclPerCore; // energy of one row read and row-wide popcount
-      mjEnergy *= bitsPerElement * numCore * numPass;
+      mjEnergy = m_eAP * m_numChipsPerRank * numRanks + mjEnergyPerPcl * numPclPerCore * numCore; // energy of one row read and row-wide popcount
+      mjEnergy *= bitsPerElement * numPass;
       // reduction for all regions
       double aggregateMs = static_cast<double>(numCore) / 3200000;
       msRuntime += aggregateMs;
       mjEnergy += aggregateMs * cpuTDP;
-      mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     } else {
       assert(0);
     }
@@ -492,13 +487,13 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
     // read a row to walker, then reduce in serial
     double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
     msRuntime = m_tR + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * numPass);
-    mjEnergy = m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement);
-    mjEnergy *= numCore * numPass;
+    mjEnergy = m_eAP * m_numChipsPerRank * numRanks + numCore * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement);
+    mjEnergy *= numPass;
     // reduction for all regions
     double aggregateMs = static_cast<double>(numCore) / 3200000;
     msRuntime += aggregateMs;
     mjEnergy += aggregateMs * cpuTDP;
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
@@ -509,12 +504,12 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
     msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
 
     // Refer to fulcrum documentation
-    mjEnergy = (m_eAP * 1 + m_eGDL * numGDLItr + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numPass * obj.getNumCoresUsed();
+    mjEnergy = (m_eAP * 1 * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed()) * numPass;
     // reduction for all regions
     double aggregateMs = static_cast<double>(numCore) / 3200000;
     msRuntime += aggregateMs;
     mjEnergy += aggregateMs * cpuTDP;
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   default:
@@ -545,7 +540,7 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     msRuntime = (m_tL + m_tW) * bitsPerElement;
     msRuntime *= numPass;
     mjEnergy = m_eAP * bitsPerElement * numPass;
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   case PIM_DEVICE_SIMDRAM:
@@ -553,7 +548,7 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     // todo
     msRuntime *= numPass;
     mjEnergy *= numPass;
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   case PIM_DEVICE_BITSIMD_H:
@@ -562,8 +557,8 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     uint64_t maxBytesPerRegion = (uint64_t)maxElementsPerRegion * (bitsPerElement / 8);
     msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
     msRuntime *= numPass;
-    mjEnergy = (m_eAP + m_tL * maxBytesPerRegion) * numPass * obj.getNumCoresUsed();
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy = (m_eAP * m_numChipsPerRank * numRanks + (m_tL * maxBytesPerRegion) * obj.getNumCoresUsed()) * numPass;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   case PIM_DEVICE_FULCRUM:
@@ -572,10 +567,9 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
     msRuntime = m_tW + m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement;
     msRuntime *= numPass;
-    mjEnergy = ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement);
-    mjEnergy += m_eAP;
-    mjEnergy *= obj.getNumCoresUsed() * numPass;
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy = obj.getNumCoresUsed() * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement);
+    mjEnergy += m_eAP * m_numChipsPerRank * numRanks;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   case PIM_DEVICE_BANK_LEVEL:
@@ -586,8 +580,8 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     msRuntime *= numPass;
     msRuntime = (m_eAP + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement)) * numPass; // todo: change m_eR to write energy
     unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-    mjEnergy = (m_eAP + m_eGDL * numGDLItr + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numPass * obj.getNumCoresUsed();
-    mjEnergy += m_pBCore * obj.getNumCoresUsed() + m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+    mjEnergy = (m_eAP * m_numChipsPerRank * numRanks + (m_eGDL * numGDLItr + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * obj.getNumCoresUsed()) * numPass;
+    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
     break;
   }
   default:
