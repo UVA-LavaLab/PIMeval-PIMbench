@@ -71,7 +71,7 @@ private:
   // Following values are taken from fulcrum paper.
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ
-  double m_fulcrumShiftEnergy = 0.0000075; // mJ
+  double m_fulcrumShiftEnergy = 0.0000000075; // mJ
 
   // Following values are taken from fulcrum paper as BLIMP paper does not model energy
   double m_blimpArithmeticEnergy = 0.0000000004992329586; // mJ

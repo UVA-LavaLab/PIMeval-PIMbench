@@ -1,6 +1,6 @@
 ## PIMeval Simulator and PIMbench Suite
 
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Contribution](https://img.shields.io/badge/Contribution-Welcome-blue) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ### Description
 * PIMeval
@@ -18,9 +18,9 @@
 ### Quick Start
 ```bash
 git clone <url_to_your_fork>
-cd PIMeval/
+cd PIMeval-PIMbench/
 make -j<n_proc>
-cd /PIMbench/<application_dir>
+cd /PIMbench/<application_dir>/PIM
 ./<application_executable_name>.out
 ```
 
