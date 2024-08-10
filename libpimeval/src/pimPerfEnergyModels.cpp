@@ -75,6 +75,7 @@ pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTy
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numRanks = pimSim::get()->getNumRanks();
+  unsigned numCores = obj.getNumCoresUsed();
 
   switch (deviceType) {
   case PIM_DEVICE_BITSIMD_V:
@@ -94,7 +95,7 @@ pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTy
         if (it3 != it2->second.end()) {
           const auto& [numR, numW, numL] = it3->second;
           msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
-          mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * m_numChipsPerRank * numRanks;
+          mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
           mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
           ok = true;
         }
