@@ -27,9 +27,9 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./relu_batch.out [options]"
           "\n"
-          "\n    -r    row (default=224)"
-          "\n    -c    column (default=224)"
-          "\n    -d    dimension (default=64)"
+          "\n    -r    row (default=226)"
+          "\n    -c    column (default=226)"
+          "\n    -d    dimension (default=128)"
           "\n    -b    batch size (Default=2)"
           "\n    -v    should verify result with CPU"
           "\n    -i    input image file containing matrices (default=generates matrix with random numbers)"
