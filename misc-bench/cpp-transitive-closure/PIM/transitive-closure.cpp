@@ -132,6 +132,8 @@ void transitiveClosure(std::vector<uint16_t> &adjList, int numVertices)
 
     status = pimCopyDeviceToHost(adjListObj, (void *) adjList.data());
     assert(status == PIM_OK);
+
+    std::cout << i << std::endl;
   }
 
   pimFree(adjListObj);

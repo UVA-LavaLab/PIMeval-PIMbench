@@ -228,6 +228,7 @@ int main(int argc, char *argv[])
 
     for (int k = 0; k < numVertices; ++k) 
     {
+      #pragma omp parallel for collapse(2)
       for (int i = 0; i < numVertices; ++i) 
       {
         for (int j = 0; j < numVertices; ++j) 

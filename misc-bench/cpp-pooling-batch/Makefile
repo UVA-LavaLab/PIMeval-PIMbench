@@ -5,8 +5,8 @@
 
 include ../Makefile.common
 
-EXEC := pool_batch.out
-SRC := pool_batch.cpp
+EXEC := pool-batch.out
+SRC := pool-batch.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 
@@ -15,4 +15,3 @@ $(EXEC): $(SRC) $(DEPS)
 
 clean:
 	rm -rf $(EXEC) *.dSYM
-

@@ -1,4 +1,4 @@
-# Makefile: C++ version of vector boradcast and popcount
+# Makefile: C++ version of vector popcount
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
@@ -15,4 +15,3 @@ $(EXEC): $(SRC) $(DEPS)
 
 clean:
 	rm -rf $(EXEC) *.dSYM
-

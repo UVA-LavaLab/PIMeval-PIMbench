@@ -8,7 +8,7 @@ where:
 -  $\alpha$ and $\beta$ are scalars.
 - $A$, $B$ and $C$ are matrices.
 
-For a detailed description of GEMM, you can refer to the [BLAS documentation](http://www.netlib.org/blas/).
+For a detailed description of GEMM, you can refer to the [BLAS documentation](http://www.netlib.org/blas/). This implementation version uses batches of general matrix vector multiplication to perform GEMM.
 
 ## Directory Structure
 
