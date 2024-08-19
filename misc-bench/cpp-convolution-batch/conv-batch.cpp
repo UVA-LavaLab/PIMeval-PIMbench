@@ -32,7 +32,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./conv_batch.out [options]"
+          "\nUsage:  ./conv-batch.out [options]"
           "\n"
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"

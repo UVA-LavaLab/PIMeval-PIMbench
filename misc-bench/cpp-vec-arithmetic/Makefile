@@ -5,7 +5,7 @@
 
 include ../Makefile.common
 
-EXEC := vec-ar.out
+EXEC := vec-arithmetic.out
 SRC := vec-arithmetic.cpp
 
 debug perf dramsim3_integ: $(EXEC)
@@ -15,4 +15,3 @@ $(EXEC): $(SRC) $(DEPS)
 
 clean:
 	rm -rf $(EXEC) *.dSYM
-

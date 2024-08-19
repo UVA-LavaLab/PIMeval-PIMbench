@@ -1,4 +1,4 @@
-// Test: C++ version of vector multiplication
+// Test: C++ version of FP32 vector multiplication
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -29,7 +29,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./mul [options]"
+          "\nUsage:  ./vec-mul-fp32.out [options]"
           "\n"
           "\n    -l    input size (default=65536 elements)"
           "\n    -c    dramsim config file"
