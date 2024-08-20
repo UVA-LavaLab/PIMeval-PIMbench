@@ -1,34 +1,30 @@
-# Makefile: GPU version of image downsampling
-# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
-
+# Compiler settings
 NVCC := nvcc
-# NVCCFLAGS := 
+CUDA_DIR ?= $(shell dirname $(shell dirname $(shell which nvcc)))
+CUDA_INCLUDE := $(CUDA_DIR)/include
+CUDA_LIB_DIR := $(CUDA_DIR)/lib64
+CUDA_LIB := -lcublas
+FOPENMP := -Xcompiler -fopenmp
+ARCH_FLAG := -arch=sm_80
+
+# Target executable
+EXEC := image-downsampling.out
+
+# Source files
+SOURCES := image-downsampling.cu
+
+# Compiler flags
+CFLAGS := -O3
 CXXFLAGS := -std=c++17
 
-EXEC := image-downsampling.out
-SRC := image-downsampling.cu
+# Default target
+all: $(EXEC)
 
-.PHONY: debug perf dramsim3_integ clean
-.DEFAULT_GOAL := perf
+# Rule to build the target executable
+$(EXEC): $(SOURCES)
+	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 
-# Setup build targets
-ifeq ($(MAKECMDGOALS),)
-	MAKECMDGOALS := $(.DEFAULT_GOAL)
-endif
-ifeq ($(MAKECMDGOALS),debug)
-	CXXFLAGS += -g -DDEBUG
-endif
-ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -O3
-endif
-ifeq ($(MAKECMDGOALS),dramsim3_integ)
-	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
-endif
-
-debug perf dramsim3_integ: $(EXEC)
-
-$(EXEC): $(SRC)
-	$(NVCC) $(SRC) $(CXXFLAGS) -o $@
-
+# Rule to clean the project
 clean:
 	rm -f $(EXEC)
+	

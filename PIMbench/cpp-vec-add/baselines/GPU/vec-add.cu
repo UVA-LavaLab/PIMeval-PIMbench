@@ -1,4 +1,4 @@
-/* File:     vec_add.cu
+/* File:     vec-add.cu
  * Purpose:  Implement vector addition on a gpu using cuda
  *
  */
@@ -28,7 +28,7 @@ struct Params
  */
 void usage()
 {
-    cerr << "\nUsage:  ./vec_add.out [options]\n"
+    cerr << "\nUsage:  ./vec-add.out [options]\n"
          << "\nOptions:\n"
          << "    -l    vector size (default=2048 elements)\n"
          << "    -h    display this help message\n";

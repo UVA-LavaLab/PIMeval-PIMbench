@@ -1,7 +1,9 @@
 /**
  * @file gemm.cpp
+ * @brief Template for a Host Application Source File.
  *
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +33,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./gemv [options]"
+          "\nUsage:  ./gemm.out [options]"
           "\n"
           "\n    -r <R>    row size"
           "\n    -c <C>    MatA column size"

@@ -1,33 +1,22 @@
-# Makefile: C++ version of image downsampling
-# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
-
+# Compiler
 CXX := g++
-CXXFLAGS := -std=c++17 -Wall
 
+# Compiler flags
+CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
+
+# Executable name
 EXEC := image-downsampling.out
-SRC := image-downsampling.cpp
 
-.PHONY: debug perf dramsim3_integ clean
-.DEFAULT_GOAL := perf
+# Source files
+SRC_FILES := $(wildcard *.cpp)
 
-# Setup build targets
-ifeq ($(MAKECMDGOALS),)
-	MAKECMDGOALS := $(.DEFAULT_GOAL)
-endif
-ifeq ($(MAKECMDGOALS),debug)
-	CXXFLAGS += -g -DDEBUG
-endif
-ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -O3
-endif
-ifeq ($(MAKECMDGOALS),dramsim3_integ)
-	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
-endif
 
-debug perf dramsim3_integ: $(EXEC)
+.PHONY: all clean
 
-$(EXEC): $(SRC)
-	$(CXX) $(SRC) $(CXXFLAGS) -o $@
+all: $(EXEC)
+
+$(EXEC): $(SRC_FILES) |
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
-	rm -f $(EXEC)
+	rm -rf $(EXEC)

@@ -1,5 +1,7 @@
-// Image Downsampling implementation on GPU
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+/* File:     image-downsampling.cu
+ * Purpose:  Implement brightness on a gpu using Thrust
+ *
+ */
 
 #include <unistd.h>
 #include <cassert>
@@ -22,7 +24,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./image_downsampling.out [options]"
+          "\nUsage:  ./image-downsampling.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"

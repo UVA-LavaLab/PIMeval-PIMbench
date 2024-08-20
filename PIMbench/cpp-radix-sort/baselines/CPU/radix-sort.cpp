@@ -1,5 +1,6 @@
-/* File:     vec_add.cu
- * Purpose:  Implement vector addition on a gpu using cuda
+/**
+ * @file radix-sort.cpp
+ * @brief Template for a Host Application Source File.
  *
  */
 
