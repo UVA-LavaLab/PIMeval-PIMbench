@@ -1,5 +1,5 @@
 /* File:     axpy.cu
- * Purpose:  Implement  on a gpu using cuda
+ * Purpose:  Implement axpy on a gpu using cuda
  *
  */
 

@@ -1,3 +1,9 @@
+/**
+ * @file aes.cpp
+ * @brief Template for a Host Application Source File.
+ *
+ */
+
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <stdio.h>

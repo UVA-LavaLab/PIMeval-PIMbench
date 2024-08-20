@@ -1,3 +1,8 @@
+/* File:     aes.cu
+ * Purpose:  Implement aes on a gpu using cuda
+ *
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

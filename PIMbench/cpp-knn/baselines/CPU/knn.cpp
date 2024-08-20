@@ -1,3 +1,9 @@
+/**
+ * @file knn.cpp
+ * @brief Template for a Host Application Source File.
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +46,7 @@ typedef struct Params
 void usage()
 {
     fprintf(stderr,
-            "\nUsage:  ./program [options]"
+            "\nUsage:  ./knn.out [options]"
             "\n"
             "\n    -t    # of threads (default=8)"
             "\n    -n    number of reference points (default=65536 points)"

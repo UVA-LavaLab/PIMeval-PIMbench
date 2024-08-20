@@ -1,3 +1,9 @@
+/**
+ * @file filter.cpp
+ * @brief Template for a Host Application Source File.
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +45,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./filter [options]"
+          "\nUsage:  ./filter.out [options]"
           "\n"
           "\n    -n    database size (default=65536 elements)"
           "\n    -k    value of key (default = 1)"

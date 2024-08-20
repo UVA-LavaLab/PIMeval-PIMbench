@@ -17,10 +17,10 @@ cpp-vec-add/
 ├── baselines/
 │   ├── CPU/
 │   │   ├── Makefile
-│   │   ├── vec_add.cpp
+│   │   ├── vec-add.cpp
 │   ├── GPU/
 │   │   ├── Makefile
-│   │   ├── vec_add.cu
+│   │   ├── vec-add.cu
 ├── README.md
 ├── Makefile
 ```
@@ -85,12 +85,12 @@ make
 After compiling, run the each executable with the following command that will run it for default parameters:
 
 ```bash
-./vec_add.out
+./vec-add.out
 ```
 
 To see help text on all usages, use following command
 ```bash
-./vec_add.out -h
+./vec-add.out -h
 ```
 
 ### Specifying Input Size
@@ -98,5 +98,5 @@ To see help text on all usages, use following command
 You can specify the input size using the `-l` option:
 
 ```bash
-./vec_add.out -l <input_size>
+./vec-add.out -l <input_size>
 ```

@@ -2,10 +2,10 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++11 -O3 -fopenmp
+CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
 
 # Executable name
-EXEC := radix_sort.out
+EXEC := radix-sort.out
 
 # Source files
 SRC_FILES := $(wildcard *.cpp)

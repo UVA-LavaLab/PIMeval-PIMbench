@@ -29,7 +29,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./add.out [options]"
+          "\nUsage:  ./vec-add.out [options]"
           "\n"
           "\n    -l    input size (default=2048 elements)"
           "\n    -c    dramsim config file"
