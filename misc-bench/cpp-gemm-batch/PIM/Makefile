@@ -1,4 +1,4 @@
-# Makefile: C++ version of matrix matrix multiplication
+# Makefile: C++ version of matrix matrix multiplication with batched matrix vector multiplication
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
@@ -12,8 +12,8 @@ ifeq ($(USE_OPENMP),1)
 	CXXFLAGS += -fopenmp
 endif
 
-EXEC := gemv-batched.out
-SRC := gemv-batched.cpp
+EXEC := gemm.out
+SRC := gemm.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 

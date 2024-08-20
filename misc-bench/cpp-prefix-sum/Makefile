@@ -1,10 +1,10 @@
-# Makefile: C++ version of prefixsum
+# Makefile: C++ version of prefix sum
 # Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
 
 include ../Makefile.common
 
-EXEC := prefixsum.out
-SRC := prefixsum.cpp
+EXEC := prefix-sum.out
+SRC := prefix-sum.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 
