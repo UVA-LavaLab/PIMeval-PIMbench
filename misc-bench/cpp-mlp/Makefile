@@ -1,20 +1,16 @@
-# all:
-# 	gcc mlp_openmp.c -o mlp_openmp -fopenmp -std=c99
-# run:
-# 	./mlp_openmp
+# Makefile: C++ version of multi-layer perceptron (MLP)
+# Copyright (c) 2024 University of Virginia
+# This file is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for more details.
 
-# Makefile: C++ version of MLP
-# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+SUBDIRS := PIM
 
-include ../Makefile.common
+.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
+.DEFAULT_GOAL := perf
 
-EXEC := mlp.out
-SRC := mlp.cpp
+USE_OPENMP ?= 0
 
-debug perf dramsim3_integ: $(EXEC)
+debug perf dramsim3_integ clean: $(SUBDIRS)
 
-$(EXEC): $(SRC) $(DEPS)
-	$(CXX) $< $(CXXFLAGS) -o $@
-
-clean:
-	rm -rf $(EXEC) *.dSYM
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)

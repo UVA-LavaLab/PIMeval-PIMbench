@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 using namespace std;
 
@@ -30,7 +30,7 @@ void usage() {
     "\n    -l    comma-seperate list of number the neurons in each layer. First number represents the input size, last represents output "
     "\n          size, and every number in between is the size of each hidden layer. (default=500 input neurons, 1 hidden layer with 1000 neurons, 2 output neurons)"    
     "\n    -c    dramsim config file"
-    "\n    -n    number of examples (default=1)"
+    "\n    -n    number of inference points for the batch (default=1)"
     "\n    -v    t = verifies PIM output with host output. (default=false)"
     "\n"
     "\nGeneral options:"
