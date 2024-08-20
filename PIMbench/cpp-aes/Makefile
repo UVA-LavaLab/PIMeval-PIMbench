@@ -1,23 +1,16 @@
-# Makefile: C++ version of AES
-# Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+# Makefile: C++ version of AES 
+# Copyright (c) 2024 University of Virginia
+# This file is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for more details.
 
-LIBPIMSIM_PATH = ../../libpimsim
-include ../Makefile.common
+SUBDIRS := PIM
 
-# make USE_OPENMP=1
+.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
+.DEFAULT_GOAL := perf
+
 USE_OPENMP ?= 0
-ifeq ($(USE_OPENMP),1)
-	CXXFLAGS += -fopenmp
-endif
 
-EXEC := aes.out
-SRCS := $(wildcard *.cpp)
+debug perf dramsim3_integ clean: $(SUBDIRS)
 
-debug perf dramsim3_integ: $(EXEC)
-
-$(EXEC): $(SRCS) $(DEPS)
-	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
-
-clean:
-	rm -f $(EXEC)
-
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)

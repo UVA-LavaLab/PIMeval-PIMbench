@@ -1,11 +1,11 @@
-# Makefile: C++ version of vector arithmetic
+# Makefile: C++ version of vector comparator
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
 include ../Makefile.common
 
-EXEC := vec-comp.out
+EXEC := vec-comparator.out
 SRC := vec-comparator.cpp
 
 debug perf dramsim3_integ: $(EXEC)
@@ -15,4 +15,3 @@ $(EXEC): $(SRC) $(DEPS)
 
 clean:
 	rm -rf $(EXEC) *.dSYM
-

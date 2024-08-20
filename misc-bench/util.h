@@ -51,14 +51,15 @@ void getVectorFP32(uint64_t vectorLength, std::vector<float> &srcVector, bool no
 
 void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &inputMatrix)
 {
-  srand((unsigned)time(NULL));
+  //srand((unsigned)time(NULL));
+  srand(1234567);
   inputMatrix.resize(row + 2 * padding, std::vector<int>(column + 2 * padding, 0));
 #pragma omp parallel for
   for (int i = padding; i < row + padding; ++i)
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = rand() % (i + 1);
+      inputMatrix[i][j] = rand() % (i + 1) + 1;
     }
   }
 }
@@ -110,8 +111,6 @@ bool createDevice(char *configFile)
   }
   else
   {
-    std::cout << "Creating device from config file is not supported yet.\n";
-    return 0;
     PimStatus status = pimCreateDeviceFromConfig(PIM_FUNCTIONAL, configFile);
     if (status != PIM_OK)
     {

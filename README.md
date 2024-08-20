@@ -1,6 +1,6 @@
 ## PIMeval Simulator and PIMbench Suite
 
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Contribution](https://img.shields.io/badge/Contribution-Welcome-blue) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ### Description
 * PIMeval
@@ -8,19 +8,19 @@
   * Support various subarray-level bit-serial, subarray-level bit-parallel and bank-level PIM architectures
   * Support both vertical and horizontal data layouts
   * Support multi-PIM-core programming model and resource management
-  * Support high-level functional programming with a set of general APIs common to all PIM architectures
+  * Support high-level functional simulation with a set of PIM architecture independent APIs
   * Support low-level micro-ops programming for modeling architecture details
   * Support performance and energy modeling with detailed stats tracking
   * Support multi-threaded simulation for runtime
 * PIMbench
   * A rich set of PIM benchmark applications on top of the PIMeval functional simulation and evaluation framework
 
-### Quick start
+### Quick Start
 ```bash
 git clone <url_to_your_fork>
-cd PIMeval/
+cd PIMeval-PIMbench/
 make -j<n_proc>
-cd /PIMbench/<application_dir>
+cd /PIMbench/<application_dir>/PIM
 ./<application_executable_name>.out
 ```
 
@@ -111,3 +111,8 @@ This repository is the result of a collaborative effort by many individuals, inc
 Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her exceptional contributions to both the simulator and the PIMbench suite.
 
 \<citation recommendation to be updated\>
+### Contact
+
+* Deyuan Guo - dg7vp AT virginia DOT edu
+* Farzana Ahmed Siddique - farzana AT virginia DOT edu
+* Kevin Skadron - skadron AT virginia DOT edu

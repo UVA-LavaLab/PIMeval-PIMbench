@@ -426,17 +426,10 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimMulScalar(srcObj, srcObj, srcVector[i]);
+    status = pimScaledAdd(srcObj, dstObj, dstObj, srcVector[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Function: " << __func__ << ", Abort: pimMulScalar failed between srcObj1 and srcObj2 at i=" << i << std::endl;
-      return;
-    }
-
-    status = pimAdd(srcObj, dstObj, dstObj);
-    if (status != PIM_OK)
-    {
-      std::cout << "Function: " << __func__ << ", Abort: pimAdd failed between srcVector and dstObj at i=" << i << std::endl;
+      std::cout << "Function: " << __func__ << ", Abort: pimScaledAdd failed between srcObj1 and srcObj2 at i=" << i << std::endl;
       return;
     }
   }

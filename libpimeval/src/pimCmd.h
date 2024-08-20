@@ -124,30 +124,6 @@ protected:
   virtual bool updateStats() const { return false; }
   bool computeAllRegions(unsigned numRegions);
 
-  //! @brief  Utility: Locate nth element in region
-  inline std::pair<unsigned, unsigned> locateNthElement(const pimRegion& region, bool isVLayout, unsigned nth, unsigned numBits) const
-  {
-    unsigned colIdx = region.getColIdx();
-    unsigned numAllocCols = region.getNumAllocCols();
-    unsigned rowIdx = region.getRowIdx();
-    unsigned numAllocRows = region.getNumAllocRows();
-    unsigned r = 0;
-    unsigned c = 0;
-
-    // TODO: Decide if numBits is always going to be power of 2. If so, replace '/' & '%' with shift and bit-wise operation.
-    if (isVLayout) {
-      assert(numAllocRows % numBits == 0);
-      r = rowIdx + (nth / numAllocCols) * numBits;
-      c = colIdx + nth % numAllocCols;
-    } else {
-      assert(numAllocCols % numBits == 0);
-      unsigned numBitsPerRow = numAllocCols / numBits;
-      r = rowIdx + nth / numBitsPerRow;
-      c = colIdx + (nth % numBitsPerRow) * numBits;
-    }
-    return std::make_pair(r, c);
-  }
-
   //! @brief  Utility: Get a value from a region
   inline uint64_t getBits(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned numBits) const
   {
