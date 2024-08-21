@@ -11,7 +11,7 @@
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
-#include "../util.h"
+#include "../../util.h"
 #include <iomanip>
 #include <chrono>
 
@@ -21,7 +21,7 @@ typedef vector<vector<vector<int>>> Image3D;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  int row, column, dim, stride, kernelSize, kernelDim, padding;
+  int row, column, dim, stride, kernelHeight, kernelWidth, kernelDim, padding;
   char *kernelMatrixFile;
   char *imageMatrixFile;
   char *dramConfigFile;
@@ -38,14 +38,15 @@ void usage()
           "\n    -c    column (default=224)"
           "\n    -d    dimension (default=3)"
           "\n    -s    stride (default=1)"
-          "\n    -k    kernel size (default=3X3)"
+          "\n    -l    kernel height (default=3)"
+          "\n    -w    kernel width (default=3)"
           "\n    -z    kernel dimension (default=64)"
           "\n    -v    should verify result with CPU"
           "\n    -p    padding (default = 1)"
           "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
           "\n    -i    input file containing image matrices (default=generates matrix with random numbers)"
           "\n    -o    DRAM config file (default = false)"
-	  "\n    -m    enable more debug prints (default = false)"
+          "\n    -m    enable more debug prints (default = false)"
           "\n");
 }
 
@@ -54,9 +55,10 @@ struct Params getInputParams(int argc, char **argv)
   struct Params p;
   p.row = 224;
   p.column = 224;
-  p.dim = 3;
+  p.dim = 64;
   p.stride = 1;
-  p.kernelSize = 3;
+  p.kernelHeight = 3;
+  p.kernelWidth = 3;
   p.kernelMatrixFile = nullptr;
   p.imageMatrixFile = nullptr;
   p.dramConfigFile = nullptr;
@@ -66,7 +68,7 @@ struct Params getInputParams(int argc, char **argv)
   p.moreDebugPrints = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "r:c:d:s:k:v:z:f:i:p:m:")) >= 0)
+  while ((opt = getopt(argc, argv, "r:c:d:s:l:w:v:z:f:i:p:m:")) >= 0)
   {
     switch (opt)
     {
@@ -86,9 +88,12 @@ struct Params getInputParams(int argc, char **argv)
     case 's':
       p.stride = atoi(optarg);
       break;
-    case 'k':
-      p.kernelSize = atoi(optarg);
+    case 'l':
+      p.kernelHeight = atoi(optarg);
       break;
+    case 'w':
+      p.kernelWidth = atoi(optarg);
+      break;      
     case 'z':
       p.kernelDim = atoi(optarg);
       break;
@@ -140,7 +145,7 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
   }
 }
 
-void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol, bool moreDebugPrints)
+void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputVector, int numRequiredPIMRows, int numRequiredPIMCol, bool moreDebugPrints)
 {
   unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
@@ -148,7 +153,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
-    std::cout << "Abort" << std::endl;
+    std::cout << "Abort: pimAlloc failed for obj1" << std::endl;
     return;
   }
   filterObjects.push_back(obj1);
@@ -157,7 +162,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Abort: pimAllocAssociated failed for obj (filterObjects) at iteration: " << i << std::endl;
       return;
     }
     filterObjects.push_back(obj);
@@ -171,7 +176,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
       PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
       if (status != PIM_OK)
       {
-        std::cout << "Abort" << std::endl;
+        std::cout << "Abort: pimBroadcastInt failed for filterObjects at i=" << i << " and j=" << j << std::endl;
         return;
       }
     }
@@ -183,7 +188,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: " << i << std::endl;
       return;
     }
     matrixObjects.push_back(obj);
@@ -194,14 +199,14 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects at iteration: " << i << std::endl;
       return;
     }
   
     status = pimMul(matrixObjects[i], filterObjects[i], filterObjects[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Abort: pimMul failed between matrixObjects and filterObjects at iteration: " << i << std::endl;
       return;
     }
   }
@@ -211,17 +216,17 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     PimStatus status = pimAdd(filterObjects[0], filterObjects[i], filterObjects[0]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
+      std::cout << "Abort: pimAddd failed between filterObjects at itertaion: " << i << std::endl;
       return;
     }
   }
 
-  outputMatrix.resize(numRequiredPIMCol);
+  outputVector.resize(numRequiredPIMCol);
 
-  PimStatus status = pimCopyDeviceToHost(filterObjects[0], outputMatrix.data());
+  PimStatus status = pimCopyDeviceToHost(filterObjects[0], outputVector.data());
   if (status != PIM_OK)
   {
-    std::cout << "Abort" << std::endl;
+    std::cout << "Abort: pimCopyDeviceToHost failed between filterObjects[0] and outputVector" << std::endl;
     return;
   }
 
@@ -234,16 +239,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   {
     pimFree(elem);
   }
-  
-  if (moreDebugPrints == true) {
-    // Debug print
-    std::cout << "Output Matrix from performConv():" << std::endl;
-    for (const auto &val : outputMatrix)
-    {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-  }
+
 }
 
 // Function to perform 3D convolution on CPU and compare the results with PIM results
@@ -266,8 +262,8 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
 
   // Check if output dimensions are within reasonable limits
   if (outputHeight <= 0 || outputWidth <= 0 || outputDepth <= 0) {
-      std::cerr << "Invalid output dimensions." << std::endl;
-      exit(0);
+    std::cerr << "Invalid output dimensions." << std::endl;
+    exit(0);
   }
 
   // Properly initialize the output vector
@@ -277,47 +273,42 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
   std::cout << "Performing convolution on CPU " << std::endl;
   #pragma omp parallel for collapse (3)
   for (int k = 0; k < kernelDepth; ++k) {
-      for (int i = 0; i < outputHeight; ++i) {
-          for (int j = 0; j < outputWidth; ++j) {
-              int convSum = 0;
-              for (int d = 0; d < inputDepth; ++d) {
-                  for (int h = 0; h < kernelHeight; ++h) {
-                      for (int w = 0; w < kernelWidth; ++w) {
-                           convSum += kernel[k][h][w] * input[d][i * stride + h][j * stride + w];
-                      }
-                  }
-              }
-              output[k][i][j] = convSum;
+    for (int i = 0; i < outputHeight; ++i) {
+      for (int j = 0; j < outputWidth; ++j) {
+        int convSum = 0;
+        for (int d = 0; d < inputDepth; ++d) {
+          for (int h = 0; h < kernelHeight; ++h) {
+            for (int w = 0; w < kernelWidth; ++w) {
+              convSum += kernel[k][h][w] * input[d][i * stride + h][j * stride + w];
+            }
           }
+        }
+        output[k][i][j] = convSum;
       }
+    }
   }
 
   int mismatch_counter = 0;
   std::cout << "Comparing PIM convolution results with CPU results " << std::endl;
   for (int i = 0; i < output.size(); ++i) {
-      for (int j = 0; j < output[0].size(); ++j) {
-          for (int k = 0; k < output[0][0].size(); ++k) {
-              if (output[i][j][k] !=  PIMResult[i][j][k]) {
-		if (moreDebugPrints == true) {      
-                  std::cout<< "Mismatch between PIM and CPU results at index: " << i << ", " << j << ", " << k << "; PIM result: " << PIMResult[i][j][k] << ", CPU result:" << output[i][j][k] << std::endl;
-		}
-		mismatch_counter += 1;
-              }
-          }
+    for (int j = 0; j < output[0].size(); ++j) {
+      for (int k = 0; k < output[0][0].size(); ++k) {
+        if (output[i][j][k] !=  PIMResult[i][j][k]) {
+		      if (moreDebugPrints == true) {      
+            std::cout<< "Mismatch between PIM and CPU results at index: " << i << ", " << j << ", " << k << "; PIM result: " << PIMResult[i][j][k] << ", CPU result:" << output[i][j][k] << std::endl;
+		       }
+		       mismatch_counter += 1;
+        }
       }
+    }
   }
  
   if (moreDebugPrints == true) { 
     std::cout << "Ouput matrix from CPU:" << std::endl;
     for (int i = 0; i < output.size(); ++i) {
-        std::cout << "Layer " << i << ":\n";
-        for (int j = 0; j < output[i].size(); ++j) { 
-            for (int k = 0; k < output[i][j].size(); ++k) {
-                std::cout << output[i][j][k] << " ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
+      std::cout << "Layer " << i << ":\n";
+      printMatrix(output[i]);
+      std::cout << "\n";
     }
   }
 
@@ -345,7 +336,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
+    std::cerr << "Reading from the input file is not implemented yet for the input matrix" << std::endl;
     return 1;
   }
 
@@ -354,20 +345,30 @@ int main(int argc, char *argv[])
     kernelMatrix.resize(params.kernelDim);
     for (auto &mat : kernelMatrix)
     {
-      getMatrix(params.kernelSize, params.kernelSize, 0, mat);
+      getMatrix(params.kernelHeight, params.kernelWidth, 0, mat);
     }
   }
   else
   {
-    // TODO: read Kernel Matrix from file
+    std::cerr << "Reading from the input file is not implemented yet for the kernel matrix" << std::endl;
+    return 1;
   }
 
   if (!createDevice(params.dramConfigFile))
     return 1;
 
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
-  unsigned numCols = 8192, numOfCore = 4096;
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  if (status != PIM_OK) {
+    std::cout << "Abort: pimGetDeviceProperties failed" << std::endl;
+    return 1;
+  }
+  // Get the device parameters
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows;  
 
+  int inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
   int kernelHeight = kernelMatrix[0].size();
@@ -376,10 +377,9 @@ int main(int argc, char *argv[])
   int outMatDim = params.kernelDim;
   int outMatRow = std::floor((inputHeight - kernelHeight) / params.stride) + 1;
   int outMatCol = std::floor((inputWidth - kernelWidth) / params.stride) + 1;   
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) < params.dim ? floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) : params.dim;
-  int numOfPIMRow = params.kernelSize * params.kernelSize;
+  int numOfMatPerRow = floor((1.0 * numOfBits) / (outMatRow * outMatCol)) < params.dim ? floor((1.0 * numOfBits) / (outMatRow * outMatCol)) : params.dim;
+  int numOfPIMRow = params.kernelHeight * params.kernelWidth;
 
-  cout << "num mat per row: " << numOfMatPerRow << "\n";
   std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
@@ -392,54 +392,44 @@ int main(int argc, char *argv[])
       int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
 
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+      std::vector<std::vector<int>> decompMat;      
       for (int k = j; k < matChunk; k++)
       {
-        std::vector<std::vector<int>> decompMat;
-	getDecomposedMatrix(params.row, params.column, kernelMatrix[i].size(), kernelMatrix[i][0].size(), params.stride, inputMatrix[k], decompMat);
+        getDecomposedMatrix(params.row, params.column, kernelHeight, kernelWidth, params.stride, inputMatrix[k], decompMat);
         if (params.moreDebugPrints == true) { 
           // Debug print
           std::cout << "Decomposed Matrix:" << std::endl;
-          for (const auto &row : decompMat)
-          {
-            for (const auto &val : row)
-            {
-              std::cout << val << " ";
-            }
-          std::cout << std::endl;
-          }
+          printMatrix(decompMat);
         }
-	for (int idx = 0; idx < mergedMat.size(); idx++)
-        {
-          mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
-          mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
-          tempcol = mergedMat[idx].size();
+        // Merge the matrices
+        for (int idx = 0; idx < mergedMat.size(); idx++) {
+          mergedMat[idx].insert(mergedMat[idx].end(),
+                                std::make_move_iterator(decompMat[idx].begin()),
+                                std::make_move_iterator(decompMat[idx].end()));
         }
+        tempcol = mergedMat[0].size();        
       }
 
       if (params.moreDebugPrints == true) {
         // Debug print
         std::cout << "Merged Matrix (Iteration " << i << ", Chunk " << j << "):" << std::endl;
-        for (const auto &row : mergedMat)
-        {
-            for (const auto &val : row)
-            {
-                std::cout << val << " ";
-            }
-            std::cout << std::endl;
-        }
+        printMatrix(mergedMat);
       }      
 
-      std::vector<int> outVector;
+      std::vector<int> outVector (outMatRow * outMatCol *  inputDepth);
       performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol, params.moreDebugPrints);
-
-      auto start = std::chrono::high_resolution_clock::now();
+      if (params.moreDebugPrints == true) {
+        // Debug print
+        std::cout << "Output Matrix from performConv():" << std::endl;
+        printVector(outVector);
+      }
 
       int hopSize = outMatCol * outMatRow;
+      auto start = std::chrono::high_resolution_clock::now();
       if (j == 0)
       {
         std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
-      }
-
+      }      
       for (int m = 0; m < hopSize; ++m)
       {
         for (int n = m + hopSize; n < outVector.size(); n += hopSize)
@@ -453,11 +443,7 @@ int main(int argc, char *argv[])
       if (params.moreDebugPrints == true) {
         // Debug print
         std::cout << "Intermediate dstVec (Iteration " << i << ", Chunk " << j << "):" << std::endl;
-        for (const auto &val : dstVec)
-        {
-          std::cout << val << " ";
-        }
-        std::cout << std::endl;
+        printVector(dstVec);
       }
 
     }
@@ -473,13 +459,7 @@ int main(int argc, char *argv[])
     if (params.moreDebugPrints ==  true) {
       // Debug print
       std::cout << "Result matrix from PIM< (Kernel " << i << "):" << std::endl;
-      for (const auto &row : resultMatrix[i]) {
-        for (const auto &val : row)
-        {
-          std::cout << val << " ";
-        }
-        std::cout << std::endl;
-      }
+      printMatrix(resultMatrix[i]);
     }
   }
   
@@ -490,7 +470,7 @@ int main(int argc, char *argv[])
   }
 
   pimShowStats();
-  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
+  std::cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << std::endl;
 
   return 0;
 }
