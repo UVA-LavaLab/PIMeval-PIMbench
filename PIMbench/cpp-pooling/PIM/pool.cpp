@@ -107,15 +107,20 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+// Decompose the input matrix by sliding the kernel dimensions (kernelHeight * kernelWidth) along the input matrix with a stride.
+// Assume the input matrix is padded.
+void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, int padding, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
 {
+  // Calculate the number of rows and columns for the decomposed matrix
   int numRows = kernelHeight * kernelWidth;
-  int numCols = ((matrixRow - kernelHeight) / stride + 1) * ((matrixColumn - kernelWidth) / stride + 1);
+  int numCols = ((matrixRow - kernelHeight + 2 * padding) / stride + 1) * ((matrixColumn - kernelWidth + 2 * padding) / stride + 1);  
+  // Initialize the decomposed matrix with the correct size
   decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
+
   int colIdx = 0;
-  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
+  for (int i = 0; i < (matrixRow + 2 * padding - kernelHeight + 1); i += stride)
   {
-    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
+    for (int j = 0; j < (matrixColumn + 2 * padding - kernelWidth + 1); j += stride)
     {
       int rowIDX = 0;
       for (int k = i; k < i + kernelHeight; k++)
@@ -290,8 +295,8 @@ int main(int argc, char *argv[])
 
   uint64_t inputHeight = inputMatrix[0].size();
   uint64_t inputWidth = inputMatrix[0][0].size();
-  uint64_t outputHeight = (inputHeight - params.kernelHeight) / params.stride + 1;
-  uint64_t outputWidth = (inputWidth - params.kernelWidth) / params.stride + 1;
+  uint64_t outputHeight = (inputHeight - params.kernelHeight + 2 * params.padding) / params.stride + 1;
+  uint64_t outputWidth = (inputWidth - params.kernelWidth + 2 * params.padding) / params.stride + 1;
 
   uint64_t numOfPIMRow = params.kernelHeight * params.kernelWidth;
   uint64_t numOfPIMColumn = outputHeight * outputWidth;
@@ -308,7 +313,7 @@ int main(int argc, char *argv[])
     for (uint64_t j = i; j < matChunk; j++)
     {
       std::vector<std::vector<int>> decompMat;
-      getDecomposedMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, inputMatrix[j], decompMat);
+      decomposeMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, params.padding, inputMatrix[j], decompMat);
       if (params.moreDebugPrints == true) { 
         // Debug print
         std::cout << "Decomposed Matrix:" << std::endl;
@@ -323,6 +328,11 @@ int main(int argc, char *argv[])
     }
 
     std::vector<int> outVector;
+    if (params.moreDebugPrints == true) { 
+      // Debug print
+      std::cout << "Merged matrix:" << std::endl;
+      printMatrix(mergedMat);
+    }    
     maxPool(mergedMat, outVector);
     if (params.moreDebugPrints == true) { 
       // Debug print
