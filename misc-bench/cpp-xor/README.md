@@ -1,6 +1,6 @@
 # XOR
 
-XOR is a basic bitwise operation comparing every bit place for two different vectors. If the bits are not equal at position `i`, then the resulting bit at position `i` is 1, else it is 0. The inclusion of this benchmark was inspired by previous works, such as the Fulcrum paper [[1]](#1).
+XOR is a basic bitwise operation, which compares every bit place for two different vectors, and is popularly used in bitmap indexing and bitmap-based graph processing. If the bits are not equal at position `i`, then the resulting bit at position `i` is 1, else it is 0. The inclusion of this benchmark was inspired by previous works, such as the Fulcrum paper [[1]](#1).
 
 For a more detailed description on the operation/algorithm, refer to the Microsoft XOR [documentation](https://learn.microsoft.com/en-us/dotnet/visual-basic/language-reference/operators/xor-operator).
 
