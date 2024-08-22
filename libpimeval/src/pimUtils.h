@@ -24,6 +24,7 @@ namespace pimUtils
   std::string pimAllocEnumToStr(PimAllocEnum allocType);
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
+  unsigned getNumBitsOfDataType(PimDataType dataType);
 
   std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
