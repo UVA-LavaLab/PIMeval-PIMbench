@@ -1,4 +1,4 @@
-// Test: C++ version of max pool. 
+// Test: C++ version of max pool
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -8,14 +8,14 @@
 #include <vector>
 #include <getopt.h>
 #include <cmath>
-#include "../util.h"
+#include "../../util.h"
 
 using namespace std;
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  int row, column, dim, stride, kernelHeight, kernelWidth;
+  int row, column, dim, stride, padding, kernelHeight, kernelWidth;
   char *dramConfigFile;
   char *imageMatrixFile;
   bool shouldVerify;
@@ -31,12 +31,13 @@ void usage()
           "\n    -c    column (default=224)"
           "\n    -d    dimension (default=64)"
           "\n    -s    stride (default=2)"
+          "\n    -p    input padding (default=0)"
           "\n    -l    kernel height (default=2)"
           "\n    -w    kernel width (default=2)"
           "\n    -v    should verify result with CPU"
           "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
           "\n    -i    input image file containing matrices (default=generates matrix with random numbers)"
-	  "\n    -m    enable more debug prints (default = false)"          
+          "\n    -m    enable more debug prints (default = false)"          
           "\n");
 }
 
@@ -47,6 +48,7 @@ struct Params getInputParams(int argc, char **argv)
   p.column = 224;
   p.dim = 64;
   p.stride = 2;
+  p.padding = 0;
   p.kernelHeight = 2;
   p.kernelWidth = 2;
   p.dramConfigFile = nullptr;
@@ -55,7 +57,7 @@ struct Params getInputParams(int argc, char **argv)
   p.moreDebugPrints = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:r:c:d:s:l:w:v:f:i:m:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:r:c:d:s:p:l:w:v:f:i:m:")) >= 0)
   {
     switch (opt)
     {
@@ -75,6 +77,9 @@ struct Params getInputParams(int argc, char **argv)
     case 's':
       p.stride = atoi(optarg);
       break;
+    case 'p':
+      p.padding = atoi(optarg);
+      break;  
     case 'l':
       p.kernelHeight = atoi(optarg);
       break;
@@ -102,29 +107,20 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-// Function to print a 3D matrix
-void print3DMatrix(const std::vector<std::vector<std::vector<int>>> &matrix) {
-    for (int i = 0; i < matrix.size(); ++i) {
-        std::cout << "Layer " << i << ":\n";
-        for (int j = 0; j < matrix[i].size(); ++j) {
-            for (int k = 0; k < matrix[i][j].size(); ++k) {
-                std::cout << matrix[i][j][k] << " ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-    }
-}
-
-void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+// Decompose the input matrix by sliding the kernel dimensions (kernelHeight * kernelWidth) along the input matrix with a stride.
+// Assume the input matrix is padded.
+void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, int padding, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
 {
+  // Calculate the number of rows and columns for the decomposed matrix
   int numRows = kernelHeight * kernelWidth;
-  int numCols = matrixRow * matrixColumn;
+  int numCols = ((matrixRow - kernelHeight + 2 * padding) / stride + 1) * ((matrixColumn - kernelWidth + 2 * padding) / stride + 1);  
+  // Initialize the decomposed matrix with the correct size
   decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
+
   int colIdx = 0;
-  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
+  for (int i = 0; i < (matrixRow + 2 * padding - kernelHeight + 1); i += stride)
   {
-    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
+    for (int j = 0; j < (matrixColumn + 2 * padding - kernelWidth + 1); j += stride)
     {
       int rowIDX = 0;
       for (int k = i; k < i + kernelHeight; k++)
@@ -148,7 +144,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
 
   if (inputMatrix.empty())
   {
-    return;
+    std::cerr << "Abort: input matrix is empty" << std::endl;
+    exit(1);
   }
   int numRows = inputMatrix.size();
   int numCols = inputMatrix[0].size();
@@ -157,8 +154,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
   if (obj1 == -1)
   {
-    std::cout << "Abort" << std::endl;
-    return;
+    std::cerr << "Abort: pimAlloc failed for obj1" << std::endl;
+    exit(1);
   }
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
@@ -166,8 +163,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
-      std::cout << "Abort" << std::endl;
-      return;
+      std::cerr << "Abort: pimAllocAssociated failed pimObjectList at iteration: " << i << std::endl;
+      exit(1);
     }
     pimObjectList[i] = obj;
   }
@@ -177,8 +174,8 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
-      return;
+      std::cerr << "Abort: pimCopyHostToDevice failed between inputMatrix and pimObjectList at iteration: " << i << std::endl;
+      exit(1);
     }
   }
 
@@ -187,16 +184,16 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     PimStatus status = pimMax(pimObjectList[0], pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort" << std::endl;
-      return;
+      std::cerr << "Abort: pimMax failed between pimObjectLists at iteration: " << i << std::endl;
+      exit(1); 
     }
   }
   outputMatrix.resize(numCols);
   PimStatus status = pimCopyDeviceToHost(pimObjectList[0], outputMatrix.data());
   if (status != PIM_OK)
   {
-    std::cout << "Abort" << std::endl;
-    return;
+    std::cerr << "Abort: pimCopyDeviceToHost failed between pimObjectList and outputMatrix" << std::endl;
+    exit(1);
   }
   for (auto elem : pimObjectList)
   {
@@ -242,22 +239,23 @@ std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector
     }
   }
 
-  if (mismatch_counter == 0) {
-    std::cout << "Success: PIM results match with CPU results" << std::endl; 
-  } else {
-    std::cout << "Failure: PIM results do not match with CPU results" << std::endl;
-  }
-
   if (moreDebugPrints == true) {
     std::cout << "Stride: " << stride << ", Kernel size: " << kernelHeight << "x" << kernelWidth << std::endl;
     std::cout << "Input matrix:" << std::endl;
-    print3DMatrix(inputMatrix);
+    printMatrix(inputMatrix);
     std::cout << "Output matrix from CPU:" << std::endl;
-    print3DMatrix(outputMatrix);
+    printMatrix(outputMatrix);
     std::cout << "Output matrix from PIM:" << std::endl;
-    print3DMatrix(PIMResult);    
+    printMatrix(PIMResult);    
   }
-  
+
+  if (mismatch_counter == 0) {
+    std::cout << "Success: PIM results match with CPU results" << std::endl; 
+  } else {
+    std::cerr << "Failure: PIM results do not match with CPU results" << std::endl;
+    exit(1);
+  }
+    
   return outputMatrix;
 }
 
@@ -272,69 +270,84 @@ int main(int argc, char *argv[])
   {
     for (auto &mat : inputMatrix)
     {
-      getMatrix(params.row, params.column, 0, mat);
+      getMatrix(params.row, params.column, params.padding, mat);
     }
   }
   else
   {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
+    std::cerr << "Reading from the input file is not implemented yet for the input matrix" << std::endl;
+    exit(1);
   }
 
   if (!createDevice(params.dramConfigFile))
-    return 1;
+    exit(1);
 
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
-  unsigned numCols = 8192, numOfCore = 4096;
-  
-  int numOfPIMRow = params.kernelHeight * params.kernelWidth;
-  int numOfPIMColumn = (params.row * params.column / numOfPIMRow);
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < params.dim ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : params.dim;
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  if (status != PIM_OK) {
+    std::cerr << "Abort: pimGetDeviceProperties failed" << std::endl;
+    exit(1);
+  }
+  // Get the device parameters
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows; 
 
-  int inputHeight = inputMatrix[0].size();
-  int inputWidth = inputMatrix[0][0].size();
-  int outputHeight = (inputHeight - params.kernelHeight) / params.stride + 1;
-  int outputWidth = (inputWidth - params.kernelWidth) / params.stride + 1;
-  
+  uint64_t inputHeight = inputMatrix[0].size();
+  uint64_t inputWidth = inputMatrix[0][0].size();
+  uint64_t outputHeight = (inputHeight - params.kernelHeight + 2 * params.padding) / params.stride + 1;
+  uint64_t outputWidth = (inputWidth - params.kernelWidth + 2 * params.padding) / params.stride + 1;
+
+  uint64_t numOfPIMRow = params.kernelHeight * params.kernelWidth;
+  uint64_t numOfPIMColumn = outputHeight * outputWidth;
+  uint64_t numOfMatPerRow = floor((1.0 * numOfBits) / numOfPIMColumn) < params.dim ? floor((1.0 * numOfBits) / (numOfPIMColumn)) : params.dim;
+
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(params.dim, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
 
-  for (int i = 0; i < params.dim; i += 1)
+  for (uint64_t i = 0; i < params.dim; i += 1)
   {
     // This vector packs all the matrices that can be fit into one PIM iteration
     std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
-    for (int j = i; j < matChunk; j++)
+    uint64_t matChunk = (numOfMatPerRow + i) <= params.dim ? (numOfMatPerRow + i) : params.dim;
+    for (uint64_t j = i; j < matChunk; j++)
     {
-      std::vector<std::vector<int>> tempMat;
-      getDecomposedMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, inputMatrix[j], tempMat);
+      std::vector<std::vector<int>> decompMat;
+      decomposeMatrix(params.row, params.column, params.kernelHeight, params.kernelWidth, params.stride, params.padding, inputMatrix[j], decompMat);
       if (params.moreDebugPrints == true) { 
         // Debug print
         std::cout << "Decomposed Matrix:" << std::endl;
-        for (const auto &row : tempMat)
-        {
-          for (const auto &val : row)
-          {
-            std::cout << val << " ";
-          }
-          std::cout << std::endl;
-        }
+        printMatrix(decompMat);
       }
-      for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+      // Merge the matrices
+      for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
+        mergedMat[idx].insert(mergedMat[idx].end(),
+                             std::make_move_iterator(decompMat[idx].begin()),
+                             std::make_move_iterator(decompMat[idx].end()));
       }
     }
-    std::vector<int> outMatrix;
-    maxPool(mergedMat, outMatrix);
-    int idx = 0;
-    for (int j = i; j < matChunk; ++j)
+
+    std::vector<int> outVector;
+    if (params.moreDebugPrints == true) { 
+      // Debug print
+      std::cout << "Merged matrix:" << std::endl;
+      printMatrix(mergedMat);
+    }    
+    maxPool(mergedMat, outVector);
+    if (params.moreDebugPrints == true) { 
+      // Debug print
+      std::cout << "outVector:" << std::endl;
+      printVector(outVector);
+    }
+
+    uint64_t idx = 0;
+    for (uint64_t j = i; j < matChunk; ++j)
     {
-      for (int r = 0; r < resultMatrix[j].size(); ++r)
+      for (uint64_t r = 0; r < outputHeight; ++r)
       {
-        for (int c = 0; c < resultMatrix[j][r].size(); ++c)
+        for (uint64_t c = 0; c < outputWidth; ++c)
         {
-          resultMatrix[j][r][c] = outMatrix[idx++];
+          resultMatrix[j][r][c] = outVector[idx++];
         }
       }
     }
