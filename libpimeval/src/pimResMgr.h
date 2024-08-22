@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <cassert>
 
 class pimDevice;
 
@@ -35,6 +36,7 @@ public:
   void setElemIdxBegin(uint64_t idx) { m_elemIdxBegin = idx; }
   void setElemIdxEnd(uint64_t idx) { m_elemIdxEnd = idx; }
   void setIsValid(bool val) { m_isValid = val; }
+  void setNumColsPerElem(unsigned val) { m_numColsPerElem = val; }
 
   PimCoreId getCoreId() const { return m_coreId; }
   unsigned getRowIdx() const { return m_rowIdx; }
@@ -44,6 +46,14 @@ public:
   uint64_t getElemIdxBegin() const { return m_elemIdxBegin; }
   uint64_t getElemIdxEnd() const { return m_elemIdxEnd; }
   uint64_t getNumElemInRegion() const { return m_elemIdxEnd - m_elemIdxBegin; }
+  unsigned getNumColsPerElem() const { return m_numColsPerElem; }
+
+  std::pair<unsigned, unsigned> locateIthElemInRegion(unsigned i) const {
+    assert(i < getNumElemInRegion());
+    unsigned rowIdx = m_rowIdx; // only one row of elements per region
+    unsigned colIdx = m_colIdx + i * m_numColsPerElem;
+    return std::make_pair(rowIdx, colIdx);
+  }
 
   bool isValid() const { return m_isValid && m_coreId >= 0 && m_numAllocRows > 0 && m_numAllocCols > 0; }
 
@@ -57,6 +67,7 @@ private:
   unsigned m_numAllocCols = 0;  // number of cols of this region
   uint64_t m_elemIdxBegin = 0;  // begin element index in this region
   uint64_t m_elemIdxEnd = 0;    // end element index in this region
+  unsigned m_numColsPerElem = 0;  // number of cols per element
   bool m_isValid = false;
 };
 
@@ -84,6 +95,7 @@ public:
   void setAssocObjId(PimObjId assocObjId) { m_assocObjId = assocObjId; }
   void setRefObjId(PimObjId refObjId) { m_refObjId = refObjId; }
   void setIsDualContactRef(bool val) { m_isDualContactRef = val; }
+  void setNumColsPerElem(unsigned val) { m_numColsPerElem = val; }
   void finalize();
 
   PimObjId getObjId() const { return m_objId; }
@@ -104,6 +116,7 @@ public:
   unsigned getMaxNumRegionsPerCore() const { return m_maxNumRegionsPerCore; }
   unsigned getNumCoresUsed() const { return m_numCoresUsed; }
   unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
+  unsigned getNumColsPerElem() const { return m_numColsPerElem; }
 
   std::string getDataTypeName() const;
   void print() const;
@@ -121,6 +134,7 @@ private:
   unsigned m_maxNumRegionsPerCore = 0;
   unsigned m_numCoresUsed = 0;
   unsigned m_maxElementsPerRegion = 0;
+  unsigned m_numColsPerElem = 0; // number of cols per element
   bool m_isDualContactRef = false;
 };
 

@@ -5,6 +5,14 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimUtils.h"
+#include "libpimeval.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <unordered_map>
+#include <string>
+#include <filesystem>
+#include <cstdlib>
 #include <cassert>
 
 //! @brief  Convert PimStatus enum to string
@@ -19,24 +27,23 @@ pimUtils::pimStatusEnumToStr(PimStatus status)
 }
 
 //! @brief  Convert PimDeviceEnum to string
-std::string
-pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType)
-{
-  switch (deviceType) {
-  case PIM_DEVICE_NONE: return "PIM_DEVICE_NONE";
-  case PIM_FUNCTIONAL: return "PIM_FUNCTIONAL";
-  case PIM_DEVICE_BITSIMD_V: return "PIM_DEVICE_BITSIMD_V";
-  case PIM_DEVICE_BITSIMD_V_NAND: return "PIM_DEVICE_BITSIMD_V_NAND";
-  case PIM_DEVICE_BITSIMD_V_MAJ: return "PIM_DEVICE_BITSIMD_V_MAJ";
-  case PIM_DEVICE_BITSIMD_V_AP: return "PIM_DEVICE_BITSIMD_V_AP";
-  case PIM_DEVICE_DRISA_NOR: return "PIM_DEVICE_DRISA_NOR";
-  case PIM_DEVICE_DRISA_MIXED: return "PIM_DEVICE_DRISA_MIXED";
-  case PIM_DEVICE_SIMDRAM: return "PIM_DEVICE_SIMDRAM";
-  case PIM_DEVICE_BITSIMD_H: return "PIM_DEVICE_BITSIMD_H";
-  case PIM_DEVICE_FULCRUM: return "PIM_DEVICE_FUMCRUM";
-  case PIM_DEVICE_BANK_LEVEL: return "PIM_DEVICE_BANK_LEVEL";
+std::string 
+pimUtils::pimDeviceEnumToStr(PimDeviceEnum deviceType) {
+  auto it = enumToStrMap.find(deviceType);
+  if (it != enumToStrMap.end()) {
+    return it->second;
   }
   return "Unknown";
+}
+
+//! @brief  Convert string to PimDeviceEnum
+PimDeviceEnum
+pimUtils::strToPimDeviceEnum(const std::string& deviceTypeStr) {
+  auto it = strToEnumMap.find(deviceTypeStr);
+  if (it != strToEnumMap.end()) {
+    return it->second;
+  }
+  return PIM_DEVICE_NONE;
 }
 
 //! @brief  Convert PimAllocEnum to string
@@ -210,3 +217,94 @@ pimUtils::threadPool::workerThread()
   }
 }
 
+//! @brief Helper function to trim from the start (left) of the string
+std::string&
+pimUtils::ltrim(std::string& s) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+    return !std::isspace(ch);
+  }));
+  return s;
+ }
+
+//! @brief Helper function to trim from the end (right) of the string
+std::string&
+pimUtils::rtrim(std::string& s) {
+  s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+    return !std::isspace(ch);
+  }).base(), s.end());
+  return s;
+}
+
+//! @brief Function to trim from both ends
+std::string&
+pimUtils::trim(std::string& s) {
+  return ltrim(rtrim(s));
+}
+
+
+//! @brief Reads the content of a file and stores it in a provided std::string reference
+bool
+pimUtils::readFileContent(const char* fileName, std::string& fileContent) {
+    std::ifstream fileStream(fileName);
+
+    if (!fileStream.is_open()) {
+        std::cerr << "PIM-Error: Could not open the file: " << fileName << std::endl;
+        return false;
+    }
+
+    std::stringstream buffer;
+    buffer << fileStream.rdbuf();
+    fileContent = buffer.str();
+    return true;
+}
+
+//! @brief Retrieves the value of the specified environment variable.
+bool
+pimUtils::getEnvVar(const std::string &name, std::string &value) {
+    const char* evnVal = std::getenv(name.c_str());
+    if (evnVal == nullptr) {
+        return false;
+    } else {
+        value = evnVal;
+        return true;
+    }
+}
+
+//! @brief Returns the values of each parameter in the config files.
+std::string
+pimUtils::getParam(const std::unordered_map<std::string, std::string>& params, const std::string& key) {
+  auto it = params.find(key);
+  if (it == params.end()) {
+    throw std::invalid_argument(key);
+  }
+  return it->second;
+}
+
+//! @brief Returns the values of each parameter in the config files. Return empty string and false return status if the parameter value is not found
+std::string 
+pimUtils::getOptionalParam(const std::unordered_map<std::string, std::string>& params, const std::string& key, bool& returnStatus) {
+  returnStatus = false;  
+  auto it = params.find(key);
+  if (it == params.end()) {
+    return "";
+  }
+  returnStatus = true;
+  return it->second;
+} 
+
+//! @brief Returns a substring from the beginning of the input string up to the first ';' character, or the entire string if ';' is not found
+std::string 
+pimUtils::removeAfterSemicolon(const std::string &input) {
+    size_t pos = input.find(';');
+    if (pos != std::string::npos) {
+        return input.substr(0, pos);
+    }
+    return input;
+}
+
+//! @brief Returns the directory path of the input file.
+std::string
+pimUtils::getDirectoryPath(const std::string& filePath) {
+    std::filesystem::path path(filePath);
+    return path.parent_path().string() + "/";
+}

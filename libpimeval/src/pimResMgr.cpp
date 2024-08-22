@@ -68,6 +68,7 @@ pimObjInfo::finalize()
 
   const pimRegion& region = m_regions[0];
   m_maxElementsPerRegion = (uint64_t)region.getNumAllocRows() * region.getNumAllocCols() / m_bitsPerElement;
+  m_numColsPerElem = region.getNumColsPerElem();
 }
 
 //! @brief  Get all regions on a specific PIM core for current PIM object
@@ -134,6 +135,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
   unsigned numColsToAllocLast = 0;
   uint64_t numElemPerRegion = 0;
   uint64_t numElemPerRegionLast = 0;
+  unsigned numColsPerElem = 0;
   if (allocType == PIM_ALLOC_V || allocType == PIM_ALLOC_V1) {
     // allocate one region per core, with vertical layout
     numRowsToAlloc = bitsPerElement;
@@ -144,6 +146,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     }
     numElemPerRegion = numCols;
     numElemPerRegionLast = numColsToAllocLast;
+    numColsPerElem = 1;
   } else if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
     // allocate one region per core, with horizontal layout
     numRowsToAlloc = 1;
@@ -154,6 +157,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
     }
     numElemPerRegion = numCols / bitsPerElement;
     numElemPerRegionLast = numColsToAllocLast / bitsPerElement;
+    numColsPerElem = bitsPerElement;
   } else {
     std::printf("PIM-Error: Unsupported PIM allocation type %d\n", static_cast<int>(allocType));
     return -1;
@@ -191,6 +195,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
       newRegion.setElemIdxBegin(elemIdx);
       elemIdx += numElemInRegion;
       newRegion.setElemIdxEnd(elemIdx); // exclusive
+      newRegion.setNumColsPerElem(numColsPerElem);
       newObj.addRegion(newRegion);
 
       // add to core usage map
@@ -290,6 +295,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
     }
     newRegion.setElemIdxBegin(region.getElemIdxBegin());
     newRegion.setElemIdxEnd(region.getElemIdxEnd()); // exclusive
+    newRegion.setNumColsPerElem(region.getNumColsPerElem());
     newObj.addRegion(newRegion);
 
     // add to core usage map
