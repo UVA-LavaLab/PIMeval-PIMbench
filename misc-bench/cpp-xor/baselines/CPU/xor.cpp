@@ -22,7 +22,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./xor.out [options]"
           "\n"
-          "\n    -l    data size (default=65536 elements)"
+          "\n    -l    vector length (default=2048 elements)"
           "\n    -i    input file containing two vectors (default=generates vectors with random numbers)"
           "\n");
 }
@@ -30,7 +30,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = 65536;
+  p.dataSize = 2048;
   p.inputFile = nullptr;
 
   int opt;

@@ -36,7 +36,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./xor.out [options]"
           "\n"
-          "\n    -l    data size (default=65536 elements)"
+          "\n    -l    vector length (default=2048 elements)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing two vectors (default=generates vectors with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -46,7 +46,7 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.dataSize = 65536;
+  p.dataSize = 2048;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
@@ -127,8 +127,6 @@ int main(int argc, char *argv[])
     std::cerr << "Reading from the input file is not implemented yet for the input matrix" << std::endl;
     return 1;
   }
-
-  src1[3] = 1246125;
 
   printf("Performing XOR with %lu data points\n", vectorLength);
 
