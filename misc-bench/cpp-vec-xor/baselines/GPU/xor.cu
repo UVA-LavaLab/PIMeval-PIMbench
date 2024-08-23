@@ -1,5 +1,5 @@
 /* File:     xor.cu
- * Purpose:  Implement brightness on a gpu using Thrust
+ * Purpose:  Implement xor on a gpu using Thrust
  *
  */
 
