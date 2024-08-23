@@ -7,7 +7,7 @@ For a more detailed description on the operation/algorithm, refer to the Microso
 ## Directory Structure
 
 ```
-cpp-xor/
+cpp-vec-xor/
 ├── PIM/
 │   ├── Makefile
 │   ├── xor.cpp
