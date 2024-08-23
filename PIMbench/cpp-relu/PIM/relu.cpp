@@ -1,4 +1,4 @@
-// Test: C++ version of RELU activation function: max(0, x)
+// Test: C++ version of ReLU activation function: max(0, x)
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -118,9 +118,8 @@ void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kern
 /*
   This should work for bitSIMD or any PIM that requires vertical data layout.
 */
-void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
+void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, unsigned bitsPerElement)
 {
-  unsigned bitsPerElement = 32;
 
   if (inputMatrix.empty())
   {
@@ -266,7 +265,8 @@ int main(int argc, char *argv[]) {
   uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows;
 
   uint64_t numOfPIMRow = 1;
-  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numOfBits) / (inputHeight * inputWidth * 32))), static_cast<uint64_t>(inputWidth));
+  unsigned bitsPerElement = 32;
+  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numOfBits) / (inputHeight * inputWidth * bitsPerElement))), static_cast<uint64_t>(inputWidth));
 
   // Initialize result matrix with the same dimensions as input matrix
   std::vector<std::vector<std::vector<int>>> resultMatrix(inputDepth, std::vector<std::vector<int>>(inputHeight, std::vector<int>(inputWidth)));
@@ -281,6 +281,8 @@ int main(int argc, char *argv[]) {
     uint64_t matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
     // Decompose and merge matrices
     for (uint64_t k = j; k < matChunk; k++) {
+      // 1, 1, 1, 0 in the function call below indicates that the kernel dimensions are 1x1, stride is 1 and padding is 0 while decomposing the matrix for ReLU operation.
+      // The kernel dimensions, stride and padding are specified in the functional call to make the function reusable for other operations like max pooling.
       decomposeMatrix(inputHeight, inputWidth, 1, 1, 1, 0, inputMatrix[k], decompMat);
       if (params.moreDebugPrints) { 
         // Debug print decomposed matrix
@@ -300,7 +302,7 @@ int main(int argc, char *argv[]) {
     }
   }
   
-  performRelu(mergedMat, outVector);
+  performRelu(mergedMat, outVector, bitsPerElement);
   if (params.moreDebugPrints) {
     // Debug print outVector
     std::cout << "outVector:" << std::endl;            
