@@ -128,12 +128,17 @@ int main(int argc, char* argv[])
   {
     // verify result
     #pragma omp parallel for
+    bool is_correct = true;
     for (unsigned i = 0; i < params.vectorLength; ++i)
     {
       if (Y_device[i] != X[i])
       {
         std::cout << "Wrong answer: " << Y_device[i] << " (expected " << X[i] << ")" << std::endl;
+        is_correct = false;
       }
+    }
+    if(is_correct) {
+      std::cout << "Correct for copy!" << std::endl;
     }
   }
 
