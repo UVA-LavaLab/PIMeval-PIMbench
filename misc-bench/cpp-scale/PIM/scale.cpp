@@ -13,7 +13,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "../../util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -30,7 +30,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./axpy.out [options]"
+          "\nUsage:  ./scale.out [options]"
           "\n"
           "\n    -l    input size (default=2048 elements)"
           "\n    -c    dramsim config file"
