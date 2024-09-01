@@ -175,22 +175,10 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
     add_vector_to_grid(src_host[i], tmp_pim_obj, pim_board);
   }
 
-  std::cout << "pim grid: \n";
-
-  for(size_t i=0; i<pim_board.size(); ++i) {
-    print_pim_obj(pim_board[i], width);
-  }
-
-  std::cout << "end pim grid\n";
-
   std::vector<PimObjId> result_objs;
 
   for(size_t i=0; i<src_host.size(); ++i) {
     result_objs.push_back(game_of_life_row(pim_board, i, tmp_pim_obj));
-  }
-
-  for(size_t i=0; i<src_host.size(); ++i) {
-    print_pim_obj(result_objs[i], width);
   }
 
   dst_host.resize(height);
@@ -200,16 +188,6 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
     PimStatus copy_status = pimCopyDeviceToHost(result_objs[i], dst_host[i].data());
     assert (copy_status == PIM_OK);
   }
-
-
-  std::cout << "starting result\n";
-  for(size_t y=0; y<dst_host.size(); ++y) {
-    for(size_t x=0; x<dst_host[0].size(); ++x) {
-      std::cout << unsigned(dst_host[y][x]) << ", ";
-    }
-    std::cout << std::endl;
-  }
-  std::cout << "end result\n";
 }
 
 uint8_t get_with_default(size_t i, size_t j, std::vector<std::vector<uint8_t>> &x) {
@@ -231,10 +209,6 @@ int main(int argc, char* argv[])
          {0,0,0,1,1},
          {1,1,0,1,0},
          {1,0,0,1,1}};
-    for(size_t i=0; i<5; ++i) {
-    std::cout << unsigned(x[0][i]) << ", ";
-  }
-  std::cout << std::endl;
     // srand((unsigned)time(NULL));
     // x.resize(params.height);
     // for(size_t i=0; i<params.height; ++i) {
