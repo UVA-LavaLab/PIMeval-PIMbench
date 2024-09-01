@@ -192,7 +192,31 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
   for(size_t i=0; i<src_host.size(); ++i) {
     print_pim_obj(result_objs[i], width);
   }
-  
+
+  dst_host.resize(height);
+
+  for(size_t i=0; i<src_host.size(); ++i) {
+    dst_host[i].resize(width);
+    PimStatus copy_status = pimCopyDeviceToHost(result_objs[i], dst_host[i].data());
+    assert (copy_status == PIM_OK);
+  }
+
+
+  std::cout << "starting result\n";
+  for(size_t y=0; y<dst_host.size(); ++y) {
+    for(size_t x=0; x<dst_host[0].size(); ++x) {
+      std::cout << unsigned(dst_host[y][x]) << ", ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << "end result\n";
+}
+
+uint8_t get_with_default(size_t i, size_t j, std::vector<std::vector<uint8_t>> &x) {
+  if(i >= 0 && i < x.size() && j >= 0 && j < x[0].size()) {
+    return x[i][j];
+  }
+  return 0;
 }
 
 int main(int argc, char* argv[])
@@ -234,23 +258,36 @@ int main(int argc, char* argv[])
   //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   game_of_life(x, y);
 
-  // if (params.shouldVerify) 
-  // {
-  //   // verify result
-  //   #pragma omp parallel for
-  //   bool is_correct = true;
-  //   for (unsigned i = 0; i < params.vectorLength; ++i)
-  //   {
-  //     if (Y_device[i] != X[i])
-  //     {
-  //       std::cout << "Wrong answer: " << Y_device[i] << " (expected " << X[i] << ")" << std::endl;
-  //       is_correct = false;
-  //     }
-  //   }
-  //   if(is_correct) {
-  //     std::cout << "Correct for copy!" << std::endl;
-  //   }
-  // }
+  if (params.shouldVerify) 
+  {
+    bool is_correct = true;
+    for(int i=0; i<y.size(); ++i) {
+      for(int j=0; j<y[0].size(); ++j) {
+        uint8_t sum_cpu = get_with_default(i-1, j-1, x);
+        sum_cpu += get_with_default(i-1, j, x);
+        sum_cpu += get_with_default(i-1, j+1, x);
+        sum_cpu += get_with_default(i, j-1, x);
+        sum_cpu += get_with_default(i, j+1, x);
+        sum_cpu += get_with_default(i+1, j-1, x);
+        sum_cpu += get_with_default(i+1, j, x);
+        sum_cpu += get_with_default(i+1, j+1, x);
+
+        uint8_t res_cpu = (sum_cpu == 3) ? 1 : 0;
+        sum_cpu = (sum_cpu == 2) ? 1 : 0;
+        sum_cpu &= get_with_default(i, j, x);
+        res_cpu |= sum_cpu;
+
+        if (res_cpu != y[i][j])
+        {
+          std::cout << "Wrong answer: " << unsigned(y[i][j]) << " (expected " << unsigned(res_cpu) << ")" << std::endl;
+          is_correct = false;
+        }
+      }
+    }
+    if(is_correct) {
+      std::cout << "Correct for game of life!" << std::endl;
+    }
+  }
 
   pimShowStats();
 
