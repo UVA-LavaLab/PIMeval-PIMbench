@@ -94,103 +94,102 @@ void print_pim_obj(PimObjId pim_obj, size_t sz) {
   std::cout << std::endl;
 }
 
+PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj) {
+  size_t mid_idx = 3*row_idx + 1;
+
+  pimAdd(pim_board[mid_idx - 1], pim_board[mid_idx + 1], tmp_pim_obj);
+  if(row_idx > 0) {
+    pimAdd(pim_board[mid_idx - 2], tmp_pim_obj, tmp_pim_obj);
+    pimAdd(pim_board[mid_idx - 3], tmp_pim_obj, tmp_pim_obj);
+    pimAdd(pim_board[mid_idx - 4], tmp_pim_obj, tmp_pim_obj);
+  }
+
+  if(mid_idx + 2 < pim_board.size()) {
+    pimAdd(pim_board[mid_idx + 2], tmp_pim_obj, tmp_pim_obj);
+    pimAdd(pim_board[mid_idx + 3], tmp_pim_obj, tmp_pim_obj);
+    pimAdd(pim_board[mid_idx + 4], tmp_pim_obj, tmp_pim_obj);
+  }
+  
+  unsigned bitsPerElement = 8;
+  PimObjId pim_res = pimAllocAssociated(bitsPerElement, pim_board[mid_idx], PIM_UINT8);
+  assert(pim_res != -1);
+
+  PimStatus status = pimEQScalar(tmp_pim_obj, pim_res, 3);
+  assert (status == PIM_OK);
+
+  status = pimEQScalar(tmp_pim_obj, tmp_pim_obj, 2);
+  assert (status == PIM_OK);
+
+  status = pimAnd(tmp_pim_obj, pim_board[mid_idx], tmp_pim_obj);
+  assert (status == PIM_OK);
+
+  status = pimOr(tmp_pim_obj, pim_res, pim_res);
+  assert (status == PIM_OK);
+
+  return pim_res;
+}
+
+void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, std::vector<PimObjId> &pim_board) {
+  unsigned bitsPerElement = 8;
+
+  PimObjId left = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  assert(left != -1);
+  // Should be able to use a ranged ref to replace shift once implemented
+  // Also try device to device copy
+  PimStatus status = pimCopyHostToDevice((void *)to_add.data(), left);
+  assert (status == PIM_OK);
+  status = pimShiftElementsRight(left);
+  assert (status == PIM_OK);
+
+  PimObjId mid = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  assert(mid != -1);
+  status = pimCopyHostToDevice((void *)to_add.data(), mid);
+  assert (status == PIM_OK);
+
+  PimObjId right = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  assert(right != -1);
+  status = pimCopyHostToDevice((void *)to_add.data(), right);
+  assert (status == PIM_OK);
+  status = pimShiftElementsLeft(right);
+  assert (status == PIM_OK);
+
+  pim_board.push_back(left);
+  pim_board.push_back(mid);
+  pim_board.push_back(right);
+}
+
 void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector<std::vector<uint8_t>> &dst_host)
 {
   unsigned bitsPerElement = 8;
   size_t width = src_host[0].size();
   size_t height = src_host.size();
-  PimObjId sum_pim = pimAlloc(PIM_ALLOC_AUTO, width, bitsPerElement, PIM_UINT8);
-  assert(sum_pim != -1);
 
-  PimObjId res_pim = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(res_pim != -1);
-  PimStatus status = pimCopyHostToDevice((void *)src_host[1].data(), res_pim);
-  assert (status == PIM_OK);
-
-  PimObjId upper_left = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(upper_left != -1);
-  // Should be able to use a ranged ref to replace shift once implemented
-  status = pimCopyHostToDevice((void *)src_host[0].data(), upper_left);
-  assert (status == PIM_OK);
-  status = pimShiftElementsRight(upper_left);
-  assert (status == PIM_OK);
-
-  PimObjId upper_mid = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(upper_mid != -1);
-  status = pimCopyHostToDevice((void *)src_host[0].data(), upper_mid);
-  assert (status == PIM_OK);
-
-  PimObjId upper_right = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(upper_right != -1);
-  status = pimCopyHostToDevice((void *)src_host[0].data(), upper_right);
-  assert (status == PIM_OK);
-  status = pimShiftElementsLeft(upper_right);
-  assert (status == PIM_OK);
-
-  PimObjId mid_left = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(mid_left != -1);
-  status = pimCopyHostToDevice((void *)src_host[1].data(), mid_left);
-  assert (status == PIM_OK);
-  status = pimShiftElementsRight(mid_left);
-  assert (status == PIM_OK);
-
-  PimObjId mid_right = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(mid_right != -1);
-  status = pimCopyHostToDevice((void *)src_host[1].data(), mid_right);
-  assert (status == PIM_OK);
-  status = pimShiftElementsLeft(mid_right);
-  assert (status == PIM_OK);
-
-  PimObjId lower_left = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(lower_left != -1);
-  status = pimCopyHostToDevice((void *)src_host[2].data(), lower_left);
-  assert (status == PIM_OK);
-  status = pimShiftElementsRight(lower_left);
-  assert (status == PIM_OK);
-
-  PimObjId lower_mid = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(lower_mid != -1);
-  status = pimCopyHostToDevice((void *)src_host[2].data(), lower_mid);
-  assert (status == PIM_OK);
-
-  PimObjId lower_right = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
-  assert(lower_right != -1);
-  status = pimCopyHostToDevice((void *)src_host[2].data(), lower_right);
-  assert (status == PIM_OK);
-  status = pimShiftElementsLeft(lower_right);
-  assert (status == PIM_OK);
-
-  pimAdd(upper_left, upper_mid, sum_pim);
-  pimAdd(upper_right, sum_pim, sum_pim);
-  pimAdd(mid_left, sum_pim, sum_pim);
-  pimAdd(mid_right, sum_pim, sum_pim);
-  pimAdd(lower_left, sum_pim, sum_pim);
-  pimAdd(lower_mid, sum_pim, sum_pim);
-  pimAdd(lower_right, sum_pim, sum_pim);
-
-  print_pim_obj(sum_pim, width);
-  print_pim_obj(res_pim, width);
-
-  PimObjId tmp_pim_obj = pimAllocAssociated(bitsPerElement, sum_pim, PIM_UINT8);
+  PimObjId tmp_pim_obj = pimAlloc(PIM_ALLOC_AUTO, width, bitsPerElement, PIM_UINT8);
   assert(tmp_pim_obj != -1);
 
-  status = pimEQScalar(sum_pim, tmp_pim_obj, 2);
-  assert (status == PIM_OK);
+  std::vector<PimObjId> pim_board;
 
-  status = pimAnd(tmp_pim_obj, res_pim, res_pim);
-  assert (status == PIM_OK);
+  for(size_t i=0; i<src_host.size(); ++i) {
+    add_vector_to_grid(src_host[i], tmp_pim_obj, pim_board);
+  }
 
-  // Lives if 3 neighbors, or (2 and alive)
-  status = pimEQScalar(sum_pim, tmp_pim_obj, 3);
-  assert (status == PIM_OK);
+  std::cout << "pim grid: \n";
 
-  status = pimOr(tmp_pim_obj, res_pim, res_pim);
-  assert (status == PIM_OK);
+  for(size_t i=0; i<pim_board.size(); ++i) {
+    print_pim_obj(pim_board[i], width);
+  }
 
-  
+  std::cout << "end pim grid\n";
 
-  std::cout << "final state: ";
-  print_pim_obj(res_pim, width);
+  std::vector<PimObjId> result_objs;
+
+  for(size_t i=0; i<src_host.size(); ++i) {
+    result_objs.push_back(game_of_life_row(pim_board, i, tmp_pim_obj));
+  }
+
+  for(size_t i=0; i<src_host.size(); ++i) {
+    print_pim_obj(result_objs[i], width);
+  }
   
 }
 
@@ -203,7 +202,9 @@ int main(int argc, char* argv[])
   {
     x = {{1,0,1,0,0},
          {0,1,1,1,0},
-         {0,0,0,1,1}};
+         {0,0,0,1,1},
+         {1,1,0,1,0},
+         {1,0,0,1,1}};
     for(size_t i=0; i<5; ++i) {
     std::cout << unsigned(x[0][i]) << ", ";
   }
