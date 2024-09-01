@@ -204,19 +204,14 @@ int main(int argc, char* argv[])
   std::vector<std::vector<uint8_t>> x, y;
   if (params.inputFile == nullptr)
   {
-    x = {{1,0,1,0,0},
-         {0,1,1,1,0},
-         {0,0,0,1,1},
-         {1,1,0,1,0},
-         {1,0,0,1,1}};
-    // srand((unsigned)time(NULL));
-    // x.resize(params.height);
-    // for(size_t i=0; i<params.height; ++i) {
-    //   x[i].resize(params.width);
-    //   for(size_t j=0; j<params.width; ++j) {
-    //     x[i][j] = rand() & 1;
-    //   }
-    // }
+    srand((unsigned)time(NULL));
+    x.resize(params.height);
+    for(size_t i=0; i<params.height; ++i) {
+      x[i].resize(params.width);
+      for(size_t j=0; j<params.width; ++j) {
+        x[i][j] = rand() & 1;
+      }
+    }
   } 
   else 
   {
