@@ -130,25 +130,27 @@ PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx
 }
 
 void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, std::vector<PimObjId> &pim_board) {
+  // Should be able to use a ranged ref to replace shift once implemented
+
   unsigned bitsPerElement = 8;
 
-  PimObjId left = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  PimObjId mid = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  assert(mid != -1);
+  PimStatus status = pimCopyHostToDevice((void *)to_add.data(), mid);
+  assert (status == PIM_OK);
+
+  PimObjId left = pimAllocAssociated(bitsPerElement, mid, PIM_UINT8);
   assert(left != -1);
-  // Should be able to use a ranged ref to replace shift once implemented
-  // Also try device to device copy
-  PimStatus status = pimCopyHostToDevice((void *)to_add.data(), left);
+  status = pimCopyDeviceToDevice(mid, left);
   assert (status == PIM_OK);
   status = pimShiftElementsRight(left);
   assert (status == PIM_OK);
 
-  PimObjId mid = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
-  assert(mid != -1);
-  status = pimCopyHostToDevice((void *)to_add.data(), mid);
-  assert (status == PIM_OK);
+  
 
-  PimObjId right = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  PimObjId right = pimAllocAssociated(bitsPerElement, mid, PIM_UINT8);
   assert(right != -1);
-  status = pimCopyHostToDevice((void *)to_add.data(), right);
+  status = pimCopyDeviceToDevice(mid, right);
   assert (status == PIM_OK);
   status = pimShiftElementsLeft(right);
   assert (status == PIM_OK);
