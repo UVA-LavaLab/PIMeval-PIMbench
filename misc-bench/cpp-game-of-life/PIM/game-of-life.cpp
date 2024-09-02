@@ -98,17 +98,13 @@ PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx
   size_t mid_idx = 3*row_idx + 1;
 
   pimAdd(pim_board[mid_idx - 1], pim_board[mid_idx + 1], tmp_pim_obj);
-  if(row_idx > 0) {
-    pimAdd(pim_board[mid_idx - 2], tmp_pim_obj, tmp_pim_obj);
-    pimAdd(pim_board[mid_idx - 3], tmp_pim_obj, tmp_pim_obj);
-    pimAdd(pim_board[mid_idx - 4], tmp_pim_obj, tmp_pim_obj);
-  }
+  pimAdd(pim_board[mid_idx - 2], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_board[mid_idx - 3], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_board[mid_idx - 4], tmp_pim_obj, tmp_pim_obj);
 
-  if(mid_idx + 2 < pim_board.size()) {
-    pimAdd(pim_board[mid_idx + 2], tmp_pim_obj, tmp_pim_obj);
-    pimAdd(pim_board[mid_idx + 3], tmp_pim_obj, tmp_pim_obj);
-    pimAdd(pim_board[mid_idx + 4], tmp_pim_obj, tmp_pim_obj);
-  }
+  pimAdd(pim_board[mid_idx + 2], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_board[mid_idx + 3], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_board[mid_idx + 4], tmp_pim_obj, tmp_pim_obj);
   
   unsigned bitsPerElement = 8;
   PimObjId pim_res = pimAllocAssociated(bitsPerElement, pim_board[mid_idx], PIM_UINT8);
@@ -160,33 +156,71 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
   pim_board.push_back(right);
 }
 
-void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector<std::vector<uint8_t>> &dst_host)
+// For a board of size x by y
+// Allocates 1 tmp obj of length x
+// Allocates 3*y objects of length x as input
+// Allocates y objects of length x as output
+// Total: 4y + 1 objects of length x
+// uses (4y + 1)x * 8 bits
+// Uses 4y + 1 rows of associated
+
+void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector<std::vector<uint8_t>> &dst_host,
+size_t start_x, size_t end_x, size_t start_y, size_t end_y)
 {
   unsigned bitsPerElement = 8;
-  size_t width = src_host[0].size();
-  size_t height = src_host.size();
+  size_t width = end_x - start_x;
+  size_t height = end_y - start_y;
 
   PimObjId tmp_pim_obj = pimAlloc(PIM_ALLOC_AUTO, width, bitsPerElement, PIM_UINT8);
   assert(tmp_pim_obj != -1);
 
   std::vector<PimObjId> pim_board;
 
-  for(size_t i=0; i<src_host.size(); ++i) {
+  if(start_y > 0) {
+    add_vector_to_grid(src_host[start_y - 1], tmp_pim_obj, pim_board);
+  } else {
+    std::vector<uint8_t> tmp_zeros(width, 0);
+    add_vector_to_grid(tmp_zeros, tmp_pim_obj, pim_board);
+  }
+
+  for(size_t i=start_y; i<end_y; ++i) {
     add_vector_to_grid(src_host[i], tmp_pim_obj, pim_board);
   }
 
+  if(end_y < src_host.size()) {
+    add_vector_to_grid(src_host[end_y], tmp_pim_obj, pim_board);
+  } else {
+    std::vector<uint8_t> tmp_zeros(width, 0);
+    add_vector_to_grid(tmp_zeros, tmp_pim_obj, pim_board);
+  }
+
+  // std::cout << "start pim board: \n";
+  
+  // for(size_t i=0; i<pim_board.size(); ++i) {
+  //   print_pim_obj(pim_board[i], width);
+  // }
+
+  // std::cout << "end pim board: \n";
+
   std::vector<PimObjId> result_objs;
 
-  for(size_t i=0; i<src_host.size(); ++i) {
+  for(size_t i=1; i<height+1; ++i) {
     result_objs.push_back(game_of_life_row(pim_board, i, tmp_pim_obj));
   }
 
-  dst_host.resize(height);
-
-  for(size_t i=0; i<src_host.size(); ++i) {
-    dst_host[i].resize(width);
-    PimStatus copy_status = pimCopyDeviceToHost(result_objs[i], dst_host[i].data());
+  for(size_t i=0; i<height; ++i) {
+    PimStatus copy_status = pimCopyDeviceToHost(result_objs[i], dst_host[start_y + i].data());
     assert (copy_status == PIM_OK);
+  }
+
+  pimFree(tmp_pim_obj);
+
+  for(size_t i=0; i<pim_board.size(); ++i) {
+    pimFree(pim_board[i]);
+  }
+
+  for(size_t i=0; i<result_objs.size(); ++i) {
+    pimFree(result_objs[i]);
   }
 }
 
@@ -204,6 +238,21 @@ int main(int argc, char* argv[])
   std::vector<std::vector<uint8_t>> x, y;
   if (params.inputFile == nullptr)
   {
+
+    // x = {{1,0,1,0,0},
+    //      {0,1,1,1,0},
+    //      {0,0,0,1,1},
+    //      {1,1,0,1,0},
+    //      {1,0,0,1,1}};
+         //0, 1, 0, 0, 1, 
+         // 1, 0, 0, 0, 1,
+
+          // Correct Board
+          // 0, 0, 1, 1, 0, 
+          // 0, 1, 0, 0, 1, 
+          // 1, 0, 0, 0, 1, 
+          // 1, 1, 0, 0, 0, 
+          // 1, 1, 1, 1, 1
     srand((unsigned)time(NULL));
     x.resize(params.height);
     for(size_t i=0; i<params.height; ++i) {
@@ -224,8 +273,75 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  game_of_life(x, y);
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  assert(status == PIM_OK);
+  uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
+           numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
+  uint64_t totalAvailableBits = numCol * numRow * numCore;
+
+  std::cout << "rows: " << numRow << std::endl;
+  std::cout << "total bits: " << totalAvailableBits << std::endl;
+
+  // size_t i = 1;
+  // PimObjId pim_obj = pimAlloc(PIM_ALLOC_AUTO, 1, 8, PIM_UINT8);
+
+  // while(true) {
+  //   PimObjId new_pim_obj = pimAllocAssociated(8, pim_obj, PIM_UINT8);
+  //   if(new_pim_obj == -1) {
+  //     std::cout << "allocated " << i << std::endl;
+  //     exit(0);
+  //   }
+  //   ++i;
+  // }
+
+  // PimObjId test_obj = pimAlloc(PIM_ALLOC_AUTO, (totalAvailableBits / 8), 8, PIM_UINT8);
+  // assert(test_obj != -1);
+
+  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
+  y.resize(x.size());
+  for(size_t i=0; i<y.size(); ++i) {
+    y[i].resize(x[0].size());
+  }
+
+  for(size_t i=0; i<params.height; i += 62) {
+    game_of_life(x, y, 0, params.width, i, min(i+62, params.height));
+  }
+  
+
+  // std::cout << "\n\nx: \n";
+
+  // for(size_t i=0; i<x.size(); ++i) {
+  //   for(size_t j=0; j<x[0].size(); ++j) {
+  //     std::cout << unsigned(x[i][j]) << ", ";
+  //   }
+  //   std::cout << std::endl;
+  // }
+
+  // std::cout << "\n\ny: \n";
+
+  // for(size_t i=0; i<y.size(); ++i) {
+  //   for(size_t j=0; j<y[0].size(); ++j) {
+  //     std::cout << unsigned(y[i][j]) << ", ";
+  //   }
+  //   std::cout << std::endl;
+  // }
+
+  // std::vector<std::vector<uint8_t>> y2;
+  // std::cout << "\n\ny2: \n";
+  // y2.resize(x.size());
+  // for(size_t i=0; i<y2.size(); ++i) {
+  //   y2[i].resize(x[0].size());
+  // }
+  // game_of_life(x, y2, 0, 5, 1, 3);
+  // for(size_t i=0; i<y2.size(); ++i) {
+  //   for(size_t j=0; j<y2[0].size(); ++j) {
+  //     std::cout << unsigned(y2[i][j]) << ", ";
+  //   }
+  //   std::cout << std::endl;
+  // }
+  
+
 
   if (params.shouldVerify) 
   {
