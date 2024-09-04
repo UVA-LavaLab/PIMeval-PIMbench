@@ -39,7 +39,7 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of copy has been implemented using the standard C++ library.
+The CPU variant of copy has been implemented using the standard C++ library, as well as with parallelization from OpenMP.
 
 #### GPU
 
