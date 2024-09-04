@@ -80,8 +80,6 @@ __global__ void scale(int* gpu_x, int A, int* gpu_y, size_t sz) {
  */
 int main(int argc, char **argv)
 {
-  cudaGetLastError();
-
   struct Params params = input_params(argc, argv);
 
   uint64_t vectorSize = params.vectorLength;
