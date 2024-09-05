@@ -87,7 +87,7 @@ int main(int argc, char **argv)
   std::vector<int> X;
   std::vector<int> Y;
 
-  getVector(vectorSize, X);
+  getVector<int>(vectorSize, X);
   Y.resize(X.size());
   int A = rand() % 50;
 
