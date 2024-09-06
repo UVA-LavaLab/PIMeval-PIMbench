@@ -94,7 +94,7 @@ void print_pim_obj(PimObjId pim_obj, size_t sz) {
   std::cout << std::endl;
 }
 
-PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj) {
+PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj, const std::vector<PimObjId>& pim_sums, int old_ind) {
 
   // 1
   // 2
@@ -139,14 +139,21 @@ PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx
 
   size_t mid_idx = 3*row_idx + 1;
 
-  pimAdd(pim_board[mid_idx - 1], pim_board[mid_idx + 1], tmp_pim_obj);
-  pimAdd(pim_board[mid_idx - 2], tmp_pim_obj, tmp_pim_obj);
-  pimAdd(pim_board[mid_idx - 3], tmp_pim_obj, tmp_pim_obj);
-  pimAdd(pim_board[mid_idx - 4], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_board[mid_idx + 2], pim_board[mid_idx + 3], pim_sums[old_ind]);
+  pimAdd(pim_board[mid_idx + 4], pim_sums[old_ind], pim_sums[old_ind]);
 
-  pimAdd(pim_board[mid_idx + 2], tmp_pim_obj, tmp_pim_obj);
-  pimAdd(pim_board[mid_idx + 3], tmp_pim_obj, tmp_pim_obj);
-  pimAdd(pim_board[mid_idx + 4], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_sums[old_ind], pim_sums[(old_ind + 1) % pim_sums.size()], tmp_pim_obj);
+  pimAdd(pim_board[mid_idx - 1], tmp_pim_obj, tmp_pim_obj);
+  pimAdd(pim_board[mid_idx + 1], tmp_pim_obj, tmp_pim_obj);
+
+  // pimAdd(pim_board[mid_idx - 1], pim_board[mid_idx + 1], tmp_pim_obj);
+  // pimAdd(pim_board[mid_idx - 2], tmp_pim_obj, tmp_pim_obj);
+  // pimAdd(pim_board[mid_idx - 3], tmp_pim_obj, tmp_pim_obj);
+  // pimAdd(pim_board[mid_idx - 4], tmp_pim_obj, tmp_pim_obj);
+
+  // pimAdd(pim_board[mid_idx + 2], tmp_pim_obj, tmp_pim_obj);
+  // pimAdd(pim_board[mid_idx + 3], tmp_pim_obj, tmp_pim_obj);
+  // pimAdd(pim_board[mid_idx + 4], tmp_pim_obj, tmp_pim_obj);
   
   unsigned bitsPerElement = 8;
   PimObjId pim_res = pimAllocAssociated(bitsPerElement, pim_board[mid_idx], PIM_UINT8);
@@ -246,8 +253,27 @@ size_t start_x, size_t end_x, size_t start_y, size_t end_y)
 
   std::vector<PimObjId> result_objs;
 
+  std::vector<PimObjId> tmp_sums;
+
+  tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
+  tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
+  tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
+
+  PimStatus status = pimAdd(pim_board[0], pim_board[1], tmp_sums[0]);
+  assert (status == PIM_OK);
+  status = pimAdd(pim_board[2], tmp_sums[0], tmp_sums[0]);
+  assert (status == PIM_OK);
+
+  status = pimAdd(pim_board[3], pim_board[4], tmp_sums[1]);
+  assert (status == PIM_OK);
+  status = pimAdd(pim_board[5], tmp_sums[1], tmp_sums[1]);
+  assert (status == PIM_OK);
+
+  int old_ind = 2;
+
   for(size_t i=1; i<height+1; ++i) {
-    result_objs.push_back(game_of_life_row(pim_board, i, tmp_pim_obj));
+    result_objs.push_back(game_of_life_row(pim_board, i, tmp_pim_obj, tmp_sums, old_ind));
+    old_ind = (1+old_ind) % tmp_sums.size();
   }
 
   for(size_t i=0; i<height; ++i) {
@@ -263,6 +289,10 @@ size_t start_x, size_t end_x, size_t start_y, size_t end_y)
 
   for(size_t i=0; i<result_objs.size(); ++i) {
     pimFree(result_objs[i]);
+  }
+
+  for(size_t i=0; i<tmp_sums.size(); ++i) {
+    pimFree(tmp_sums[i]);
   }
 }
 
@@ -346,8 +376,8 @@ int main(int argc, char* argv[])
     y[i].resize(x[0].size());
   }
 
-  for(size_t i=0; i<params.height; i += 62) {
-    game_of_life(x, y, 0, params.width, i, min(i+62, params.height));
+  for(size_t i=0; i<params.height; i += 60) {
+    game_of_life(x, y, 0, params.width, i, min(i+60, params.height));
   }
   
 
