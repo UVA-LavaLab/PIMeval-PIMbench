@@ -95,6 +95,48 @@ void print_pim_obj(PimObjId pim_obj, size_t sz) {
 }
 
 PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj) {
+
+  // 1
+  // 2
+  // 3
+  // 4
+  // 5
+  // 6
+  // 7
+  // 8
+  // 9
+  // 10
+  // 11
+  // 12
+  // 13
+  // 14
+  // 15
+
+
+  // 123 -> A
+  // 456 -> B
+  // 789 -> C
+  // A+B+C - 5
+  // 10,11,12 -> A
+  // A+B+C - 8
+  // Transition Price:
+  // 2 adds to set A/B/C (e.g. (1+2)+3)
+  // res = A+B+C-5, 3 adds
+  // transition is 5 adds
+
+
+  // Add first 9
+  // 1,2,3,4,6,7,8,9
+
+  // -1, -2, -3, +5, +10, +11, +12
+  // 4,5,6,7,9,10,11,12
+
+  // -4, -5, -6, +8, +13, +14, +15
+  // 7,8,9,10,12,13,14,15
+
+  // first to third:
+  // -1, -2, -3, -4, -6, + (10,12,13,14,15)
+
   size_t mid_idx = 3*row_idx + 1;
 
   pimAdd(pim_board[mid_idx - 1], pim_board[mid_idx + 1], tmp_pim_obj);
