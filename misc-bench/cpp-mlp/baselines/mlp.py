@@ -1,3 +1,4 @@
+# Inference using a pre-trained MLP model on CPU or GPU with CUDA support
 import sys
 import time
 import argparse
