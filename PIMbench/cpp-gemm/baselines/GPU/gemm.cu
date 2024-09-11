@@ -1,5 +1,5 @@
-/* File:     matrix matrix multiplication cuda
- * Purpose:  Implement  on a gpu using cuda
+/* File:     gemm.cu
+ * Purpose:  Implement gemm on a gpu
  *
  */
 //TODO: support different data type
@@ -30,7 +30,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./gemv [options]"
+          "\nUsage:  ./gemm.out [options]"
           "\n"
           "\n    -r <R>    row size"
           "\n    -c <C>    MatA column size"

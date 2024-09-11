@@ -1,5 +1,5 @@
 /**
- * @file vec_add.cpp
+ * @file vec-add.cpp
  * @brief Vector Addition.
  */
 
@@ -41,7 +41,7 @@ struct Params
  */
 void usage()
 {
-    cerr << "\nUsage:  ./vec_add.out [options]\n"
+    cerr << "\nUsage:  ./vec-add.out [options]\n"
          << "\nOptions:\n"
          << "    -l    vector size (default=1024 elements)\n"
          << "    -h    display this help message\n";

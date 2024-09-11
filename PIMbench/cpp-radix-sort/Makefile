@@ -1,18 +1,16 @@
-# Makefile: Radix Sort
+# Makefile: C++ version of radix sort
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-include ../Makefile.common
+SUBDIRS := PIM
 
-EXEC := radix-sort.out
-SRC := radix-sort.cpp
+.PHONY: debug perf dramsim3_integ clean $(SUBDIRS)
+.DEFAULT_GOAL := perf
 
-debug perf dramsim3_integ: $(EXEC)
+USE_OPENMP ?= 0
 
-$(EXEC): $(SRC) $(DEPS)
-	$(CXX) $< $(CXXFLAGS)  -o $@
+debug perf dramsim3_integ clean: $(SUBDIRS)
 
-clean:
-	rm -rf $(EXEC) *.dSYM
-
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS) USE_OPENMP=$(USE_OPENMP)

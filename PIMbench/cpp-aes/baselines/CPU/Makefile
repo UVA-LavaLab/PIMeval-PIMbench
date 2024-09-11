@@ -2,7 +2,7 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -std=c++11 -O3 -fopenmp -lssl -lcrypto 
+CXXFLAGS := -Wall -std=c++17 -O3 -fopenmp -lssl -lcrypto 
 
 TARGET := aes.out
 

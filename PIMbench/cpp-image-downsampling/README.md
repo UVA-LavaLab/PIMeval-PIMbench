@@ -26,10 +26,10 @@ cpp-image-downsampling/
 ├── baselines/
 │   ├── CPU/
 │   │   ├── Makefile
-│   │   ├── image_downsampling.cpp
+│   │   ├── image-downsampling.cpp
 │   ├── GPU/
 │   │   ├── Makefile
-│   │   ├── image_downsampling.cu
+│   │   ├── image-downsampling.cu
 ├── README.md
 ├── Makefile
 ```

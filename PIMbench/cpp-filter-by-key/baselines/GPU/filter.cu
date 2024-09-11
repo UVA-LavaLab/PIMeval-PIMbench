@@ -33,7 +33,7 @@
  * section functor (greater-than)
  *
  * To compile using the command line:
- *   nvcc -arch=sm_XX example_device_select_if.cu -I../.. -lcudart -O3
+ *   make
  *
  ******************************************************************************/
 
@@ -257,4 +257,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-

@@ -7,7 +7,7 @@
 cpp-filter-by-key/
 ├── PIM/
 │   ├── Makefile
-│   ├── db-filtering.cpp
+│   ├── filter.cpp
 ├── baselines/
 │   ├── CPU/
 │   │   ├── Makefile
@@ -20,7 +20,7 @@ cpp-filter-by-key/
 │   │   │   ├── test_util_vec.h
 │   │   │   ├── test_util.h
 │   │   ├── Makefile
-│   │   ├── filtering.cu
+│   │   ├── filter.cu
 ├── README.md
 ├── Makefile
 ```
@@ -82,24 +82,28 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command that will run it for default parameters:
+After compiling, run each executable with the following command that will run it with default parameters:
 
 ```bash
-./radix-sort.out
+./filter.out
 ```
 
-### For CPU version
+To see help text on all usages, use following command:
+
 ```bash
-./filter.out -n 65536
--n    database size (default=65536 elements)"
--k    value of key (default = 1)"
--v    t = print output vector. (default=false)"
+./filter.out -h
 ```
 
-### For GPU version
+### Specifying Input Size
 
-You can specify the input size using the `--n` option:
+Each executable can change the input size parameter passed into the benchmark. PIM and CPU versions use the `-n` flag while GPU uses the `--n` flag:
 
 ```bash
-./filtering --n=65536
+./filter.out -n 65536  // PIM and CPU
+```
+
+or,
+
+```
+./filter.out --n 65536  // GPU
 ```

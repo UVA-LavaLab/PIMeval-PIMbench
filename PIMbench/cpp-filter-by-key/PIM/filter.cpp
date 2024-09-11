@@ -4,7 +4,7 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "libpimeval.h"
-#include "../util.h"
+#include "../../util.h"
 #include <iostream>
 #include <vector>
 #include <getopt.h>
@@ -32,7 +32,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\n    Usage:  ./db-filtering.out [options]"
+          "\n    Usage:  ./filter.out [options]"
           "\n"
           "\n    -n    database size (default=2048 elements)"
           "\n    -k    value of key (default = 1)"

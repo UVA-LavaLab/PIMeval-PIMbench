@@ -1,5 +1,8 @@
-// Image Downsampling implementation on CPU
-// Copyright 2024 LavaLab @ University of Virginia. All rights reserved.
+/**
+ * @file image-downsampling.cpp
+ * @brief Template for a Host Application Source File.
+ *
+ */
 
 #include <unistd.h>
 #include <cassert>
@@ -22,7 +25,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./image_downsampling.out [options]"
+          "\nUsage:  ./image-downsampling.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"

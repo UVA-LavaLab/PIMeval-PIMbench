@@ -1,3 +1,8 @@
+/* File:     knncuda.cu
+ * Purpose:  Implement vector addition on a gpu using cuda
+ *
+ */
+
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -34,7 +39,7 @@ typedef struct Params
 void usage()
 {
     fprintf(stderr,
-            "\nUsage:  ./program [options]"
+            "\nUsage:  ./knn.out [options]"
             "\n"
             "\n    -n    number of data points (default=65536 points)"
             "\n    -m    number of test points (default=100 points)"

@@ -22,4 +22,3 @@ $(EXEC): $(SRC) $(DEPS)
 
 clean:
 	rm -rf $(EXEC) *.dSYM
-
