@@ -89,6 +89,7 @@ uint8_t get_with_default(int i, int j, const std::vector<std::vector<uint8_t>> &
  */
 void game_of_life(const std::vector<std::vector<uint8_t>> &x, std::vector<std::vector<uint8_t>> &y) 
 {
+  // uint8_t sum_cpu = x[0]
   #pragma omp parallel for
   for(int i=0; i < (int) x.size(); ++i) {
       for(int j=0; j<(int) x[0].size(); ++j) {
@@ -101,8 +102,8 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &x, std::vector<std::v
         sum_cpu += get_with_default(i+1, j, x);
         sum_cpu += get_with_default(i+1, j+1, x);
 
-        uint8_t res_cpu = (sum_cpu == 3) ? 1 : 0;
-        sum_cpu = (sum_cpu == 2) ? 1 : 0;
+        uint8_t res_cpu = (uint8_t)(sum_cpu == 3);
+        sum_cpu = (uint8_t)(sum_cpu == 2);
         sum_cpu &= get_with_default(i, j, x);
         res_cpu |= sum_cpu;
         y[i][j] = res_cpu;
