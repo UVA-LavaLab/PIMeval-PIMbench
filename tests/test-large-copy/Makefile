@@ -3,7 +3,8 @@
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-include ../Makefile.common
+PROJ_ROOT = ../..
+include ${PROJ_ROOT}/Makefile.common
 
 EXEC := test-large-copy.out
 SRC := test-large-copy.cpp
