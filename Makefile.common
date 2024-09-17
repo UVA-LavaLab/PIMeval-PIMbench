@@ -1,4 +1,4 @@
-# Makefile common settings used by tests subdirs
+# Makefile common settings for sub-modules
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
@@ -7,7 +7,8 @@ CXX := g++
 CXXFLAGS := -std=c++17 -Wall
 
 # Setup libpimeval library
-LIBPIMEVAL_PATH ?= ../../libpimeval
+PROJ_ROOT ?= .
+LIBPIMEVAL_PATH ?= $(PROJ_ROOT)/libpimeval
 INC_DIR := $(LIBPIMEVAL_PATH)/include
 LIB_DIR := $(LIBPIMEVAL_PATH)/lib
 CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimeval
@@ -24,7 +25,7 @@ ifeq ($(MAKECMDGOALS),debug)
 	CXXFLAGS += -g -DDEBUG
 endif
 ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -Ofast -Wno-unused-variable
+	CXXFLAGS += -Ofast
 endif
 ifeq ($(MAKECMDGOALS),dramsim3_integ)
 	CXXFLAGS += -Ofast -DDRAMSIM3_INTEG
