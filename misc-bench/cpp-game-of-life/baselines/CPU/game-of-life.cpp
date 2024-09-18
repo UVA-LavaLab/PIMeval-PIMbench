@@ -77,13 +77,6 @@ struct Params input_params(int argc, char **argv)
   return p;
 }
 
-uint8_t get_with_default(int i, int j, const std::vector<std::vector<uint8_t>> &x) {
-  if(i >= 0 && i < (int) x.size() && j >= 0 && j < (int) x[0].size()) {
-    return x[i][j];
-  }
-  return 0;
-}
-
 /**
  * @brief cpu game of life kernel
  */
