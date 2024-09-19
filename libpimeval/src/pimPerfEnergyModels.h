@@ -1,5 +1,5 @@
-// File: pimParamsPerf.h
-// PIMeval Simulator - Performance parameters
+// File: pimPerfEnergyModels.h
+// PIMeval Simulator - Performance Energy Models
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -13,14 +13,7 @@
 #include "pimResMgr.h"
 
 
-//! @class  pimParamsPerf
-//! @brief  PIM performance parameters base class
-class pimParamsPerf
-{
-public:
-  pimParamsPerf(pimParamsDram* paramsDram);
-  ~pimParamsPerf() {}
-
+namespace pimNS {
   class perfEnergy
   {
     public:
@@ -30,16 +23,26 @@ public:
       double m_msRuntime;
       double m_mjEnergy;
   };
+}
 
-  perfEnergy getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const;
-  perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  perfEnergy getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
-  perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+
+//! @class  pimPerfEnergyBase
+//! @brief  PIM performance energy model base class
+class pimPerfEnergyBase
+{
+public:
+  pimPerfEnergyBase(pimParamsDram* paramsDram);
+  ~pimPerfEnergyBase() {}
+
+  pimNS::perfEnergy getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const;
+  pimNS::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  pimNS::perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  pimNS::perfEnergy getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
+  pimNS::perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  pimNS::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
 
 private:
-  perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const;
+  pimNS::perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const;
 
   const pimParamsDram* m_paramsDram;
   const double m_nano_to_milli = 1000000.0;

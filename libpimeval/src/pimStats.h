@@ -34,16 +34,16 @@ private:
 class pimStatsMgr
 {
 public:
-  pimStatsMgr(pimParamsDram* paramsDram, pimParamsPerf* paramsPerf)
+  pimStatsMgr(pimParamsDram* paramsDram, pimPerfEnergyBase* perfEnergyModel)
     : m_paramsDram(paramsDram),
-      m_paramsPerf(paramsPerf)
+      m_perfEnergyModel(perfEnergyModel)
   {}
   ~pimStatsMgr() {}
 
   void showStats() const;
   void resetStats();
   
-  void recordCmd(const std::string& cmdName, pimParamsPerf::perfEnergy mPerfEnergy) {
+  void recordCmd(const std::string& cmdName, pimNS::perfEnergy mPerfEnergy) {
     auto& item = m_cmdPerf[cmdName];
     item.first++;
     item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
@@ -56,19 +56,19 @@ public:
     item.second += elapsed;
   }
 
-  void recordCopyMainToDevice(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+  void recordCopyMainToDevice(uint64_t numBits, pimNS::perfEnergy mPerfEnergy) {
     m_bitsCopiedMainToDevice += numBits;
     m_elapsedTimeCopiedMainToDevice += mPerfEnergy.m_msRuntime;
     m_mJCopiedMainToDevice += mPerfEnergy.m_mjEnergy;
   }
 
-  void recordCopyDeviceToMain(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+  void recordCopyDeviceToMain(uint64_t numBits, pimNS::perfEnergy mPerfEnergy) {
     m_bitsCopiedDeviceToMain += numBits; 
     m_elapsedTimeCopiedDeviceToMain += mPerfEnergy.m_msRuntime;
     m_mJCopiedDeviceToMain += mPerfEnergy.m_mjEnergy;
   }
   
-  void recordCopyDeviceToDevice(uint64_t numBits, pimParamsPerf::perfEnergy mPerfEnergy) { 
+  void recordCopyDeviceToDevice(uint64_t numBits, pimNS::perfEnergy mPerfEnergy) {
     m_bitsCopiedDeviceToDevice += numBits;
     m_elapsedTimeCopiedDeviceToDevice += mPerfEnergy.m_msRuntime;
     m_mJCopiedDeviceToDevice += mPerfEnergy.m_mjEnergy;
@@ -81,9 +81,9 @@ private:
   void showCmdStats() const;
 
   const pimParamsDram* m_paramsDram;
-  const pimParamsPerf* m_paramsPerf;
+  const pimPerfEnergyBase* m_perfEnergyModel;
 
-  std::map<std::string, std::pair<int, pimParamsPerf::perfEnergy>> m_cmdPerf;
+  std::map<std::string, std::pair<int, pimNS::perfEnergy>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;
 
   uint64_t m_bitsCopiedMainToDevice = 0;

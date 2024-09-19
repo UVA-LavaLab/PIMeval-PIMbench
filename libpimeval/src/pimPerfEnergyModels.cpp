@@ -1,5 +1,5 @@
-// File: pimParamsPerf.cc
-// PIMeval Simulator - Performance parameters
+// File: pimPerfEnergyModels.cc
+// PIMeval Simulator - Performance Energy Models
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -10,8 +10,8 @@
 #include "pimPerfEnergyTables.h"
 #include <cstdio>
 
-//! @brief  pimParamsPerf ctor
-pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
+//! @brief  pimPerfEnergyBase ctor
+pimPerfEnergyBase::pimPerfEnergyBase(pimParamsDram* paramsDram)
   : m_paramsDram(paramsDram)
 {
   m_tR = m_paramsDram->getNsRowRead() / m_nano_to_milli;
@@ -29,8 +29,8 @@ pimParamsPerf::pimParamsPerf(pimParamsDram* paramsDram)
 }
 
 //! @brief  Get ms runtime for bytes transferred between host and device
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const
 {
 
   double mjEnergy = 0.0;
@@ -63,13 +63,13 @@ pimParamsPerf::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numByt
       break;
     }
   }
-  return  perfEnergy(msRuntime, mjEnergy);
+  return  pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for bit-serial PIM devices
 //!         BitSIMD and SIMDRAM need different fields
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
 {
   bool ok = false;
   double msRuntime = 0.0;
@@ -125,12 +125,12 @@ pimParamsPerf::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdTy
   msRuntime *= numPass;
   mjEnergy *= numPass;
 
-  return perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for func1
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
@@ -146,7 +146,7 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
   {
-    pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+    pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
     msRuntime += perfEnergyBS.m_msRuntime;
     mjEnergy += perfEnergyBS.m_mjEnergy;
     break;
@@ -263,12 +263,12 @@ pimParamsPerf::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) 
   }
   break;
   }
-  return perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for func2
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
@@ -284,7 +284,7 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
   case PIM_DEVICE_BITSIMD_H:
   case PIM_DEVICE_SIMDRAM:
   {
-    pimParamsPerf::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+    pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
     msRuntime += perfEnergyBS.m_msRuntime;
     mjEnergy += perfEnergyBS.m_mjEnergy;
     break;
@@ -425,12 +425,12 @@ pimParamsPerf::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) 
     mjEnergy = 999999999.9;
   }
 
-  return perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for reduction sum
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
@@ -512,12 +512,12 @@ pimParamsPerf::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj,
     mjEnergy = 999999999.9; // todo
   }
 
-  return perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for broadcast
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
@@ -583,12 +583,12 @@ pimParamsPerf::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& o
     mjEnergy = 999999999.9;
   }
 
-  return perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Get ms runtime for rotate
-pimParamsPerf::perfEnergy
-pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
@@ -597,7 +597,7 @@ pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj)
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
   // boundary handling
-  pimParamsPerf::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
   switch (simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_AP:
@@ -630,6 +630,6 @@ pimParamsPerf::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj)
     mjEnergy = 999999999.9; // todo
   }
 
-  return perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
