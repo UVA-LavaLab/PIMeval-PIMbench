@@ -10,6 +10,38 @@
 #include "pimPerfEnergyTables.h"
 #include <cstdio>
 
+
+//! @brief  A factory function to get perf energy model for sim target
+pimPerfEnergyBase*
+pimPerfEnergyFactory::getPerfEnergyModel(PimDeviceEnum simTarget, pimParamsDram* paramsDram)
+{
+  pimPerfEnergyBase* model = nullptr;
+  switch (simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    case PIM_DEVICE_SIMDRAM:
+      std::printf("PIM-Info: Created performance energy model for bit-serial PIM\n");
+      model = new pimPerfEnergyBitSerial(paramsDram);
+      break;
+    case PIM_DEVICE_FULCRUM:
+      std::printf("PIM-Info: Created performance energy model for Fulcrum\n");
+      model = new pimPerfEnergyFulcrum(paramsDram);
+      break;
+    case PIM_DEVICE_BANK_LEVEL:
+      std::printf("PIM-Info: Created performance energy model for bank-level PIM\n");
+      model = new pimPerfEnergyBankLevel(paramsDram);
+      break;
+    default:
+      std::printf("PIM-Info: Created performance energy model for base\n");
+      model = new pimPerfEnergyBase(paramsDram);
+  }
+  return model;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MODEL: Base
+///////////////////////////////////////////////////////////////////////////////
 //! @brief  pimPerfEnergyBase ctor
 pimPerfEnergyBase::pimPerfEnergyBase(pimParamsDram* paramsDram)
   : m_paramsDram(paramsDram)
@@ -28,11 +60,10 @@ pimPerfEnergyBase::pimPerfEnergyBase(pimParamsDram* paramsDram)
   m_numChipsPerRank = m_paramsDram->getNumChipsPerRank();
 }
 
-//! @brief  Get ms runtime for bytes transferred between host and device
+//! @brief  Perf energy model of data transfer between CPU memory and PIM memory
 pimNS::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const
 {
-
   double mjEnergy = 0.0;
   unsigned numRanks = pimSim::get()->getNumRanks();
   double typicalRankBW = m_paramsDram->getTypicalRankBW(); // GB/s
@@ -63,13 +94,61 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
       break;
     }
   }
-  return  pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Get ms runtime for bit-serial PIM devices
+//! @brief  Perf energy model of base class for func1 (placeholder)
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 1e10;
+  double mjEnergy = 999999999.9;
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of base class for func2 (placeholder)
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 1e10;
+  double mjEnergy = 999999999.9;
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of base class for reduction sum (placeholder)
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+{
+  double msRuntime = 1e10;
+  double mjEnergy = 999999999.9;
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of base class for broadcast (placeholder)
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 1e10;
+  double mjEnergy = 999999999.9;
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of base class for rotate (placeholder)
+pimNS::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 1e10;
+  double mjEnergy = 999999999.9;
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MODEL: Bit-Serial PIM
+///////////////////////////////////////////////////////////////////////////////
+//! @brief  Get performance and energy for bit-serial PIM
 //!         BitSIMD and SIMDRAM need different fields
 pimNS::perfEnergy
-pimPerfEnergyBase::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
 {
   bool ok = false;
   double msRuntime = 0.0;
@@ -78,43 +157,44 @@ pimPerfEnergyBase::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum c
   unsigned numCores = obj.getNumCoresUsed();
 
   switch (deviceType) {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_V_AP:
-  case PIM_DEVICE_BITSIMD_H:
-  {
-    // BitSIMD-H reuse BitISMD-V perf for now
-    if (deviceType == PIM_DEVICE_BITSIMD_H) {
-      deviceType = PIM_DEVICE_BITSIMD_V;
-    }
-    // look up perf params from table
-    auto it1 = pimPerfEnergyTables::bitsimdPerfTable.find(deviceType);
-    if (it1 != pimPerfEnergyTables::bitsimdPerfTable.end()) {
-      auto it2 = it1->second.find(dataType);
-      if (it2 != it1->second.end()) {
-        auto it3 = it2->second.find(cmdType);
-        if (it3 != it2->second.end()) {
-          const auto& [numR, numW, numL] = it3->second;
-          msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
-          mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
-          mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-          ok = true;
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    {
+      // BitSIMD-H reuse BitISMD-V perf for now
+      if (deviceType == PIM_DEVICE_BITSIMD_H) {
+        deviceType = PIM_DEVICE_BITSIMD_V;
+      }
+      // look up perf params from table
+      auto it1 = pimPerfEnergyTables::bitsimdPerfTable.find(deviceType);
+      if (it1 != pimPerfEnergyTables::bitsimdPerfTable.end()) {
+        auto it2 = it1->second.find(dataType);
+        if (it2 != it1->second.end()) {
+          auto it3 = it2->second.find(cmdType);
+          if (it3 != it2->second.end()) {
+            const auto& [numR, numW, numL] = it3->second;
+            msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
+            mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+            ok = true;
+          }
         }
       }
+      // handle bit-shift specially
+      if (cmdType == PimCmdEnum::SHIFT_BITS_L || cmdType == PimCmdEnum::SHIFT_BITS_R) {
+        msRuntime += m_tR * (bitsPerElement - 1) + m_tW * bitsPerElement + m_tL;
+        ok = true;
+      }
+      break;
     }
-    // handle bit-shift specially
-    if (cmdType == PimCmdEnum::SHIFT_BITS_L || cmdType == PimCmdEnum::SHIFT_BITS_R) {
-      msRuntime += m_tR * (bitsPerElement - 1) + m_tW * bitsPerElement + m_tL;
-      ok = true;
+    case PIM_DEVICE_SIMDRAM:
+    {
+      break;
     }
-    break;
+    default:
+      assert(0);
   }
-  case PIM_DEVICE_SIMDRAM:
-  {
-    break;
-  }
-  default:
-    assert(0);
-  }
+
   if (!ok) {
     std::printf("PIM-Warning: Unimplemented bit-serial runtime estimation for device=%s cmd=%s dataType=%s\n",
             pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
@@ -128,41 +208,239 @@ pimPerfEnergyBase::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum c
   return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Get ms runtime for func1
+//! @brief  Perf energy model of bit-serial PIM for func1
 pimNS::perfEnergy
-pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
+  PimDataType dataType = obj.getDataType();
+
+  switch (simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    case PIM_DEVICE_SIMDRAM:
+    {
+      pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      msRuntime += perfEnergyBS.m_msRuntime;
+      mjEnergy += perfEnergyBS.m_mjEnergy;
+      break;
+    }
+    default:
+      assert(0);
+  }
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of bit-serial PIM for func2
+pimNS::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  PimDataType dataType = obj.getDataType();
+
+  switch (simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    case PIM_DEVICE_SIMDRAM:
+    {
+      pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      msRuntime += perfEnergyBS.m_msRuntime;
+      mjEnergy += perfEnergyBS.m_mjEnergy;
+      break;
+    }
+    default:
+      assert(0);
+  }
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of bit-serial PIM for reduction sum
+pimNS::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+{
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  PimDataType dataType = obj.getDataType();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  uint64_t numElements = obj.getNumElements();
+  unsigned numRanks = pimSim::get()->getNumRanks();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.getNumCoresUsed();
+  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+
+  switch (simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    {
+      if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
+        // Assume row-wide popcount capability for integer reduction, with a 64-bit popcount logic unit per PIM core
+        // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
+        // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
+        double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
+        int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
+        msRuntime = m_tR + (m_pclNsDelay * 1e-6) * numPclPerCore;
+        msRuntime *= bitsPerElement * numPass;
+        mjEnergy = m_eAP * numCore + mjEnergyPerPcl * numPclPerCore * numCore; // energy of one row read and row-wide popcount
+        mjEnergy *= bitsPerElement * numPass;
+        // reduction for all regions
+        double aggregateMs = static_cast<double>(numCore) / 3200000;
+        msRuntime += aggregateMs;
+        mjEnergy += aggregateMs * cpuTDP;
+        mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      } else {
+        assert(0);
+      }
+      break;
+    }
+    case PIM_DEVICE_SIMDRAM:
+      // todo
+      std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
+      break;
+    case PIM_DEVICE_BITSIMD_H:
+      // Sequentially process all elements per CPU cycle
+      msRuntime = static_cast<double>(numElements) / 3200000; // typical 3.2 GHz CPU
+      mjEnergy = 999999999.9; // todo
+      // consider PCL
+      break;
+    default:
+      assert(0);
+  }
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of bit-serial PIM for broadcast
+pimNS::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numRanks = pimSim::get()->getNumRanks();
+  unsigned numCore = obj.getNumCoresUsed();
+  switch (simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    {
+      // For one pass: For every bit: Set SA to bit value; Write SA to row;
+      msRuntime = (m_tL + m_tW) * bitsPerElement;
+      msRuntime *= numPass;
+      mjEnergy = m_eAP * numCore * numPass ;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
+    case PIM_DEVICE_SIMDRAM:
+    {
+      // todo
+      msRuntime *= numPass;
+      mjEnergy *= numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
+    case PIM_DEVICE_BITSIMD_H:
+    {
+      // For one pass: For every element: 1 tCCD per byte
+      uint64_t maxBytesPerRegion = (uint64_t)maxElementsPerRegion * (bitsPerElement / 8);
+      msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
+      msRuntime *= numPass;
+      mjEnergy = (m_eAP + (m_tL * maxBytesPerRegion)) * numCore * numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
+    default:
+      assert(0);
+  }
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of bit-serial PIM for rotate
+pimNS::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numRegions = obj.getRegions().size();
+  // boundary handling
+  pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+
+  switch (simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+      // rotate within subarray:
+      // For every bit: Read row to SA; move SA to R1; Shift R1; Move R1 to SA; Write SA to row
+      msRuntime = (m_tR + 3 * m_tL + m_tW) * bitsPerElement; // for one pass
+      msRuntime *= numPass;
+      mjEnergy = (m_eAP + 3 * m_eL) * bitsPerElement * numPass; // for one pass
+      msRuntime += 2 * perfEnergyBT.m_msRuntime;
+      mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+      break;
+    case PIM_DEVICE_SIMDRAM:
+      // todo
+      break;
+    case PIM_DEVICE_BITSIMD_H:
+      // rotate within subarray:
+      // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
+      // TODO: separate bank level and GDL
+      // TODO: energy unimplemented
+      msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
+      msRuntime *= numPass;
+      mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
+      msRuntime += 2 * perfEnergyBT.m_msRuntime;
+      mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+      break;
+    default:
+      assert(0);
+  }
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// MODEL: Fulcrum
+///////////////////////////////////////////////////////////////////////////////
+
+//! @brief  Perf energy model of Fulcrum for func1
+pimNS::perfEnergy
+pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCores = obj.getNumCoresUsed();
   unsigned numRanks = pimSim::get()->getNumRanks();
-  PimDataType dataType = obj.getDataType();
-  switch (simTarget) {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_V_AP:
-  case PIM_DEVICE_BITSIMD_H:
-  case PIM_DEVICE_SIMDRAM:
-  {
-    pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
-    msRuntime += perfEnergyBS.m_msRuntime;
-    mjEnergy += perfEnergyBS.m_mjEnergy;
-    break;
-  }
-  case PIM_DEVICE_FULCRUM:
-  {
-    // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
-    // For instructions that operate on a single operand, the next operand is fetched by the walker.
-    // Consequently, only one row read operation is required in this case.
-    // Additionally, using the walker-renaming technique (refer to the Fulcrum paper for details),
-    // the write operation is also pipelined. Thus, only one row write operation is needed.
 
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
-    switch (cmdType)
-    {
+  // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
+  // For instructions that operate on a single operand, the next operand is fetched by the walker.
+  // Consequently, only one row read operation is required in this case.
+  // Additionally, using the walker-renaming technique (refer to the Fulcrum paper for details),
+  // the write operation is also pipelined. Thus, only one row write operation is needed.
+
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  switch (cmdType)
+  {
     case PimCmdEnum::POPCOUNT:
     {
       numberOfALUOperationPerElement *= 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
@@ -204,97 +482,26 @@ pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& o
     default:
       std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
-    }
-    break;
   }
-  case PIM_DEVICE_BANK_LEVEL:
-  {
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    switch (cmdType)
-    {
-    case PimCmdEnum::POPCOUNT:
-    case PimCmdEnum::ABS:
-    case PimCmdEnum::ADD_SCALAR:
-    case PimCmdEnum::SUB_SCALAR:
-    case PimCmdEnum::MUL_SCALAR:
-    case PimCmdEnum::DIV_SCALAR:
-    {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      // Refer to fulcrum documentation
-      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
-      mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-      break;
-    }
-    case PimCmdEnum::AND_SCALAR:
-    case PimCmdEnum::OR_SCALAR:
-    case PimCmdEnum::XOR_SCALAR:
-    case PimCmdEnum::XNOR_SCALAR:
-    case PimCmdEnum::GT_SCALAR:
-    case PimCmdEnum::LT_SCALAR:
-    case PimCmdEnum::EQ_SCALAR:
-    case PimCmdEnum::MIN_SCALAR:
-    case PimCmdEnum::MAX_SCALAR:
-    case PimCmdEnum::SHIFT_BITS_L:
-    case PimCmdEnum::SHIFT_BITS_R:
-    {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      // Refer to fulcrum documentation
-      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
-      mjEnergy = ((m_eAP * 2) + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass ;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-      break;
-    }
-    default:
-      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
-      break;
-    }
-    break;
-  }
-  default:
-  {
-    msRuntime = 1000000;
-    mjEnergy = 999999999.9;
-  }
-  break;
-  }
+
   return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Get ms runtime for func2
+//! @brief  Perf energy model of Fulcrum for func2
 pimNS::perfEnergy
-pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRanks = pimSim::get()->getNumRanks();
-  PimDataType dataType = obj.getDataType();
   unsigned numCoresUsed = obj.getNumCoresUsed();
-  switch (simTarget) {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_V_AP:
-  case PIM_DEVICE_BITSIMD_H:
-  case PIM_DEVICE_SIMDRAM:
+
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  switch (cmdType)
   {
-    pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
-    msRuntime += perfEnergyBS.m_msRuntime;
-    mjEnergy += perfEnergyBS.m_mjEnergy;
-    break;
-  }
-  case PIM_DEVICE_FULCRUM:
-  {
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
-    switch (cmdType)
-    {
     case PimCmdEnum::ADD:
     case PimCmdEnum::SUB:
     case PimCmdEnum::MUL:
@@ -348,18 +555,166 @@ pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& o
     default:
       std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
-    }
-    break;
   }
-  case PIM_DEVICE_BANK_LEVEL:
-  {
-    unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-    double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    // How many iteration require to read / write max elements per region
-    unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
 
-    switch (cmdType)
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of Fulcrum for reduction sum
+pimNS::perfEnergy
+pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numRanks = pimSim::get()->getNumRanks();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.getNumCoresUsed();
+  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+
+  // read a row to walker, then reduce in serial
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  msRuntime = m_tR + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * numPass);
+  mjEnergy = numPass * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement));
+  // reduction for all regions
+  double aggregateMs = static_cast<double>(numCore) / 3200000;
+  msRuntime += aggregateMs;
+  mjEnergy += aggregateMs * cpuTDP;
+  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of Fulcrum for broadcast
+pimNS::perfEnergy
+pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numRanks = pimSim::get()->getNumRanks();
+  unsigned numCore = obj.getNumCoresUsed();
+
+  // assume taking 1 ALU latency to write an element
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  msRuntime = m_tW + m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement;
+  msRuntime *= numPass;
+  mjEnergy = numPass * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
+  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of Fulcrum for rotate
+pimNS::perfEnergy
+pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numRegions = obj.getRegions().size();
+  // boundary handling
+  pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+
+  // rotate within subarray:
+  // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
+  // TODO: separate bank level and GDL
+  // TODO: energy unimplemented
+  msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
+  msRuntime *= numPass;
+  mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
+  msRuntime += 2 * perfEnergyBT.m_msRuntime;
+  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// MODEL: Bank-Level PIM
+///////////////////////////////////////////////////////////////////////////////
+
+//! @brief  Perf energy model of bank-level PIM for func1
+pimNS::perfEnergy
+pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numCores = obj.getNumCoresUsed();
+  unsigned numRanks = pimSim::get()->getNumRanks();
+
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  switch (cmdType)
+  {
+    case PimCmdEnum::POPCOUNT:
+    case PimCmdEnum::ABS:
+    case PimCmdEnum::ADD_SCALAR:
+    case PimCmdEnum::SUB_SCALAR:
+    case PimCmdEnum::MUL_SCALAR:
+    case PimCmdEnum::DIV_SCALAR:
     {
+      // How many iteration require to read / write max elements per region
+      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
+      // Refer to fulcrum documentation
+      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+      mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
+    case PimCmdEnum::AND_SCALAR:
+    case PimCmdEnum::OR_SCALAR:
+    case PimCmdEnum::XOR_SCALAR:
+    case PimCmdEnum::XNOR_SCALAR:
+    case PimCmdEnum::GT_SCALAR:
+    case PimCmdEnum::LT_SCALAR:
+    case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::MIN_SCALAR:
+    case PimCmdEnum::MAX_SCALAR:
+    case PimCmdEnum::SHIFT_BITS_L:
+    case PimCmdEnum::SHIFT_BITS_R:
+    {
+      // How many iteration require to read / write max elements per region
+      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
+      // Refer to fulcrum documentation
+      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+      mjEnergy = ((m_eAP * 2) + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass ;
+      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      break;
+    }
+    default:
+      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      break;
+  }
+
+  return pimNS::perfEnergy(msRuntime, mjEnergy);
+}
+
+//! @brief  Perf energy model of bank-level PIM for func2
+pimNS::perfEnergy
+pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned numRanks = pimSim::get()->getNumRanks();
+  unsigned numCoresUsed = obj.getNumCoresUsed();
+
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  // How many iteration require to read / write max elements per region
+  unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+
+  switch (cmdType)
+  {
     case PimCmdEnum::ADD:
     case PimCmdEnum::SUB:
     case PimCmdEnum::MUL:
@@ -417,109 +772,42 @@ pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& o
     default:
       std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
-    }
-    break;
-  }
-  default:
-    msRuntime = 1e10;
-    mjEnergy = 999999999.9;
   }
 
   return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Get ms runtime for reduction sum
+//! @brief  Perf energy model of bank-level PIM for reduction sum
 pimNS::perfEnergy
-pimPerfEnergyBase::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  PimDataType dataType = obj.getDataType();
   unsigned bitsPerElement = obj.getBitsPerElement();
-  unsigned numRegions = obj.getRegions().size();
-  uint64_t numElements = obj.getNumElements();
   unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
-  switch (simTarget) {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_V_AP:
-  {
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
-      // Assume row-wide popcount capability for integer reduction, with a 64-bit popcount logic unit per PIM core
-      // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
-      // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
-      double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
-      int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
-      msRuntime = m_tR + (m_pclNsDelay * 1e-6) * numPclPerCore;
-      msRuntime *= bitsPerElement * numPass;
-      mjEnergy = m_eAP * numCore + mjEnergyPerPcl * numPclPerCore * numCore; // energy of one row read and row-wide popcount
-      mjEnergy *= bitsPerElement * numPass;
-      // reduction for all regions
-      double aggregateMs = static_cast<double>(numCore) / 3200000;
-      msRuntime += aggregateMs;
-      mjEnergy += aggregateMs * cpuTDP;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    } else {
-      assert(0);
-    }
-    break;
-  }
-  case PIM_DEVICE_SIMDRAM:
-    // todo
-    std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
-    break;
-  case PIM_DEVICE_BITSIMD_H:
-    // Sequentially process all elements per CPU cycle
-    msRuntime = static_cast<double>(numElements) / 3200000; // typical 3.2 GHz CPU
-    mjEnergy = 999999999.9; // todo
-    // consider PCL
-    break;
-  case PIM_DEVICE_FULCRUM:
-  {
-    // read a row to walker, then reduce in serial
-    double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
-    msRuntime = m_tR + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * numPass);
-    mjEnergy = numPass * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement));
-    // reduction for all regions
-    double aggregateMs = static_cast<double>(numCore) / 3200000;
-    msRuntime += aggregateMs;
-    mjEnergy += aggregateMs * cpuTDP;
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  case PIM_DEVICE_BANK_LEVEL:
-  {
-    // How many iteration require to read / write max elements per region
-    unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-    double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+  // How many iteration require to read / write max elements per region
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
 
-    // Refer to fulcrum documentation
-    mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
-    // reduction for all regions
-    double aggregateMs = static_cast<double>(numCore) / 3200000;
-    msRuntime += aggregateMs;
-    mjEnergy += aggregateMs * cpuTDP;
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  default:
-    msRuntime = 1e10;
-    mjEnergy = 999999999.9; // todo
-  }
+  // Refer to fulcrum documentation
+  mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
+  // reduction for all regions
+  double aggregateMs = static_cast<double>(numCore) / 3200000;
+  msRuntime += aggregateMs;
+  mjEnergy += aggregateMs * cpuTDP;
+  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
 
   return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Get ms runtime for broadcast
+//! @brief  Perf energy model of bank-level PIM for broadcast
 pimNS::perfEnergy
-pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
@@ -527,70 +815,22 @@ pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInf
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCore = obj.getNumCoresUsed();
-  switch (simTarget) {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_V_AP:
-  {
-    // For one pass: For every bit: Set SA to bit value; Write SA to row;
-    msRuntime = (m_tL + m_tW) * bitsPerElement;
-    msRuntime *= numPass;
-    mjEnergy = m_eAP * numCore * numPass ;
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  case PIM_DEVICE_SIMDRAM:
-  {
-    // todo
-    msRuntime *= numPass;
-    mjEnergy *= numPass;
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  case PIM_DEVICE_BITSIMD_H:
-  {
-    // For one pass: For every element: 1 tCCD per byte
-    uint64_t maxBytesPerRegion = (uint64_t)maxElementsPerRegion * (bitsPerElement / 8);
-    msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
-    msRuntime *= numPass;
-    mjEnergy = (m_eAP + (m_tL * maxBytesPerRegion)) * numCore * numPass;
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  case PIM_DEVICE_FULCRUM:
-  {
-    // assume taking 1 ALU latency to write an element
-    double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
-    msRuntime = m_tW + m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement;
-    msRuntime *= numPass;
-    mjEnergy = numPass * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  case PIM_DEVICE_BANK_LEVEL:
-  {
-    // assume taking 1 ALU latency to write an element
-    double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-    msRuntime = m_tW + m_tGDL + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement);
-    msRuntime *= numPass;
-    msRuntime = (m_eAP + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement)) * numPass; // todo: change m_eR to write energy
-    unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-    mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numPass * numCore;
-    mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
-    break;
-  }
-  default:
-    msRuntime = 1e10;
-    mjEnergy = 999999999.9;
-  }
+
+  // assume taking 1 ALU latency to write an element
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  msRuntime = m_tW + m_tGDL + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement);
+  msRuntime *= numPass;
+  msRuntime = (m_eAP + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement)) * numPass; // todo: change m_eR to write energy
+  mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numPass * numCore;
+  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
 
   return pimNS::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Get ms runtime for rotate
+//! @brief  Perf energy model of bank-level PIM for rotate
 pimNS::perfEnergy
-pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
@@ -598,37 +838,16 @@ pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& 
   unsigned numRegions = obj.getRegions().size();
   // boundary handling
   pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
-  switch (simTarget) {
-  case PIM_DEVICE_BITSIMD_V:
-  case PIM_DEVICE_BITSIMD_V_AP:
-    // rotate within subarray:
-    // For every bit: Read row to SA; move SA to R1; Shift R1; Move R1 to SA; Write SA to row
-    msRuntime = (m_tR + 3 * m_tL + m_tW) * bitsPerElement; // for one pass
-    msRuntime *= numPass;
-    mjEnergy = (m_eAP + 3 * m_eL) * bitsPerElement * numPass; // for one pass
-    msRuntime += 2 * perfEnergyBT.m_msRuntime;
-    mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-    break;
-  case PIM_DEVICE_SIMDRAM:
-    // todo
-    break;
-  case PIM_DEVICE_BITSIMD_H:
-  case PIM_DEVICE_FULCRUM:
-  case PIM_DEVICE_BANK_LEVEL:
-    // rotate within subarray:
-    // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
-    // TODO: separate bank level and GDL
-    // TODO: energy unimplemented
-    msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
-    msRuntime *= numPass;
-    mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
-    msRuntime += 2 * perfEnergyBT.m_msRuntime;
-    mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-    break;
-  default:
-    msRuntime = 1e10;
-    mjEnergy = 999999999.9; // todo
-  }
+
+  // rotate within subarray:
+  // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
+  // TODO: separate bank level and GDL
+  // TODO: energy unimplemented
+  msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
+  msRuntime *= numPass;
+  mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
+  msRuntime += 2 * perfEnergyBT.m_msRuntime;
+  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
 
   return pimNS::perfEnergy(msRuntime, mjEnergy);
 }

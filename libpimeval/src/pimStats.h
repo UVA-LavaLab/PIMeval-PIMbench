@@ -34,10 +34,7 @@ private:
 class pimStatsMgr
 {
 public:
-  pimStatsMgr(pimParamsDram* paramsDram, pimPerfEnergyBase* perfEnergyModel)
-    : m_paramsDram(paramsDram),
-      m_perfEnergyModel(perfEnergyModel)
-  {}
+  pimStatsMgr() {}
   ~pimStatsMgr() {}
 
   void showStats() const;
@@ -79,9 +76,6 @@ private:
   void showDeviceParams() const;
   void showCopyStats() const;
   void showCmdStats() const;
-
-  const pimParamsDram* m_paramsDram;
-  const pimPerfEnergyBase* m_perfEnergyModel;
 
   std::map<std::string, std::pair<int, pimNS::perfEnergy>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;

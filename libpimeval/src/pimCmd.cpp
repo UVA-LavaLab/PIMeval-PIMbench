@@ -795,7 +795,6 @@ pimCmdRedSum<T>::updateStats() const
   unsigned numPass = 0;
   if (m_cmdType == PimCmdEnum::REDSUM_RANGE) {
     // determine numPass for ranged redSum
-    unsigned bitsPerElement = objSrc.getBitsPerElement();
     std::unordered_map<PimCoreId, unsigned> activeRegionPerCore;
     uint64_t index = 0;
     for (const auto& region : objSrc.getRegions()) {

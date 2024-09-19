@@ -10,6 +10,7 @@
 #include "libpimeval.h"
 #include "pimCore.h"
 #include "pimCmd.h"
+#include "pimPerfEnergyModels.h"
 #ifdef DRAMSIM3_INTEG
 #include "cpu.h"
 #endif
@@ -61,6 +62,7 @@ public:
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 
   pimResMgr* getResMgr() { return m_resMgr; }
+  pimPerfEnergyBase* getPerfEnergyModel() { return m_perfEnergyModel; }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
 
@@ -82,6 +84,7 @@ private:
   bool m_isValid = false;
   bool m_isInit = false;
   pimResMgr* m_resMgr = nullptr;
+  pimPerfEnergyBase* m_perfEnergyModel = nullptr;
   std::vector<pimCore> m_cores;
 
 #ifdef DRAMSIM3_INTEG
