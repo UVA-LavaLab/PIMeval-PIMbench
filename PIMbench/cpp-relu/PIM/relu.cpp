@@ -1,4 +1,4 @@
-// Test: C++ version of RELU activation function: max(0, x).
+// Test: C++ version of ReLU activation function: max(0, x)
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -8,7 +8,7 @@
 #include <vector>
 #include <getopt.h>
 #include <cmath>
-#include "../util.h"
+#include "../../util.h"
 
 using namespace std;
 
@@ -27,13 +27,13 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./relu.out [options]"
           "\n"
-          "\n    -r    row (default=224)"
-          "\n    -c    column (default=224)"
-          "\n    -d    dimension (default=64)"
+          "\n    -r    row (default=226)"
+          "\n    -c    column (default=226)"
+          "\n    -d    dimension (default=128)"
           "\n    -v    should verify result with CPU"
           "\n    -i    input image file containing matrices (default=generates matrix with random numbers)"
           "\n    -o    DRAM config file (default = nullptr)"
-	  "\n    -m    enable more debug prints (default = false)"          
+          "\n    -m    enable more debug prints (default = false)"          
           "\n");
 }
 
@@ -49,7 +49,7 @@ struct Params getInputParams(int argc, char **argv)
   p.moreDebugPrints = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:r:c:d:v:i:m:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:r:c:d:v:o:i:m:")) >= 0)
   {
     switch (opt)
     {
@@ -118,9 +118,8 @@ void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kern
 /*
   This should work for bitSIMD or any PIM that requires vertical data layout.
 */
-void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
+void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, unsigned bitsPerElement)
 {
-  unsigned bitsPerElement = 32;
 
   if (inputMatrix.empty())
   {
@@ -184,24 +183,20 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
 }
 
 // Function to perform RELU on CPU with configurable kernel size and stride
-std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<std::vector<std::vector<int>>> &PIMResult, int kernelHeight, int kernelWidth, int stride, bool moreDebugPrints)
+std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<std::vector<std::vector<int>>> &PIMResult, bool moreDebugPrints)
 {
   int numDepth = inputMatrix.size();
   int numRows = inputMatrix[0].size();
   int numCols = inputMatrix[0][0].size();
   
-  // Calculate the dimensions of the output matrix
-  int outputRows = (numRows - kernelHeight) / stride + 1;
-  int outputCols = (numCols - kernelWidth) / stride + 1;
-
   // Initialize the output matrix with zeros
-  std::vector<std::vector<std::vector<int>>> outputMatrix(numDepth, std::vector<std::vector<int>>(outputRows, std::vector<int>(outputCols, 0)));
+  std::vector<std::vector<std::vector<int>>> outputMatrix(numDepth, std::vector<std::vector<int>>(numRows, std::vector<int>(numCols, 0)));
        
   int mismatch_counter = 0;
   // Perform RELU with the specified kernel size and stride
   for (int d = 0; d < numDepth; ++d) {
-    for (int i = 0; i < outputRows; ++i) {
-      for (int j = 0; j < outputCols; ++j) {
+    for (int i = 0; i < numRows; ++i) {
+      for (int j = 0; j < numCols; ++j) {
         outputMatrix[d][i][j] = std::max(0, inputMatrix[d][i][j]);
         if (outputMatrix[d][i][j] != PIMResult[d][i][j]) {
           std::cout << "Mismatch between PIM and CPU results at depth: " << d << ", row: " << i << ", column: " << j << std::endl;
@@ -211,14 +206,7 @@ std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector
     }
   }
    
-  if (mismatch_counter == 0) {
-    std::cout << "Success: PIM results match with CPU results" << std::endl << std::endl; 
-  } else {
-    std::cout << "Failure: PIM results do not match with CPU results" << std::endl << std::endl;
-  }
-
   if (moreDebugPrints == true) {
-    std::cout << "Stride: " << stride << ", Kernel size: " << kernelHeight << "x" << kernelWidth << std::endl;
     std::cout << "Input matrix:" << std::endl;
     printMatrix(inputMatrix);
     std::cout << "Output matrix from CPU:" << std::endl;
@@ -226,7 +214,13 @@ std::vector<std::vector<std::vector<int>>> verifyWithCPU(std::vector<std::vector
     std::cout << "Output matrix from PIM:" << std::endl;
     printMatrix(PIMResult);    
   }
-  
+
+  if (mismatch_counter == 0) {
+    std::cout << "Success: PIM results match with CPU results" << std::endl << std::endl; 
+  } else {
+    std::cout << "Failure: PIM results do not match with CPU results" << std::endl << std::endl;
+  }
+ 
   return outputMatrix;
 }
 
@@ -245,8 +239,8 @@ int main(int argc, char *argv[]) {
       getMatrix(params.row, params.column, 0, mat);
     }
   } else {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 0;    
+    std::cerr << "Reading from the input file is not implemented yet for the input matrix" << std::endl;
+    exit(1);    
   }
 
   // Create a device based on provided DRAM configuration file
@@ -259,72 +253,77 @@ int main(int argc, char *argv[]) {
   int inputWidth = inputMatrix[0][0].size();
 
   // Define parameters for processing
-  unsigned numCols = 8192, numOfCore = 4096;
-  int numOfPIMRow = 1;
-  int numOfPIMColumn = (inputHeight * inputWidth / numOfPIMRow);
-  int numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfCore) / numOfPIMColumn)), inputDepth);
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  if (status != PIM_OK) {
+    std::cout << "Abort: pimGetDeviceProperties failed" << std::endl;
+    return 1;
+  }
+  // Get the device parameters
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows;
+
+  uint64_t numOfPIMRow = 1;
+  unsigned bitsPerElement = 32;
+  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numOfBits) / (inputHeight * inputWidth * bitsPerElement))), static_cast<uint64_t>(inputWidth));
 
   // Initialize result matrix with the same dimensions as input matrix
   std::vector<std::vector<std::vector<int>>> resultMatrix(inputDepth, std::vector<std::vector<int>>(inputHeight, std::vector<int>(inputWidth)));
 
-  int tempcol = 0;
   std::vector<std::vector<int>> decompMat;
   std::vector<std::vector<int>> mergedMat(numOfPIMRow);
   std::vector<int> outVector;
   outVector.resize(inputDepth * inputHeight * inputWidth);
   
   // Loop through input depth in chunks
-  for (int j = 0; j < inputDepth; j += numOfMatPerRow) {
-    int matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+  for (uint64_t j = 0; j < inputDepth; j += numOfMatPerRow) {
+    uint64_t matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
     // Decompose and merge matrices
-    for (int k = j; k < matChunk; k++) {
-      decomposeMatrix(params.row, params.column, 1, 1, 1, 0, inputMatrix[k], decompMat);
+    for (uint64_t k = j; k < matChunk; k++) {
+      // 1, 1, 1, 0 in the function call below indicates that the kernel dimensions are 1x1, stride is 1 and padding is 0 while decomposing the matrix for ReLU operation.
+      // The kernel dimensions, stride and padding are specified in the functional call to make the function reusable for other operations like max pooling.
+      decomposeMatrix(inputHeight, inputWidth, 1, 1, 1, 0, inputMatrix[k], decompMat);
       if (params.moreDebugPrints) { 
         // Debug print decomposed matrix
         std::cout << "Decomposed Matrix:" << std::endl;
-        for (const auto &row : decompMat) {
-          for (const auto &val : row) {
-            std::cout << val << " ";
-          }
-          std::cout << std::endl;
-        }
+        printMatrix(decompMat);
       }
-      for (int idx = 0; idx < mergedMat.size(); idx++) {
+      for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
         mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
         mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
-        tempcol = mergedMat[idx].size();
       }
     }
 
     if (params.moreDebugPrints) {
       // Debug print merged matrix
       std::cout << "Merged Matrix:" << std::endl;            
-      for (const auto &row : mergedMat) {
-        for (const auto &val : row) {
-          std::cout << val << " ";
-        }
-        std::cout << std::endl;
-      }
+      printMatrix(mergedMat);
     }
   }
   
-  performRelu(mergedMat, outVector);
+  performRelu(mergedMat, outVector, bitsPerElement);
+  if (params.moreDebugPrints) {
+    // Debug print outVector
+    std::cout << "outVector:" << std::endl;            
+    printVector(outVector);    
+  }
 
+  uint64_t idx = 0;
   for (int i = 0; i < inputDepth; i += 1)
-  {     
-    int idx = 0;
-      for (int r = 0; r < inputHeight; ++r)
-      {
-        for (int c = 0; c < inputWidth; ++c)
+  {  
+    for (int r = 0; r < inputHeight; ++r)
+    {
+      for (int c = 0; c < inputWidth; ++c)
         {
           resultMatrix[i][r][c] = outVector[idx++];
         }
-      }
+    }
   }  
   
   // Verify results against CPU if specified
   if (params.shouldVerify) {
-    verifyWithCPU(inputMatrix, resultMatrix, 1, 1, 1, params.moreDebugPrints);
+    verifyWithCPU(inputMatrix, resultMatrix, params.moreDebugPrints);
   }
 
   // Display PIM processing statistics

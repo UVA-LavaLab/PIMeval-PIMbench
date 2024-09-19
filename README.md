@@ -2,6 +2,8 @@
 
 ![Contribution](https://img.shields.io/badge/Contribution-Welcome-blue) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+This repository contains the PIMeval simulator and the PIMbench benchmark suite, designed to evaluate Processing-In-Memory (PIM) architectures. For more details, please explore our [wiki](https://github.com/UVA-LavaLab/PIMeval-PIMbench/wiki) page, which provides comprehensive information on the tools, setup instructions, usage guidelines, documentation, contribution guideline and more!
+
 ### Description
 * PIMeval
   * A PIM simulation and evaluation framework implemented as a C++ library
