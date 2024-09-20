@@ -30,15 +30,18 @@ std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duratio
 
 // Decompose the input matrix by sliding the kernel dimensions (kernelHeight * kernelWidth) along the input matrix with a stride.
 // Assume the input matrix is padded.
-void DecomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
+void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kernelWidth, int stride, int padding, const std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
 {
+  // Calculate the number of rows and columns for the decomposed matrix
   int numRows = kernelHeight * kernelWidth;
-  int numCols = matrixRow * matrixColumn;
+  int numCols = ((matrixRow - kernelHeight + 2 * padding) / stride + 1) * ((matrixColumn - kernelWidth + 2 * padding) / stride + 1);  
+  // Initialize the decomposed matrix with the correct size
   decompMatrix.resize(numRows, std::vector<int>(numCols, 0));
+
   int colIdx = 0;
-  for (int i = 0; i < (matrixRow - kernelHeight + 1); i += stride)
+  for (int i = 0; i < (matrixRow + 2 * padding - kernelHeight + 1); i += stride)
   {
-    for (int j = 0; j < (matrixColumn - kernelWidth + 1); j += stride)
+    for (int j = 0; j < (matrixColumn + 2 * padding - kernelWidth + 1); j += stride)
     {
       int rowIDX = 0;
       for (int k = i; k < i + kernelHeight; k++)
@@ -52,7 +55,6 @@ void DecomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kern
     }
   }
 }
-
 // Function to perform softmax operation on Host.
 //  -> Find the max value in the input vector
 //  -> Compute the exponentials of each (element - max_value) in the vector
@@ -200,9 +202,16 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
 // The result (1D vector) from the PIM is then  reconstructed back to a 2D final result matrix for each filter.
 void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<std::vector<std::vector<int>>> &kernelMatrix, std::vector<std::vector<std::vector<int>>> &resultMatrix, int stride, int padding)
 {
-
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig.
-  unsigned numCols = 8192, numOfCore = 4096;
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  if (status != PIM_OK) {
+    std::cout << "Abort: pimGetDeviceProperties failed" << std::endl;
+    exit(1);
+  }
+  // Get the device parameters
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows;  
 
   int inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
@@ -211,13 +220,12 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
   int kernelHeight = kernelMatrix[0].size();
   int kernelWidth = kernelMatrix[0][0].size();
 
-  int outMatDim = kernelMatrix.size();
   int outMatRow = std::floor((inputHeight - kernelHeight) / stride) + 1;
   int outMatCol = std::floor((inputWidth - kernelWidth) / stride) + 1;   
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) < inputDepth ? floor((1.0 * numCols * numOfCore) / (outMatRow * outMatCol)) : inputDepth;
+  int numOfMatPerRow = floor((1.0 * numOfBits) / (outMatRow * outMatCol)) <  inputDepth ? floor((1.0 * numOfBits) / (outMatRow * outMatCol)) : inputDepth;
   int numOfPIMRow = kernelHeight * kernelWidth;
 
-  resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
+  resultMatrix.resize(kernelDepth, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
 
   for (int i = 0; i < kernelDepth; i++)
   {
@@ -231,21 +239,21 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
       for (int k = j; k < matChunk; k++)
       {
         std::vector<std::vector<int>> decompMat;
-	      DecomposeMatrix(inputHeight, inputWidth, kernelMatrix[i].size(), kernelMatrix[i][0].size(), stride, inputMatrix[k], decompMat);
-	      for (int idx = 0; idx < mergedMat.size(); idx++)
-        {
-          mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
-          mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
-          tempcol = mergedMat[idx].size();
+	      decomposeMatrix(inputHeight, inputWidth, kernelMatrix[i].size(), kernelMatrix[i][0].size(), stride, 0, inputMatrix[k], decompMat);
+        // Merge the matrices
+        for (int idx = 0; idx < mergedMat.size(); idx++) {
+          mergedMat[idx].insert(mergedMat[idx].end(),
+                                std::make_move_iterator(decompMat[idx].begin()),
+                                std::make_move_iterator(decompMat[idx].end()));
         }
+        tempcol = mergedMat[0].size();     
       }
 
       std::vector<int> outVector;
       performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol);
 
-      auto start = std::chrono::high_resolution_clock::now();
-
       int hopSize = outMatCol * outMatRow;
+      auto start = std::chrono::high_resolution_clock::now();
       if (j == 0)
       {
         std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
@@ -345,44 +353,57 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
 // The result (1D vector) from the PIM is then reconstructed back to a 2D final result matrix for each input depth.
 void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelHeight, int kernelWidth, int stride, std::vector<std::vector<std::vector<int>>> &resultMatrix)
 {
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
-  unsigned numCols = 8192, numOfCore = 4096;
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  if (status != PIM_OK) {
+    std::cerr << "Abort: pimGetDeviceProperties failed" << std::endl;
+    exit(1);
+  }
+  // Get the device parameters
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows; 
 
-  int inputDepth = inputMatrix.size();
-  int inputHeight = inputMatrix[0].size();
-  int inputWidth = inputMatrix[0][0].size();
-  int outputHeight = (inputHeight - kernelHeight) / stride + 1;
-  int outputWidth = (inputWidth - kernelWidth) / stride + 1;  
-  int numOfPIMRow = kernelHeight * kernelWidth;
-  int numOfPIMColumn = (inputHeight * inputWidth / numOfPIMRow);
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < inputDepth ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : inputDepth;
+  uint64_t inputDepth = inputMatrix.size();
+  uint64_t inputHeight = inputMatrix[0].size();
+  uint64_t inputWidth = inputMatrix[0][0].size();
+  uint64_t outputHeight = (inputHeight - kernelHeight) / stride + 1;
+  uint64_t outputWidth = (inputWidth - kernelWidth) / stride + 1;
+
+  uint64_t numOfPIMRow = kernelHeight * kernelWidth;
+  uint64_t numOfPIMColumn = outputHeight * outputWidth;
+  uint64_t numOfMatPerRow = floor((1.0 * numOfBits) / numOfPIMColumn) < inputDepth ? floor((1.0 * numOfBits) / (numOfPIMColumn)) : inputDepth;
 
   resultMatrix.resize(inputDepth, std::vector<std::vector<int>>(outputHeight, std::vector<int>(outputWidth)));
 
-  for (int i = 0; i < inputDepth; i += 1)
+  for (uint64_t i = 0; i < inputDepth; i += 1)
   {
     // This vector packs all the matrices that can be fit into one PIM iteration
     std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= inputDepth ? (numOfMatPerRow + i) : inputDepth;
-    for (int j = i; j < matChunk; j++)
+    uint64_t matChunk = (numOfMatPerRow + i) <= inputDepth ? (numOfMatPerRow + i) : inputDepth;
+    for (uint64_t j = i; j < matChunk; j++)
     {
-      std::vector<std::vector<int>> tempMat;
-      DecomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, inputMatrix[j], tempMat);
-      for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
+      std::vector<std::vector<int>> decompMat;
+      decomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, 0, inputMatrix[j], decompMat);
+      // Merge the matrices
+      for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
+        mergedMat[idx].insert(mergedMat[idx].end(),
+                             std::make_move_iterator(decompMat[idx].begin()),
+                             std::make_move_iterator(decompMat[idx].end()));
       }
     }
-    std::vector<int> outMatrix;
-    maxPool(mergedMat, outMatrix);
-    int idx = 0;
-    for (int j = i; j < matChunk; ++j)
+
+    std::vector<int> outVector;
+    maxPool(mergedMat, outVector);
+
+    uint64_t idx = 0;
+    for (uint64_t j = i; j < matChunk; ++j)
     {
-      for (int r = 0; r < resultMatrix[j].size(); ++r)
+      for (uint64_t r = 0; r < outputHeight; ++r)
       {
-        for (int c = 0; c < resultMatrix[j][r].size(); ++c)
+        for (uint64_t c = 0; c < outputWidth; ++c)
         {
-          resultMatrix[j][r][c] = outMatrix[idx++];
+          resultMatrix[j][r][c] = outVector[idx++];
         }
       }
     }
@@ -444,18 +465,18 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
   pimFree(dstObj);
 }
 
-// Perform the RELU (REctified Linear Unit) operation, max(0, x), a non-linear activation function in PIM for the given 1D input matrix.
+// Perform the RELU (REctified Linear Unit) operation, max(0, x), a non-linear activation function in PIM for the given 1D input vector; called after GEMV operation.
 // The function allocates the necessary PIM objects, copies the data from host to PIM, and performs Max operation.
 // The max results from pimObject are then copied from the PIM (device) to Host.
-void performRelu(std::vector<int> &inputMatrix)
+void performRelu(std::vector<int> &inputVector)
 {
   unsigned bitsPerElement = 32;
 
-  if (inputMatrix.empty()) {
+  if (inputVector.empty()) {
     std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;    
     return;
   }
-  int numCols = inputMatrix.size();
+  int numCols = inputVector.size();
 
   // Initialize reluConst vector with zero for max(0, x) operation.
   std::vector<int> reluConst(numCols, 0);  
@@ -472,7 +493,7 @@ void performRelu(std::vector<int> &inputMatrix)
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice((void *)inputMatrix.data(), pimObject);
+  PimStatus status = pimCopyHostToDevice((void *)inputVector.data(), pimObject);
   if (status != PIM_OK) {
     std::cout << "Function: " << __func__ << ", Abort: pimCopyHostToDevice from inputMatrix to pimObject failed" << std::endl;
     return;
@@ -490,8 +511,8 @@ void performRelu(std::vector<int> &inputMatrix)
     return;
   }
 
-  inputMatrix.resize(numCols);
-  status = pimCopyDeviceToHost(pimObject, inputMatrix.data());
+  inputVector.resize(numCols);
+  status = pimCopyDeviceToHost(pimObject, inputVector.data());
   if (status != PIM_OK) {
     std::cout << "Function: " << __func__ << ", Abort: pimCopyDeviceToHost from pimObject to outputMatrix" << std::endl;
     return;
@@ -505,10 +526,8 @@ void performRelu(std::vector<int> &inputMatrix)
 // Perform the RELU (REctified Linear Unit) operation, max(0, x), a non-linear activation function in PIM for the given 2D input matrix.
 // The function allocates the necessary PIM objects, copies the data from host to PIM, and performs Max operation.
 // The max results from pimObjectList[0] are then copied from the PIM (device) to Host.
-void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
+void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, unsigned bitsPerElement)
 {
-  unsigned bitsPerElement = 32;
-
   if (inputMatrix.empty())
   {    
     std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;
@@ -590,49 +609,61 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
 // The result (1D vector) from the PIM is then reconstructed back to a 2D final result matrix for each input depth.
 void relu (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
   
-  // TODO: get number of columns after creating the device. Maybe support an API like getDeviceConfig. Besides 65536 is too large.
-  unsigned numCols = 8192, numOfCore = 4096;
+  // Define parameters for processing
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  if (status != PIM_OK) {
+    std::cout << "Abort: pimGetDeviceProperties failed" << std::endl;
+    exit(1);
+  }
+  // Get the device parameters
+  uint64_t numCols = deviceProp.numColPerSubarray;
+  uint64_t numRows = deviceProp.numRowPerSubarray;
+  uint64_t numOfBits = uint64_t(deviceProp.numRanks) * uint64_t(deviceProp.numBankPerRank) * uint64_t(deviceProp.numSubarrayPerBank) * numCols * numRows;
+
+  // Calculate matrix dimensions
+  uint64_t inputDepth = inputMatrix.size();
+  uint64_t inputHeight = inputMatrix[0].size();
+  uint64_t inputWidth = inputMatrix[0][0].size();
+
+  uint64_t numOfPIMRow = 1;
+  unsigned bitsPerElement = 32;
+  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numOfBits) / (inputHeight * inputWidth * bitsPerElement))), static_cast<uint64_t>(inputWidth));
+
+  std::vector<std::vector<int>> decompMat;
+  std::vector<std::vector<int>> mergedMat(numOfPIMRow);
+  std::vector<int> outVector;
+  outVector.resize(inputDepth * inputHeight * inputWidth);
   
-  const int kernelHeight = 1;
-  const int kernelWidth = 1;
-  const int stride = 1;
-  int inputDepth = inputMatrix.size();
-  int inputHeight = inputMatrix[0].size();
-  int inputWidth = inputMatrix[0][0].size();
-  int outputHeight = inputHeight;
-  int outputWidth = inputWidth;  
-  int numOfPIMRow = kernelHeight * kernelWidth;
-  int numOfPIMColumn = (inputHeight * inputWidth / numOfPIMRow);
-  int numOfMatPerRow = floor((1.0 * numCols * numOfCore) / numOfPIMColumn) < inputDepth ? floor((1.0 * numCols * numOfCore) / (numOfPIMColumn)) : inputDepth;
-  
-  for (int i = 0; i < inputDepth; i += 1)
-  {
-    // This vector packs all the matrices that can be fit into one PIM iteration
-    std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-    int matChunk = (numOfMatPerRow + i) <= inputDepth ? (numOfMatPerRow + i) : inputDepth;
-    for (int j = i; j < matChunk; j++)
-    {
-      std::vector<std::vector<int>> tempMat;
-      DecomposeMatrix(inputHeight, inputWidth, kernelHeight, kernelWidth, stride, inputMatrix[j], tempMat);
-      for (int idx = 0; idx < mergedMat.size(); idx++) {
-        mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
-      }
-    }
-    std::vector<int> outMatrix;
-    performRelu(mergedMat, outMatrix);
-    int idx = 0;
-    for (int j = i; j < matChunk; ++j)
-    {
-      for (int r = 0; r < inputHeight; ++r)
-      {
-        for (int c = 0; c < inputWidth; ++c)
-        {
-          inputMatrix[j][r][c] = outMatrix[idx++];
-        }
+  // Loop through input depth in chunks
+  for (uint64_t j = 0; j < inputDepth; j += numOfMatPerRow) {
+    uint64_t matChunk = (numOfMatPerRow + j) <= inputDepth ? (numOfMatPerRow + j) : inputDepth;
+    // Decompose and merge matrices
+    for (uint64_t k = j; k < matChunk; k++) {
+      // 1, 1, 1, 0 in the function call below indicates that the kernel dimensions are 1x1, stride is 1 and padding is 0 while decomposing the matrix for ReLU operation.
+      // The kernel dimensions, stride and padding are specified in the functional call to make the function reusable for other operations like max pooling.
+      decomposeMatrix(inputHeight, inputWidth, 1, 1, 1, 0, inputMatrix[k], decompMat);
+      for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
+        mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
+        mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
       }
     }
   }
+  
+  performRelu(mergedMat, outVector, bitsPerElement);
+
+  uint64_t idx = 0;
+  for (int i = 0; i < inputDepth; i += 1)
+  {  
+    for (int r = 0; r < inputHeight; ++r)
+    {
+      for (int c = 0; c < inputWidth; ++c)
+      {
+        inputMatrix[i][r][c] = outVector[idx++];
+      }
+    }
+  } 
+
 }
 
 // Function to read weights of a specific layer from CSV (for convolutional layers).

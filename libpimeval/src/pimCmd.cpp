@@ -343,34 +343,38 @@ pimCmdCopy::computeRegion(unsigned index)
     if (m_copyType == PIM_COPY_V) {
       size_t bitIdx = 0;
       for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
-        bool val = bits[bitIdx++];
-        if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i % numAllocRows;
         unsigned col = colIdx + i / numAllocRows;
         if (!m_copyFullRange) {
           uint64_t currIdx = regionBeginIdx + col;
           if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+            bool val = bits[bitIdx++];
+            if (isDCCN) { val = !val; }
             core.setBit(row, col, val);
           }
         } 
         else {
+          bool val = bits[bitIdx++];
+          if (isDCCN) { val = !val; }
           core.setBit(row, col, val);
         }
       }
     } else if (m_copyType == PIM_COPY_H) {
       size_t bitIdx = 0;
       for (size_t i = 0; i < (size_t)numAllocRows * numAllocCols; ++i) {
-        bool val = bits[bitIdx++];
-        if (isDCCN) { val = !val; }
         unsigned row = rowIdx + i / numAllocCols;
         unsigned col = colIdx + i % numAllocCols;
         if (!m_copyFullRange) {
           uint64_t currIdx = regionBeginIdx + col / bitsPerElement;
           if (currIdx >= m_idxBegin && currIdx < m_idxEnd) {
+            bool val = bits[bitIdx++];
+            if (isDCCN) { val = !val; }
             core.setBit(row, col, val);
           }
         } 
         else {
+          bool val = bits[bitIdx++];
+          if (isDCCN) { val = !val; }
           core.setBit(row, col, val);
         }
       }
