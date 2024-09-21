@@ -7,7 +7,6 @@
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimParamsDram.h"
-#include "pimPerfEnergyModels.h"
 #include "pimStats.h"
 #include "pimUtils.h"
 #include <cstdio>
@@ -77,13 +76,11 @@ pimSim::init(const std::string& simConfigFileConetnt)
         m_paramsDram = new pimParamsDram();
       }
 
-      m_paramsPerf = new pimParamsPerf(m_paramsDram);
-      m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+      m_statsMgr = new pimStatsMgr();
       m_initCalled = true;
     } else {
       m_paramsDram = new pimParamsDram();
-      m_paramsPerf = new pimParamsPerf(m_paramsDram);
-      m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+      m_statsMgr = new pimStatsMgr();
       m_initCalled = true;
     }
   }
@@ -100,8 +97,6 @@ pimSim::uninit()
   m_statsMgr = nullptr;
   delete m_paramsDram;
   m_paramsDram = nullptr;
-  delete m_paramsPerf;
-  m_paramsPerf = nullptr;
   m_initCalled = false;
 }
 
@@ -358,6 +353,16 @@ pimSim::getNumCols() const
     return m_device->getNumCols();
   }
   return 0;
+}
+
+//! @brief  Get number of columns per PIM core
+pimPerfEnergyBase*
+pimSim::getPerfEnergyModel()
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getPerfEnergyModel();
+  }
+  return nullptr;
 }
 
 //! @brief  Show PIM command stats

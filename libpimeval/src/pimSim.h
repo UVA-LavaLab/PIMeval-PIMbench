@@ -46,7 +46,7 @@ public:
   void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr; }
   pimParamsDram* getParamsDram() { return m_paramsDram; }
-  pimParamsPerf* getParamsPerf() { return m_paramsPerf; }
+  pimPerfEnergyBase* getPerfEnergyModel();
 
   void initThreadPool(unsigned maxNumThreads);
   pimUtils::threadPool* getThreadPool() { return m_threadPool; }
@@ -142,7 +142,6 @@ private:
   // support one device for now
   pimDevice* m_device = nullptr;
   pimParamsDram* m_paramsDram = nullptr;
-  pimParamsPerf* m_paramsPerf = nullptr;
   pimStatsMgr* m_statsMgr = nullptr;
   pimUtils::threadPool* m_threadPool = nullptr;
   unsigned m_numThreads = 0;
