@@ -32,7 +32,7 @@ cpp-transitive-closure/
 
 ## Implementation Description
 
-This repository contains three different implementations of the brightness benchmark:
+This repository contains three different implementations of the transitive closure benchmark:
 
 1. CPU
 2. GPU
@@ -44,7 +44,7 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of histogram has been implemented using standard C++ library and OpenMP for parallel execution. This method was chosen as it was seen to be the most effective in parallelizing the arithmetic for larger datasets when compared to other libraries such as Boost. 
+The CPU variant of transitive closure has been implemented using standard C++ library and OpenMP for parallel execution. This method was chosen as it was seen to be the most effective in parallelizing the arithmetic for larger datasets when compared to other libraries such as Boost. 
 
 #### GPU
 

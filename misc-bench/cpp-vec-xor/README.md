@@ -36,7 +36,7 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of histogram has been implemented using standard C++ library and OpenMP for parallel execution. This method was chosen as it was seen to be both the easiest and most effective in parallelizing the independent execution operations. 
+The CPU variant of XOR has been implemented using standard C++ library and OpenMP for parallel execution. This method was chosen as it was seen to be both the easiest and most effective in parallelizing the independent execution operations. 
 
 #### GPU
 
