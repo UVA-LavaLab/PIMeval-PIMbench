@@ -1,10 +1,10 @@
-# Makefile: C++ version of the game of life
+# Makefile: C++ version of game of life
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
-LIBPIMEVAL_PATH = ../../../libpimeval
-include ../../Makefile.common
+PROJ_ROOT = ../../..
+include ${PROJ_ROOT}/Makefile.common
 
 # make USE_OPENMP=1
 USE_OPENMP ?= 0

@@ -89,10 +89,6 @@ __inline__ __host__ __device__ uint8_t get_with_default(int x_index, int y_index
   return 0;
 }
 
-__host__ __device__ uint8_t get(int x_index, int y_index, size_t width, uint8_t* x) {
-  return x[y_index * width + y_index];
-}
-
 __global__ void game_of_life(uint8_t* x, uint8_t* y, int width, int height)
 {
     int x_index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -117,32 +113,10 @@ __global__ void game_of_life(uint8_t* x, uint8_t* y, int width, int height)
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  // params.width = 5;
-  // params.height = 5;
   std::cout << "Running GPU game of life for board: " << params.width << "x" << params.height << "\n";
   std::vector<uint8_t> x, y;
   if (params.inputFile == nullptr)
   {
-    // x = {1,0,1,0,0,
-    //      0,1,1,1,0,
-    //      0,0,0,1,1,
-    //      1,1,0,1,0,
-    //      1,0,0,1,1};
-
-    // x = {{1,0,1,0,0},
-    //      {0,1,1,1,0},
-    //      {0,0,0,1,1},
-    //      {1,1,0,1,0},
-    //      {1,0,0,1,1}};
-         //0, 1, 0, 0, 1, 
-         // 1, 0, 0, 0, 1,
-
-          // Correct Board
-          // 0, 0, 1, 1, 0, 
-          // 0, 1, 0, 0, 1, 
-          // 1, 0, 0, 0, 1, 
-          // 1, 1, 0, 0, 0, 
-          // 1, 1, 1, 1, 1
     srand((unsigned)time(NULL));
     x.resize(params.height * params.width);
     for(size_t i=0; i<x.size(); ++i) {
