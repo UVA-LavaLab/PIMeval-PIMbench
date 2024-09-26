@@ -6,11 +6,14 @@
 PROJ_ROOT = ../../..
 include ${PROJ_ROOT}/Makefile.common
 
+# make USE_OPENMP=1
+USE_OPENMP ?= 0
+ifeq ($(USE_OPENMP),1)
+	CXXFLAGS += -fopenmp
+endif
+
 EXEC := filter.out
 SRCS := $(wildcard *.cpp) 
-
-# Automatically adds OpenMP in order to avoid errors
-CXXFLAGS += -fopenmp
 
 debug perf dramsim3_integ: $(EXEC)
 
