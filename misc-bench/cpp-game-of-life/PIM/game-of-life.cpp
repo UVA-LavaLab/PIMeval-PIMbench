@@ -309,11 +309,20 @@ int main(int argc, char* argv[])
     max_alloc_assoc = numRow;
   }
 
-  for(size_t i=0; i<params.height; i += 70) {
-    game_of_life(x, y, 0, params.width, i, min(i+70, params.height));
-  }
-  
+  // Dont understand this line, seems to work though, because if stride incremented any more, then it fails
+  // Not accurate for bank level
+  max_alloc_assoc *= 2;
 
+  // stride = end_y-start_y
+  // 11+3*stride
+  // max_alloc = 11+3*stride
+  // (max_alloc-11)/3 = stride
+
+  int stride = (max_alloc_assoc-11)/3;
+
+  for(size_t i=0; i<params.height; i += stride) {
+    game_of_life(x, y, 0, params.width, i, min(i+stride, params.height));
+  }
 
   if (params.shouldVerify) 
   {
