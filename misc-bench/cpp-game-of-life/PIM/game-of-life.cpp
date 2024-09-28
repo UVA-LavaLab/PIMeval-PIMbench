@@ -94,7 +94,7 @@ void print_pim_obj(PimObjId pim_obj, size_t sz) {
   std::cout << std::endl;
 }
 
-PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj, const std::vector<PimObjId>& pim_sums, int old_ind) {
+void game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj, const std::vector<PimObjId>& pim_sums, int old_ind, PimObjId result_obj) {
   size_t mid_idx = 3*row_idx + 1;
 
   pimAdd(pim_board[mid_idx + 2], pim_board[mid_idx + 3], pim_sums[old_ind]);
@@ -105,10 +105,8 @@ PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx
   pimAdd(pim_board[mid_idx + 1], tmp_pim_obj, tmp_pim_obj);
   
   unsigned bitsPerElement = 8;
-  PimObjId pim_res = pimAllocAssociated(bitsPerElement, pim_board[mid_idx], PIM_UINT8);
-  assert(pim_res != -1);
 
-  PimStatus status = pimEQScalar(tmp_pim_obj, pim_res, 3);
+  PimStatus status = pimEQScalar(tmp_pim_obj, result_obj, 3);
   assert (status == PIM_OK);
 
   status = pimEQScalar(tmp_pim_obj, tmp_pim_obj, 2);
@@ -117,10 +115,8 @@ PimObjId game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx
   status = pimAnd(tmp_pim_obj, pim_board[mid_idx], tmp_pim_obj);
   assert (status == PIM_OK);
 
-  status = pimOr(tmp_pim_obj, pim_res, pim_res);
+  status = pimOr(tmp_pim_obj, result_obj, result_obj);
   assert (status == PIM_OK);
-
-  return pim_res;
 }
 
 void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, std::vector<PimObjId> &pim_board) {
@@ -153,13 +149,33 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
   pim_board.push_back(right);
 }
 
-// For a board of size x by y
-// Allocates 1 tmp obj of length x
-// Allocates 3*y objects of length x as input
-// Allocates y objects of length x as output
-// Total: 4y + 1 objects of length x
-// uses (4y + 1)x * 8 bits
-// Uses 4y + 1 rows of associated
+// Will alloc:
+// 1: tmp_pim_obj
+
+// Add vector to grid:
+// 2 calls
+// end_y-start_y calls
+// 3 alloc per call
+// Total: 3*(2+end_y-start_y) alloc assoc calls
+
+// 3 tmp sum objs
+
+// gol row
+// 1 alloc
+// runs end_y-start_y times
+
+// Total:
+// 1: tmp pim obj
+// 3*(2+end_y-start_y): add vec to grid
+// 3: tmp smp
+// (end_y-start_y): results
+
+// 1+3+3*(2+end_y-start_y)+(end_y-start_y)
+// 10+4*(end_y-start_y)
+
+// New with optim:
+// 11+3(end_y-start_y)
+
 
 void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector<std::vector<uint8_t>> &dst_host,
 size_t start_x, size_t end_x, size_t start_y, size_t end_y)
@@ -191,8 +207,6 @@ size_t start_x, size_t end_x, size_t start_y, size_t end_y)
     add_vector_to_grid(tmp_zeros, tmp_pim_obj, pim_board);
   }
 
-  std::vector<PimObjId> result_objs;
-
   std::vector<PimObjId> tmp_sums;
 
   tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
@@ -211,13 +225,13 @@ size_t start_x, size_t end_x, size_t start_y, size_t end_y)
 
   int old_ind = 2;
 
-  for(size_t i=1; i<height+1; ++i) {
-    result_objs.push_back(game_of_life_row(pim_board, i, tmp_pim_obj, tmp_sums, old_ind));
-    old_ind = (1+old_ind) % tmp_sums.size();
-  }
+  PimObjId result_object = pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8);
+  assert(result_object != -1);
 
-  for(size_t i=0; i<height; ++i) {
-    PimStatus copy_status = pimCopyDeviceToHost(result_objs[i], dst_host[start_y + i].data());
+  for(size_t i=1; i<height+1; ++i) {
+    game_of_life_row(pim_board, i, tmp_pim_obj, tmp_sums, old_ind, result_object);
+    old_ind = (1+old_ind) % tmp_sums.size();
+    PimStatus copy_status = pimCopyDeviceToHost(result_object, dst_host[start_y + i - 1].data());
     assert (copy_status == PIM_OK);
   }
 
@@ -227,9 +241,7 @@ size_t start_x, size_t end_x, size_t start_y, size_t end_y)
     pimFree(pim_board[i]);
   }
 
-  for(size_t i=0; i<result_objs.size(); ++i) {
-    pimFree(result_objs[i]);
-  }
+  pimFree(result_object);
 
   for(size_t i=0; i<tmp_sums.size(); ++i) {
     pimFree(tmp_sums[i]);
@@ -280,14 +292,25 @@ int main(int argc, char* argv[])
   std::cout << "rows: " << numRow << std::endl;
   std::cout << "total bits: " << totalAvailableBits << std::endl;
 
+  // TODO: Fix
+  bool is_v_device = true;
+
   // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   y.resize(x.size());
   for(size_t i=0; i<y.size(); ++i) {
     y[i].resize(x[0].size());
   }
 
-  for(size_t i=0; i<params.height; i += 60) {
-    game_of_life(x, y, 0, params.width, i, min(i+60, params.height));
+  unsigned bitsPerElement = 8;
+  int max_alloc_assoc;
+  if(is_v_device) {
+    max_alloc_assoc = numRow/bitsPerElement;
+  } else {
+    max_alloc_assoc = numRow;
+  }
+
+  for(size_t i=0; i<params.height; i += 70) {
+    game_of_life(x, y, 0, params.width, i, min(i+70, params.height));
   }
   
 
