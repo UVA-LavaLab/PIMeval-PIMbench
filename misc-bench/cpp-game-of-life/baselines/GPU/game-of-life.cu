@@ -82,33 +82,36 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+
 __inline__ __host__ __device__ uint8_t get_with_default(int x_index, int y_index, size_t width, size_t height, uint8_t* x) {
-  if(x_index >= 0 && x_index < width && y_index >= 0 && y_index < height) {
-    return x[y_index * width + x_index];
-  }
-  return 0;
+    if(x_index >= 0 && x_index < width && y_index >= 0 && y_index < height) {
+        return x[y_index * width + x_index];
+    }
+    return 0;
 }
 
-__global__ void game_of_life(uint8_t* x, uint8_t* y, int width, int height, int start_row, int end_row)
+__global__ void game_of_life(uint8_t* x, uint8_t* y, int width, int curr_rows_todo, int offset, int height_in_chunk)
 {
     int x_index = blockIdx.x * blockDim.x + threadIdx.x;
     int y_index_res = blockIdx.y * blockDim.y + threadIdx.y;
-    int y_index = (start_row == 0) ? y_index_res : y_index_res + 1;
-    int curr_height = end_row - start_row;
-    if(x_index >= 0 && x_index <= width-1 && y_index >= 0 && y_index <= curr_height-1) {
-      uint8_t sum_gpu = get_with_default(x_index-1, y_index-1, width, curr_height, x);
-      sum_gpu += get_with_default(x_index-1, y_index, width, curr_height, x);
-      sum_gpu += get_with_default(x_index-1, y_index+1, width, curr_height, x);
-      sum_gpu += get_with_default(x_index, y_index-1, width, curr_height, x);
-      sum_gpu += get_with_default(x_index, y_index+1, width, curr_height, x);
-      sum_gpu += get_with_default(x_index+1, y_index-1, width, curr_height, x);
-      sum_gpu += get_with_default(x_index+1, y_index, width, curr_height, x);
-      sum_gpu += get_with_default(x_index+1, y_index+1, width, curr_height, x);
-      uint8_t res_gpu = (uint8_t)(sum_gpu == 3);
-      sum_gpu = (uint8_t)(sum_gpu == 2);
-      sum_gpu &= x[y_index * width + x_index];
-      res_gpu |= sum_gpu;
-      y[y_index_res * width + x_index] = res_gpu;
+
+    int y_index = y_index_res + offset;
+
+    if(x_index < width && y_index_res < curr_rows_todo) {
+        uint8_t sum_gpu = 0;
+        sum_gpu += get_with_default(x_index-1, y_index-1, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index-1, y_index, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index-1, y_index+1, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index, y_index-1, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index, y_index+1, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index+1, y_index-1, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index+1, y_index, width, height_in_chunk, x);
+        sum_gpu += get_with_default(x_index+1, y_index+1, width, height_in_chunk, x);
+
+        uint8_t cell_state = x[y_index * width + x_index];
+        uint8_t res_gpu = (sum_gpu == 3) || ((sum_gpu == 2) && cell_state);
+
+        y[y_index_res * width + x_index] = res_gpu;
     }
 }
 
@@ -136,17 +139,6 @@ int main(int argc, char* argv[])
   size_t free_memory = 0;
   size_t total_memory = 0;
 
-  // Get free and total memory
-  cudaError_t mem_result = cudaMemGetInfo(&free_memory, &total_memory);
-
-  if (mem_result != cudaSuccess) {
-      std::cerr << "cudaMemGetInfo failed: " << cudaGetErrorString(mem_result) << std::endl;
-      return 1;
-  }
-
-  std::cout << "Free memory: " << free_memory / (1024.0 * 1024.0) << " MB" << std::endl;
-  std::cout << "Total memory: " << total_memory / (1024.0 * 1024.0) << " MB" << std::endl;
-
   int grid_sz = sizeof(uint8_t) * params.width * params.height;
 
   // Number below is a rough estimate from testing, TODO: look into better ways to get max memory alloc
@@ -160,10 +152,6 @@ int main(int argc, char* argv[])
   size_t rows_per_iteration_usable = rows_per_iteration - 2;
   size_t num_iteration = 1 + params.height / rows_per_iteration_usable;
   size_t rows_final_iteration = params.height - ((num_iteration - 1) * rows_per_iteration_usable);//params.height - (num_iteration * rows_per_iteration);
-
-  cout << "gpu max sz: " << gpu_max_sz << " gpu to alloc each: " << gpu_to_alloc_each << " num iteration: " << num_iteration << " rows per iteration: " << rows_per_iteration_usable << " rows on final iteration: " << rows_final_iteration << endl;
-
-  // cout << "to alloc: " << 2*gpu_to_alloc_each << ", gpu free: " << free_memory << endl;
   uint8_t* gpu_x;
   uint8_t* gpu_y;
 
@@ -184,36 +172,43 @@ int main(int argc, char* argv[])
   }
 
   double total_time = 0;
-  cout << "num iter: " << num_iteration << endl;
-  cout << "rows final iteration: " << rows_final_iteration << endl;
 
-  for(int i=0; i<num_iteration; ++i) {
-    // [start_row, end_row)
-    int start_row = i*rows_per_iteration;
-    int curr_rows_todo = (i+1 == num_iteration) ? rows_final_iteration : rows_per_iteration;
+  for(int i = 0; i < num_iteration; ++i) {
+    int start_row = i * rows_per_iteration_usable;
+    int curr_rows_todo = (i+1 == num_iteration) ? rows_final_iteration : rows_per_iteration_usable;
     if(curr_rows_todo == 0) {
-      continue;
+        continue;
     }
     int end_row = start_row + curr_rows_todo;
-    size_t curr_grid_offset = sizeof(uint8_t)*params.width*start_row;
-    size_t curr_alloc_sz = sizeof(uint8_t)*params.width*curr_rows_todo;
-    size_t curr_grid_offset_orig = curr_grid_offset;
-    size_t curr_alloc_sz_orig = curr_alloc_sz;
+    int curr_alloc_rows = curr_rows_todo;
+    size_t curr_grid_offset = start_row * params.width;
+    int offset = 0;
+
     if(start_row != 0) {
-      curr_grid_offset -= sizeof(uint8_t)*params.width;
-      curr_alloc_sz += sizeof(uint8_t)*params.width;
+        curr_grid_offset -= params.width;
+        curr_alloc_rows += 1;
+        offset = 1;
     }
+
     if(end_row != params.height) {
-      curr_alloc_sz += sizeof(uint8_t)*params.width;
+        curr_alloc_rows += 1;
+    } else {
+        // Last chunk: add extra row and zero it out
+        curr_alloc_rows += 1;
+        cudaMemset(gpu_x + (curr_alloc_rows - 1) * params.width, 0, params.width * sizeof(uint8_t));
     }
-    errorCode = cudaMemcpy(gpu_x, x.data()+curr_grid_offset, curr_alloc_sz, cudaMemcpyHostToDevice);
+
+    size_t max_host_data_sz = (params.height * params.width * sizeof(uint8_t)) - curr_grid_offset * sizeof(uint8_t);
+    size_t curr_alloc_sz = std::min((curr_alloc_rows - (end_row == params.height ? 1 : 0)) * params.width * sizeof(uint8_t), max_host_data_sz);
+
+    errorCode = cudaMemcpy(gpu_x, x.data() + curr_grid_offset, curr_alloc_sz, cudaMemcpyHostToDevice);
     if (errorCode != cudaSuccess) {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
 
-    dim3 dimGrid (( params.width + 1023) / 1024 , curr_rows_todo , 1);
-    dim3 dimBlock (1024 , 1 , 1);
+    dim3 dimBlock(32, 32);
+    dim3 dimGrid((params.width + dimBlock.x - 1) / dimBlock.x, (curr_rows_todo + dimBlock.y - 1) / dimBlock.y);
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -221,14 +216,11 @@ int main(int argc, char* argv[])
     float timeElapsed = 0;
 
     cudaEventRecord(start, 0);
-    // cout << "206\n";
 
-    game_of_life<<<dimGrid, dimBlock>>>(gpu_x, gpu_y, params.width, params.height, start_row, end_row);
-    // cout << "209\n";
-    
+    game_of_life<<<dimGrid, dimBlock>>>(gpu_x, gpu_y, params.width, curr_rows_todo, offset, curr_alloc_rows);
+
     errorCode = cudaGetLastError();
-    if (errorCode != cudaSuccess)
-    {
+    if (errorCode != cudaSuccess) {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
@@ -237,23 +229,21 @@ int main(int argc, char* argv[])
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&timeElapsed, start, stop);
 
-    // printf("Execution time of game of life = %f ms\n", timeElapsed);
     total_time += timeElapsed;
 
-    errorCode = cudaMemcpy(y.data() + curr_grid_offset_orig, gpu_y, curr_alloc_sz_orig, cudaMemcpyDeviceToHost);
-    if (errorCode != cudaSuccess)
-    {
+    size_t curr_output_sz = curr_rows_todo * params.width * sizeof(uint8_t);
+
+    errorCode = cudaMemcpy(y.data() + start_row * params.width, gpu_y, curr_output_sz, cudaMemcpyDeviceToHost);
+    if (errorCode != cudaSuccess) {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
-    cout << "end of loop\n";
   }
 
   printf("Execution time of game of life = %f ms\n", total_time);
    
   cudaFree(gpu_x);
   cudaFree(gpu_y);
-  cout << "after free\n";
 
   if (params.shouldVerify) 
   {
@@ -278,6 +268,7 @@ int main(int argc, char* argv[])
         {
           std::cout << "Wrong answer: " << unsigned(y[i * params.width + j]) << " (expected " << unsigned(res_cpu) << ") at " << i << ", " << j << std::endl;
           is_correct = false;
+          exit(1);
         }
       }
     }
