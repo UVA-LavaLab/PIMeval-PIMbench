@@ -136,14 +136,16 @@ int main(int argc, char* argv[])
   
   y.resize(x.size());
 
-  size_t free_memory = 0;
-  size_t total_memory = 0;
+  size_t free_mem, total_mem;
+  cudaError_t cuda_status = cudaMemGetInfo(&free_mem, &total_mem);
+  if (cuda_status != cudaSuccess) {
+      std::cerr << "cudaMemGetInfo failed: " << cudaGetErrorString(cuda_status) << std::endl;
+      return -1;
+  }
 
   int grid_sz = sizeof(uint8_t) * params.width * params.height;
-
-  // Number below is a rough estimate from testing, TODO: look into better ways to get max memory alloc
-  size_t gpu_max_sz = 100000000;
-  size_t gpu_to_alloc_each = std::min(gpu_max_sz / 2, (size_t) grid_sz + 2);
+  size_t usable_mem = static_cast<size_t>(free_mem * 0.7);
+  size_t gpu_to_alloc_each = std::min(usable_mem / 2, (size_t) grid_sz + 2);
   size_t rows_per_iteration = gpu_to_alloc_each / params.width;
   if(rows_per_iteration <= 2) {
     std::cerr << "Not enough GPU memory for game of life" << std::endl;
