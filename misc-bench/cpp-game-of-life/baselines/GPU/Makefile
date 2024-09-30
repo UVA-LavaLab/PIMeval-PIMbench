@@ -4,7 +4,7 @@ CUDA_DIR ?= $(shell dirname $(shell dirname $(shell which nvcc)))
 CUDA_INCLUDE := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64
 FOPENMP := -Xcompiler -fopenmp
-ARCH_FLAG := -arch=sm_75
+ARCH_FLAG := -arch=sm_80
 
 # Target executable
 EXEC := game-of-life.out
