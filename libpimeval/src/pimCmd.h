@@ -144,14 +144,14 @@ protected:
   inline uint64_t getOperand(uint64_t operandBits, PimDataType dataType) {
     uint64_t operandValue = 0;
     switch (dataType) {
-    case PIM_INT8: operandValue =  *reinterpret_cast<int8_t*>(&operandBits); break;
-    case PIM_INT16: operandValue =  *reinterpret_cast<int16_t*>(&operandBits); break;
-    case PIM_INT32: operandValue =  *reinterpret_cast<int32_t*>(&operandBits); break;
-    case PIM_INT64: operandValue =  *reinterpret_cast<int64_t*>(&operandBits); break;
-    case PIM_UINT8: operandValue =  *reinterpret_cast<uint8_t*>(&operandBits); break;
-    case PIM_UINT16: operandValue =  *reinterpret_cast<uint16_t*>(&operandBits); break;
-    case PIM_UINT32: operandValue =  *reinterpret_cast<uint32_t*>(&operandBits); break;
-    case PIM_UINT64: operandValue =  *reinterpret_cast<uint64_t*>(&operandBits); break;
+    case PIM_INT8: operandValue =  pimUtils::operandCast<int8_t>(&operandBits, sizeof(int8_t)); break;
+    case PIM_INT16: operandValue = pimUtils::operandCast<int16_t>(&operandBits, sizeof(int16_t)); break;
+    case PIM_INT32: operandValue = pimUtils::operandCast<int32_t>(&operandBits, sizeof(int32_t)); break;
+    case PIM_INT64: operandValue = pimUtils::operandCast<int64_t>(&operandBits, sizeof(int64_t)); break;
+    case PIM_UINT8: operandValue = pimUtils::operandCast<uint8_t>(&operandBits, sizeof(uint8_t)); break;
+    case PIM_UINT16: operandValue = pimUtils::operandCast<uint16_t>(&operandBits, sizeof(uint16_t)); break;
+    case PIM_UINT32: operandValue = pimUtils::operandCast<uint32_t>(&operandBits, sizeof(uint32_t)); break;
+    case PIM_UINT64: operandValue = pimUtils::operandCast<uint64_t>(&operandBits, sizeof(uint64_t)); break;
     default:
         std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
     }

@@ -13,6 +13,7 @@
 #include <string>
 #include <filesystem>
 #include <cstdlib>
+#include <cstring>
 
 //! @brief  Convert PimStatus enum to string
 std::string
