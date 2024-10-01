@@ -515,7 +515,7 @@ pimCmdFunc1::computeRegion(unsigned index)
         int64_t signedOperand = getOperand(operandBits, dataType);
         int64_t result = 0;
         if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalerValue, result, bitsPerElementSrc)) return false;
-        setBits(core, isVLayout, locDest.first, locDest.second, pimUtils::operandCast<uint64_t>(&result, sizeof(uint64_t)), bitsPerElementDest);
+        setBits(core, isVLayout, locDest.first, locDest.second, pimUtils::typeCast<uint64_t>(&result), bitsPerElementDest);
       } else {
         uint64_t unsignedOperand = getOperand(operandBits, dataType);
         uint64_t result = 0;
@@ -642,7 +642,7 @@ pimCmdFunc2::computeRegion(unsigned index)
           assert(0);
         }
         setBits(core, isVLayout, locDest.first, locDest.second,
-             pimUtils::operandCast<uint64_t>(&result, sizeof(uint64_t)), bitsPerElementdest);
+             pimUtils::typeCast<uint64_t>(&result), bitsPerElementdest);
       } else {
         uint64_t operand1 = getOperand(operandBits1, dataType);
         uint64_t operand2 = getOperand(operandBits2, dataType);
@@ -677,8 +677,8 @@ pimCmdFunc2::computeRegion(unsigned index)
     } else if (dataType == PIM_FP32) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
-      float operand1 = pimUtils::operandCast<float>(&operandBits1, sizeof(float));
-      float operand2 = pimUtils::operandCast<float>(&operandBits2, sizeof(float));
+      float operand1 = pimUtils::typeCast<float>(&operandBits1);
+      float operand2 = pimUtils::typeCast<float>(&operandBits2);
       float result = 0;
       switch (m_cmdType) {
       case PimCmdEnum::ADD: result = operand1 + operand2; break;
@@ -696,7 +696,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         assert(0);
       }
       setBits(core, isVLayout, locDest.first, locDest.second,
-             pimUtils::operandCast<uint64_t>(&result, sizeof(uint64_t)), bitsPerElementdest);
+             pimUtils::typeCast<uint64_t>(&result), bitsPerElementdest);
     } else {
       assert(0); // todo: data type
     }
@@ -867,7 +867,7 @@ pimCmdBroadcast<T>::computeRegion(unsigned index)
 
   unsigned numElementsInRegion = destRegion.getNumElemInRegion();
 
-  uint64_t val = pimUtils::operandCast<uint64_t>(&m_val, sizeof(uint64_t));
+  uint64_t val = pimUtils::typeCast<uint64_t>(&m_val);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     auto locDest = destRegion.locateIthElemInRegion(j);
     setBits(core, isVLayout, locDest.first, locDest.second, val, bitsPerElement);

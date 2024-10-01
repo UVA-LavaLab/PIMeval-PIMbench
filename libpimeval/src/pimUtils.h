@@ -43,12 +43,12 @@ namespace pimUtils
   bool getEnvVar(const std::string &varName, std::string &varValue);
 
   template<typename T> 
-  T operandCast(const void* inputOperand, uint8_t numBytes) {
+  T typeCast(const void* inputOperand) {
     T operandValue = 0;  // Ensure operandValue is initialized
     T temp;              // Temporary variable of type T
 
     // Copy the specified number of bytes into temp
-    memcpy(&temp, inputOperand, numBytes);
+    memcpy(&temp, inputOperand, sizeof(T));
 
     // Assign the value to operandValue (handles sign extension if T is signed)
     operandValue = static_cast<T>(temp);
