@@ -19,8 +19,7 @@
 class pimPerfEnergyBankLevel : public pimPerfEnergyBase
 {
 public:
-  pimPerfEnergyBankLevel(pimParamsDram* paramsDram)
-    : pimPerfEnergyBase(paramsDram) {}
+  pimPerfEnergyBankLevel(const pimPerfEnergyModelParams& params) : pimPerfEnergyBase(params) {}
   virtual ~pimPerfEnergyBankLevel() {}
 
   virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const override;

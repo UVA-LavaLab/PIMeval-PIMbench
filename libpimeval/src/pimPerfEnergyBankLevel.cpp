@@ -5,9 +5,8 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimPerfEnergyBankLevel.h"
-#include "pimSim.h"
 #include "pimCmd.h"
-#include <cstdio>
+#include <iostream>
 
 
 //! @brief  Perf energy model of bank-level PIM for func1
@@ -19,7 +18,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCores = obj.getNumCoresUsed();
-  unsigned numRanks = pimSim::get()->getNumRanks();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
@@ -38,7 +36,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       // Refer to fulcrum documentation
       msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
       mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND_SCALAR:
@@ -59,11 +57,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       // Refer to fulcrum documentation
       msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
       mjEnergy = ((m_eAP * 2) + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass ;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     default:
-      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;
   }
 
@@ -78,7 +76,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCoresUsed = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -97,7 +94,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
       msRuntime *= numPass;
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -121,7 +118,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_blimpArithmeticEnergy * numCoresUsed;
       mjEnergy *= numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND:
@@ -139,11 +136,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       msRuntime *= numPass;
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy *= numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     default:
-      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;
   }
 
@@ -157,7 +154,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned bitsPerElement = obj.getBitsPerElement();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
@@ -172,7 +168,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
   double aggregateMs = static_cast<double>(numCore) / 3200000;
   msRuntime += aggregateMs;
   mjEnergy += aggregateMs * cpuTDP;
-  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
@@ -186,7 +182,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCore = obj.getNumCoresUsed();
 
   // assume taking 1 ALU latency to write an element
@@ -195,7 +190,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   msRuntime *= numPass;
   msRuntime = (m_eAP + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement)) * numPass; // todo: change m_eR to write energy
   mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numPass * numCore;
-  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }

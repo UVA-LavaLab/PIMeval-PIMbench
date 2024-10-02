@@ -5,10 +5,9 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimPerfEnergyBitSerial.h"
-#include "pimSim.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
-#include <cstdio>
+#include <iostream>
 
 
 //! @brief  Get performance and energy for bit-serial PIM
@@ -19,7 +18,6 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   bool ok = false;
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCores = obj.getNumCoresUsed();
 
   switch (deviceType) {
@@ -41,7 +39,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             const auto& [numR, numW, numL] = it3->second;
             msRuntime += m_tR * numR + m_tW * numW + m_tL * numL;
             mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
-            mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
             ok = true;
           }
         }
@@ -62,10 +60,11 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   }
 
   if (!ok) {
-    std::printf("PIM-Warning: Unimplemented bit-serial runtime estimation for device=%s cmd=%s dataType=%s\n",
-            pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
-            pimCmd::getName(cmdType, "").c_str(),
-            pimUtils::pimDataTypeEnumToStr(dataType).c_str());
+    std::cout << "PIM-Warning: Unimplemented bit-serial runtime estimation for"
+              << " device=" << pimUtils::pimDeviceEnumToStr(deviceType)
+              << " cmd=" << pimCmd::getName(cmdType, "")
+              << " dataType=" << pimUtils::pimDataTypeEnumToStr(dataType)
+              << std::endl;
     msRuntime = 1000000;
   }
   msRuntime *= numPass;
@@ -78,20 +77,19 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
 pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
 
-  switch (simTarget) {
+  switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
       break;
@@ -107,20 +105,19 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   PimDataType dataType = obj.getDataType();
 
-  switch (simTarget) {
+  switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
       break;
@@ -136,18 +133,16 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
 pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   PimDataType dataType = obj.getDataType();
   unsigned bitsPerElement = obj.getBitsPerElement();
   uint64_t numElements = obj.getNumElements();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
-  switch (simTarget) {
+  switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     {
@@ -165,7 +160,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
         double aggregateMs = static_cast<double>(numCore) / 3200000;
         msRuntime += aggregateMs;
         mjEnergy += aggregateMs * cpuTDP;
-        mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+        mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       } else {
         assert(0);
       }
@@ -173,7 +168,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
     }
     case PIM_DEVICE_SIMDRAM:
       // todo
-      std::printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
+      std::cout << "PIM-Warning: SIMDRAM performance stats not implemented yet." << std::endl;
       break;
     case PIM_DEVICE_BITSIMD_H:
       // Sequentially process all elements per CPU cycle
@@ -192,15 +187,13 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
 pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCore = obj.getNumCoresUsed();
-  switch (simTarget) {
+  switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     {
@@ -208,7 +201,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       msRuntime = (m_tL + m_tW) * bitsPerElement;
       msRuntime *= numPass;
       mjEnergy = m_eAP * numCore * numPass ;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PIM_DEVICE_SIMDRAM:
@@ -216,7 +209,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       // todo
       msRuntime *= numPass;
       mjEnergy *= numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PIM_DEVICE_BITSIMD_H:
@@ -226,7 +219,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       msRuntime = m_tW + m_tL * maxBytesPerRegion; // for one pass
       msRuntime *= numPass;
       mjEnergy = (m_eAP + (m_tL * maxBytesPerRegion)) * numCore * numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     default:
@@ -240,7 +233,6 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
 pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
-  PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
@@ -249,7 +241,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   // boundary handling
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
 
-  switch (simTarget) {
+  switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
       // rotate within subarray:

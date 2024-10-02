@@ -31,7 +31,6 @@ public:
 
   bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool init(PimDeviceEnum deviceType, const char* configFileName);
-  void uninit();
 
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
   PimDeviceEnum getSimTarget() const { return m_simTarget; }
@@ -61,8 +60,8 @@ public:
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 
-  pimResMgr* getResMgr() { return m_resMgr; }
-  pimPerfEnergyBase* getPerfEnergyModel() { return m_perfEnergyModel; }
+  pimResMgr* getResMgr() { return m_resMgr.get(); }
+  pimPerfEnergyBase* getPerfEnergyModel() { return m_perfEnergyModel.get(); }
   pimCore& getCore(PimCoreId coreId) { return m_cores[coreId]; }
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
 
@@ -83,8 +82,8 @@ private:
   unsigned m_numCols = 0;
   bool m_isValid = false;
   bool m_isInit = false;
-  pimResMgr* m_resMgr = nullptr;
-  pimPerfEnergyBase* m_perfEnergyModel = nullptr;
+  std::unique_ptr<pimResMgr> m_resMgr;
+  std::unique_ptr<pimPerfEnergyBase> m_perfEnergyModel;
   std::vector<pimCore> m_cores;
 
 #ifdef DRAMSIM3_INTEG

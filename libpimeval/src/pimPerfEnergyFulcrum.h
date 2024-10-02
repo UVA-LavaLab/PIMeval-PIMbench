@@ -19,8 +19,7 @@
 class pimPerfEnergyFulcrum : public pimPerfEnergyBase
 {
 public:
-  pimPerfEnergyFulcrum(pimParamsDram* paramsDram)
-    : pimPerfEnergyBase(paramsDram) {}
+  pimPerfEnergyFulcrum(const pimPerfEnergyModelParams& params) : pimPerfEnergyBase(params) {}
   virtual ~pimPerfEnergyFulcrum() {}
 
   virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const override;

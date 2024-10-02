@@ -5,9 +5,8 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimPerfEnergyFulcrum.h"
-#include "pimSim.h"
 #include "pimCmd.h"
-#include <cstdio>
+#include <iostream>
 
 
 //! @brief  Perf energy model of Fulcrum for func1
@@ -19,7 +18,6 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCores = obj.getNumCoresUsed();
-  unsigned numRanks = pimSim::get()->getNumRanks();
 
   // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
   // For instructions that operate on a single operand, the next operand is fetched by the walker.
@@ -38,7 +36,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       double energyArithmetic = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * 4);
       double energyLogical = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * 8);
       mjEnergy = ((energyArithmetic + energyLogical) + m_eAP) * numCores * numPass;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::ADD_SCALAR:
@@ -49,7 +47,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     {
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
       mjEnergy = numPass * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND_SCALAR:
@@ -66,11 +64,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     {
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
       mjEnergy = numPass * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement));
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     default:
-      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;
   }
 
@@ -85,7 +83,6 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCoresUsed = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -100,7 +97,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
       msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       msRuntime *= numPass;
       mjEnergy = numCoresUsed * numPass * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -122,7 +119,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
       */
       msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * numPass;
       mjEnergy = numCoresUsed * numPass * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::AND:
@@ -138,12 +135,12 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
       msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       msRuntime *= numPass;
       mjEnergy = numCoresUsed * numPass * (((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement));
-      mjEnergy += m_eAP * 3 * m_numChipsPerRank * numRanks;
-      mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+      mjEnergy += m_eAP * 3 * m_numChipsPerRank * m_numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     default:
-      std::printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;
   }
 
@@ -157,7 +154,6 @@ pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInf
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned bitsPerElement = obj.getBitsPerElement();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
@@ -170,7 +166,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInf
   double aggregateMs = static_cast<double>(numCore) / 3200000;
   msRuntime += aggregateMs;
   mjEnergy += aggregateMs * cpuTDP;
-  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
@@ -184,7 +180,6 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned numRanks = pimSim::get()->getNumRanks();
   unsigned numCore = obj.getNumCoresUsed();
 
   // assume taking 1 ALU latency to write an element
@@ -192,7 +187,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
   msRuntime = m_tW + m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement;
   msRuntime *= numPass;
   mjEnergy = numPass * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
-  mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }

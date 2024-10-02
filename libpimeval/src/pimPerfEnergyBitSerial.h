@@ -19,8 +19,7 @@
 class pimPerfEnergyBitSerial : public pimPerfEnergyBase
 {
 public:
-  pimPerfEnergyBitSerial(pimParamsDram* paramsDram)
-    : pimPerfEnergyBase(paramsDram) {}
+  pimPerfEnergyBitSerial(const pimPerfEnergyModelParams& params) : pimPerfEnergyBase(params) {}
   virtual ~pimPerfEnergyBitSerial() {}
 
   virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
