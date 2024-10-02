@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("Performing bitmap with %lu data points and 8 unique bitmap indices\n", numDatabaseEntries);
+  printf("Performing bitmap with %llu data points and 8 unique bitmap indices\n", numDatabaseEntries);
 
   if (!createDevice(params.configFile))
   {

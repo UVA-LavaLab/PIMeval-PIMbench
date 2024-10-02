@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("Performing XOR with %lu data points\n", vectorLength);
+  printf("Performing XOR with %llu data points\n", vectorLength);
 
   if (!createDevice(params.configFile))
   {

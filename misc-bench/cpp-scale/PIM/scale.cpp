@@ -82,7 +82,7 @@ void scale(uint64_t vectorLength, const std::vector<int> &src_host, int A, std::
   PimObjId src_pim = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
   assert(src_pim != -1);
 
-  PimObjId dst_pim = pimAllocAssociated(dst_pim, PIM_INT32);
+  PimObjId dst_pim = pimAllocAssociated(src_pim, PIM_INT32);
   assert(dst_pim != -1);
 
   PimStatus status = pimCopyHostToDevice((void *)src_host.data(), src_pim);
