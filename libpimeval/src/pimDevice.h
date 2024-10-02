@@ -10,7 +10,7 @@
 #include "libpimeval.h"
 #include "pimCore.h"
 #include "pimCmd.h"
-#include "pimPerfEnergyModels.h"
+#include "pimPerfEnergyBase.h"
 #ifdef DRAMSIM3_INTEG
 #include "cpu.h"
 #endif

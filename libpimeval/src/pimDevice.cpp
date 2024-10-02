@@ -199,7 +199,7 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
 
   m_resMgr = new pimResMgr(this);
   pimParamsDram* paramsDram = pimSim::get()->getParamsDram();
-  m_perfEnergyModel = pimPerfEnergyFactory::getPerfEnergyModel(m_simTarget, paramsDram);
+  m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(m_simTarget, paramsDram);
 
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
 
@@ -292,7 +292,7 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
   m_resMgr = new pimResMgr(this);
   pimParamsDram* paramsDram = pimSim::get()->getParamsDram();
-  m_perfEnergyModel = pimPerfEnergyFactory::getPerfEnergyModel(m_simTarget, paramsDram);
+  m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(m_simTarget, paramsDram);
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
