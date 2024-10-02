@@ -119,6 +119,21 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
 
   cout << "needle: " << endl;
   print_pim(needle_pim, haystack.size());
+
+  PimObjId needle_shift = pimAllocAssociated(bitsPerElement, haystack_pim, PIM_UINT8);
+  assert(needle_shift != -1);
+
+  status = pimCopyDeviceToDevice(needle_pim, needle_shift);
+  assert (status == PIM_OK);
+
+  for(uint64_t i=0; i<1; ++i) {
+    status = pimShiftElementsRight(needle_shift);
+    assert (status == PIM_OK);
+    cout << "shifting\n";
+  }
+
+  cout << "needle shift: " << endl;
+  print_pim(needle_shift, haystack.size());
   
   return {};
 }
