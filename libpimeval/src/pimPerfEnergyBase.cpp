@@ -1,11 +1,10 @@
-// File: pimPerfEnergyModels.cc
+// File: pimPerfEnergyBase.cc
 // PIMeval Simulator - Performance Energy Models
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimPerfEnergyBase.h"
-#include "pimSim.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyBitSerial.h"
 #include "pimPerfEnergyFulcrum.h"
