@@ -49,7 +49,8 @@ enum PimCopyEnum {
 
 //! @brief  PIM datatypes
 enum PimDataType {
-  PIM_INT8 = 0,
+  PIM_BOOL = 0,
+  PIM_INT8,
   PIM_INT16,
   PIM_INT32,
   PIM_INT64,
