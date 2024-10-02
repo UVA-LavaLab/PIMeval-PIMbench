@@ -147,11 +147,9 @@ vector<pair<int, int>> readEdgeList(const string& filename) {
 }
 
 int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1, std::vector<unsigned int> &src2, std::vector<unsigned int> &dst, std::vector<unsigned int> &popCountSrc) {
-    unsigned bitsPerElement = sizeof(int) * 8;
-
     cout << "numElements: " << numElements << endl;
 
-    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
+    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT32);
     if (srcObj1 == -1)
     {
         std::cout << "src1: pimAlloc" << std::endl;
@@ -159,7 +157,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     }
     if (DEBUG) cout << "src1 allocated successfully!" << endl;
 
-    PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
     if (srcObj2 == -1)
     {
         std::cout << "src2: pimAllocAssociated" << std::endl;
@@ -167,7 +165,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     }
     if (DEBUG) cout << "src2 allocated successfully!" << endl;
 
-    PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    PimObjId dstObj = pimAllocAssociated(srcObj1, PIM_INT32);
     if (dstObj == -1)
     {
         std::cout << "dst: pimAllocAssociated" << std::endl;
@@ -175,7 +173,7 @@ int vectorAndPopCntRedSum(uint64_t numElements, std::vector<unsigned int> &src1,
     }
     if (DEBUG) cout << "dst allocated successfully!" << endl;
 
-    PimObjId popCountSrcObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    PimObjId popCountSrcObj = pimAllocAssociated(srcObj1, PIM_INT32);
     if (popCountSrcObj == -1)
     {
         std::cout << "popCountSrc: pimAllocAssociated" << std::endl;

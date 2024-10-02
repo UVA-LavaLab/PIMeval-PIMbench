@@ -19,7 +19,6 @@ testFunctional::testU16()
   pimResetStats();
 
   unsigned numElements = 3000;
-  unsigned bitsPerElement = 16;
 
   std::vector<uint16_t> src1(numElements);
   std::vector<uint16_t> src2(numElements);
@@ -31,11 +30,11 @@ testFunctional::testU16()
     src2[i] = static_cast<uint16_t>(i*2 + 9);
   }
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_UINT16);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_UINT16);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_UINT16);
+  PimObjId obj2 = pimAllocAssociated(obj1, PIM_UINT16);
   assert(obj2 != -1);
-  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_UINT16);
+  PimObjId obj3 = pimAllocAssociated(obj1, PIM_UINT16);
   assert(obj3 != -1);
 
   PimStatus status = PIM_OK;

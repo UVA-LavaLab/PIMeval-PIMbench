@@ -147,10 +147,9 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
 
 void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol, bool moreDebugPrints)
 {
-  unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
   std::vector<int> temp;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -159,7 +158,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   filterObjects.push_back(obj1);
   for (int i = 1; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -185,7 +184,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   std::vector<PimObjId> matrixObjects;
   for (int i = 0; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;

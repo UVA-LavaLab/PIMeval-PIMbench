@@ -78,14 +78,13 @@ struct Params getInputParams(int argc, char **argv)
 void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const std::vector<uint8_t> &greenData, const std::vector<uint8_t> &blueData, 
                std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
 {
-  unsigned bitsPerElement = sizeof(uint8_t) * 8;
-  PimObjId redObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_UINT8);
+  PimObjId redObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, PIM_UINT8);
   assert(redObj != -1);
-  PimObjId greenObj = pimAllocAssociated(bitsPerElement, redObj, PIM_UINT8);
+  PimObjId greenObj = pimAllocAssociated(redObj, PIM_UINT8);
   assert(greenObj != -1);
-  PimObjId blueObj = pimAllocAssociated(bitsPerElement, redObj, PIM_UINT8);
+  PimObjId blueObj = pimAllocAssociated(redObj, PIM_UINT8);
   assert(blueObj != -1);
-  PimObjId tempObj = pimAllocAssociated(bitsPerElement, redObj, PIM_UINT8);
+  PimObjId tempObj = pimAllocAssociated(redObj, PIM_UINT8);
   assert(tempObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) redData.data(), redObj);

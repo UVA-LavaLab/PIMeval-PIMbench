@@ -40,10 +40,10 @@ void testAlloc(PimDeviceEnum deviceType)
   assert(status == PIM_OK);
 
   // test PIM allocation
-  PimObjId objInt = pimAlloc(PIM_ALLOC_AUTO, numElements, 32, PIM_INT32);
-  PimObjId objIntNarrow = pimAlloc(PIM_ALLOC_AUTO, numElements, 24, PIM_INT32);
-  PimObjId objChar = pimAlloc(PIM_ALLOC_AUTO, numElements, 8, PIM_INT8);
-  PimObjId objCharNarrow = pimAlloc(PIM_ALLOC_AUTO, numElements, 4, PIM_INT8);
+  PimObjId objInt = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT32);
+  PimObjId objIntNarrow = pimAllocCustomized(PIM_ALLOC_AUTO, numElements, PIM_INT32, 24/*bitsPerElement*/);
+  PimObjId objChar = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT8);
+  PimObjId objCharNarrow = pimAllocCustomized(PIM_ALLOC_AUTO, numElements, PIM_INT8, 4/*bitsPerElement*/);
   assert(objInt != -1);
   assert(objIntNarrow != -1);
   assert(objChar != -1);

@@ -135,8 +135,6 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int kernelHeight, int 
 */
 void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
-  unsigned bitsPerElement = 32;
-
   if (inputMatrix.empty())
   {
     return;
@@ -145,7 +143,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   int numCols = inputMatrix[0].size();
 
   std::vector<PimObjId> pimObjectList(numRows);
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -154,7 +152,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;
