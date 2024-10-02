@@ -61,7 +61,7 @@ pimPerfEnergyBase::pimPerfEnergyBase(pimParamsDram* paramsDram)
 }
 
 //! @brief  Perf energy model of data transfer between CPU memory and PIM memory
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const
 {
   double mjEnergy = 0.0;
@@ -94,52 +94,52 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
       break;
     }
   }
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of base class for func1 (placeholder)
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 1e10;
   double mjEnergy = 999999999.9;
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of base class for func2 (placeholder)
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 1e10;
   double mjEnergy = 999999999.9;
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of base class for reduction sum (placeholder)
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 1e10;
   double mjEnergy = 999999999.9;
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of base class for broadcast (placeholder)
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 1e10;
   double mjEnergy = 999999999.9;
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of base class for rotate (placeholder)
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 1e10;
   double mjEnergy = 999999999.9;
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -147,7 +147,7 @@ pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& 
 ///////////////////////////////////////////////////////////////////////////////
 //! @brief  Get performance and energy for bit-serial PIM
 //!         BitSIMD and SIMDRAM need different fields
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
 {
   bool ok = false;
@@ -205,11 +205,11 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   msRuntime *= numPass;
   mjEnergy *= numPass;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for func1
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
@@ -225,7 +225,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
       break;
@@ -234,11 +234,11 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       assert(0);
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for func2
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
@@ -254,7 +254,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimNS::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
       break;
@@ -263,11 +263,11 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       assert(0);
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for reduction sum
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
@@ -319,11 +319,11 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
       assert(0);
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for broadcast
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
@@ -367,11 +367,11 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       assert(0);
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for rotate
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   PimDeviceEnum simTarget = pimSim::get()->getSimTarget();
@@ -381,7 +381,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
   // boundary handling
-  pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
 
   switch (simTarget) {
     case PIM_DEVICE_BITSIMD_V:
@@ -412,7 +412,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
       assert(0);
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 
@@ -421,7 +421,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
 ///////////////////////////////////////////////////////////////////////////////
 
 //! @brief  Perf energy model of Fulcrum for func1
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -484,11 +484,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       break;
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of Fulcrum for func2
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -557,11 +557,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
       break;
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of Fulcrum for reduction sum
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
@@ -582,11 +582,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInf
   mjEnergy += aggregateMs * cpuTDP;
   mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of Fulcrum for broadcast
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -604,11 +604,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
   mjEnergy = numPass * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
   mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of Fulcrum for rotate
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -617,7 +617,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
   // boundary handling
-  pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
 
   // rotate within subarray:
   // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
@@ -629,7 +629,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   msRuntime += 2 * perfEnergyBT.m_msRuntime;
   mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 
@@ -638,7 +638,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
 ///////////////////////////////////////////////////////////////////////////////
 
 //! @brief  Perf energy model of bank-level PIM for func1
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -694,11 +694,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       break;
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bank-level PIM for func2
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -774,11 +774,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       break;
   }
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bank-level PIM for reduction sum
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
@@ -801,11 +801,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
   mjEnergy += aggregateMs * cpuTDP;
   mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bank-level PIM for broadcast
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -824,11 +824,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numPass * numCore;
   mjEnergy += m_pBChip * m_numChipsPerRank * numRanks * msRuntime;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
 //! @brief  Perf energy model of bank-level PIM for rotate
-pimNS::perfEnergy
+pimeval::perfEnergy
 pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
@@ -837,7 +837,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
   // boundary handling
-  pimNS::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
 
   // rotate within subarray:
   // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
@@ -849,6 +849,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   msRuntime += 2 * perfEnergyBT.m_msRuntime;
   mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
 
-  return pimNS::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
