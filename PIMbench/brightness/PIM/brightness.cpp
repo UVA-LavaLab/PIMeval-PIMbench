@@ -47,7 +47,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "../../cpp-histogram/histogram_datafiles/sample1.bmp";
+  p.inputFile = "../../histogram/histogram_datafiles/sample1.bmp";
   p.shouldVerify = false;
   p.brightnessCoefficient = 20;
 
