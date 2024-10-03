@@ -141,7 +141,7 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
   print_pim(needle_length_pim, haystack.size());
 
   int needle_copies = haystack.size() / needle.size();
-  uint8_t needle_length = needle.size();
+  uint8_t needle_length_plus = 1 + needle.size();
   for(uint64_t i=0; i<needle_copies; ++i) {
     status = pimCopyHostToDevice((void *)needle.c_str(), needle_pim, i*needle.size(), (i+1)*needle.size());
     assert (status == PIM_OK);
@@ -149,7 +149,7 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
     cout << "needle length:\n";
     print_pim(needle_length_pim, haystack.size());
 
-    status = pimCopyHostToDevice((void *)(&needle_length), needle_length_pim, i*needle.size(), i*needle.size()+1);
+    status = pimCopyHostToDevice((void *)(&needle_length_plus), needle_length_pim, i*needle.size(), i*needle.size()+1);
     assert (status == PIM_OK);
   }
 
@@ -163,40 +163,47 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
   PimObjId match_accumulator = pimAllocAssociated(bitsPerElement, haystack_pim, PIM_UINT8);
   assert(match_accumulator != -1);
 
-  status = pimEQ(haystack_pim, needle_pim, curr_match);
-  assert (status == PIM_OK);
-  cout << "after eq";
+  for(uint64_t i=0; i<needle.size(); ++i) {
+    status = pimEQ(haystack_pim, needle_pim, curr_match);
+    assert (status == PIM_OK);
+    // cout << "after eq";
 
-  status = pimCopyDeviceToDevice(curr_match, match_accumulator);
-  assert (status == PIM_OK);
+    status = pimAddScalar(curr_match, match_accumulator, 1);
+    assert (status == PIM_OK);
 
-  for(uint64_t i=0; i<needle.size()-1; ++i) {
-    pimShiftElementsLeft(curr_match);
-    pimAdd(match_accumulator, curr_match, match_accumulator);
+    for(uint64_t i=0; i<needle.size()-1; ++i) {
+      pimShiftElementsLeft(curr_match);
+      pimAdd(match_accumulator, curr_match, match_accumulator);
+    }
+
+    // cout << "match accumulator after loop:\n";
+    // print_pim(match_accumulator, haystack.size());
+    // cout << "needle length before match:\n";
+    // print_pim(needle_length_pim, haystack.size());
+
+    status = pimEQ(match_accumulator, needle_length_pim, match_accumulator);
+    assert (status == PIM_OK);
+
+    // cout << "match accumulator after eq:\n";
+    // print_pim(match_accumulator, haystack.size());
+
+    status = pimOr(match_accumulator, result_pim, result_pim);
+    assert (status == PIM_OK);
+
+    if(i+1 != needle.size()) {
+      pimShiftElementsRight(needle_pim);
+      pimShiftElementsRight(needle_length_pim);
+    }
   }
-
-  cout << "match accumulator after loop:\n";
-  print_pim(match_accumulator, haystack.size());
-  cout << "needle length before match:\n";
-  print_pim(needle_length_pim, haystack.size());
-
-  status = pimEQ(match_accumulator, needle_length_pim, match_accumulator);
-  assert (status == PIM_OK);
-
-  cout << "match accumulator after eq:\n";
-  print_pim(match_accumulator, haystack.size());
-
-  status = pimOr(match_accumulator, result_pim, result_pim);
-  assert (status == PIM_OK);
   
-  cout << "needle:\n";
-  print_pim(needle_pim, haystack.size());
+  // cout << "needle:\n";
+  // print_pim(needle_pim, haystack.size());
 
-  cout << "needle length:\n";
-  print_pim(needle_length_pim, haystack.size());
+  // cout << "needle length:\n";
+  // print_pim(needle_length_pim, haystack.size());
 
-  cout << "match accumulator:\n";
-  print_pim(match_accumulator, haystack.size());
+  // cout << "match accumulator:\n";
+  // print_pim(match_accumulator, haystack.size());
 
   cout << "result pim:\n";
   print_pim(result_pim, haystack.size());
@@ -239,7 +246,7 @@ int main(int argc, char* argv[])
   {
     // getString(haystack, params.stringLength);
     // getString(needle, params.keyLength);
-    haystack = "abcde";
+    haystack = "abcdeabc";
     needle = "abc";
   } 
   else 
