@@ -125,8 +125,6 @@ void decomposeMatrix(int matrixRow, int matrixColumn, int kernelHeight, int kern
 */
 void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
-  unsigned bitsPerElement = 32;
-
   if (inputMatrix.empty())
   {
     std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;
@@ -138,7 +136,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
   uint64_t reluConst = 0;  
 
   std::vector<PimObjId> pimObjectList(numRows);
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Abort: pimAlloc for PimObj obj1 failed" << std::endl;
@@ -147,7 +145,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort: pimAllocAssociated for PimObj obj failed" << std::endl;

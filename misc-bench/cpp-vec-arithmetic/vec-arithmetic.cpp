@@ -37,19 +37,18 @@ int main(int argc, char *argv[])
 #endif
 
   unsigned numElements = 512;
-  unsigned bitsPerElement = 32;
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT32);
   if (obj1 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(obj1, PIM_INT32);
   if (obj2 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj3 = pimAllocAssociated(obj1, PIM_INT32);
   if (obj3 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;

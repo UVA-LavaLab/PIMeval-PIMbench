@@ -83,14 +83,13 @@ struct Params getInputParams(int argc, char **argv)
 
 void brightness(uint64_t imgDataBytes, const std::vector<int16_t> &imgData, int coefficient, std::vector<int16_t> &resultData)
 {
-  unsigned bitsPerElement = sizeof(int16_t) * 8; 
-  PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, bitsPerElement, PIM_INT16);
+  PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, PIM_INT16);
   assert(imgObj != -1);
-  PimObjId additionObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT16);
+  PimObjId additionObj = pimAllocAssociated(imgObj, PIM_INT16);
   assert(additionObj != -1);
-  PimObjId minObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT16);
+  PimObjId minObj = pimAllocAssociated(imgObj, PIM_INT16);
   assert(minObj != -1);
-  PimObjId resultObj = pimAllocAssociated(bitsPerElement, imgObj, PIM_INT16);
+  PimObjId resultObj = pimAllocAssociated(imgObj, PIM_INT16);
   assert(resultObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) imgData.data(), imgObj);

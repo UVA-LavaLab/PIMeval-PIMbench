@@ -88,14 +88,13 @@ struct Params getInputParams(int argc, char **argv)
 
 void transitiveClosure(std::vector<uint16_t> &adjList, int numVertices)
 {
-  int bitsPerElement = sizeof(uint16_t) * 8;
-  PimObjId adjListObj = pimAlloc(PIM_ALLOC_AUTO, numVertices * numVertices, bitsPerElement, PIM_UINT16);
+  PimObjId adjListObj = pimAlloc(PIM_ALLOC_AUTO, numVertices * numVertices, PIM_UINT16);
   assert(adjListObj != -1);
-  PimObjId keyObj = pimAllocAssociated(bitsPerElement, adjListObj, PIM_UINT16);
+  PimObjId keyObj = pimAllocAssociated(adjListObj, PIM_UINT16);
   assert(keyObj != -1);
-  PimObjId additionObj = pimAllocAssociated(bitsPerElement, adjListObj, PIM_UINT16);
+  PimObjId additionObj = pimAllocAssociated(adjListObj, PIM_UINT16);
   assert(additionObj != -1);
-  PimObjId tempObj = pimAllocAssociated(bitsPerElement, adjListObj, PIM_UINT16);
+  PimObjId tempObj = pimAllocAssociated(adjListObj, PIM_UINT16);
   assert(tempObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) adjList.data(), adjListObj);

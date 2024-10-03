@@ -227,10 +227,9 @@ bool knn_test(vector<vector<int>> ref,
 void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId> &pimObjectList, PimObjId refObj)
 {
   int idx = 0;
-  unsigned bitsPerElement = sizeof(int) * 8;
   if (refObj == -1)
   {
-    PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numOfPoints, bitsPerElement, PIM_INT32);
+    PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numOfPoints, PIM_INT32);
     if (obj1 == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -243,7 +242,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
 
   for (; idx < dimension; ++idx)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, refObj, PIM_INT32);
+    PimObjId obj = pimAllocAssociated(refObj, PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Abort" << std::endl;

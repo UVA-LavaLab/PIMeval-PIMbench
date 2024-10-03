@@ -108,7 +108,6 @@ constexpr int bits_per_pixel = 24;
 constexpr int min_data_offset = 0x36;
 constexpr int color_channels_per_pixel = 3;
 constexpr int bmp_scanline_padding_multiple = 4; // BMP file format specifies that scanlines are padded to nearest 4 byte boundary
-constexpr int bits_per_element = 8;
 constexpr int shift_amount = 2;
 
 NewImgWrapper parseInputImageandSetupOutputImage(std::vector<uint8_t> img, bool print_size=false)
@@ -182,16 +181,16 @@ void pimAverageRows(vector<uint8_t>& upper_left, vector<uint8_t>& upper_right, v
   // Returns average of the four input vectors as a uint8_t array
   int sz = upper_left.size();
 
-  PimObjId ul = pimAlloc(PIM_ALLOC_AUTO, sz, bits_per_element, PIM_UINT8);
+  PimObjId ul = pimAlloc(PIM_ALLOC_AUTO, sz, PIM_UINT8);
   assert(-1 != ul);
 
-  PimObjId ur = pimAllocAssociated(bits_per_element, ul, PIM_UINT8);
+  PimObjId ur = pimAllocAssociated(ul, PIM_UINT8);
   assert(-1 != ur);
 
-  PimObjId ll = pimAllocAssociated(bits_per_element, ul, PIM_UINT8);
+  PimObjId ll = pimAllocAssociated(ul, PIM_UINT8);
   assert(-1 != ll);
 
-  PimObjId lr = pimAllocAssociated(bits_per_element, ul, PIM_UINT8);
+  PimObjId lr = pimAllocAssociated(ul, PIM_UINT8);
   assert(-1 != lr);
 
   PimStatus ul_status = pimCopyHostToDevice(upper_left.data(), ul);

@@ -12,13 +12,12 @@ public:
     PimObjId pimObjId;
     PimAllocEnum allocType;
     unsigned numElements;
-    unsigned bitsPerElements;
     PimDataType dataType;
 
 
     PIMAuxilary();
-    PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType);
-    PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElement, PimObjId ref, PimDataType dataType);
+    PIMAuxilary(PimAllocEnum allocType, unsigned numElements, PimDataType dataType);
+    PIMAuxilary(PimAllocEnum allocType, unsigned numElements, PimObjId ref, PimDataType dataType);
     PIMAuxilary(const PIMAuxilary* src); // Copy constructor
     ~PIMAuxilary();
 

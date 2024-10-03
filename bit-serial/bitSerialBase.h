@@ -227,12 +227,12 @@ bitSerialBase::testInt(const std::string& category, PimDataType dataType)
   vecSrc1[501] = static_cast<T>(scalarVal - 1); // cover scalar LT
 
   // allocate PIM objects
-  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, numBits, dataType);
-  PimObjId src2 = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId srcNonZero = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId dest1 = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId dest2 = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId src3 = pimAllocAssociated(numBits, src1, dataType);  // alloc at last for oob check
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, dataType);
+  PimObjId src2 = pimAllocAssociated(src1, dataType);
+  PimObjId srcNonZero = pimAllocAssociated(src1, dataType);
+  PimObjId dest1 = pimAllocAssociated(src1, dataType);
+  PimObjId dest2 = pimAllocAssociated(src1, dataType);
+  PimObjId src3 = pimAllocAssociated(src1, dataType);  // alloc at last for oob check
 
   // for printing. keep in sync with switch case below
   const std::vector<std::string> testNames = {
@@ -461,12 +461,12 @@ bitSerialBase::testFp(const std::string& category, PimDataType dataType)
   vecSrc2[3000] = vecSrc1[3000];
 
   // allocate PIM objects
-  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, numBits, dataType);
-  PimObjId src2 = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId srcNonZero = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId dest1 = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId dest2 = pimAllocAssociated(numBits, src1, dataType);
-  PimObjId src3 = pimAllocAssociated(numBits, src1, dataType);  // alloc at last for oob check
+  PimObjId src1 = pimAlloc(PIM_ALLOC_V1, numElements, dataType);
+  PimObjId src2 = pimAllocAssociated(src1, dataType);
+  PimObjId srcNonZero = pimAllocAssociated(src1, dataType);
+  PimObjId dest1 = pimAllocAssociated(src1, dataType);
+  PimObjId dest2 = pimAllocAssociated(src1, dataType);
+  PimObjId src3 = pimAllocAssociated(src1, dataType);  // alloc at last for oob check
 
   // for printing. keep in sync with switch case below
   const std::vector<std::string> testNames = {

@@ -84,12 +84,11 @@ struct Params getInputParams(int argc, char **argv)
 
 void bitmap(const uint64_t numDatabaseEntries, const std::vector<uint8_t> database, const std::vector<uint8_t> indicesChecker, std::vector<std::vector<uint8_t>> &result)
 {
-  unsigned bitsPerElement = sizeof(uint8_t) * 8; 
-  PimObjId databaseObj = pimAlloc(PIM_ALLOC_AUTO, numDatabaseEntries, bitsPerElement, PIM_UINT8);
+  PimObjId databaseObj = pimAlloc(PIM_ALLOC_AUTO, numDatabaseEntries, PIM_UINT8);
   assert(databaseObj != -1);
-  PimObjId indicesCheckerObj = pimAllocAssociated(bitsPerElement, databaseObj, PIM_UINT8);
+  PimObjId indicesCheckerObj = pimAllocAssociated(databaseObj, PIM_UINT8);
   assert(indicesCheckerObj != -1);
-  PimObjId tempObj = pimAllocAssociated(bitsPerElement, databaseObj, PIM_UINT8);
+  PimObjId tempObj = pimAllocAssociated(databaseObj, PIM_UINT8);
   assert(tempObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) database.data(), databaseObj);
@@ -151,7 +150,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("Performing bitmap with %lu data points and 8 unique bitmap indices\n", numDatabaseEntries);
+  printf("Performing bitmap with %llu data points and 8 unique bitmap indices\n", numDatabaseEntries);
 
   if (!createDevice(params.configFile))
   {
