@@ -102,10 +102,9 @@ void softmaxOnHost(const std::vector<T> &input, std::vector<double> &output)
 // The summed results are then copied from the PIM (device) to Host.
 void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, int numRequiredPIMRows, int numRequiredPIMCol)
 {
-  unsigned bitsPerElement = 32;
   std::vector<PimObjId> filterObjects;
   std::vector<int> temp;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Function: " << __func__ << "Abort: pimAlloc failed for obj1" << std::endl;
@@ -114,7 +113,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   filterObjects.push_back(obj1);
   for (int i = 1; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Function: " << __func__ << "Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
@@ -140,7 +139,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   std::vector<PimObjId> matrixObjects;
   for (int i = 0; i < numRequiredPIMRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, filterObjects[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(filterObjects[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Function: " << __func__ << "Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
@@ -287,8 +286,6 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
 // The max results from pimObjectList[0] are then copied from the PIM (device) to Host.
 void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
-  unsigned bitsPerElement = 32;
-
   if (inputMatrix.empty())
   {
     return;
@@ -297,7 +294,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   int numCols = inputMatrix[0].size();
 
   std::vector<PimObjId> pimObjectList(numRows);
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Function: " << __func__ << "Abort: pimAlloc failed for obj1" << std::endl;
@@ -306,7 +303,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Function: " << __func__ << "Abort: pimAllocAssociated failed for obj at i=" << i << std::endl;
@@ -416,15 +413,14 @@ void pool(std::vector<std::vector<std::vector<int>>> &inputMatrix, int kernelHei
 // The accumulated results are then copied from the PIM (device) to the host. 
 void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, row, bitsPerElement, PIM_INT32);
+  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, row, PIM_INT32);
   if (srcObj == -1)
   {
     std::cout << "Function: " << __func__ << ", Abort: pimAlloc failed for srcObj" << std::endl;
     return;
   }
 
-  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj, PIM_INT32);
+  PimObjId dstObj = pimAllocAssociated(srcObj, PIM_INT32);
   if (dstObj == -1)
   {
     std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated failed for dstObj" << std::endl;
@@ -470,8 +466,6 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 // The max results from pimObject are then copied from the PIM (device) to Host.
 void performRelu(std::vector<int> &inputVector)
 {
-  unsigned bitsPerElement = 32;
-
   if (inputVector.empty()) {
     std::cout << "Function: " << __func__ << ", Abort: Input matrix is empty" << std::endl;    
     return;
@@ -481,13 +475,13 @@ void performRelu(std::vector<int> &inputVector)
   // Initialize reluConst vector with zero for max(0, x) operation.
   std::vector<int> reluConst(numCols, 0);  
 
-  PimObjId pimObject = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
+  PimObjId pimObject = pimAlloc(PIM_ALLOC_AUTO, numCols, PIM_INT32);
   if (pimObject == -1) {
     std::cout << "Function: " << __func__ << ", Abort: pimAlloc for PimObj pimObject failed" << std::endl;
     return;
   }
 
-  PimObjId RELUConstObj = pimAllocAssociated(bitsPerElement, pimObject, PIM_INT32);
+  PimObjId RELUConstObj = pimAllocAssociated(pimObject, PIM_INT32);
   if (RELUConstObj == -1) {
     std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for PimObj RELUConstObj failed" << std::endl;
     return;
@@ -526,7 +520,7 @@ void performRelu(std::vector<int> &inputVector)
 // Perform the RELU (REctified Linear Unit) operation, max(0, x), a non-linear activation function in PIM for the given 2D input matrix.
 // The function allocates the necessary PIM objects, copies the data from host to PIM, and performs Max operation.
 // The max results from pimObjectList[0] are then copied from the PIM (device) to Host.
-void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix, unsigned bitsPerElement)
+void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputMatrix)
 {
   if (inputMatrix.empty())
   {    
@@ -539,7 +533,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
   std::vector<int> reluConst(numCols, 0);  
 
   std::vector<PimObjId> pimObjectList(numRows);
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numCols, PIM_INT32);
   if (obj1 == -1)
   {
     std::cout << "Function: " << __func__ << ", Abort: pimAlloc for PimObj obj1 failed" << std::endl;
@@ -548,7 +542,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
   pimObjectList[0] = obj1;
   for (int i = 1; i < numRows; i++)
   {
-    PimObjId obj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
+    PimObjId obj = pimAllocAssociated(pimObjectList[0], PIM_INT32);
     if (obj == -1)
     {
       std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for PimObj obj failed" << std::endl;
@@ -556,7 +550,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     }
     pimObjectList[i] = obj;
   }
-  PimObjId RELUConstObj = pimAllocAssociated(bitsPerElement, pimObjectList[0], PIM_INT32);
+  PimObjId RELUConstObj = pimAllocAssociated(pimObjectList[0], PIM_INT32);
   if (RELUConstObj == -1)
   {
       std::cout << "Function: " << __func__ << ", Abort: pimAllocAssociated for PimObj RELUConstObj failed" << std::endl;
@@ -650,7 +644,7 @@ void relu (std::vector<std::vector<std::vector<int>>> &inputMatrix) {
     }
   }
   
-  performRelu(mergedMat, outVector, bitsPerElement);
+  performRelu(mergedMat, outVector);
 
   uint64_t idx = 0;
   for (int i = 0; i < inputDepth; i += 1)

@@ -3,12 +3,12 @@
 #include <iostream>
 #include <cassert>
 
-PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_AUTO), numElements(0), bitsPerElements(0), dataType(PIM_UINT8) {
+PIMAuxilary::PIMAuxilary() : pimObjId(0), allocType(PIM_ALLOC_AUTO), numElements(0), dataType(PIM_UINT8) {
     // Constructor initialization
 }
 
 PIMAuxilary::PIMAuxilary(const PIMAuxilary* src) {
-    this->pimObjId = pimAllocAssociated(src->bitsPerElements, src->pimObjId, src->dataType);
+    this->pimObjId = pimAllocAssociated(src->pimObjId, src->dataType);
     if (this->pimObjId == -1) {
         std::cout << "Abort" << std::endl;
         abort();
@@ -17,12 +17,11 @@ PIMAuxilary::PIMAuxilary(const PIMAuxilary* src) {
     this->array.assign(src->array.begin(), src->array.end());  // Copy all elements from src to dest
     this->allocType = src->allocType;
     this->numElements = src->numElements;
-    this->bitsPerElements = src->bitsPerElements;
     this->dataType = src->dataType;
 }
 
-PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimDataType dataType) {
-    this->pimObjId = pimAlloc(allocType, numElements, bitsPerElements, dataType);
+PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, PimDataType dataType) {
+    this->pimObjId = pimAlloc(allocType, numElements, dataType);
     if (this->pimObjId == -1) {
         std::cout << "Abort" << std::endl;
         abort();
@@ -30,12 +29,11 @@ PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned 
     this->array = *(new std::vector<uint8_t>(numElements));
     this->allocType = allocType;
     this->numElements = numElements;
-    this->bitsPerElements = bitsPerElements;
     this->dataType = dataType;
 }
 
-PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned bitsPerElements, PimObjId ref, PimDataType dataType) {
-    this->pimObjId = pimAllocAssociated(bitsPerElements, ref, dataType);
+PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, PimObjId ref, PimDataType dataType) {
+    this->pimObjId = pimAllocAssociated(ref, dataType);
     if (this->pimObjId == -1) {
         std::cout << "Abort" << std::endl;
         abort();
@@ -43,7 +41,6 @@ PIMAuxilary::PIMAuxilary(PimAllocEnum allocType, unsigned numElements, unsigned 
     this->array = std::vector<uint8_t>(numElements);
     this->allocType = allocType;
     this->numElements = numElements;
-    this->bitsPerElements = bitsPerElements;
     this->dataType = dataType;
 }
 

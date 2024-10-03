@@ -466,7 +466,6 @@ int testRjXtime(void){
     unsigned numSubarrayPerBank = 1024;
     unsigned numCores = numRanks * numBanks * numSubarrayPerBank / 2;
     unsigned numCols = 1024;
-    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
 
 
@@ -477,7 +476,7 @@ int testRjXtime(void){
 
 
     
-    PIMAuxilary* xObj = new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_UINT8);
+    PIMAuxilary* xObj = new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, PIM_UINT8);
     PIMAuxilary* zObj = new PIMAuxilary(xObj);
 
 
@@ -524,7 +523,6 @@ int testAesSubBytes() {
 
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
-    unsigned bitsPerElement = 8;
     unsigned long numElements = totalCols;
     unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
@@ -534,7 +532,7 @@ int testAesSubBytes() {
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement , PIM_UINT8);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
     for (unsigned j = 1; j < AES_BLOCK_SIZE; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -597,7 +595,6 @@ int testAesSubBytesInv() {
 
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
-    unsigned bitsPerElement = 8;
     unsigned long numElements = totalCols;
     unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
@@ -607,7 +604,7 @@ int testAesSubBytesInv() {
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement , PIM_UINT8);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
     for (unsigned j = 1; j < AES_BLOCK_SIZE; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -677,7 +674,6 @@ int testAesAddRoundKey() {
 
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
-    unsigned bitsPerElement = 8;
     unsigned long numElements = totalCols;
     unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
@@ -687,7 +683,7 @@ int testAesAddRoundKey() {
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement , PIM_UINT8);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
     for (unsigned j = 1; j < AES_BLOCK_SIZE; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -766,7 +762,6 @@ int testAesAddRoundKeyCpy(void) {
 
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
-    unsigned bitsPerElement = 8;
     unsigned long numElements = totalCols;
     unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
@@ -776,7 +771,7 @@ int testAesAddRoundKeyCpy(void) {
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement , PIM_UINT8);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
     for (unsigned j = 1; j < AES_BLOCK_SIZE; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
     }
@@ -885,7 +880,6 @@ int testAesShiftRows(void) {
 
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
-    unsigned bitsPerElement = 8;
     unsigned long numElements = totalCols;
     unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
@@ -896,7 +890,7 @@ int testAesShiftRows(void) {
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement , PIM_UINT8);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
     for (unsigned j = 1; j < AES_BLOCK_SIZE; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
 
@@ -963,7 +957,6 @@ int testAesShiftRowsInv(void) {
     unsigned numRows = 65536;
 
     unsigned numCols = 1024;
-    unsigned bitsPerElement = 8;
     unsigned long numBytes = numCols * AES_BLOCK_SIZE;
     unsigned totalElementCount = numCores * numCols / 2;
 
@@ -973,7 +966,7 @@ int testAesShiftRowsInv(void) {
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
-    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0] = new PIMAuxilary(PIM_ALLOC_V1, totalElementCount, PIM_UINT8);
     for (unsigned j = 1; j < AES_BLOCK_SIZE; ++j) {
         (*inputObjBuf)[j] = new PIMAuxilary((*inputObjBuf)[0]);
 
@@ -1045,7 +1038,6 @@ int testAesMixColumns(void) {
     unsigned numRows = 65536;
 
     unsigned numCols = 8; 
-    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
     unsigned long numBytes = totalElementCount * AES_BLOCK_SIZE;
 
@@ -1056,7 +1048,7 @@ int testAesMixColumns(void) {
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
 
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, PIM_UINT8);
 
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
@@ -1123,7 +1115,6 @@ int testAesMixColumnsInv(void) {
     unsigned numRows = 65536;
 
     unsigned numCols = 8; 
-    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
     unsigned long numBytes = totalElementCount * AES_BLOCK_SIZE;
 
@@ -1134,7 +1125,7 @@ int testAesMixColumnsInv(void) {
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
 
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, PIM_UINT8);
 
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
@@ -1200,7 +1191,6 @@ int testAes256EncryptEcb(void) {
     unsigned numRows = 65536;
 
     unsigned numCols = 8; 
-    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
     unsigned long numBytes = totalElementCount * AES_BLOCK_SIZE;
     
@@ -1211,7 +1201,7 @@ int testAes256EncryptEcb(void) {
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
 
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, PIM_UINT8);
 
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
@@ -1286,7 +1276,6 @@ int testAes256DecryptEcb(void) {
     unsigned numRows = 65536;
 
     unsigned numCols = 8; 
-    unsigned bitsPerElement = 8;
     unsigned totalElementCount = numCores * numCols;
     unsigned long numBytes = totalElementCount * AES_BLOCK_SIZE;
 
@@ -1297,7 +1286,7 @@ int testAes256DecryptEcb(void) {
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
 
 
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, totalElementCount, PIM_UINT8);
 
     for (unsigned j = 1; j < (AES_BLOCK_SIZE); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
@@ -1368,8 +1357,6 @@ int testEncryptdemo(void) {
     // unsigned long numBytes = 1310720; 
     unsigned long numBytes = 1UL * 1024 * 1024; // * 1024; // 1 GB
 
-    unsigned bitsPerElement = 8;
-
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
     unsigned numRanks = 2;
     unsigned numBankPerRank = 1; // 128; // 8 chips * 16 banks
@@ -1394,7 +1381,7 @@ int testEncryptdemo(void) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
    
     for (unsigned j = 1; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
@@ -1470,8 +1457,6 @@ int testDecryptdemo(void) {
     // unsigned long numBytes = 1310720; 
     unsigned long numBytes = 1UL * 1024 * 1024 * 1024; // 1 GB
 
-    unsigned bitsPerElement = 8;
-
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
     unsigned numRanks = 2;
     unsigned numBankPerRank = 128; // 8 chips * 16 banks
@@ -1498,7 +1483,7 @@ int testDecryptdemo(void) {
 
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
    
     for (unsigned j = 1; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
@@ -1657,9 +1642,6 @@ int testDemo(int argc, char **argv) {
     numbytes += padding;
     printf("INFO: Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
 
-
-    unsigned bitsPerElement = 8;
-     
     // Each rank has 8 chips; Total Bank = 16; Each Bank contains 32 subarrays;
     unsigned numRanks = 2;
     unsigned numBankPerRank = 128; // 8 chips * 16 banks
@@ -1677,7 +1659,7 @@ int testDemo(int argc, char **argv) {
     assert(status == PIM_OK);
 
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE * numCalls);
-    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_UINT8);
+    (*inputObjBuf)[0]= new PIMAuxilary(PIM_ALLOC_AUTO, numElements, PIM_UINT8);
     for (unsigned j = 1; j < (AES_BLOCK_SIZE * numCalls); ++j) {
         (*inputObjBuf)[j]= new PIMAuxilary((*inputObjBuf)[0]);
     }

@@ -79,11 +79,10 @@ struct Params getInputParams(int argc, char **argv)
 
 void axpy(uint64_t vectorLength, const std::vector<int> &X, const std::vector<int> &Y, int A, std::vector<int> &dst)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
   assert(obj1 != -1);
 
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(obj1, PIM_INT32);
   assert(obj2 != -1);
 
   PimStatus status = pimCopyHostToDevice((void *)X.data(), obj1);

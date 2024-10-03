@@ -23,7 +23,6 @@ bool createPimDevice()
 bool testMicroOps()
 {
   unsigned numElements = 1000;
-  unsigned bitsPerElement = 32;
 
   std::vector<int> src1(numElements);
   std::vector<int> src2(numElements);
@@ -34,9 +33,9 @@ bool testMicroOps()
     src2[i] = static_cast<int>(i * 3 + 1);
   }
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, PIM_INT32);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(obj1, PIM_INT32);
   assert(obj2 != -1);
   PimObjId obj3 = pimCreateDualContactRef(obj2);
   assert(obj3 != -1);

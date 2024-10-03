@@ -6,7 +6,7 @@
 LIBDIR := libpimeval
 BITSERIALDIR := bit-serial
 APPDIR := PIMbench
-TESTDIR := tests
+TESTDIR := misc-bench tests
 ALLDIRS := $(LIBDIR) $(BITSERIALDIR) $(APPDIR) $(TESTDIR)
 
 # Handle dependency between lib and apps to support make -j
