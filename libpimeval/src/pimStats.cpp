@@ -69,6 +69,7 @@ pimStatsMgr::showApiStats() const
 void
 pimStatsMgr::showDeviceParams() const
 {
+  const pimParamsDram& paramsDram = pimSim::get()->getParamsDram();
   std::printf("PIM Params:\n");
   std::printf(" %30s : %s\n", "PIM Device Type Enum",
               pimUtils::pimDeviceEnumToStr(pimSim::get()->getDeviceType()).c_str());
@@ -83,12 +84,12 @@ pimStatsMgr::showDeviceParams() const
   std::printf(" %30s : %u\n", "Number of PIM Cores", pimSim::get()->getNumCores());
   std::printf(" %30s : %u\n", "Number of Rows per Core", pimSim::get()->getNumRows());
   std::printf(" %30s : %u\n", "Number of Cols per Core", pimSim::get()->getNumCols());
-  std::printf(" %30s : %f GB/s\n", "Typical Rank BW", m_paramsDram->getTypicalRankBW());
-  std::printf(" %30s : %f\n", "Row Read (ns)", m_paramsDram->getNsRowRead());
-  std::printf(" %30s : %f\n", "Row Write (ns)", m_paramsDram->getNsRowWrite());
-  std::printf(" %30s : %f\n", "tCCD (ns)", m_paramsDram->getNsTCCD_S());
+  std::printf(" %30s : %f GB/s\n", "Typical Rank BW", paramsDram.getTypicalRankBW());
+  std::printf(" %30s : %f\n", "Row Read (ns)", paramsDram.getNsRowRead());
+  std::printf(" %30s : %f\n", "Row Write (ns)", paramsDram.getNsRowWrite());
+  std::printf(" %30s : %f\n", "tCCD (ns)", paramsDram.getNsTCCD_S());
   #if defined(DEBUG)
-  std::printf(" %30s : %f\n", "AAP (ns)", m_paramsDram->getNsAAP());
+  std::printf(" %30s : %f\n", "AAP (ns)", paramsDram.getNsAAP());
   #endif
 }
 
