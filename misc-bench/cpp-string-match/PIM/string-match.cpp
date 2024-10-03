@@ -109,7 +109,7 @@ void print_pim_int(PimObjId pim_obj, uint64_t len) {
   std::cout << std::endl;
 }
 
-vector<uint8_t> string_match(string& needle, string& haystack) {
+void string_match(string& needle, string& haystack, vector<uint8_t>& matches) {
 
   PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT8);
   assert(haystack_pim != -1);
@@ -149,13 +149,8 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
     }
   }
 
-  vector<uint8_t> dst_host;
-  dst_host.resize(haystack.size());
-
-  status = pimCopyDeviceToHost(result_pim, (void *)dst_host.data());
+  status = pimCopyDeviceToHost(result_pim, (void *)matches.data());
   assert (status == PIM_OK);
-
-  return dst_host;
 }
 
 // a,b,c,0,0,0,0,0,0,0,0,0
@@ -201,6 +196,19 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
 // Worth looking into hash based strategies, because:
 //     -> Current implementation has O(needle.size()^2) element shifts, which are slow already
 
+void string_match_cpu(string& needle, string& haystack, vector<uint8_t>& matches) {
+  size_t pos = haystack.find(needle, 0);
+
+  if (pos == string::npos) {
+    return;
+  }
+
+  while (pos != string::npos) {
+      matches[pos] = 1;
+      pos = haystack.find(needle, pos + 1);
+  }
+}
+
 void getString(string& str, uint64_t len) {
   str.resize(len);
 #pragma omp parallel for
@@ -214,12 +222,11 @@ int main(int argc, char* argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running PIM string match for string size: " << params.stringLength << ", key size: " << params.keyLength << "\n";
   string haystack, needle;
+  vector<uint8_t> matches;
   if (params.inputFile == nullptr)
   {
-    // getString(haystack, params.stringLength);
-    // getString(needle, params.keyLength);
-    haystack = "abcdeabc";
-    needle = "abc";
+    getString(haystack, params.stringLength);
+    getString(needle, params.keyLength);
   } 
   else 
   {
@@ -232,15 +239,30 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  cout << "string: " << haystack << endl;
-  cout << "key: " << needle << endl;
-
+  matches.resize(haystack.size());
   //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  string_match(needle, haystack);
+  string_match(needle, haystack, matches);
 
   if (params.shouldVerify) 
   {
-    
+    vector<uint8_t> matches_cpu;
+    matches_cpu.resize(haystack.size());
+    string_match_cpu(needle, haystack, matches_cpu);
+
+    // verify result
+    #pragma omp parallel for
+    bool is_correct = true;
+    for (unsigned i = 0; i < matches.size(); ++i)
+    {
+      if (matches[i] != matches_cpu[i])
+      {
+        std::cout << "Wrong answer: " << matches[i] << " (expected " << matches_cpu[i] << "), at index: " << i << std::endl;
+        is_correct = false;
+      }
+    }
+    if(is_correct) {
+      std::cout << "Correct for string match!" << std::endl;
+    }
   }
 
   pimShowStats();
