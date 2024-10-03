@@ -83,17 +83,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void print_pim_obj(PimObjId pim_obj, size_t sz) {
-  std::vector<uint8_t> tmp_res;
-  tmp_res.resize(sz);
-  pimCopyDeviceToHost(pim_obj, tmp_res.data());
-
-  for(size_t i=0; i<sz; ++i) {
-    std::cout << unsigned(tmp_res[i]) << ", ";
-  }
-  std::cout << std::endl;
-}
-
 void game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj, const std::vector<PimObjId>& pim_sums, int old_ind, PimObjId result_obj) {
   size_t mid_idx = 3*row_idx + 1;
 
@@ -119,14 +108,12 @@ void game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, Pi
 
 void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, std::vector<PimObjId> &pim_board) {
 
-  unsigned bitsPerElement = 8;
-
-  PimObjId mid = pimAllocAssociated(bitsPerElement, to_associate, PIM_UINT8);
+  PimObjId mid = pimAllocAssociated(to_associate, PIM_UINT8);
   assert(mid != -1);
   PimStatus status = pimCopyHostToDevice((void *)to_add.data(), mid);
   assert (status == PIM_OK);
 
-  PimObjId left = pimAllocAssociated(bitsPerElement, mid, PIM_UINT8);
+  PimObjId left = pimAllocAssociated(mid, PIM_UINT8);
   assert(left != -1);
   status = pimCopyDeviceToDevice(mid, left);
   assert (status == PIM_OK);
@@ -135,7 +122,7 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
 
   
 
-  PimObjId right = pimAllocAssociated(bitsPerElement, mid, PIM_UINT8);
+  PimObjId right = pimAllocAssociated(mid, PIM_UINT8);
   assert(right != -1);
   status = pimCopyDeviceToDevice(mid, right);
   assert (status == PIM_OK);
@@ -154,7 +141,7 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
   size_t width = src_host[0].size();
   size_t height = src_host.size();
 
-  PimObjId tmp_pim_obj = pimAlloc(PIM_ALLOC_AUTO, width, bitsPerElement, PIM_UINT8);
+  PimObjId tmp_pim_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_UINT8);
   assert(tmp_pim_obj != -1);
 
   std::vector<PimObjId> pim_board;
@@ -168,9 +155,9 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
 
   std::vector<PimObjId> tmp_sums;
 
-  tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
-  tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
-  tmp_sums.push_back(pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8));
+  tmp_sums.push_back(pimAllocAssociated(tmp_pim_obj, PIM_UINT8));
+  tmp_sums.push_back(pimAllocAssociated(tmp_pim_obj, PIM_UINT8));
+  tmp_sums.push_back(pimAllocAssociated(tmp_pim_obj, PIM_UINT8));
 
   PimStatus status = pimAdd(pim_board[0], pim_board[1], tmp_sums[0]);
   assert (status == PIM_OK);
@@ -184,7 +171,7 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
 
   int old_ind = 2;
 
-  PimObjId result_object = pimAllocAssociated(bitsPerElement, tmp_pim_obj, PIM_UINT8);
+  PimObjId result_object = pimAllocAssociated(tmp_pim_obj, PIM_UINT8);
   assert(result_object != -1);
 
   for(size_t i=0; i<height; ++i) {

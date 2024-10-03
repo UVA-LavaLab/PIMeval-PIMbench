@@ -82,7 +82,6 @@ struct Params input_params(int argc, char **argv)
  */
 void game_of_life(const std::vector<std::vector<uint8_t>> &x, std::vector<std::vector<uint8_t>> &y) 
 {
-  // uint8_t sum_cpu = x[0]
   int height = x.size();
   int width = x[0].size();
   uint8_t sum_cpu = x[0][1] + x[1][0] + x[1][1];
