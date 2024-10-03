@@ -7,7 +7,6 @@
 #include "pimSim.h"
 #include "pimCmd.h"
 #include "pimParamsDram.h"
-#include "pimPerfEnergyModels.h"
 #include "pimStats.h"
 #include "pimUtils.h"
 #include <cstdio>
@@ -72,18 +71,16 @@ pimSim::init(const std::string& simConfigFileConetnt)
         if (!success) {
           return false;
         }
-        m_paramsDram = new pimParamsDram(fileContent);
+        m_paramsDram = std::make_unique<pimParamsDram>(fileContent);
       } else {
-        m_paramsDram = new pimParamsDram();
+        m_paramsDram = std::make_unique<pimParamsDram>();
       }
 
-      m_paramsPerf = new pimParamsPerf(m_paramsDram);
-      m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+      m_statsMgr = std::make_unique<pimStatsMgr>();
       m_initCalled = true;
     } else {
-      m_paramsDram = new pimParamsDram();
-      m_paramsPerf = new pimParamsPerf(m_paramsDram);
-      m_statsMgr = new pimStatsMgr(m_paramsDram, m_paramsPerf);
+      m_paramsDram = std::make_unique<pimParamsDram>();
+      m_statsMgr = std::make_unique<pimStatsMgr>();
       m_initCalled = true;
     }
   }
@@ -94,14 +91,9 @@ pimSim::init(const std::string& simConfigFileConetnt)
 void
 pimSim::uninit()
 {
-  delete m_threadPool;
-  m_threadPool = nullptr;
-  delete m_statsMgr;
-  m_statsMgr = nullptr;
-  delete m_paramsDram;
-  m_paramsDram = nullptr;
-  delete m_paramsPerf;
-  m_paramsPerf = nullptr;
+  m_threadPool.reset();
+  m_statsMgr.reset();
+  m_paramsDram.reset();
   m_initCalled = false;
 }
 
@@ -109,10 +101,7 @@ pimSim::uninit()
 void
 pimSim::initThreadPool(unsigned maxNumThreads)
 {
-  if (m_threadPool) {
-    delete m_threadPool;
-    m_threadPool = nullptr;
-  }
+  m_threadPool.reset();
   unsigned hwThreads = std::thread::hardware_concurrency();
   if (maxNumThreads == 0) {
     m_numThreads = hwThreads;
@@ -123,7 +112,7 @@ pimSim::initThreadPool(unsigned maxNumThreads)
     m_numThreads = 1;
   }
   if (m_numThreads > 1) {
-    m_threadPool = new pimUtils::threadPool(m_numThreads);
+    m_threadPool = std::make_unique<pimUtils::threadPool>(m_numThreads);
   }
 }
 
@@ -132,7 +121,7 @@ bool
 pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
-  if (m_device != nullptr) {
+  if (m_device) {
     std::printf("PIM-Error: PIM device is already created\n");
     return false;
   }
@@ -141,10 +130,10 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
     std::printf("PIM-Error: Init failed\n");
     return false;
   }
-  m_device = new pimDevice();
+  m_device = std::make_unique<pimDevice>();
   m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   if (!m_device->isValid()) {
-    delete m_device;
+    m_device.reset();
     uninit();
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
@@ -206,10 +195,10 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     return false;
   }
 
-  m_device = new pimDevice();
+  m_device = std::make_unique<pimDevice>();
   m_device->init(deviceType, correctConfigFileName.c_str());
   if (!m_device->isValid()) {
-    delete m_device;
+    m_device.reset();
     uninit();
     std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
     return false;
@@ -243,8 +232,7 @@ pimSim::deleteDevice()
     std::printf("PIM-Error: No PIM device to delete\n");
     return false;
   }
-  delete m_device;
-  m_device = nullptr;
+  m_device.reset();
   uninit();
   return true;
 }
@@ -358,6 +346,16 @@ pimSim::getNumCols() const
     return m_device->getNumCols();
   }
   return 0;
+}
+
+//! @brief  Get number of columns per PIM core
+pimPerfEnergyBase*
+pimSim::getPerfEnergyModel()
+{
+  if (m_device && m_device->isValid()) {
+    return m_device->getPerfEnergyModel();
+  }
+  return nullptr;
 }
 
 //! @brief  Show PIM command stats

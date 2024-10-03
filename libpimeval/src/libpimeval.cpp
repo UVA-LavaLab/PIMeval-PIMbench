@@ -6,6 +6,7 @@
 
 #include "libpimeval.h"
 #include "pimSim.h"
+#include "pimUtils.h"
 
 
 //! @brief  Create a PIM device
@@ -56,16 +57,18 @@ pimResetStats()
 
 //! @brief  Allocate a PIM resource
 PimObjId
-pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElements, PimDataType dataType)
+pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
-  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElements, dataType);
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
+  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElement, dataType);
 }
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
-pimAllocAssociated(unsigned bitsPerElements, PimObjId assocId, PimDataType dataType)
+pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
-  return pimSim::get()->pimAllocAssociated(bitsPerElements, assocId, dataType);
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
+  return pimSim::get()->pimAllocAssociated(bitsPerElement, assocId, dataType);
 }
 
 //! @brief  Free a PIM resource

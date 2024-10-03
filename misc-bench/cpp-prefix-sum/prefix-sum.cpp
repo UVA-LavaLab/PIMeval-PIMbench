@@ -79,11 +79,10 @@ struct Params getInputParams(int argc, char **argv)
 
 void prefixSum(vector<int> &input, vector<int> &deviceoutput, uint64_t len)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
   std::vector<PimObjId> temp(len);
   std::vector<PimObjId> acc(len);
 
-  PimObjId inputObj = pimAlloc(PIM_ALLOC_AUTO, len, bitsPerElement, PIM_INT32);
+  PimObjId inputObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
   if (inputObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
@@ -96,7 +95,7 @@ void prefixSum(vector<int> &input, vector<int> &deviceoutput, uint64_t len)
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
     return;
   }
-  PimObjId tempObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
+  PimObjId tempObj = pimAllocAssociated(inputObj, PIM_INT32);
   if (tempObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
@@ -109,7 +108,7 @@ void prefixSum(vector<int> &input, vector<int> &deviceoutput, uint64_t len)
     return;
   }
 
-  PimObjId accObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
+  PimObjId accObj = pimAllocAssociated(inputObj, PIM_INT32);
   if (accObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
@@ -123,7 +122,7 @@ void prefixSum(vector<int> &input, vector<int> &deviceoutput, uint64_t len)
     return;
   }
 
-  PimObjId outputObj = pimAllocAssociated(bitsPerElement, inputObj, PIM_INT32);
+  PimObjId outputObj = pimAllocAssociated(inputObj, PIM_INT32);
   if (outputObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;

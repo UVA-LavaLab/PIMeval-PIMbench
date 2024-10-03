@@ -23,20 +23,19 @@ bool createPimDevice()
 bool testMicroOps()
 {
   unsigned numElements = 1000;
-  unsigned bitsPerElement = 32;
 
   std::vector<int> src1(numElements);
   std::vector<int> src2(numElements);
   std::vector<int> src3(numElements);
   std::vector<int> dest(numElements);
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_V1, numElements, PIM_INT32);
   assert(obj1 != -1);
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(obj1, PIM_INT32);
   assert(obj2 != -1);
-  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj3 = pimAllocAssociated(obj1, PIM_INT32);
   assert(obj3 != -1);
-  PimObjId obj4 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj4 = pimAllocAssociated(obj1, PIM_INT32);
   assert(obj4 != -1);
 
   // assign some initial values

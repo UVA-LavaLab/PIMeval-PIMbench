@@ -231,8 +231,8 @@ bitSerialBitsimdAp::implIntDivRem(int numBits, PimObjId src1, PimObjId src2, Pim
 
   // compute abs
   std::cout << "BS-INFO: Allocate 64 temporary rows" << std::endl;
-  PimObjId abs1 = pimAllocAssociated(32, src1, PIM_INT32);
-  PimObjId abs2 = pimAllocAssociated(32, src1, PIM_INT32);
+  PimObjId abs1 = pimAllocAssociated(src1, PIM_INT32);
+  PimObjId abs2 = pimAllocAssociated(src1, PIM_INT32);
   bitSerialIntAbs(numBits, src1, abs1);
   if (useScalar) {
     // broadcast the scalar value for computing abs
@@ -282,8 +282,8 @@ bitSerialBitsimdAp::implUintDivRem(int numBits, PimObjId src1, PimObjId src2, Pi
 
   // quotient and remainder
   std::cout << "BS-INFO: Allocate 96 temporary rows" << std::endl;
-  PimObjId qr = pimAllocAssociated(64, src1, PIM_INT64);
-  PimObjId tmp = pimAllocAssociated(32, src1, PIM_INT32);
+  PimObjId qr = pimAllocAssociated(src1, PIM_INT64);
+  PimObjId tmp = pimAllocAssociated(src1, PIM_INT32);
 
   // init 64-bit space
   pimOpSet(src1, PIM_RREG_SA, 0);

@@ -78,14 +78,13 @@ struct Params getInputParams(int argc, char **argv)
 
 void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;
