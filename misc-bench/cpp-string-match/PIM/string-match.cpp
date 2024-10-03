@@ -229,6 +229,31 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
 // abcde
 // ab
 
+
+
+// Idea 2: Hash
+// a,b,c,d,e,a,b,c
+// a,b,c
+
+
+// a,b,c,d,e,a,b,c
+// b,c,d,e,a,b,c,0
+// Shift left needle.size()-1 times
+// "Hash" characters
+// "Hash" key (on host?)
+
+
+// Gives possible match array
+//     -> must get actual matches
+// 1,0,0,1,0,1,0,0
+//     -> getting actual matches from potential matches seems difficult, will probably need host code?
+//     -> Idea 1: pull potential matches back to host, then check on host
+//     -> Idea 2: take matches back to pim, put key at every match index in new pim obj, compare using strategy
+
+
+// Worth looking into hash based strategies, because:
+//     -> Current implementation has O(needle.size()^2) element shifts, which are slow already
+
 void getString(string& str, uint64_t len) {
   str.resize(len);
 #pragma omp parallel for
