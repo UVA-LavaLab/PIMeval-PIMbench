@@ -131,15 +131,12 @@ int main(int argc, char **argv){
     std::vector<int> bitMap(inVectorSize, 0);
     std::vector<int> bitMapHost(inVectorSize, 0);
 
-    //PIM parameters
-    unsigned bitsPerElement = 32;
-
-    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, inVector.size(), bitsPerElement, PIM_INT32);
+    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, inVector.size(), PIM_INT32);
     if (srcObj1 == -1){
         std::cout << "Abort" << std::endl;
         return 1;
     }
-    PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+    PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
     if (srcObj2 == -1){
         std::cout << "Abort" << std::endl;
         return 1;

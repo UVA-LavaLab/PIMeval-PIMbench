@@ -97,23 +97,22 @@ int main(int argc, char *argv[])
     std::vector<PimObjId> compare_obj(num_passes);
     std::vector<PimObjId> compare_results_obj(num_passes);
 
-    //What is the difference between bitsPerElement and PIM_INT32
     for(unsigned i = 0; i < num_passes; i++){
-        src_obj[i] = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT32);
+        src_obj[i] = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT32);
         if (src_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
         }
     }
     for(unsigned i = 0; i < num_passes; i++){
-        compare_obj[i] = pimAllocAssociated(bitsPerElement, src_obj[i], PIM_INT32);
+        compare_obj[i] = pimAllocAssociated(src_obj[i], PIM_INT32);
         if (compare_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;
         }
     }
     for(unsigned i = 0; i < num_passes; i++){
-        compare_results_obj[i] = pimAllocAssociated(bitsPerElement, src_obj[i], PIM_INT32);
+        compare_results_obj[i] = pimAllocAssociated(src_obj[i], PIM_INT32);
         if (compare_results_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;

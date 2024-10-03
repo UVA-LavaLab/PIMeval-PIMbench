@@ -78,8 +78,7 @@ struct Params getInputParams(int argc, char **argv)
 
 void vectorPopCount(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &dst)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
   if (srcObj == -1)
   {
     std::cout << "Abort" << std::endl;

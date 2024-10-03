@@ -24,7 +24,6 @@ void testLargeCopy(PimDeviceEnum deviceType)
 
   uint64_t numElements = 2LL * 1024 * 1024 + 2; // 4G + 2 elements
   uint64_t HostNumElements = numElements;  
-  unsigned bitsPerElement = 8;
   std::vector<char> src(HostNumElements);
   std::vector<char> dest(HostNumElements);
   for (uint64_t i = 0; i < HostNumElements; ++i) {
@@ -36,7 +35,7 @@ void testLargeCopy(PimDeviceEnum deviceType)
 
   // test a few iterations
   for (int iter = 0; iter < 2; ++iter) {
-    PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_INT8);
+    PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT8);
     assert(obj != -1);
 
     status = pimCopyHostToDevice((void*)src.data(), obj, 0, HostNumElements);

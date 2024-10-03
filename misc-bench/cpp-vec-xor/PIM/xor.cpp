@@ -83,12 +83,11 @@ struct Params getInputParams(int argc, char **argv)
 
 void XOR(uint64_t vectorLength, const std::vector<int> src1, const std::vector<int> src2, std::vector<int> &dst)
 {
-  unsigned bitsPerElement = sizeof(int) * 8; 
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
   assert(srcObj1 != -1);
-  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
   assert(srcObj2 != -1);
-  PimObjId dstObj = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId dstObj = pimAllocAssociated(srcObj1, PIM_INT32);
   assert(dstObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) src1.data(), srcObj1);
@@ -128,7 +127,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("Performing XOR with %lu data points\n", vectorLength);
+  printf("Performing XOR with %llu data points\n", vectorLength);
 
   if (!createDevice(params.configFile))
   {

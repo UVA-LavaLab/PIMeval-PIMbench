@@ -23,7 +23,6 @@ void testRedSum(PimDeviceEnum deviceType)
   unsigned numCols = 1024;
 
   uint64_t numElements = 65536;
-  unsigned bitsPerElement = 32;
   std::vector<unsigned> src(numElements);
   std::vector<unsigned> dest(numElements);
   unsigned sum32 = 0;
@@ -47,7 +46,7 @@ void testRedSum(PimDeviceEnum deviceType)
 
   // test a few iterations
   for (int iter = 0; iter < 2; ++iter) {
-    PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, bitsPerElement, PIM_UINT32);
+    PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_UINT32);
     assert(obj != -1);
 
     status = pimCopyHostToDevice((void*)src.data(), obj);

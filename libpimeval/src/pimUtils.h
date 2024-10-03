@@ -28,6 +28,7 @@ namespace pimUtils
   std::string pimAllocEnumToStr(PimAllocEnum allocType);
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
+  unsigned getNumBitsOfDataType(PimDataType dataType);
   std::string& ltrim(std::string& s);
   std::string& rtrim(std::string& s);
   std::string& trim(std::string& s);
