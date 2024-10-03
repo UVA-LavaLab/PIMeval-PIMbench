@@ -36,7 +36,7 @@ void usage()
           "\n    -s    string size (default=2048 elements)"
           "\n    -k    key size (default = 20 elements)"
           "\n    -c    dramsim config file"
-          "\n    -i    input file containing string and key (default=generates vector with random numbers)"
+          "\n    -i    input file containing string and key (default=generates strings with random characters)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
