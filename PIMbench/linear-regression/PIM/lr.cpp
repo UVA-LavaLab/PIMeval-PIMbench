@@ -80,9 +80,7 @@ struct Params getInputParams(int argc, char **argv)
 
 void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::vector<int> &Y, int64_t &SX, int64_t &SY, int64_t &SXX, int64_t &SXY)
 {
-  unsigned bitsPerElement = sizeof(int) * 8;
-
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, dataSize, bitsPerElement, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, dataSize, PIM_INT32);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
@@ -103,7 +101,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  PimObjId srcObj2 = pimAllocAssociated(bitsPerElement, srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;

@@ -82,8 +82,8 @@ void pimShowStats();
 void pimResetStats();
 
 // Resource allocation and deletion
-PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
-PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
+PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
+PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
 PimStatus pimFree(PimObjId obj);
 PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
 

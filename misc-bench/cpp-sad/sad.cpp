@@ -23,21 +23,20 @@ int main()
     return 1;
   }
 
-  int bitsPerElement = 32;
   int vectorLength = 512;
   int subvectorLength = 64;
 
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, bitsPerElement, PIM_INT32);
+  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
   if (obj1 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj2 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj2 = pimAllocAssociated(obj1, PIM_INT32);
   if (obj2 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
-  PimObjId obj3 = pimAllocAssociated(bitsPerElement, obj1, PIM_INT32);
+  PimObjId obj3 = pimAllocAssociated(obj1, PIM_INT32);
   if (obj3 == -1) {
     std::cout << "Abort" << std::endl;
     return 1;

@@ -13,6 +13,7 @@
 #include <string>
 #include <filesystem>
 #include <cstdlib>
+#include <cassert>
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -86,6 +87,26 @@ pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
   case PIM_FP32: return "fp32";
   }
   return "Unknown";
+}
+
+//! @brief  Get number of bits of a PIM data type
+unsigned
+pimUtils::getNumBitsOfDataType(PimDataType dataType)
+{
+  switch (dataType) {
+  case PIM_INT8: return 8;
+  case PIM_INT16: return 16;
+  case PIM_INT32: return 32;
+  case PIM_INT64: return 64;
+  case PIM_UINT8: return 8;
+  case PIM_UINT16: return 16;
+  case PIM_UINT32: return 32;
+  case PIM_UINT64: return 64;
+  case PIM_FP32: return 32;
+  default:
+    assert(0);
+  }
+  return 0;
 }
 
 //! @brief  Read bits from host
