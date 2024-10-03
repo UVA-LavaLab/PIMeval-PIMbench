@@ -87,7 +87,7 @@ void print_pim(PimObjId pim_obj, uint64_t len) {
   vector<uint8_t> dst_host;
   dst_host.resize(len, 1);
 
-  PimStatus status = pimCopyDeviceToHost(pim_obj, (void *)dst_host.data(), 0, (len+3)/4);
+  PimStatus status = pimCopyDeviceToHost(pim_obj, (void *)dst_host.data());
   assert (status == PIM_OK);
 
   for (auto val : dst_host) {
@@ -97,7 +97,7 @@ void print_pim(PimObjId pim_obj, uint64_t len) {
 }
 
 vector<uint8_t> string_match(string& needle, string& haystack) {
-  unsigned bitsPerElement = sizeof(int) * 8;
+  unsigned bitsPerElement = 8;
 
   PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), bitsPerElement, PIM_UINT8);
   assert(haystack_pim != -1);
@@ -105,44 +105,68 @@ vector<uint8_t> string_match(string& needle, string& haystack) {
   PimObjId needle_pim = pimAllocAssociated(bitsPerElement, haystack_pim, PIM_UINT8);
   assert(needle_pim != -1);
 
-  PimStatus status = pimCopyHostToDevice((void *)haystack.c_str(), haystack_pim);
-  assert (status == PIM_OK);
-
-  // status = pimXor(needle_pim, needle_pim, needle_pim);
-  // assert (status == PIM_OK);
-
-  status = pimCopyHostToDevice((void *)needle.c_str(), needle_pim, 0, (needle.size() + 3)/4);
-  assert (status == PIM_OK);
-
-  cout << "haystack: " << endl;
-  print_pim(haystack_pim, haystack.size());
-
-  cout << "needle: " << endl;
-  print_pim(needle_pim, haystack.size());
-
   PimObjId needle_shift = pimAllocAssociated(bitsPerElement, haystack_pim, PIM_UINT8);
   assert(needle_shift != -1);
 
-  status = pimCopyDeviceToDevice(needle_pim, needle_shift);
+  PimStatus status = pimCopyHostToDevice((void *)haystack.c_str(), haystack_pim);
   assert (status == PIM_OK);
 
-  for(uint64_t i=0; i<1; ++i) {
-    status = pimShiftElementsRight(needle_shift);
-    assert (status == PIM_OK);
-    cout << "shifting\n";
-  }
+  // Requires needle_pim to start zero initialized
+  // status = pimXor(needle_pim, needle_pim, needle_pim);
+  // assert (status == PIM_OK);
 
-  cout << "needle shift: " << endl;
-  print_pim(needle_shift, haystack.size());
+  // status = pimCopyHostToDevice((void *)needle.c_str(), needle_shift, 0, needle.size());
+  // assert (status == PIM_OK);
+
+  // status = pimOr(needle_pim, needle_shift, needle_pim);
+  // assert (status == PIM_OK);
+
+  int needle_copies = haystack.size() / needle.size();
+
+  // for(uint64_t i=0; i<needle_copies-1; ++i) {
+  //   for(uint64_t j=0; j<needle.size(); ++j) {
+  //     status = pimShiftElementsRight(needle_shift);
+  //     assert (status == PIM_OK);
+  //   }
+  //   status = pimOr(needle_pim, needle_shift, needle_pim);
+  //   assert (status == PIM_OK);
+  // }
+
+  // cout << "needle: " << endl;
+  // print_pim(needle_pim, haystack.size());
+
+  for(uint64_t i=0; i<needle_copies; ++i) {
+    status = pimCopyHostToDevice((void *)needle.c_str(), needle_shift, i*needle.size(), (i+1)*needle.size());
+    assert (status == PIM_OK);
+  }
+  
   
   return {};
 }
 
+// a,b,c,0,0,0,0,0,0,0,0,0
+// 0,0,0,a,b,c,0,0,0,0,0,0
+// Linear: s-k shifts
+// 12-3=9
+
+// a,b,c,0,0,0,0,0,0,0,0,0
+// 0,0,0,a,b,c,0,0,0,0,0,0
+// k + 2k
+// 3 + 6 = 9
+
+// The same
+
+
+// 5-2
+
+// abcde
+// ab
+
 void getString(string& str, uint64_t len) {
-  str.reserve(len);
+  str.resize(len);
 #pragma omp parallel for
   for(uint64_t i=0; i<len; ++i) {
-    str.push_back('a' + (rand()%26));
+    str[i] = 'a' + (rand()%26);
   }
 }
 
