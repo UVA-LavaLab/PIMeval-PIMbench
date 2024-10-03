@@ -405,7 +405,7 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objDest.getBitsPerElement();
-    pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
@@ -420,7 +420,7 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
@@ -435,7 +435,7 @@ pimCmdCopy::updateStats() const
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement();
-    pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
+    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     #if defined(DEBUG)
@@ -538,7 +538,7 @@ pimCmdFunc1::updateStats() const
   bool isVLayout = objSrc.isVLayout();
 
   
-  pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -712,7 +712,7 @@ pimCmdFunc2::updateStats() const
   PimDataType dataType = objSrc1.getDataType();
   bool isVLayout = objSrc1.isVLayout();
 
-  pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -815,7 +815,7 @@ pimCmdRedSum<T>::updateStats() const
     numPass = objSrc.getMaxNumRegionsPerCore();
   }
 
-  pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -882,7 +882,7 @@ pimCmdBroadcast<T>::updateStats() const
   PimDataType dataType = objDest.getDataType();
   bool isVLayout = objDest.isVLayout();
 
-  pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBroadcast(m_cmdType, objDest);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBroadcast(m_cmdType, objDest);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -1014,7 +1014,7 @@ pimCmdRotate::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  pimNS::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRotate(m_cmdType, objSrc);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRotate(m_cmdType, objSrc);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -1041,7 +1041,7 @@ pimCmdReadRowToSa::execute()
   }
 
   // Update stats
-  pimNS::perfEnergy prfEnrgy;
+  pimeval::perfEnergy prfEnrgy;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
@@ -1067,7 +1067,7 @@ pimCmdWriteSaToRow::execute()
   }
 
   // Update stats
-  pimNS::perfEnergy prfEnrgy;
+  pimeval::perfEnergy prfEnrgy;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
@@ -1171,7 +1171,7 @@ pimCmdRRegOp::execute()
   }
 
   // Update stats
-  pimNS::perfEnergy prfEnrgy;
+  pimeval::perfEnergy prfEnrgy;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
@@ -1224,7 +1224,7 @@ pimCmdRRegRotate::execute()
   }
 
   // Update stats
-  pimNS::perfEnergy prfEnrgy;
+  pimeval::perfEnergy prfEnrgy;
   pimSim::get()->getStatsMgr()->recordCmd(getName(), prfEnrgy);
   return true;
 }
@@ -1312,7 +1312,7 @@ pimCmdAnalogAAP::execute()
   // Update stats
   std::string cmdName = getName();
   cmdName += "@" + std::to_string(m_srcRows.size()) + "," + std::to_string(m_destRows.size());
-  pimNS::perfEnergy prfEnrgy;
+  pimeval::perfEnergy prfEnrgy;
   pimSim::get()->getStatsMgr()->recordCmd(cmdName, prfEnrgy);
   return true;
 }

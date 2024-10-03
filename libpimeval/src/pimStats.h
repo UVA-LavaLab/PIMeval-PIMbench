@@ -8,7 +8,7 @@
 #define LAVA_PIM_STATS_H
 
 #include "pimParamsDram.h"
-#include "pimPerfEnergyModels.h"
+#include "pimPerfEnergyBase.h"
 #include "libpimeval.h"
 #include <cstdint>
 #include <string>
@@ -40,7 +40,7 @@ public:
   void showStats() const;
   void resetStats();
   
-  void recordCmd(const std::string& cmdName, pimNS::perfEnergy mPerfEnergy) {
+  void recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEnergy) {
     auto& item = m_cmdPerf[cmdName];
     item.first++;
     item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
@@ -53,19 +53,19 @@ public:
     item.second += elapsed;
   }
 
-  void recordCopyMainToDevice(uint64_t numBits, pimNS::perfEnergy mPerfEnergy) {
+  void recordCopyMainToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy) {
     m_bitsCopiedMainToDevice += numBits;
     m_elapsedTimeCopiedMainToDevice += mPerfEnergy.m_msRuntime;
     m_mJCopiedMainToDevice += mPerfEnergy.m_mjEnergy;
   }
 
-  void recordCopyDeviceToMain(uint64_t numBits, pimNS::perfEnergy mPerfEnergy) {
+  void recordCopyDeviceToMain(uint64_t numBits, pimeval::perfEnergy mPerfEnergy) {
     m_bitsCopiedDeviceToMain += numBits; 
     m_elapsedTimeCopiedDeviceToMain += mPerfEnergy.m_msRuntime;
     m_mJCopiedDeviceToMain += mPerfEnergy.m_mjEnergy;
   }
   
-  void recordCopyDeviceToDevice(uint64_t numBits, pimNS::perfEnergy mPerfEnergy) {
+  void recordCopyDeviceToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy) {
     m_bitsCopiedDeviceToDevice += numBits;
     m_elapsedTimeCopiedDeviceToDevice += mPerfEnergy.m_msRuntime;
     m_mJCopiedDeviceToDevice += mPerfEnergy.m_mjEnergy;
@@ -77,7 +77,7 @@ private:
   void showCopyStats() const;
   void showCmdStats() const;
 
-  std::map<std::string, std::pair<int, pimNS::perfEnergy>> m_cmdPerf;
+  std::map<std::string, std::pair<int, pimeval::perfEnergy>> m_cmdPerf;
   std::map<std::string, std::pair<int, double>> m_msElapsed;
 
   uint64_t m_bitsCopiedMainToDevice = 0;

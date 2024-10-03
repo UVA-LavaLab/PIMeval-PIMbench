@@ -10,7 +10,7 @@
 #include "libpimeval.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
-#include "pimPerfEnergyModels.h"
+#include "pimPerfEnergyBase.h"
 #include "pimStats.h"
 #include <vector>
 #include <cstdarg>
@@ -44,12 +44,12 @@ public:
 
   void showStats() const;
   void resetStats() const;
-  pimStatsMgr* getStatsMgr() { return m_statsMgr; }
-  pimParamsDram* getParamsDram() { return m_paramsDram; }
+  pimStatsMgr* getStatsMgr() { return m_statsMgr.get(); }
+  const pimParamsDram& getParamsDram() const { assert(m_paramsDram); return *m_paramsDram; }
   pimPerfEnergyBase* getPerfEnergyModel();
 
   void initThreadPool(unsigned maxNumThreads);
-  pimUtils::threadPool* getThreadPool() { return m_threadPool; }
+  pimUtils::threadPool* getThreadPool() { return m_threadPool.get(); }
   unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
@@ -140,10 +140,10 @@ private:
   static pimSim* s_instance;
 
   // support one device for now
-  pimDevice* m_device = nullptr;
-  pimParamsDram* m_paramsDram = nullptr;
-  pimStatsMgr* m_statsMgr = nullptr;
-  pimUtils::threadPool* m_threadPool = nullptr;
+  std::unique_ptr<pimDevice> m_device;
+  std::unique_ptr<pimParamsDram> m_paramsDram;
+  std::unique_ptr<pimStatsMgr> m_statsMgr;
+  std::unique_ptr<pimUtils::threadPool> m_threadPool;
   unsigned m_numThreads = 0;
   std::string m_memConfigFileName;
   std::string m_configFilesPath;
