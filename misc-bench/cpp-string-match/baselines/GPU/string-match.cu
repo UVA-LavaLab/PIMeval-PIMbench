@@ -85,8 +85,8 @@ struct Params input_params(int argc, char **argv)
  */
 __global__ void string_match(char* haystack, size_t haystack_len, char* needle, size_t needle_len, uint8_t* matches) {
   size_t idx = blockIdx.x*blockDim.x + threadIdx.x;
-  matches[idx] = 1;
   if (idx < haystack_len - needle_len + 1) {
+    matches[idx] = 1;
     for (int i = 0; i < needle_len; ++i) {
       if (haystack[idx + i] != needle[i]) {
           matches[idx] = 0;
@@ -182,12 +182,12 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  // cuda_error = cudaMemset(gpu_matches, 0, matches_sz);
+  cuda_error = cudaMemset(gpu_matches, 0, matches_sz);
 
-  // if(cuda_error != cudaSuccess) {
-  //   std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << "\n";
-  //   exit(1);
-  // }
+  if(cuda_error != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << "\n";
+    exit(1);
+  }
 
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
     {
       if (matches[i] != matches_cpu[i])
       {
-        std::cout << "Wrong answer: " << matches[i] << " (expected " << matches_cpu[i] << "), at index: " << i << std::endl;
+        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), at index: " << i << std::endl;
         is_correct = false;
       }
     }
