@@ -34,7 +34,7 @@ enum PimDeviceEnum {
 
 /**
  * @enum PimDeviceProtocol
- * @brief Enum representing the different memory protocols.
+ * @brief Enum representing different memory protocols.
  *
  * @var PIM_DEVICE_PROTOCOL_DDR
  * Standard DDR protocol. Typically used in general-purpose memory systems.

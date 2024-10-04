@@ -1,5 +1,5 @@
-// File: pimParamsDram.h
-// PIMeval Simulator - DRAM parameters
+// File: pimParamsDDRDram.h
+// PIMeval Simulator - DDR DRAM parameters
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include "pimParamsDram.h"
 
-//! @class  pimParamsDram
+//! @class  pimParamsDDRDram
 //! @brief  DRAM parameters (DRAMsim3 compatible)
 class pimParamsDDRDram : public pimParamsDram
 {
