@@ -30,8 +30,6 @@ pimDevice::pimDevice()
 //! @brief  pimDevice dtor
 pimDevice::~pimDevice()
 {
-  delete m_resMgr;
-  m_resMgr = nullptr;
 }
 
 //! @brief  Adjust config for modeling different simulation target with same inputs
@@ -195,7 +193,10 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
     return false;
   }
 
-  m_resMgr = new pimResMgr(this);
+  m_resMgr = std::make_unique<pimResMgr>(this);
+  const pimParamsDram& paramsDram = pimSim::get()->getParamsDram(); // created before pimDevice ctor
+  pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
+  m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
 
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
 
@@ -286,7 +287,10 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
     return false;
   }
 
-  m_resMgr = new pimResMgr(this);
+  m_resMgr = std::make_unique<pimResMgr>(this);
+  const pimParamsDram& paramsDram = pimSim::get()->getParamsDram(); // created before pimDevice ctor
+  pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
+  m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
   m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
@@ -357,21 +361,6 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     }
   }
   return true;
-}
-
-//! @brief  Uninit pim device
-void
-pimDevice::uninit()
-{
-  m_cores.clear();
-  delete m_resMgr;
-  m_resMgr = nullptr;
-  m_deviceType = PIM_DEVICE_NONE;
-  m_numCores = 0;
-  m_numRows = 0;
-  m_numCols = 0;
-  m_isValid = false;
-  m_isInit = false;
 }
 
 //! @brief  Alloc a PIM object
