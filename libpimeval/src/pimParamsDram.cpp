@@ -68,7 +68,7 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
   std::string deviceProtocol = params["protocol"];
 
   // Instantiate the appropriate subclass based on the protocol
-  if (deviceProtocol == "DDR3" || deviceProtocol == "DDR4" || deviceProtocol == "DDR5" || deviceProtocol == "LPDDR4")
+  if (deviceProtocol == "DDR3" || deviceProtocol == "DDR4" || deviceProtocol == "DDR5")
   {
     return std::make_unique<pimParamsDDRDram>(params);
   }
