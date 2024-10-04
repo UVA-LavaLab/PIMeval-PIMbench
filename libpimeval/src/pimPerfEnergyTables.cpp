@@ -268,6 +268,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::SUB,          { 1331,  685, 1687 } },
       { PimCmdEnum::MUL,          { 1852, 1000, 3054 } },
       { PimCmdEnum::DIV,          { 2744, 1458, 4187 } },
+      { PimCmdEnum::MUL_SCALAR,   { 1852, 1000, 3054 } },
     }}
   }},
   { PIM_DEVICE_BITSIMD_V_AP, {
@@ -524,6 +525,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::SUB,          { 1597,  822, 2024 } },
       { PimCmdEnum::MUL,          { 2222, 1200, 3664 } },
       { PimCmdEnum::DIV,          { 3292, 1749, 5024 } },
+      { PimCmdEnum::MUL_SCALAR,   { 1852, 1000, 3054 } },
     }}
   }},
 };
