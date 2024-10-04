@@ -7,6 +7,7 @@
 #include "pimParamsDram.h"
 #include "pimUtils.h"
 #include "pimParamsDDRDram.h"
+#include "pimParamsLPDDRDram.h"
 #include <sstream>
 #include <string>
 #include <algorithm>
@@ -20,6 +21,10 @@ std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum devic
   if (deviceProtocol == PIM_DEVICE_PROTOCOL_DDR || deviceProtocol == PIM_DEVICE_PROTOCOL_LPDDR)
   {
     return std::make_unique<pimParamsDDRDram>();
+  }
+  else if (deviceProtocol == PIM_DEVICE_PROTOCOL_LPDDR)
+  {
+    return std::make_unique<pimParamsLPDDRDram>();
   }
   else
   {
@@ -66,6 +71,10 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
   if (deviceProtocol == "DDR3" || deviceProtocol == "DDR4" || deviceProtocol == "DDR5" || deviceProtocol == "LPDDR4")
   {
     return std::make_unique<pimParamsDDRDram>(params);
+  }
+  if (deviceProtocol == "LPDDR3" || deviceProtocol == "LPDDR4")
+  {
+    return std::make_unique<pimParamsLPDDRDram>(params);
   }
   else
   {
