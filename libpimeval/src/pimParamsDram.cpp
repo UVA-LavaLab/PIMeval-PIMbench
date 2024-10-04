@@ -34,7 +34,7 @@ std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum devic
 }
 
 // Static factory method to create appropriate subclass based on config file
-std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string &config)
+std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string& config)
 {
   std::istringstream configStream(config);
   std::string line;
