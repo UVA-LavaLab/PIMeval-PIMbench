@@ -23,11 +23,12 @@ std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum devic
   }
   else
   {
-    throw std::invalid_argument("Unknown protocol");
+    std::string errorMessage("PIM-Error: Inavalid DRAM protocol parameter.\n");
+    throw std::invalid_argument(errorMessage);
   }
 }
 
-// Static factory method to create appropriate subclass based on config string
+// Static factory method to create appropriate subclass based on config file
 std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string &config)
 {
   std::istringstream configStream(config);
@@ -51,11 +52,11 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
       params[pimUtils::trim(key)] = pimUtils::trim(value); // Store in params map
     }
   }
-
   // Check if the "protocol" key exists
   if (params.find("protocol") == params.end())
   {
-    throw std::invalid_argument("Missing protocol key in config file.");
+    std::string errorMessage("PIM-Error: Missing DRAM protocol parameter.\n");
+    throw std::invalid_argument(errorMessage);
   }
 
   // Extract protocol from params
