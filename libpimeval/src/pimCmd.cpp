@@ -525,7 +525,7 @@ pimCmdFunc1::computeRegion(unsigned index)
       else {
         float floatOperand = getOperand(operandBits, dataType);
         float result = 0.0;
-        if(!computeResult(floatOperand, m_cmdType, (float)m_scalerValue, result, bitsPerElementSrc)) return false;
+        if(!computeResultFP(floatOperand, m_cmdType, (float)m_scalerValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
       }
     }
