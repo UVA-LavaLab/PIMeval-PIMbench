@@ -11,25 +11,27 @@
 # STEP 1: Collect PIMeval functional simulation outputs of different
 #         PIM architectures into result_local.txt
 
-LOCAL="result-local.txt"
+# Get the location of this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCAL="$SCRIPT_DIR/result-local.txt"
+GOLDEN="$SCRIPT_DIR/result-golden.txt"
 
 echo "##################################" | tee $LOCAL
 echo "PIMeval Functional Testing Results" | tee -a $LOCAL
 echo "##################################" | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_BITSIMD_V_AP
-./test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_FULCRUM
-./test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_BANK_LEVEL
-./test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
 
 
 # STEP 2: Compare result_local.txt with result_golden.txt
 #         Catch any differences between the two
-GOLDEN="result-golden.txt"
 
 if diff "$GOLDEN" "$LOCAL" > /dev/null; then
     echo
