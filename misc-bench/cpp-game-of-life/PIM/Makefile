@@ -1,4 +1,4 @@
-# Makefile: C++ version of filter by key 
+# Makefile: C++ version of game of life
 # Copyright (c) 2024 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
@@ -12,13 +12,13 @@ ifeq ($(USE_OPENMP),1)
 	CXXFLAGS += -fopenmp
 endif
 
-EXEC := filter.out
-SRCS := $(wildcard *.cpp) 
+EXEC := game-of-life.out
+SRC := game-of-life.cpp
 
 debug perf dramsim3_integ: $(EXEC)
 
-$(EXEC): $(SRCS) $(DEPS)
-	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
+$(EXEC): $(SRC) $(DEPS)
+	$(CXX) $< $(CXXFLAGS) -o $@
 
 clean:
 	rm -rf $(EXEC) *.dSYM
