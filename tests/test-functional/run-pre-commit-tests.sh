@@ -4,6 +4,9 @@
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 
+# README for PIMeval developers
+# Before committing code to libpimeval/, please run this function testing
+# script to catch any PIMeval simulator behavior changes.
 
 # STEP 1: Collect PIMeval functional simulation outputs of different
 #         PIM architectures into result_local.txt
