@@ -12,7 +12,10 @@
 #include <time.h> 
 #include <algorithm>
 #include <chrono>
+#if defined(_OPENMP)
 #include <omp.h>
+#endif
+
 
 #define MY_RANGE 100
 
