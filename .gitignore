@@ -1,6 +1,7 @@
 # Project files
 libpimeval/build/
 libpimeval/lib/
+result-local.txt
 
 # LSP
 compile_commands.json
