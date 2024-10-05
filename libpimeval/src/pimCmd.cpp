@@ -522,7 +522,7 @@ pimCmdFunc1::computeRegion(unsigned index)
         if(!computeResult(unsignedOperand, m_cmdType, m_scalerValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
       }
-      else {
+      else if (!isSigned){
         float floatOperand = getOperand(operandBits, dataType);
         float result = 0.0;
         if(!computeResultFP(floatOperand, m_cmdType, (float)m_scalerValue, result, bitsPerElementSrc)) return false;
