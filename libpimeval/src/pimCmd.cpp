@@ -615,7 +615,7 @@ pimCmdFunc2::computeRegion(unsigned index)
     auto locSrc2 = src2Region.locateIthElemInRegion(j);
     auto locDest = destRegion.locateIthElemInRegion(j);
 
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64 || dataType == PIM_FP32) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
       // The following if-else block is the perfect example of where a Template would have been much more cleaner and efficient and less error prone
@@ -681,12 +681,12 @@ pimCmdFunc2::computeRegion(unsigned index)
         }
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementdest);
       }
-    } else if (dataType == PIM_FP32) { // I saw PIM_FP32 here but not in the if block above.
+    } else if (dataType == PIM_FP32) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
       float operand1 = *reinterpret_cast<float *>(&operandBits1);
       float operand2 = *reinterpret_cast<float *>(&operandBits2);
-      float result = 0;
+      float result = 0.0;
       switch (m_cmdType) {
       case PimCmdEnum::ADD: result = operand1 + operand2; break;
       case PimCmdEnum::SUB: result = operand1 - operand2; break;
