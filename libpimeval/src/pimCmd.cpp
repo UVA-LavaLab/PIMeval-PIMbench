@@ -522,11 +522,11 @@ pimCmdFunc1::computeRegion(unsigned index)
         if(!computeResult(unsignedOperand, m_cmdType, m_scalerValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
       }
-      else if (!isSigned){
+      else if (dataType == PIM_FP32){
         float floatOperand = getOperand(operandBits, dataType);
         float result = 0.0;
         if(!computeResultFP(floatOperand, m_cmdType, (float)m_scalerValue, result, bitsPerElementSrc)) return false;
-        setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
+        setBits(core, isVLayout, locDest.first, locDest.second, *reinterpret_cast<uint64_t*>(&result), bitsPerElementDest);
       }
     }
     else {
@@ -684,8 +684,8 @@ pimCmdFunc2::computeRegion(unsigned index)
     } else if (dataType == PIM_FP32) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
-      float operand1 = *reinterpret_cast<float *>(&operandBits1);
-      float operand2 = *reinterpret_cast<float *>(&operandBits2);
+      float operand1 = getOperand(operandBits1, dataType);
+      float operand2 = getOperand(operandBits2, dataType);
       float result = 0.0;
       switch (m_cmdType) {
       case PimCmdEnum::ADD: result = operand1 + operand2; break;
@@ -702,8 +702,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", static_cast<int>(m_cmdType));
         assert(0);
       }
-      setBits(core, isVLayout, locDest.first, locDest.second,
-             *reinterpret_cast<uint64_t *>(&result), bitsPerElementdest);
+      setBits(core, isVLayout, locDest.first, locDest.second, *reinterpret_cast<uint64_t *>(&result), bitsPerElementdest);
     } else {
       assert(0); // todo: data type
     }
