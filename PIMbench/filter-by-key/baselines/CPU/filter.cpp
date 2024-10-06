@@ -115,7 +115,6 @@ int main(int argc, char **argv){
     uint64_t outSize = selectedNum;
     auto end = std::chrono::high_resolution_clock::now();
     elapsedTime = (end - start);
-    // cout << "buffer_in_CPU = " << buffer_in_CPU << endl;
 
     if(p.shouldVerify == true){
       cout << outSize <<" out of " << inVectorSize << " selected" << endl;
