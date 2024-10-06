@@ -103,7 +103,6 @@ int main(int argc, char **argv){
     for (uint64_t j = 0; j < dummyVectorSize; j++){
       dummyVector1[j] += rand() % MY_RANGE;
     }
-    // cout << "Cache flushed!" << endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedTime;
