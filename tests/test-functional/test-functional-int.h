@@ -15,6 +15,7 @@
 #include <map>
 #include <memory>
 #include <limits>
+#include <bitset>
 #include <type_traits>
 #include <cstdlib>
 
