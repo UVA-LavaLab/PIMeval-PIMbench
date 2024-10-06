@@ -8,10 +8,11 @@ include ${PROJ_ROOT}/Makefile.common
 
 EXEC := test-functional.out
 SRCS := $(wildcard *.cpp) 
+HEADERS := $(wildcard *.h) 
 
 debug perf dramsim3_integ: $(EXEC)
 
-$(EXEC): $(SRCS) $(DEPS)
+$(EXEC): $(SRCS) $(DEPS) $(HEADERS)
 	$(CXX) $(SRCS) $(CXXFLAGS) -o $@
 
 clean:
