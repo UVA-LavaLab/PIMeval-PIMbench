@@ -14,8 +14,6 @@
 #include <chrono>
 #include <bitset>
 
-#include <immintrin.h>
-
 #define MY_RANGE 1000
 
 using namespace std;
@@ -188,7 +186,6 @@ int main(int argc, char **argv){
 
     start_cpu = std::chrono::high_resolution_clock::now();
     for (uint64_t i = 0; i < inVectorSize; i+=8){
-      _mm_prefetch((char *)&bitMapTemp[i + 512], _MM_HINT_T0);
       if(bitMapTemp[i + 0] == true){
         buffer_in_CPU1 += inVector[i + 0];
         selectedNum1++;
