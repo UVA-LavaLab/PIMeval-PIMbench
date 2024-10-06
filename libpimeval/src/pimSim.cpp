@@ -71,15 +71,15 @@ pimSim::init(const std::string& simConfigFileConetnt)
         if (!success) {
           return false;
         }
-        m_paramsDram = std::make_unique<pimParamsDram>(fileContent);
+        m_paramsDram = pimParamsDram::createFromConfig(fileContent);
       } else {
-        m_paramsDram = std::make_unique<pimParamsDram>();
+        m_paramsDram = pimParamsDram::create(PIM_DEVICE_PROTOCOL_DDR);
       }
 
       m_statsMgr = std::make_unique<pimStatsMgr>();
       m_initCalled = true;
     } else {
-      m_paramsDram = std::make_unique<pimParamsDram>();
+      m_paramsDram = pimParamsDram::create(PIM_DEVICE_PROTOCOL_DDR);
       m_statsMgr = std::make_unique<pimStatsMgr>();
       m_initCalled = true;
     }
