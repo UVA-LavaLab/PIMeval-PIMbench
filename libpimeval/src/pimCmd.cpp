@@ -980,17 +980,17 @@ pimCmdRotate::computeRegion(unsigned index)
   // perform rotation
   if (m_cmdType == PimCmdEnum::ROTATE_ELEM_R || m_cmdType == PimCmdEnum::SHIFT_ELEM_R) {
     m_regionBoundary[index] = regionVector[numElementsInRegion - 1];
-    unsigned carry = 0;
+    uint64_t carry = 0;
     for (unsigned j = 0; j < numElementsInRegion; ++j) {
-      int temp = regionVector[j];
+      uint64_t temp = regionVector[j];
       regionVector[j] = carry;
       carry = temp;
     }
   } else if (m_cmdType == PimCmdEnum::ROTATE_ELEM_L || m_cmdType == PimCmdEnum::SHIFT_ELEM_L) {
     m_regionBoundary[index] = regionVector[0];
-    unsigned carry = 0;
+    uint64_t carry = 0;
     for (int j = numElementsInRegion - 1; j >= 0; --j) {
-      unsigned temp = regionVector[j];
+      uint64_t temp = regionVector[j];
       regionVector[j] = carry;
       carry = temp;
     }

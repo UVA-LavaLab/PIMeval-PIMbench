@@ -32,6 +32,22 @@ enum PimDeviceEnum {
   PIM_DEVICE_BANK_LEVEL,
 };
 
+/**
+ * @enum PimDeviceProtocol
+ * @brief Enum representing different memory protocols.
+ *
+ * @var PIM_DEVICE_PROTOCOL_DDR
+ * Standard DDR protocol. Typically used in general-purpose memory systems.
+ *
+ * @var PIM_DEVICE_PROTOCOL_LPDDR
+ * Low Power DDR (LPDDR) protocol.
+ *
+*/
+enum PimDeviceProtocolEnum {
+  PIM_DEVICE_PROTOCOL_DDR = 0,
+  PIM_DEVICE_PROTOCOL_LPDDR,
+};
+
 //! @brief  PIM allocation types
 enum PimAllocEnum {
   PIM_ALLOC_AUTO = 0, // Auto determine vertical or horizontal layout based on device type
