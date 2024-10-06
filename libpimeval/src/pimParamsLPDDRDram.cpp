@@ -155,3 +155,4 @@ pimParamsLPDDRDram::pimParamsLPDDRDram(std::unordered_map<std::string, std::stri
     throw std::invalid_argument(errorMessage);
   }
 }
+

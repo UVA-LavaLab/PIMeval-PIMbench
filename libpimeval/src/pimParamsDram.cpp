@@ -81,3 +81,4 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
     throw std::invalid_argument("Unknown protocol: " + deviceProtocol);
   }
 }
+
