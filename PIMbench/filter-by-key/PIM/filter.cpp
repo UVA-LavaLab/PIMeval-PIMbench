@@ -12,7 +12,6 @@
 #include <time.h> 
 #include <algorithm>
 #include <chrono>
-#include <omp.h>
 #include <bitset>
 
 #include <immintrin.h>
