@@ -47,7 +47,7 @@ namespace pimUtils
   T typeCast(const void* inputOperand) {
     T operandValue = 0;  // Ensure operandValue is initialized
     T temp;              // Temporary variable of type T
-
+assert(inputOperand != nullptr); 
     // Copy the specified number of bytes into temp
     memcpy(&temp, inputOperand, sizeof(T));
 
