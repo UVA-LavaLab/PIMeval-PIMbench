@@ -702,7 +702,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", static_cast<int>(m_cmdType));
         assert(0);
       }
-      setBits(core, isVLayout, locDest.first, locDest.second, *reinterpret_cast<uint64_t *>(&result), bitsPerElementdest);
+      setBits(core, isVLayout, locDest.first, locDest.second, *reinterpret_cast<uint64_t*>(&result), bitsPerElementdest);
     } else {
       assert(0); // todo: data type
     }
