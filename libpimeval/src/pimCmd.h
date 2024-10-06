@@ -124,38 +124,20 @@ protected:
   virtual bool updateStats() const { return false; }
   bool computeAllRegions(unsigned numRegions);
 
-  //! @brief  Utility: Get a value from a region
+  //! @brief  Utility: Get bits of an element from a region. The bits are stored as uint64_t without sign extension
   inline uint64_t getBits(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned numBits) const
   {
     return isVLayout ? core.getBitsV(rowLoc, colLoc, numBits) : core.getBitsH(rowLoc, colLoc, numBits);
   }
 
-  //! @brief  Utility: Set a value to a region
-  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t val, unsigned numBits) const
+  //! @brief  Utility: Set bits of an element to a region
+  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t bits, unsigned numBits) const
   {
     if (isVLayout) {
-      core.setBitsV(rowLoc, colLoc, val, numBits);
+      core.setBitsV(rowLoc, colLoc, bits, numBits);
     } else {
-      core.setBitsH(rowLoc, colLoc, val, numBits);
+      core.setBitsH(rowLoc, colLoc, bits, numBits);
     }
-  }
-
-  //! @brief helper function to get the operand based on data type
-  inline uint64_t getOperand(uint64_t operandBits, PimDataType dataType) {
-    uint64_t operandValue = 0;
-    switch (dataType) {
-    case PIM_INT8: operandValue =  *reinterpret_cast<int8_t*>(&operandBits); break;
-    case PIM_INT16: operandValue =  *reinterpret_cast<int16_t*>(&operandBits); break;
-    case PIM_INT32: operandValue =  *reinterpret_cast<int32_t*>(&operandBits); break;
-    case PIM_INT64: operandValue =  *reinterpret_cast<int64_t*>(&operandBits); break;
-    case PIM_UINT8: operandValue =  *reinterpret_cast<uint8_t*>(&operandBits); break;
-    case PIM_UINT16: operandValue =  *reinterpret_cast<uint16_t*>(&operandBits); break;
-    case PIM_UINT32: operandValue =  *reinterpret_cast<uint32_t*>(&operandBits); break;
-    case PIM_UINT64: operandValue =  *reinterpret_cast<uint64_t*>(&operandBits); break;
-    default:
-        std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
-    }
-    return operandValue;
   }
 
   PimCmdEnum m_cmdType;
@@ -324,11 +306,11 @@ protected:
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements
-template <typename T> class pimCmdBroadcast : public pimCmd
+class pimCmdBroadcast : public pimCmd
 {
 public:
-  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, T val)
-    : pimCmd(cmdType), m_dest(dest), m_val(val)
+  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, uint64_t signExtBits)
+    : pimCmd(cmdType), m_dest(dest), m_signExtBits(signExtBits)
   {
     assert(cmdType == PimCmdEnum::BROADCAST);
   }
@@ -339,7 +321,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
-  T m_val;
+  uint64_t m_signExtBits;
 };
 
 //! @class  pimCmdRotate

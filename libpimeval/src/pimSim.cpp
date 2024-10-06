@@ -468,7 +468,8 @@ pimSim::pimBroadcast(PimObjId dest, T value)
 {
   pimPerfMon perfMon("pimBroadcast");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast<T>>(PimCmdEnum::BROADCAST, dest, value);
+  uint64_t signExtBits = pimUtils::castTypeToBits(value);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdBroadcast>(PimCmdEnum::BROADCAST, dest, signExtBits);
   return m_device->executeCmd(std::move(cmd));
 }
 
