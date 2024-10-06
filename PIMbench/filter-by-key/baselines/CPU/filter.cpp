@@ -31,7 +31,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./filter [options]"
+          "\nUsage:  ./filter.out [options]"
           "\n"
           "\n    -n    database size (default=65536 elements)"
           "\n    -k    value of key (default = 1)"
