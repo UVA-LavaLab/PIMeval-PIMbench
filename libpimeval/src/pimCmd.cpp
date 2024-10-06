@@ -44,19 +44,19 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::EQ, "eq" },
     { PimCmdEnum::MIN, "min" },
     { PimCmdEnum::MAX, "max" },
-    { PimCmdEnum::ADD_SCALAR, "add_scaler" },
-    { PimCmdEnum::SUB_SCALAR, "sub_scaler" },
-    { PimCmdEnum::MUL_SCALAR, "mul_scaler" },
-    { PimCmdEnum::DIV_SCALAR, "div_scaler" },
-    { PimCmdEnum::AND_SCALAR, "and_scaler" },
-    { PimCmdEnum::OR_SCALAR, "or_scaler" },
-    { PimCmdEnum::XOR_SCALAR, "xor_scaler" },
-    { PimCmdEnum::XNOR_SCALAR, "xnor_scaler" },
-    { PimCmdEnum::GT_SCALAR, "gt_scaler" },
-    { PimCmdEnum::LT_SCALAR, "lt_scaler" },
-    { PimCmdEnum::EQ_SCALAR, "eq_scaler" },
-    { PimCmdEnum::MIN_SCALAR, "min_scaler" },
-    { PimCmdEnum::MAX_SCALAR, "max_scaler" },
+    { PimCmdEnum::ADD_SCALAR, "add_scalar" },
+    { PimCmdEnum::SUB_SCALAR, "sub_scalar" },
+    { PimCmdEnum::MUL_SCALAR, "mul_scalar" },
+    { PimCmdEnum::DIV_SCALAR, "div_scalar" },
+    { PimCmdEnum::AND_SCALAR, "and_scalar" },
+    { PimCmdEnum::OR_SCALAR, "or_scalar" },
+    { PimCmdEnum::XOR_SCALAR, "xor_scalar" },
+    { PimCmdEnum::XNOR_SCALAR, "xnor_scalar" },
+    { PimCmdEnum::GT_SCALAR, "gt_scalar" },
+    { PimCmdEnum::LT_SCALAR, "lt_scalar" },
+    { PimCmdEnum::EQ_SCALAR, "eq_scalar" },
+    { PimCmdEnum::MIN_SCALAR, "min_scalar" },
+    { PimCmdEnum::MAX_SCALAR, "max_scalar" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::ROTATE_ELEM_R, "rotate_elem_r" },
@@ -514,12 +514,12 @@ pimCmdFunc1::computeRegion(unsigned index)
       if (isSigned) {
         int64_t signedOperand = pimUtils::signExt(operandBits, dataType);
         int64_t result = 0;
-        if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalerValue, result, bitsPerElementSrc)) return false;
+        if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalarValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, pimUtils::castTypeToBits(result), bitsPerElementDest);
       } else {
         uint64_t unsignedOperand = operandBits;
         uint64_t result = 0;
-        if(!computeResult(unsignedOperand, m_cmdType, m_scalerValue, result, bitsPerElementSrc)) return false;
+        if(!computeResult(unsignedOperand, m_cmdType, m_scalarValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
       }
     } else {
@@ -636,7 +636,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
         case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalerValue) + operand2; break;
+        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
         default:
           std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
           assert(0);
@@ -666,7 +666,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
         case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalerValue) + operand2; break;
+        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
         default:
           std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
           assert(0);
