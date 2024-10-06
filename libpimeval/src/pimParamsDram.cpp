@@ -8,6 +8,7 @@
 #include "pimUtils.h"
 #include "pimParamsDDRDram.h"
 #include "pimParamsLPDDRDram.h"
+#include "pimParamsHBMDram.h"
 #include <sstream>
 #include <string>
 #include <algorithm>
@@ -25,6 +26,10 @@ std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum devic
   else if (deviceProtocol == PIM_DEVICE_PROTOCOL_LPDDR)
   {
     return std::make_unique<pimParamsLPDDRDram>();
+  }
+  else if (deviceProtocol == PIM_DEVICE_PROTOCOL_HBM)
+  {
+    return std::make_unique<pimParamsHBMDram>();
   }
   else
   {
@@ -57,6 +62,7 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
       params[pimUtils::trim(key)] = pimUtils::trim(value); // Store in params map
     }
   }
+
   // Check if the "protocol" key exists
   if (params.find("protocol") == params.end())
   {
@@ -71,10 +77,10 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
   if (deviceProtocol == "DDR3" || deviceProtocol == "DDR4" || deviceProtocol == "DDR5")
   {
     return std::make_unique<pimParamsDDRDram>(params);
-  }
-  if (deviceProtocol == "LPDDR3" || deviceProtocol == "LPDDR4")
-  {
+  } else if (deviceProtocol == "LPDDR3" || deviceProtocol == "LPDDR4") {
     return std::make_unique<pimParamsLPDDRDram>(params);
+  } else if (deviceProtocol == "HBM" || deviceProtocol == "HBM2") {
+    return std::make_unique<pimParamsHBMDram>(params);
   }
   else
   {
