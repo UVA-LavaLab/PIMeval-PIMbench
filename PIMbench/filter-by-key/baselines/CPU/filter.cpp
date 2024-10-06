@@ -20,15 +20,6 @@ using namespace std;
  * @brief cpu database filtering kernel
  */
 
-// void filterByKey(std::vector<Record> &Vector, uint64_t vector_size, int key, std::vector<bool> & bitMap)
-// {
-// #pragma omp parallel for
-//   for (uint64_t i = 0; i < vector_size; ++i)
-//   {
-//     if (key > Vector[i].value1 && key > Vector[i].value2)
-//       bitMap[i] = true;
-//   }
-// }
 
 typedef struct Params
 {
