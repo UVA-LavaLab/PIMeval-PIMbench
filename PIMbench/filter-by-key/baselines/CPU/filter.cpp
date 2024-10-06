@@ -15,10 +15,6 @@
 
 using namespace std;
 
-// struct Record {
-//   int32_t value1;
-//   int32_t value2;
-// };
 
 /**
  * @brief cpu database filtering kernel
