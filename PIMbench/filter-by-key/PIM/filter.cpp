@@ -21,7 +21,6 @@
 
 using namespace std;
 
-// std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
 typedef struct Params
 {
