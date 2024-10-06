@@ -168,7 +168,6 @@ int main(int argc, char **argv){
       }
     }
 
-    // // uint64_t outSize = selectedNum;
     uint64_t buffer_in_CPU = 0;
     uint64_t buffer_in_CPU1 = 0;
     uint64_t buffer_in_CPU2 = 0;
