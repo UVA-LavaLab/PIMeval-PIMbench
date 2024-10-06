@@ -102,7 +102,6 @@ int main(int argc, char **argv){
         return 1;
     }
     bool* bitMapTemp = new bool[inVectorSize];
-    // vector<bool> bitMapTemp(inVectorSize);
     vector<uint64_t> inVector(inVectorSize);
 
     std::cout << "DB element size: " << inVectorSize << std::endl;
