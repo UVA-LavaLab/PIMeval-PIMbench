@@ -23,11 +23,11 @@ public:
   int getDeviceWidth() const override { return m_deviceWidth;}
   int getBurstLength() const override { return m_BL;}
   int getNumChipsPerRank() const override {return m_busWidth / m_deviceWidth; }
-  float getNsRowRead() const override { return m_tCK * (m_tRCD + m_tRP); }
-  float getNsRowWrite() const override { return m_tCK * (m_tWR + m_tRP + m_tRCD); }
-  float getNsTCCD_S() const override { return m_tCK * m_tCCD_S; }
-  float getNsTCAS() const override { return m_tCK * m_CL; }
-  float getNsAAP() const override { return m_tCK * (m_tRAS + m_tRP); }
+  double getNsRowRead() const override { return m_tCK * (m_tRCD + m_tRP); }
+  double getNsRowWrite() const override { return m_tCK * (m_tWR + m_tRP + m_tRCD); }
+  double getNsTCCD_S() const override { return m_tCK * m_tCCD_S; }
+  double getNsTCAS() const override { return m_tCK * m_CL; }
+  double getNsAAP() const override { return m_tCK * (m_tRAS + m_tRP); }
   double getTypicalRankBW() const override { return m_typicalRankBW; }
   double getPjRowRead() const override { return m_VDD * (m_IDD0 * (m_tRAS + m_tRP) - (m_IDD3N * m_tRAS + m_IDD2N * m_tRP)); } // Energy for 1 Activate command (and the correspound precharge command) in one subarray of one bank of one chip
   double getPjLogic() const override { return 0.007 * m_tCK * m_tCCD_S ; } // 0.007 mW is the total power per BSLU, 0.007 * m_tCK * m_tCCD_S is the energy of one BSLU during one logic operation in pJ.
@@ -47,7 +47,7 @@ private:
   int m_BL = 0;
 
   // [timing]
-  float m_tCK = 0.0;
+  double m_tCK = 0.0;
   int m_AL = 0;
   int m_CL = 0;
   int m_CWL = 0;
@@ -77,9 +77,9 @@ private:
   int m_tRTRS = 0;
 
   // [power]
-  float m_VDD = 0.0;
+  double m_VDD = 0.0;
   int m_IDD0 = 0;
-  float m_IPP0 = 0;
+  double m_IPP0 = 0;
   int m_IDD2P = 0;
   int m_IDD2N = 0;
   int m_IDD3P = 0;
