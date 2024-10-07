@@ -86,9 +86,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       //{ 11, "pimEQ"                  }, // TODO
       //{ 12, "pimMin"                 }, // TODO
       //{ 13, "pimMax"                 }, // TODO
-      //{ 14, "pimAddScalar"           }, // TODO
-      //{ 15, "pimSubScalar"           }, // TODO
-      //{ 16, "pimMulScalar"           }, // TODO
+      { 14, "pimAddScalar"           }, // TODO
+      { 15, "pimSubScalar"           }, // TODO
+      { 16, "pimMulScalar"           }, // TODO
       //{ 17, "pimDivScalar"           }, // TODO
       //{ 18, "pimAndScalar"           }, // not supported
       //{ 19, "pimOrScalar"            }, // not supported
