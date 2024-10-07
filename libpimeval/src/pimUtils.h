@@ -19,6 +19,7 @@
 #include <cctype>
 #include <locale>
 #include <unordered_map>
+#include <cstring>
 
 namespace pimUtils
 {
@@ -41,6 +42,20 @@ namespace pimUtils
   bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
+
+  template<typename T> 
+  T typeCast(const void* inputOperand) {
+    T operandValue = 0;  // Ensure operandValue is initialized
+    T temp;              // Temporary variable of type T
+assert(inputOperand != nullptr); 
+    // Copy the specified number of bytes into temp
+    memcpy(&temp, inputOperand, sizeof(T));
+
+    // Assign the value to operandValue (handles sign extension if T is signed)
+    operandValue = static_cast<T>(temp);
+
+    return operandValue;
+  }
 
   const std::unordered_map<PimDeviceEnum, std::string> enumToStrMap = {
       {PIM_DEVICE_NONE, "PIM_DEVICE_NONE"},
