@@ -1,6 +1,6 @@
-# Copy
+# Game of Life
 
-The Game of Life is a zero player game, where a board of cells progress through various states of being alive or dead at each step. This program simulates a single state transition. The rules for state transition are described below:
+The Game of Life is a zero player game, where a board of cells progress through various states of being alive or dead at each step. This program simulates a single state transition. The rules for state transitions are described below:
 
 - Cells are live in the next state if either:
   - They are dead, and have exactly 3 live neighbors

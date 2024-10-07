@@ -9,26 +9,23 @@
 #include <vector>
 #include <getopt.h>
 #include <cstdlib>
-#include <time.h>
+#include <time.h> 
 #include <algorithm>
 #include <chrono>
-#if defined(_OPENMP)
-#include <omp.h>
-#endif
+#include <bitset>
 
-#define MY_RANGE 100
+#define MY_RANGE 1000
 
 using namespace std;
 
-std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
 typedef struct Params
 {
-  uint64_t inVectorSize;
-  int key;
-  char *configFile;
-  char *inputFile;
-  bool shouldVerify;
+    uint64_t inVectorSize;
+    uint64_t key;
+    char *configFile;
+    char *inputFile;
+    bool shouldVerify;
 } Params;
 
 void usage()
@@ -48,7 +45,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.inVectorSize = 2048;
-  p.key = 1;
+  p.key = 10;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = true;
@@ -86,160 +83,149 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void filterByKey(std::vector<int> &Vector, uint64_t vector_size, int key, std::vector<int> &bitMap)
-{
-  for (uint64_t i = 0; i < vector_size; ++i)
-  {
-    if (key > Vector[i])
-      bitMap[i] = true;
-  }
-}
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
 
-  struct Params p = getInputParams(argc, argv);
-  std::cout << "PIM test: database-filtering" << std::endl;
-  uint64_t inVectorSize;
-  int key;
+    struct Params p = getInputParams(argc, argv);
+    std::cout << "PIM test: database-filtering" << std::endl;
+    uint64_t inVectorSize;
+    int key;
+    
+    if (p.inputFile == nullptr){
+        inVectorSize = p.inVectorSize;
+        key = p.key;
+    }
+    else{
+        std::cout << "Reading from input file is not implemented yet." << std::endl;
+        return 1;
+    }
+    bool* bitMapTemp = new bool[inVectorSize];
+    vector<uint64_t> inVector(inVectorSize);
 
-  if (p.inputFile == nullptr)
-  {
-    inVectorSize = p.inVectorSize;
-    key = p.key;
-  }
-  else
-  {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
-  }
+    std::cout << "DB element size: " << inVectorSize << std::endl;
 
-  if (!createDevice(p.configFile))
-  {
-    return 1;
-  }
+    srand((unsigned)time(NULL));
+    for (uint64_t i = 0; i < inVectorSize; i++){
+        inVector[i] = rand() % MY_RANGE;
+    }
 
-  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
+    std::vector<uint64_t> bitMap(inVectorSize, 0);
+    std::vector<int> bitMapHost(inVectorSize, 0);
 
-  vector<int> inVector(inVectorSize);
-  vector<int> outVector;
-  vector<int> outVectorHost;
+    if (!createDevice(p.configFile)){
+        return 1;
+    }
 
-  std::cout << "DB element size: " << inVectorSize << std::endl;
+    //PIM parameters
 
-  // randomly initialize input vector with value between 0 and MY_RANGE
-  srand((unsigned)time(NULL));
-  for (uint64_t i = 0; i < inVectorSize; i++)
-  {
-    inVector[i] = rand() % MY_RANGE;
-  }
+    PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, inVector.size(), PIM_UINT64);
+    if (srcObj1 == -1){
+        std::cout << "Abort" << std::endl;
+        return 1;
+    }
+    PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_UINT64);
+    if (srcObj2 == -1){
+        std::cout << "Abort" << std::endl;
+        return 1;
+    }
 
-  // initialize the vector on the host to hold the output bitmap
-  std::vector<int> bitMap(inVectorSize, 0);
-  std::vector<int> bitMapHost(inVectorSize, 0);
+    PimStatus status = pimCopyHostToDevice((void *)inVector.data(), srcObj1);
+    if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return 1;
+    }
 
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, inVector.size(), PIM_INT32);
-  if (srcObj1 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return 1;
-  }
-  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return 1;
-  }
+    status = pimLTScalar(srcObj1, srcObj2, key);
+    if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return 1;
+    }
 
-  PimStatus status = pimCopyHostToDevice((void *)inVector.data(), srcObj1);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return 1;
-  }
+    status = pimCopyDeviceToHost(srcObj2, (void *)bitMap.data());
+    if (status != PIM_OK){
+      std::cout << "Abort" << std::endl;
+    }
+    pimShowStats();
 
-  status = pimLTScalar(srcObj1, srcObj2, key);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return 1;
-  }
+    pimFree(srcObj1);
+    pimFree(srcObj2);
+    
+    uint64_t dummyVectorSize = 1073741824;
+    vector<int> dummyVector1(dummyVectorSize, 0);
 
-  status = pimCopyDeviceToHost(srcObj2, (void *)bitMap.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-  }
+    auto start_cpu = std::chrono::high_resolution_clock::now();
 
-  auto start_cpu = std::chrono::high_resolution_clock::now();
+    for (uint64_t j = 0; j < dummyVectorSize; j++){
+      dummyVector1[j] += rand() % MY_RANGE;
+    }
+    cout << "Cache flushed!" << endl;
 
-  // select data whose bitmap is '1'
-  // Do parallel reduction with a degree of (32) by creating 32 subarrays and then combining the results in these 32 array serially.
-  uint64_t nThreads = 16;
-  cout << "nThreads = " << nThreads << endl;
-  uint64_t outSubSize = inVectorSize / nThreads;
-  vector<vector<int32_t>> outSubVector(nThreads);
-
-#pragma omp parallel num_threads(nThreads)
-  for (uint64_t i = 0; i < outSubSize; i++)
-  {
-#if defined(_OPENMP)
-    int tid = omp_get_thread_num();
-#else
-    int tid = 0; // Fallback for when OpenMP is not available
-#endif
-    uint64_t index = tid * outSubSize + i;
-    if (index < inVectorSize)
-    {
-      if (bitMap[index] == true)
-      {
-        outSubVector[tid].push_back(inVector[index]);
+    for (uint64_t i = 0; i < inVectorSize; i++){
+      if(bitMap[i] == 1){
+        bitMapTemp[i] = true;
       }
     }
-  }
-  int outSize = 0;
 
-#pragma omp critical
-  for (uint64_t i = 0; i < nThreads; i++)
-  {
-    outSize += outSubVector[i].size();
-  }
-#pragma omp critical
-  for (uint64_t i = 0; i < nThreads; i++)
-  {
-    outVector.insert(outVector.end(), outSubVector[i].begin(), outSubVector[i].end());
-  }
+    uint64_t buffer_in_CPU = 0;
+    uint64_t buffer_in_CPU1 = 0;
+    uint64_t buffer_in_CPU2 = 0;
+    uint64_t buffer_in_CPU3 = 0;
+    uint64_t buffer_in_CPU4 = 0;
+    uint64_t buffer_in_CPU5 = 0;
+    uint64_t buffer_in_CPU6 = 0;
+    uint64_t buffer_in_CPU7 = 0;
+    uint64_t buffer_in_CPU8 = 0;
+    uint64_t selectedNum1 = 0;
+    uint64_t selectedNum2 = 0;
+    uint64_t selectedNum3 = 0;
+    uint64_t selectedNum4 = 0;
+    uint64_t selectedNum5 = 0;
+    uint64_t selectedNum6 = 0;
+    uint64_t selectedNum7 = 0;
+    uint64_t selectedNum8 = 0;
 
-  auto stop_cpu = std::chrono::high_resolution_clock::now();
-  hostElapsedTime += (stop_cpu - start_cpu);
-
-  // run scan on host
-  filterByKey(inVector, inVectorSize, p.key, bitMapHost);
-
-  // select data whose bitmap is '1' on host based on bitmap from host
-  for (uint64_t i = 0; i < inVectorSize; i++)
-  {
-    if (bitMapHost[i] == 1)
-    {
-      outVectorHost.push_back(inVector[i]);
+    start_cpu = std::chrono::high_resolution_clock::now();
+    for (uint64_t i = 0; i < inVectorSize; i+=8){
+      if(bitMapTemp[i + 0] == true){
+        buffer_in_CPU1 += inVector[i + 0];
+        selectedNum1++;
+      }
+      if(bitMapTemp[i + 1] == true){
+        buffer_in_CPU2 += inVector[i + 1];
+        selectedNum2++;
+      }
+      if(bitMapTemp[i + 2] == true){
+        buffer_in_CPU3 += inVector[i + 2];
+        selectedNum3++;
+      }
+      if(bitMapTemp[i + 3] == true){
+        buffer_in_CPU4 += inVector[i + 3];
+        selectedNum4++;
+      }
+      if(bitMapTemp[i + 4] == true){
+        buffer_in_CPU5 += inVector[i + 4];
+        selectedNum5++;
+      }
+      if(bitMapTemp[i + 5] == true){
+        buffer_in_CPU6 += inVector[i + 5];
+        selectedNum6++;
+      }
+      if(bitMapTemp[i + 6] == true){
+        buffer_in_CPU7 += inVector[i + 6];
+        selectedNum7++;
+      }
+      if(bitMapTemp[i + 7] == true){
+        buffer_in_CPU8 += inVector[i + 7];
+        selectedNum8++;
+      }
     }
-  }
-  // !check results and print it like km
-  if (p.shouldVerify)
-  {
-    bool ok = true;
-    if (outVector != outVectorHost)
-    {
-      std::cout << "Wrong answer!" << std::endl;
-      ok = false;
-    }
-    if (ok)
-    {
-      std::cout << "All correct!" << std::endl;
-    }
-  }
-  pimShowStats();
+    uint64_t outSize = selectedNum1 + selectedNum2 + selectedNum3 + selectedNum4 + selectedNum5 + selectedNum6 + selectedNum7 + selectedNum8;
 
-  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
-  return 0;
+    auto stop_cpu = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> hostElapsedTime = (stop_cpu - start_cpu);
+    if (p.shouldVerify){
+        cout << outSize <<" out of " << inVectorSize << " selected" << endl;
+    }
+    cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
+    return 0;
 }

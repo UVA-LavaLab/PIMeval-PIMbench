@@ -18,7 +18,7 @@
 // Static factory method to create appropriate subclass based on protocol enum
 std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum deviceProtocol)
 {
-  if (deviceProtocol == PIM_DEVICE_PROTOCOL_DDR || deviceProtocol == PIM_DEVICE_PROTOCOL_LPDDR)
+  if (deviceProtocol == PIM_DEVICE_PROTOCOL_DDR)
   {
     return std::make_unique<pimParamsDDRDram>();
   }
