@@ -1842,26 +1842,26 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
                                    abs.int8.h :          1       0.002629       0.004276
-                                   add.int8.h :          1       0.029312       0.022244
+                                   add.int8.h :          1       0.029313       0.022244
                             add_scaler.int8.h :          1       0.002629       0.004276
-                                   and.int8.h :          1       0.029312       0.022244
+                                   and.int8.h :          1       0.029313       0.022244
                             and_scaler.int8.h :          1       0.002629       0.004276
                              broadcast.int8.h :          2       0.005086       0.005809
-                                   div.int8.h :          1       0.029312       0.022244
+                                   div.int8.h :          1       0.029313       0.022244
                             div_scaler.int8.h :          1       0.002629       0.004276
-                                    eq.int8.h :          1       0.029312       0.022244
+                                    eq.int8.h :          1       0.029313       0.022244
                              eq_scaler.int8.h :          1       0.002629       0.004276
-                                    gt.int8.h :          1       0.029312       0.022244
+                                    gt.int8.h :          1       0.029313       0.022244
                              gt_scaler.int8.h :          1       0.002629       0.004276
-                                    lt.int8.h :          1       0.029312       0.022244
+                                    lt.int8.h :          1       0.029313       0.022244
                              lt_scaler.int8.h :          1       0.002629       0.004276
-                                   max.int8.h :          1       0.029312       0.022244
+                                   max.int8.h :          1       0.029313       0.022244
                             max_scaler.int8.h :          1       0.002629       0.004276
-                                   min.int8.h :          1       0.029312       0.022244
+                                   min.int8.h :          1       0.029313       0.022244
                             min_scaler.int8.h :          1       0.002629       0.004276
-                                   mul.int8.h :          1       0.029312       0.022244
+                                   mul.int8.h :          1       0.029313       0.022244
                             mul_scaler.int8.h :          1       0.002629       0.004276
-                                    or.int8.h :          1       0.029312       0.022244
+                                    or.int8.h :          1       0.029313       0.022244
                              or_scaler.int8.h :          1       0.002629       0.004276
                               popcount.int8.h :          1       0.002629       0.004276
                                 redsum.int8.h :          2       0.005086       0.005935
@@ -1873,11 +1873,11 @@ PIM Command Stats:
                           shift_bits_r.int8.h :          1       0.002629       0.004276
                           shift_elem_l.int8.h :          1       0.012759       0.000043
                           shift_elem_r.int8.h :          1       0.012759       0.000043
-                                   sub.int8.h :          1       0.029312       0.022244
+                                   sub.int8.h :          1       0.029313       0.022244
                             sub_scaler.int8.h :          1       0.002629       0.004276
-                                  xnor.int8.h :          1       0.029312       0.022244
+                                  xnor.int8.h :          1       0.029313       0.022244
                            xnor_scaler.int8.h :          1       0.002629       0.004276
-                                   xor.int8.h :          1       0.029312       0.022244
+                                   xor.int8.h :          1       0.029313       0.022244
                             xor_scaler.int8.h :          1       0.002629       0.004276
                               TOTAL --------- :         41       0.508001       0.392762
 ----------------------------------------
@@ -1945,26 +1945,26 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
                                   abs.uint8.h :          1       0.002629       0.004276
-                                  add.uint8.h :          1       0.029312       0.022244
+                                  add.uint8.h :          1       0.029313       0.022244
                            add_scaler.uint8.h :          1       0.002629       0.004276
-                                  and.uint8.h :          1       0.029312       0.022244
+                                  and.uint8.h :          1       0.029313       0.022244
                            and_scaler.uint8.h :          1       0.002629       0.004276
                             broadcast.uint8.h :          2       0.005086       0.005809
-                                  div.uint8.h :          1       0.029312       0.022244
+                                  div.uint8.h :          1       0.029313       0.022244
                            div_scaler.uint8.h :          1       0.002629       0.004276
-                                   eq.uint8.h :          1       0.029312       0.022244
+                                   eq.uint8.h :          1       0.029313       0.022244
                             eq_scaler.uint8.h :          1       0.002629       0.004276
-                                   gt.uint8.h :          1       0.029312       0.022244
+                                   gt.uint8.h :          1       0.029313       0.022244
                             gt_scaler.uint8.h :          1       0.002629       0.004276
-                                   lt.uint8.h :          1       0.029312       0.022244
+                                   lt.uint8.h :          1       0.029313       0.022244
                             lt_scaler.uint8.h :          1       0.002629       0.004276
-                                  max.uint8.h :          1       0.029312       0.022244
+                                  max.uint8.h :          1       0.029313       0.022244
                            max_scaler.uint8.h :          1       0.002629       0.004276
-                                  min.uint8.h :          1       0.029312       0.022244
+                                  min.uint8.h :          1       0.029313       0.022244
                            min_scaler.uint8.h :          1       0.002629       0.004276
-                                  mul.uint8.h :          1       0.029312       0.022244
+                                  mul.uint8.h :          1       0.029313       0.022244
                            mul_scaler.uint8.h :          1       0.002629       0.004276
-                                   or.uint8.h :          1       0.029312       0.022244
+                                   or.uint8.h :          1       0.029313       0.022244
                             or_scaler.uint8.h :          1       0.002629       0.004276
                              popcount.uint8.h :          1       0.002629       0.004276
                                redsum.uint8.h :          2       0.005086       0.005935
@@ -1976,11 +1976,11 @@ PIM Command Stats:
                          shift_bits_r.uint8.h :          1       0.002629       0.004276
                          shift_elem_l.uint8.h :          1       0.012759       0.000043
                          shift_elem_r.uint8.h :          1       0.012759       0.000043
-                                  sub.uint8.h :          1       0.029312       0.022244
+                                  sub.uint8.h :          1       0.029313       0.022244
                            sub_scaler.uint8.h :          1       0.002629       0.004276
-                                 xnor.uint8.h :          1       0.029312       0.022244
+                                 xnor.uint8.h :          1       0.029313       0.022244
                           xnor_scaler.uint8.h :          1       0.002629       0.004276
-                                  xor.uint8.h :          1       0.029312       0.022244
+                                  xor.uint8.h :          1       0.029313       0.022244
                            xor_scaler.uint8.h :          1       0.002629       0.004276
                               TOTAL --------- :         41       0.508001       0.392762
 ----------------------------------------
