@@ -1345,5 +1345,6 @@ pimCmdAnalogAAP::printDebugInfo() const
 // Explicit template instantiation
 template class pimCmdBroadcast<uint64_t>;
 template class pimCmdBroadcast<int64_t>;
+template class pimCmdBroadcast<float>;
 template class pimCmdRedSum<uint64_t>;
 template class pimCmdRedSum<int64_t>;
