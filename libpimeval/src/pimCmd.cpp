@@ -523,7 +523,8 @@ pimCmdFunc1::computeRegion(unsigned index)
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
       }
       else if (dataType == PIM_FP32){
-        float floatOperand = getOperand(operandBits, dataType);
+        // cannot use getOperand() here, need to use other functions for float value.
+        float floatOperand = *reinterpret_cast<float*>(&operandBits);
         float result = 0.0;
         if(!computeResultFP(floatOperand, m_cmdType, (float)m_scalerValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, *reinterpret_cast<uint64_t*>(&result), bitsPerElementDest);
