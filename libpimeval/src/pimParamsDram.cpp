@@ -77,9 +77,11 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
   if (deviceProtocol == "DDR3" || deviceProtocol == "DDR4" || deviceProtocol == "DDR5")
   {
     return std::make_unique<pimParamsDDRDram>(params);
-  } else if (deviceProtocol == "LPDDR3" || deviceProtocol == "LPDDR4") {
+  } 
+  else if (deviceProtocol == "LPDDR3" || deviceProtocol == "LPDDR4") {
     return std::make_unique<pimParamsLPDDRDram>(params);
-  } else if (deviceProtocol == "HBM" || deviceProtocol == "HBM2") {
+  } 
+  else if (deviceProtocol == "HBM" || deviceProtocol == "HBM2") {
     return std::make_unique<pimParamsHBMDram>(params);
   }
   else

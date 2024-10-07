@@ -70,7 +70,7 @@ private:
   int m_tCCD_L = 0;
   int m_tXS = 0;
   int m_tCKE = 0;
-  int m_tCKESR = 0;
+  int m_tCKSRE = 0;
   int m_tXP = 0;
   int m_tRTP_L = 0;
   int m_tRTP_S = 0;

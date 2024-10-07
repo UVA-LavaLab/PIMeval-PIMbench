@@ -48,7 +48,7 @@ pimParamsHBMDram::pimParamsHBMDram()
   m_tCCD_L(2),
   m_tXS(268),
   m_tCKE(8),
-  m_tCKESR(10),
+  m_tCKSRE(10),
   m_tXP(8),
   m_tRTP_L(6),
   m_tRTP_S(4),
@@ -99,7 +99,7 @@ pimParamsHBMDram::pimParamsHBMDram(std::unordered_map<std::string, std::string> 
     m_CL = std::stoi(pimUtils::getParam(params, "CL"));
     m_CWL = std::stoi(pimUtils::getParam(params, "CWL"));
     m_tRCDRD = std::stoi(pimUtils::getParam(params, "tRCDRD"));
-    m_tRCDWR = std::stoi(pimUtils::getParam(params, "tRCDRW"));
+    m_tRCDWR = std::stoi(pimUtils::getParam(params, "tRCDWR"));
     m_tRP = std::stoi(pimUtils::getParam(params, "tRP"));
     m_tRAS = std::stoi(pimUtils::getParam(params, "tRAS"));
     m_tRFC = std::stoi(pimUtils::getParam(params, "tRFC"));
@@ -117,10 +117,10 @@ pimParamsHBMDram::pimParamsHBMDram(std::unordered_map<std::string, std::string> 
     m_tCCD_L = std::stoi(pimUtils::getParam(params, "tCCD_L"));
     m_tXS = std::stoi(pimUtils::getParam(params, "tXS"));
     m_tCKE = std::stoi(pimUtils::getParam(params, "tCKE"));
-    m_tCKESR = std::stoi(pimUtils::getParam(params, "tCKESR"));
+    m_tCKSRE = std::stoi(pimUtils::getParam(params, "tCKSRE"));
     m_tXP = std::stoi(pimUtils::getParam(params, "tXP"));
-    m_tRTP_L = std::stoi(pimUtils::getParam(params, "tRTRP_L"));
-    m_tRTP_S = std::stoi(pimUtils::getParam(params, "tRTRP_S"));
+    m_tRTP_L = std::stoi(pimUtils::getParam(params, "tRTP_L"));
+    m_tRTP_S = std::stoi(pimUtils::getParam(params, "tRTP_S"));
 
     m_VDD = std::stod(pimUtils::getParam(params, "VDD"));
     m_IDD0 = std::stoi(pimUtils::getParam(params, "IDD0"));
