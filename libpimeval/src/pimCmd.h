@@ -152,7 +152,8 @@ protected:
     case PIM_UINT16: operandValue =  *reinterpret_cast<uint16_t*>(&operandBits); break;
     case PIM_UINT32: operandValue =  *reinterpret_cast<uint32_t*>(&operandBits); break;
     case PIM_UINT64: operandValue =  *reinterpret_cast<uint64_t*>(&operandBits); break;
-    case PIM_FP32: operandValue =  *reinterpret_cast<float*>(&operandBits); break;
+    // case PIM_FP32: operandValue =  *reinterpret_cast<float*>(&operandBits); break;
+    // 'float' can't not be returned as 'uint64_t', need to use other functions for floating point value.
     default:
         std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
     }

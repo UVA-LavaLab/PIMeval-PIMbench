@@ -684,8 +684,8 @@ pimCmdFunc2::computeRegion(unsigned index)
     } else if (dataType == PIM_FP32) {
       auto operandBits1 = getBits(core, isVLayout, locSrc1.first, locSrc1.second, bitsPerElementSrc1);
       auto operandBits2 = getBits(core, isVLayout, locSrc2.first, locSrc2.second, bitsPerElementSrc2);
-      float operand1 = getOperand(operandBits1, dataType);
-      float operand2 = getOperand(operandBits2, dataType);
+      float operand1 = *reinterpret_cast<float*>(&operandBits1);
+      float operand2 = *reinterpret_cast<float*>(&operandBits2);
       float result = 0.0;
       switch (m_cmdType) {
       case PimCmdEnum::ADD: result = operand1 + operand2; break;
