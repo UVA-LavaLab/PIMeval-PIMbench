@@ -29,11 +29,11 @@ public:
   virtual int getDeviceWidth() const = 0;
   virtual int getBurstLength() const = 0;
   virtual int getNumChipsPerRank() const = 0;
-  virtual float getNsRowRead() const = 0;
-  virtual float getNsRowWrite() const = 0;
-  virtual float getNsTCCD_S() const = 0;
-  virtual float getNsTCAS() const = 0;
-  virtual float getNsAAP() const = 0;
+  virtual double getNsRowRead() const = 0;
+  virtual double getNsRowWrite() const = 0;
+  virtual double getNsTCCD_S() const = 0;
+  virtual double getNsTCAS() const = 0;
+  virtual double getNsAAP() const = 0;
   virtual double getTypicalRankBW() const = 0;
   virtual double getPjRowRead() const = 0;
   virtual double getPjLogic() const = 0;

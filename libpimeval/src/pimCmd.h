@@ -124,40 +124,20 @@ protected:
   virtual bool updateStats() const { return false; }
   bool computeAllRegions(unsigned numRegions);
 
-  //! @brief  Utility: Get a value from a region
+  //! @brief  Utility: Get bits of an element from a region. The bits are stored as uint64_t without sign extension
   inline uint64_t getBits(const pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, unsigned numBits) const
   {
     return isVLayout ? core.getBitsV(rowLoc, colLoc, numBits) : core.getBitsH(rowLoc, colLoc, numBits);
   }
 
-  //! @brief  Utility: Set a value to a region
-  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t val, unsigned numBits) const
+  //! @brief  Utility: Set bits of an element to a region
+  inline void setBits(pimCore& core, bool isVLayout, unsigned rowLoc, unsigned colLoc, uint64_t bits, unsigned numBits) const
   {
     if (isVLayout) {
-      core.setBitsV(rowLoc, colLoc, val, numBits);
+      core.setBitsV(rowLoc, colLoc, bits, numBits);
     } else {
-      core.setBitsH(rowLoc, colLoc, val, numBits);
+      core.setBitsH(rowLoc, colLoc, bits, numBits);
     }
-  }
-
-  //! @brief helper function to get the operand based on data type
-  inline uint64_t getOperand(uint64_t operandBits, PimDataType dataType) {
-    uint64_t operandValue = 0;
-    switch (dataType) {
-    case PIM_INT8: operandValue =  *reinterpret_cast<int8_t*>(&operandBits); break;
-    case PIM_INT16: operandValue =  *reinterpret_cast<int16_t*>(&operandBits); break;
-    case PIM_INT32: operandValue =  *reinterpret_cast<int32_t*>(&operandBits); break;
-    case PIM_INT64: operandValue =  *reinterpret_cast<int64_t*>(&operandBits); break;
-    case PIM_UINT8: operandValue =  *reinterpret_cast<uint8_t*>(&operandBits); break;
-    case PIM_UINT16: operandValue =  *reinterpret_cast<uint16_t*>(&operandBits); break;
-    case PIM_UINT32: operandValue =  *reinterpret_cast<uint32_t*>(&operandBits); break;
-    case PIM_UINT64: operandValue =  *reinterpret_cast<uint64_t*>(&operandBits); break;
-    // case PIM_FP32: operandValue =  *reinterpret_cast<float*>(&operandBits); break;
-    // 'float' can't not be returned as 'uint64_t', need to use other functions for floating point value.
-    default:
-        std::printf("PIM-Error: Unsupported data type %u\n", static_cast<unsigned>(dataType));
-    }
-    return operandValue;
   }
 
   PimCmdEnum m_cmdType;
@@ -210,8 +190,8 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalerValue = 0)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalerValue(scalerValue) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalarValue = 0)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalarValue(scalarValue) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -220,31 +200,31 @@ public:
 protected:
   PimObjId m_src;
   PimObjId m_dest;
-  uint64_t m_scalerValue;
+  uint64_t m_scalarValue;
 private:
   template<typename T>
-  inline bool computeResult(T operand, PimCmdEnum cmdType, T scalerValue, T& result, int bitsPerElementSrc) {
+  inline bool computeResult(T operand, PimCmdEnum cmdType, T scalarValue, T& result, int bitsPerElementSrc) {
     result = operand;
     switch (cmdType) {
-    case PimCmdEnum::ADD_SCALAR: result += scalerValue; break;
-    case PimCmdEnum::SUB_SCALAR: result -= scalerValue; break;
-    case PimCmdEnum::MUL_SCALAR: result *= scalerValue; break;
+    case PimCmdEnum::ADD_SCALAR: result += scalarValue; break;
+    case PimCmdEnum::SUB_SCALAR: result -= scalarValue; break;
+    case PimCmdEnum::MUL_SCALAR: result *= scalarValue; break;
     case PimCmdEnum::DIV_SCALAR:
-        if (scalerValue == 0) {
+        if (scalarValue == 0) {
             std::printf("PIM-Error: Division by zero\n");
             return false;
         }
-        result /= scalerValue;
+        result /= scalarValue;
         break;
-    case PimCmdEnum::AND_SCALAR: result &= scalerValue; break;
-    case PimCmdEnum::OR_SCALAR: result |= scalerValue; break;
-    case PimCmdEnum::XOR_SCALAR: result ^= scalerValue; break;
-    case PimCmdEnum::XNOR_SCALAR: result = ~(operand ^ scalerValue); break;
-    case PimCmdEnum::GT_SCALAR: result = (operand > scalerValue) ? 1 : 0; break;
-    case PimCmdEnum::LT_SCALAR: result = (operand < scalerValue) ? 1 : 0; break;
-    case PimCmdEnum::EQ_SCALAR: result = (operand == scalerValue) ? 1 : 0; break;
-    case PimCmdEnum::MIN_SCALAR: result = std::min(operand, scalerValue); break;
-    case PimCmdEnum::MAX_SCALAR: result = std::max(operand, scalerValue); break;
+    case PimCmdEnum::AND_SCALAR: result &= scalarValue; break;
+    case PimCmdEnum::OR_SCALAR: result |= scalarValue; break;
+    case PimCmdEnum::XOR_SCALAR: result ^= scalarValue; break;
+    case PimCmdEnum::XNOR_SCALAR: result = ~(operand ^ scalarValue); break;
+    case PimCmdEnum::GT_SCALAR: result = (operand > scalarValue) ? 1 : 0; break;
+    case PimCmdEnum::LT_SCALAR: result = (operand < scalarValue) ? 1 : 0; break;
+    case PimCmdEnum::EQ_SCALAR: result = (operand == scalarValue) ? 1 : 0; break;
+    case PimCmdEnum::MIN_SCALAR: result = std::min(operand, scalarValue); break;
+    case PimCmdEnum::MAX_SCALAR: result = std::max(operand, scalarValue); break;
     case PimCmdEnum::POPCOUNT:
         switch (bitsPerElementSrc) {
         case 8: result = std::bitset<8>(operand).count(); break;
@@ -256,8 +236,8 @@ private:
             return false;
         }
         break;
-    case PimCmdEnum::SHIFT_BITS_R: result >>= static_cast<uint64_t>(scalerValue); break;
-    case PimCmdEnum::SHIFT_BITS_L: result <<= static_cast<uint64_t>(scalerValue); break;
+    case PimCmdEnum::SHIFT_BITS_R: result >>= static_cast<uint64_t>(scalarValue); break;
+    case PimCmdEnum::SHIFT_BITS_L: result <<= static_cast<uint64_t>(scalarValue); break;
     case PimCmdEnum::ABS:
     {
         if (std::is_signed<T>::value) {
@@ -326,8 +306,8 @@ class pimCmdFunc2 : public pimCmd
 public:
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
-  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue)
-    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalerValue(scalerValue) {}
+  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue)
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalarValue(scalarValue) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -337,7 +317,7 @@ protected:
   PimObjId m_src1;
   PimObjId m_src2;
   PimObjId m_dest;
-  uint64_t m_scalerValue;
+  uint64_t m_scalarValue;
 };
 
 //! @class  pimCmdedSum
@@ -370,11 +350,11 @@ protected:
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements
-template <typename T> class pimCmdBroadcast : public pimCmd
+class pimCmdBroadcast : public pimCmd
 {
 public:
-  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, T val)
-    : pimCmd(cmdType), m_dest(dest), m_val(val)
+  pimCmdBroadcast(PimCmdEnum cmdType, PimObjId dest, uint64_t signExtBits)
+    : pimCmd(cmdType), m_dest(dest), m_signExtBits(signExtBits)
   {
     assert(cmdType == PimCmdEnum::BROADCAST);
   }
@@ -385,7 +365,7 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_dest;
-  T m_val;
+  uint64_t m_signExtBits;
 };
 
 //! @class  pimCmdRotate
