@@ -173,7 +173,6 @@ public:
   virtual ~pimCmdCopy() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
-  virtual bool computeRegion(unsigned index) override;
   virtual bool updateStats() const override;
 protected:
   PimCopyEnum m_copyType;

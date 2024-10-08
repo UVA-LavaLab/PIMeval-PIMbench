@@ -84,6 +84,50 @@ pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
   return regions;
 }
 
+//! @brief  Sync PIM object data from simulated memory
+void
+pimObjInfo::syncFromSimulatedMem(pimDevice *device)
+{
+  unsigned numBits = getBitsPerElement();
+  for (size_t i = 0; i < m_regions.size(); ++i) {
+    pimRegion& region = m_regions[i];
+    PimCoreId coreId = region.getCoreId();
+    pimCore& core = device->getCore(coreId);
+    uint64_t elemIdxBegin = region.getElemIdxBegin();
+    uint64_t numElemInRegion = region.getNumElemInRegion();
+    for (uint64_t j = 0; j < numElemInRegion; ++j) {
+      auto [rowLoc, colLoc] = region.locateIthElemInRegion(j);
+      uint64_t bits = isVLayout() ? core.getBitsV(rowLoc, colLoc, numBits)
+                                  : core.getBitsH(rowLoc, colLoc, numBits);
+      m_data.setElement(elemIdxBegin + j, bits);
+    }
+  }
+}
+
+//! @brief  Sync PIM object data to simulated memory
+void
+pimObjInfo::syncToSimulatedMem(pimDevice *device) const
+{
+  unsigned numBits = getBitsPerElement();
+  for (size_t i = 0; i < m_regions.size(); ++i) {
+    const pimRegion& region = m_regions[i];
+    PimCoreId coreId = region.getCoreId();
+    pimCore& core = device->getCore(coreId);
+    uint64_t elemIdxBegin = region.getElemIdxBegin();
+    uint64_t numElemInRegion = region.getNumElemInRegion();
+    for (uint64_t j = 0; j < numElemInRegion; ++j) {
+      uint64_t bits = m_data.getElementBits(elemIdxBegin + j);
+      auto [rowLoc, colLoc] = region.locateIthElemInRegion(j);
+      if (isVLayout()) {
+        core.setBitsV(rowLoc, colLoc, bits, numBits);
+      } else {
+        core.setBitsH(rowLoc, colLoc, bits, numBits);
+      }
+    }
+  }
+}
+
+
 //! @brief  pimResMgr ctor
 pimResMgr::pimResMgr(pimDevice* device)
   : m_device(device),

@@ -21,13 +21,13 @@ echo "PIMeval Functional Testing Results" | tee -a $LOCAL
 echo "##################################" | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_BITSIMD_V_AP
-$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_FULCRUM
-$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_BANK_LEVEL
-$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
 
 # STEP 2: Compare result_local.txt with result_golden.txt

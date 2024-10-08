@@ -8,6 +8,7 @@
 #define LAVA_PIM_RES_MGR_H
 
 #include "libpimeval.h"
+#include "pimUtils.h"
 #include <vector>
 #include <tuple>
 #include <unordered_map>
@@ -21,7 +22,7 @@ class pimDevice;
 
 
 //! @class  pimRegion
-//! @brief  Represent a rectangle regreion in a PIM core
+//! @brief  Represent a rectangle region in a PIM core
 class pimRegion
 {
 public:
@@ -71,6 +72,94 @@ private:
   bool m_isValid = false;
 };
 
+//! @class  pimDataHolder
+//! @brief  A container holding raw PIM data as bytes
+//! Assumption: Caller gurantees correct range and indices
+class pimDataHolder
+{
+public:
+  pimDataHolder(PimDataType dataType, uint64_t numElements)
+    : m_dataType(dataType),
+      m_numElements(numElements)
+  {
+    unsigned numBitsOfDataType = pimUtils::getNumBitsOfDataType(m_dataType);
+    m_bytesPerElement = (numBitsOfDataType + 7) / 8;
+    m_data.resize(m_numElements * m_bytesPerElement);
+  }
+  ~pimDataHolder() {}
+
+  // copy data of range [idxBegin, idxEnd) from host ptr into holder
+  // use full range if idxEnd is default 0
+  void copyFromHost(void* src, uint64_t idxBegin = 0, uint64_t idxEnd = 0) {
+    uint64_t byteIndex = idxBegin * m_bytesPerElement;
+    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
+    uint64_t numBytes = numElements * m_bytesPerElement;
+    std::memcpy(m_data.data() + byteIndex, src, numBytes);
+  }
+
+  // copy data of range [idxBegin, idxEnd) from holder to host ptr
+  void copyToHost(void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const {
+    uint64_t byteIndex = idxBegin * m_bytesPerElement;
+    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
+    uint64_t numBytes = numElements * m_bytesPerElement;
+    std::memcpy(dest, m_data.data() + byteIndex, numBytes);
+  }
+
+  // copy data of range [idxBegin, idxEnd) from another holder to this holder
+  void copyFromObj(pimDataHolder& src, uint64_t idxBegin = 0, uint64_t idxEnd = 0) {
+    uint64_t byteIndex = idxBegin * m_bytesPerElement;
+    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
+    uint64_t numBytes = numElements * m_bytesPerElement;
+    std::memcpy(m_data.data() + byteIndex, src.m_data.data() + byteIndex, numBytes);
+  }
+
+  // copy data of range [idxBegin, idxEnd) from this holder to another holder
+  void copyToObj(pimDataHolder& dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const {
+    uint64_t byteIndex = idxBegin * m_bytesPerElement;
+    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
+    uint64_t numBytes = numElements * m_bytesPerElement;
+    std::memcpy(dest.m_data.data() + byteIndex, m_data.data() + byteIndex, numBytes);
+  }
+
+  // set an element of type T at index
+  template<typename T>
+  void setElement(uint64_t index, T val) {
+    uint64_t byteIndex = index * m_bytesPerElement;
+    uint64_t bits = pimUtils::castTypeToBits(val);
+    std::memcpy(m_data.data() + byteIndex, &bits, m_bytesPerElement);
+  }
+
+  // get bit representation of an element at index
+  uint64_t getElementBits(uint64_t index) const {
+    uint64_t bits = 0;
+    uint64_t byteIndex = index * m_bytesPerElement;
+    std::memcpy(&bits, m_data.data() + byteIndex, m_bytesPerElement);
+    return pimUtils::signExt(bits, m_dataType);
+  }
+
+  // get an element of type T at index
+  template<typename T>
+  T getElement(uint64_t index) const {
+     return *reinterpret_cast<const T*>(m_data.data() + index);
+  }
+
+  // print bytes
+  void print() const {
+    std::printf("DEBUG: data-type = %s, num-elements = %llu, byts-per-element = %u\n",
+        pimUtils::pimDataTypeEnumToStr(m_dataType).c_str(), m_numElements, m_bytesPerElement);
+    for (size_t i = 0; i < m_data.size(); ++i) {
+      std::printf(" %02x", m_data[i]);
+      if ((i + 1) % 64 == 0) { std::printf("\n"); }
+    }
+    std::printf("\n");
+  }
+
+private:
+  std::vector<uint8_t> m_data;
+  PimDataType m_dataType;
+  uint64_t m_numElements;
+  unsigned m_bytesPerElement;
+};
 
 //! @class  pimObjInfo
 //! @brief  Meta data of a PIM object which includes
@@ -85,6 +174,7 @@ public:
       m_assocObjId(objId),
       m_dataType(dataType),
       m_allocType(allocType),
+      m_data(dataType, numElements),
       m_numElements(numElements),
       m_bitsPerElement(bitsPerElement)
   {}
@@ -120,12 +210,25 @@ public:
   std::string getDataTypeName() const;
   void print() const;
 
+  // raw data accessors
+  const pimDataHolder& data() const { return m_data; }
+  pimDataHolder& data() { return m_data; }
+
+  // Note: Below two functions are for supporting mixed functional and micro-ops level simulation.
+  // Functional simulation purely uses this PIM data holder for simulation speed,
+  // while micro-ops level simulation uses simulated 2D memory arrays.
+  // When a functional API is called during micro-ops level simulation, call below two functions
+  // to sync the data between this PIM data holder and simulated memory arrays.
+  void syncFromSimulatedMem(pimDevice *device);
+  void syncToSimulatedMem(pimDevice *device) const;
+
 private:
   PimObjId m_objId = -1;
   PimObjId m_assocObjId = -1;
   PimObjId m_refObjId = -1;
   PimDataType m_dataType;
   PimAllocEnum m_allocType;
+  pimDataHolder m_data;
   uint64_t m_numElements = 0;
   unsigned m_bitsPerElement = 0;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
@@ -153,6 +256,7 @@ public:
 
   bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }
   const pimObjInfo& getObjInfo(PimObjId objId) const { return m_objMap.at(objId); }
+  pimObjInfo& getObjInfo(PimObjId objId) { return m_objMap.at(objId); }
 
   bool isVLayoutObj(PimObjId objId) const;
   bool isHLayoutObj(PimObjId objId) const;
