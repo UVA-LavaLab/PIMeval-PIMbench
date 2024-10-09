@@ -218,6 +218,7 @@ int main(int argc, char* argv[])
   {
     srand((unsigned)time(NULL));
     x.resize(params.height);
+#pragma omp parallel for
     for(size_t i=0; i<params.height; ++i) {
       x[i].resize(params.width);
       for(size_t j=0; j<params.width; ++j) {
@@ -238,6 +239,7 @@ int main(int argc, char* argv[])
 
   // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   y.resize(x.size());
+#pragma omp parallel for
   for(size_t i=0; i<y.size(); ++i) {
     y[i].resize(x[0].size());
   }
@@ -247,6 +249,7 @@ int main(int argc, char* argv[])
   if (params.shouldVerify) 
   {
     bool is_correct = true;
+#pragma omp parallel for
     for(int i=0; i<y.size(); ++i) {
       for(int j=0; j<y[0].size(); ++j) {
         uint8_t sum_cpu = get_with_default(i-1, j-1, x);
