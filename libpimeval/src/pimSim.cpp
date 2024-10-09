@@ -752,12 +752,53 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 }
 
 template <typename T> bool
+pimSim::pimRedMin(PimObjId src, T* min)
+{
+  pimPerfMon perfMon("pimRedMin");
+  if (!isValidDevice()) { return false; }
+  *min = std::numeric_limits<T>::max();
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMIN, src, min);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+template <typename T> bool
+pimSim::pimRedMax(PimObjId src, T* max)
+{
+  pimPerfMon perfMon("pimRedMax");
+  if (!isValidDevice()) { return false; }
+  *max = std::numeric_limits<T>::lowest();
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMAX, src, max);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+template <typename T> bool
+pimSim::pimRedMinRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* min)
+{
+  pimPerfMon perfMon("pimRedMinRanged");
+  if (!isValidDevice()) { return false; }
+  *min = std::numeric_limits<T>::max();
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMIN_RANGE, src, min, idxBegin, idxEnd);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+template <typename T> bool
+pimSim::pimRedMaxRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* max)
+{
+  pimPerfMon perfMon("pimRedMaxRanged");
+  if (!isValidDevice()) { return false; }
+  *max = std::numeric_limits<T>::lowest();
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMAX_RANGE, src, max, idxBegin, idxEnd);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// Update the existing sum reduction functions to use pimCmdReduction
+template <typename T> bool
 pimSim::pimRedSum(PimObjId src, T* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM, src, sum);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDSUM, src, sum);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -767,10 +808,9 @@ pimSim::pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
-
 bool
 pimSim::pimRotateElementsRight(PimObjId src)
 {
@@ -1057,12 +1097,21 @@ pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
 // Explicit template instantiations
 template bool pimSim::pimBroadcast<uint64_t>(PimObjId dest, uint64_t value);
 template bool pimSim::pimBroadcast<int64_t>(PimObjId dest, int64_t value);
-template bool pimSim::pimBroadcast<float>(PimObjId dest, float value);
 
+template bool pimSim::pimRedMin<uint64_t>(PimObjId src, uint64_t* min);
+template bool pimSim::pimRedMin<int64_t>(PimObjId src, int64_t* min);
+template bool pimSim::pimRedMax<uint64_t>(PimObjId src, uint64_t* max);
+template bool pimSim::pimRedMax<int64_t>(PimObjId src, int64_t* max);
+
+template bool pimSim::pimRedMinRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* min);
+template bool pimSim::pimRedMinRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* min);
+template bool pimSim::pimRedMaxRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* max);
+template bool pimSim::pimRedMaxRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* max);
+
+// Existing sum reduction instantiations
 template bool pimSim::pimRedSum<uint64_t>(PimObjId src, uint64_t* sum);
 template bool pimSim::pimRedSum<int64_t>(PimObjId src, int64_t* sum);
 template bool pimSim::pimRedSum<float>(PimObjId src, float* sum);
-
 template bool pimSim::pimRedSumRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
 template bool pimSim::pimRedSumRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
 template bool pimSim::pimRedSumRanged<float>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
