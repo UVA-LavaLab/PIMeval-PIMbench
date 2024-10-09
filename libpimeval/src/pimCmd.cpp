@@ -506,7 +506,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   // perform the computation
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64 || dataType == PIM_FP32) {
       auto locSrc = srcRegion.locateIthElemInRegion(j);
       auto locDest = destRegion.locateIthElemInRegion(j);
       uint64_t operandBits = getBits(core, isVLayout, locSrc.first, locSrc.second, bitsPerElementSrc);
@@ -516,14 +516,19 @@ pimCmdFunc1::computeRegion(unsigned index)
         int64_t result = 0;
         if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalarValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, pimUtils::castTypeToBits(result), bitsPerElementDest);
-      } else {
+      } else if (dataType != PIM_FP32) { // signed int.
         uint64_t unsignedOperand = operandBits;
         uint64_t result = 0;
         if(!computeResult(unsignedOperand, m_cmdType, m_scalarValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
-      }
-    } else {
+      } else if (dataType == PIM_FP32){
+        float floatOperand = pimUtils::castBitsToType<float>(operandBits);
+        float result = 0.0;
+        if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result, bitsPerElementSrc)) return false;
+        setBits(core, isVLayout, locDest.first, locDest.second, pimUtils::castTypeToBits(result), bitsPerElementDest);
+      } else {
       assert(0); // todo: data type
+      }
     }
   }
   return true;

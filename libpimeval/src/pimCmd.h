@@ -253,6 +253,50 @@ private:
     }
     return true;
   }
+
+  template<typename T>
+  inline bool computeResultFP(T operand, PimCmdEnum cmdType, T scalerValue, T& result, int bitsPerElementSrc) {
+    result = operand;
+    switch (cmdType) {
+    case PimCmdEnum::ADD_SCALAR: result += scalerValue; break;
+    case PimCmdEnum::SUB_SCALAR: result -= scalerValue; break;
+    case PimCmdEnum::MUL_SCALAR: result *= scalerValue; break;
+    case PimCmdEnum::DIV_SCALAR:
+        if (scalerValue == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+        }
+        result /= scalerValue;
+        break;
+    case PimCmdEnum::GT_SCALAR: result = (operand > scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::LT_SCALAR: result = (operand < scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::EQ_SCALAR: result = (operand == scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::MIN_SCALAR: result = std::min(operand, scalerValue); break;
+    case PimCmdEnum::MAX_SCALAR: result = std::max(operand, scalerValue); break;
+    case PimCmdEnum::ABS:
+    {
+        if (std::is_signed<T>::value) {
+          result = (operand < 0) ? -operand : operand;
+        } else {
+          result = operand;
+        }
+        break;
+    }
+    case PimCmdEnum::AND_SCALAR:
+    case PimCmdEnum::OR_SCALAR:
+    case PimCmdEnum::XOR_SCALAR:
+    case PimCmdEnum::XNOR_SCALAR:
+    case PimCmdEnum::POPCOUNT:
+    case PimCmdEnum::SHIFT_BITS_R:
+    case PimCmdEnum::SHIFT_BITS_L:
+        std::printf("PIM-Error: Cannot perform bitwise operation on floating point values.\n");
+        return false;
+    default:
+        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(cmdType));
+        assert(0);
+    }
+    return true;
+  }
 };
 
 //! @class  pimCmdFunc2

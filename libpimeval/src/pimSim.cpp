@@ -1040,6 +1040,7 @@ pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
 // Explicit template instantiations
 template bool pimSim::pimBroadcast<uint64_t>(PimObjId dest, uint64_t value);
 template bool pimSim::pimBroadcast<int64_t>(PimObjId dest, int64_t value);
+template bool pimSim::pimBroadcast<float>(PimObjId dest, float value);
 
 template bool pimSim::pimRedSum<uint64_t>(PimObjId src, uint64_t* sum);
 template bool pimSim::pimRedSum<int64_t>(PimObjId src, int64_t* sum);

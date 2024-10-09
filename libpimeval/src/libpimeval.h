@@ -151,6 +151,7 @@ PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, i
 PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
+PimStatus pimBroadcastFP32(PimObjId dest, float value);
 PimStatus pimRotateElementsRight(PimObjId src);
 PimStatus pimRotateElementsLeft(PimObjId src);
 PimStatus pimShiftElementsRight(PimObjId src);

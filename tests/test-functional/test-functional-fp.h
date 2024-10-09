@@ -17,6 +17,7 @@
 #include <limits>
 #include <type_traits>
 #include <cstdlib>
+#include <iomanip> // used fot std::setprecision
 
 
 //! @brief  Functional tests for PIM float-point operations
@@ -40,11 +41,12 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
 
   // Create a few equal cases for pimEQ
   vecSrc2[100] = vecSrc1[100];
-  vecSrc2[3000] = vecSrc1[3000];
+  vecSrc2[3000] = vecSrc1[3000]; 
 
   // Cover scalar value testing
   // PIMeval uses uint64_t to represent bits of scalarValue
-  const uint64_t scalarVal = 123;
+  const float scalarValFloat = 123.0;
+  const uint64_t scalarVal = *reinterpret_cast<const uint64_t*>(&scalarValFloat);
   const int64_t scalarValInt = -11; // for int broadcasting
   vecSrc1[500] = static_cast<T>(scalarVal); // cover scalar EQ
   vecSrc1[501] = static_cast<T>(scalarVal - 1); // cover scalar LT
@@ -76,29 +78,29 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       {  1, "pimSub"                 },
       {  2, "pimMul"                 },
       {  3, "pimDiv"                 },
-      //{  4, "pimAbs"                 }, // TODO
+      {  4, "pimAbs"                 },
       //{  5, "pimAnd"                 }, // not supported
       //{  6, "pimOr"                  }, // not supported
       //{  7, "pimXor"                 }, // not supported
       //{  8, "pimXnor"                }, // not supported
       //{  9, "pimGT"                  }, // TODO
-      //{ 10, "pimLT"                  }, // TODO
-      //{ 11, "pimEQ"                  }, // TODO
-      //{ 12, "pimMin"                 }, // TODO
-      //{ 13, "pimMax"                 }, // TODO
-      //{ 14, "pimAddScalar"           }, // TODO
-      //{ 15, "pimSubScalar"           }, // TODO
-      //{ 16, "pimMulScalar"           }, // TODO
+      // { 10, "pimLT"                  }, // TODO
+      // { 11, "pimEQ"                  }, // TODO
+      // { 12, "pimMin"                 }, // TODO
+      // { 13, "pimMax"                 }, // TODO
+      { 14, "pimAddScalar"           },
+      { 15, "pimSubScalar"           },
+      { 16, "pimMulScalar"           },
       //{ 17, "pimDivScalar"           }, // TODO
       //{ 18, "pimAndScalar"           }, // not supported
       //{ 19, "pimOrScalar"            }, // not supported
       //{ 20, "pimXorScalar"           }, // not supported
       //{ 21, "pimXnorScalar"          }, // not supported
-      //{ 22, "pimGTScalar"            }, // TODO
-      //{ 23, "pimLTScalar"            }, // TODO
-      //{ 24, "pimEQScalar"            }, // TODO
-      //{ 25, "pimMinScalar"           }, // TODO
-      //{ 26, "pimMaxScalar"           }, // TODO
+      { 22, "pimGTScalar"            },
+      { 23, "pimLTScalar"            },
+      { 24, "pimEQScalar"            },
+      { 25, "pimMinScalar"           },
+      { 26, "pimMaxScalar"           },
       //{ 27, "pimScaledAdd"           }, // TODO
       //{ 28, "pimPopCount"            }, // not supported
       //{ 29, "pimRedSumInt"           }, // TODO
@@ -106,7 +108,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       //{ 31, "pimRedSumRangedInt"     }, // TODO
       //{ 32, "pimRedSumRangedUInt"    }, // TODO
       //{ 33, "pimBroadcastInt"        }, // TODO
-      //{ 34, "pimBroadcastUInt"       }, // TODO
+      //{ 34, "pimBroadcastFP32"       }, // TODO
       { 35, "pimRotateElementsRight" },
       { 36, "pimRotateElementsLeft"  },
       { 37, "pimShiftElementsRight"  },
@@ -140,10 +142,10 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case  2: status = pimMul                  (objSrc1, objSrc2, objDest);            break;
       case  3: status = pimDiv                  (objSrc1, objSrc2nz, objDest);          break;
       case  4: status = pimAbs                  (objSrc1, objDest);                     break;
-      //case  5: status = pimAnd                  (objSrc1, objSrc2, objDest);            break;
-      //case  6: status = pimOr                   (objSrc1, objSrc2, objDest);            break;
-      //case  7: status = pimXor                  (objSrc1, objSrc2, objDest);            break;
-      //case  8: status = pimXnor                 (objSrc1, objSrc2, objDest);            break;
+      // case  5: status = pimAnd                  (objSrc1, objSrc2, objDest);            break;
+      // case  6: status = pimOr                   (objSrc1, objSrc2, objDest);            break;
+      // case  7: status = pimXor                  (objSrc1, objSrc2, objDest);            break;
+      // case  8: status = pimXnor                 (objSrc1, objSrc2, objDest);            break;
       case  9: status = pimGT                   (objSrc1, objSrc2, objDest);            break;
       case 10: status = pimLT                   (objSrc1, objSrc2, objDest);            break;
       case 11: status = pimEQ                   (objSrc1, objSrc2, objDest);            break;
@@ -153,10 +155,10 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 15: status = pimSubScalar            (objSrc1, objDest, scalarVal);          break;
       case 16: status = pimMulScalar            (objSrc1, objDest, scalarVal);          break;
       case 17: status = pimDivScalar            (objSrc1, objDest, scalarVal);          break;
-      //case 18: status = pimAndScalar            (objSrc1, objDest, scalarVal);          break;
-      //case 19: status = pimOrScalar             (objSrc1, objDest, scalarVal);          break;
-      //case 20: status = pimXorScalar            (objSrc1, objDest, scalarVal);          break;
-      //case 21: status = pimXnorScalar           (objSrc1, objDest, scalarVal);          break;
+      // case 18: status = pimAndScalar            (objSrc1, objDest, scalarVal);          break;
+      // case 19: status = pimOrScalar             (objSrc1, objDest, scalarVal);          break;
+      // case 20: status = pimXorScalar            (objSrc1, objDest, scalarVal);          break;
+      // case 21: status = pimXnorScalar           (objSrc1, objDest, scalarVal);          break;
       case 22: status = pimGTScalar             (objSrc1, objDest, scalarVal);          break;
       case 23: status = pimLTScalar             (objSrc1, objDest, scalarVal);          break;
       case 24: status = pimEQScalar             (objSrc1, objDest, scalarVal);          break;
@@ -169,13 +171,13 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 31: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
       case 32: status = pimRedSumRangedUInt     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
       case 33: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 34: status = pimBroadcastUInt        (objDest, scalarVal);                   break;
+      case 34: status = pimBroadcastFP32          (objDest, scalarVal);                   break;
       case 35: status = pimRotateElementsRight  (objDest);                              break;
       case 36: status = pimRotateElementsLeft   (objDest);                              break;
       case 37: status = pimShiftElementsRight   (objDest);                              break;
       case 38: status = pimShiftElementsLeft    (objDest);                              break;
-      //case 39: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
-      //case 40: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
+      // case 39: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
+      // case 40: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
       default: assert(0);
     }
     assert(status == PIM_OK);
@@ -205,8 +207,8 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
     } else {
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
-        T expected = 0;
-        T val = static_cast<T>(scalarVal);
+        T expected = 0.0;
+        T val = *reinterpret_cast<const T*>(&scalarVal);
         T valInt = static_cast<T>(scalarValInt);
         switch (testId) {
           case  0: expected = vecSrc1[i] + vecSrc2[i];              break; // pimAdd
@@ -243,7 +245,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 31: assert(0); break; // pimRedSumRangedInt
           case 32: assert(0); break; // pimRedSumRangedUInt
           case 33: expected = valInt; break; // pimBroadcastInt
-          case 34: expected = val;    break; // pimBroadcastUInt
+          case 34: expected = val;    break; // pimBroadcastFP32
           case 35: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
           case 36: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
           case 37: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight
@@ -253,8 +255,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           default: assert(0);
         }
         if (vecDest[i] != expected) {
+          // FP32 DIVISION sometimes(in extreme cases where float precision has limit) gives different results that have only very small difference compared to the number itself.
           if (numError < maxErrorToShow) {
-          std::cout << "Error: Index = " << i << " Result = " << vecDest[i] << " Expected = " << expected << std::endl;
+          std::cout << "Error: Index = " << i << " Result = " << std::fixed << std::setprecision(12) << vecDest[i] << " Expected = " << std::fixed << std::setprecision(12) << expected << std::endl;
           }
           ++numError;
         }
