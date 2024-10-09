@@ -516,22 +516,20 @@ pimCmdFunc1::computeRegion(unsigned index)
         int64_t result = 0;
         if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalarValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, pimUtils::castTypeToBits(result), bitsPerElementDest);
-      } else {
+      } else if (dataType != PIM_FP32) { // signed int.
         uint64_t unsignedOperand = operandBits;
         uint64_t result = 0;
         if(!computeResult(unsignedOperand, m_cmdType, m_scalarValue, result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, result, bitsPerElementDest);
-      }
-      else if (dataType == PIM_FP32){
+      } else if (dataType == PIM_FP32){
         // cannot use getOperand() here, need to use other functions for float value.
         float floatOperand = *reinterpret_cast<float*>(&operandBits);
         float result = 0.0;
-        if(!computeResultFP(floatOperand, m_cmdType, *reinterpret_cast<float*>(&m_scalerValue), result, bitsPerElementSrc)) return false;
+        if(!computeResultFP(floatOperand, m_cmdType, *reinterpret_cast<float*>(&m_scalarValue), result, bitsPerElementSrc)) return false;
         setBits(core, isVLayout, locDest.first, locDest.second, *reinterpret_cast<uint64_t*>(&result), bitsPerElementDest);
-      }
-    }
-    else {
+      } else {
       assert(0); // todo: data type
+      }
     }
   }
   return true;
@@ -1341,8 +1339,5 @@ pimCmdAnalogAAP::printDebugInfo() const
 }
 
 // Explicit template instantiation
-template class pimCmdBroadcast<uint64_t>;
-template class pimCmdBroadcast<int64_t>;
-template class pimCmdBroadcast<float>;
 template class pimCmdRedSum<uint64_t>;
 template class pimCmdRedSum<int64_t>;
