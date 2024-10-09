@@ -7,19 +7,18 @@
 #ifndef LAVA_PIM_CMD_H
 #define LAVA_PIM_CMD_H
 
-#include "libpimeval.h"
-#include "pimResMgr.h"
-#include "pimCore.h"
-#include "pimUtils.h"
-#include <vector>
-#include <string>
-#include <bit>
-#include <limits>
-#include <cassert>
-#include <bitset>
+#include "libpimeval.h"      // for PimDataType, PimObjId
+#include "pimResMgr.h"       // for pimResMgr, pimObjInfo
+#include "pimCore.h"         // for pimCore
+#include "pimUtils.h"        // for pimDataTypeEnumToStr, threadWorker
+#include <vector>            // for vector
+#include <string>            // for string
+#include <limits>            // for numeric_limits
+#include <cassert>           // for assert
+#include <bitset>            // for bitset
 
 class pimDevice;
-class pimResMgr;
+
 
 enum class PimCmdEnum {
   NOOP = 0,

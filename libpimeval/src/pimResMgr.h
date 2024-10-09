@@ -7,16 +7,15 @@
 #ifndef LAVA_PIM_RES_MGR_H
 #define LAVA_PIM_RES_MGR_H
 
-#include "libpimeval.h"
-#include "pimUtils.h"
-#include <vector>
-#include <tuple>
-#include <unordered_map>
-#include <set>
-#include <map>
-#include <string>
-#include <memory>
-#include <cassert>
+#include "libpimeval.h"      // for PimObjId, PimDataType
+#include "pimUtils.h"        // for getNumBitsOfDataType, signExt, pimDataTypeEnumToStr, castTypeToBits
+#include <vector>            // for vector
+#include <unordered_map>     // for unordered_map
+#include <set>               // for set
+#include <map>               // for map
+#include <string>            // for string
+#include <memory>            // for unique_ptr
+#include <cassert>           // for assert
 
 class pimDevice;
 
@@ -73,7 +72,7 @@ private:
 };
 
 //! @class  pimDataHolder
-//! @brief  A container holding raw PIM data as bytes
+//! @brief  A container holding raw data vector of a PIM object as a byte array
 //! Assumption: Caller gurantees correct range and indices
 class pimDataHolder
 {
@@ -83,67 +82,63 @@ public:
       m_numElements(numElements)
   {
     unsigned numBitsOfDataType = pimUtils::getNumBitsOfDataType(m_dataType);
-    m_bytesPerElement = (numBitsOfDataType + 7) / 8;
+    // Note: Each data element is stored as m_bytesPerElement bytes in this data holder.
+    // This aligns with the number of bytes per element in the host void* ptr for memcpy.
+    m_bytesPerElement = (numBitsOfDataType + 7) / 8;  // round up, e.g. 1 byte per bool
     m_data.resize(m_numElements * m_bytesPerElement);
   }
   ~pimDataHolder() {}
 
+  // return the number of bytes within a given range
+  uint64_t getNumBytes(uint64_t idxBegin, uint64_t idxEnd) const {
+    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
+    return numElements * m_bytesPerElement;
+  }
+
   // copy data of range [idxBegin, idxEnd) from host ptr into holder
   // use full range if idxEnd is default 0
-  void copyFromHost(void* src, uint64_t idxBegin = 0, uint64_t idxEnd = 0) {
+  bool copyFromHost(void* src, uint64_t idxBegin = 0, uint64_t idxEnd = 0) {
     uint64_t byteIndex = idxBegin * m_bytesPerElement;
-    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
-    uint64_t numBytes = numElements * m_bytesPerElement;
+    uint64_t numBytes = getNumBytes(idxBegin, idxEnd);
     std::memcpy(m_data.data() + byteIndex, src, numBytes);
+    return true;
   }
 
   // copy data of range [idxBegin, idxEnd) from holder to host ptr
-  void copyToHost(void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const {
+  // use full range if idxEnd is default 0
+  bool copyToHost(void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const {
     uint64_t byteIndex = idxBegin * m_bytesPerElement;
-    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
-    uint64_t numBytes = numElements * m_bytesPerElement;
+    uint64_t numBytes = getNumBytes(idxBegin, idxEnd);
     std::memcpy(dest, m_data.data() + byteIndex, numBytes);
-  }
-
-  // copy data of range [idxBegin, idxEnd) from another holder to this holder
-  void copyFromObj(pimDataHolder& src, uint64_t idxBegin = 0, uint64_t idxEnd = 0) {
-    uint64_t byteIndex = idxBegin * m_bytesPerElement;
-    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
-    uint64_t numBytes = numElements * m_bytesPerElement;
-    std::memcpy(m_data.data() + byteIndex, src.m_data.data() + byteIndex, numBytes);
+    return true;
   }
 
   // copy data of range [idxBegin, idxEnd) from this holder to another holder
-  void copyToObj(pimDataHolder& dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const {
+  // use full range if idxEnd is default 0
+  bool copyToObj(pimDataHolder& dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const {
     uint64_t byteIndex = idxBegin * m_bytesPerElement;
-    uint64_t numElements = (idxEnd == 0 ? m_numElements : idxEnd - idxBegin);
-    uint64_t numBytes = numElements * m_bytesPerElement;
+    uint64_t numBytes = getNumBytes(idxBegin, idxEnd);
     std::memcpy(dest.m_data.data() + byteIndex, m_data.data() + byteIndex, numBytes);
+    return true;
   }
 
-  // set an element of type T at index
-  template<typename T>
-  void setElement(uint64_t index, T val) {
+  // set an element at index from bit representation
+  bool setElementBits(uint64_t index, uint64_t bits) {
     uint64_t byteIndex = index * m_bytesPerElement;
-    uint64_t bits = pimUtils::castTypeToBits(val);
     std::memcpy(m_data.data() + byteIndex, &bits, m_bytesPerElement);
+    return true;
   }
 
   // get bit representation of an element at index
-  uint64_t getElementBits(uint64_t index) const {
-    uint64_t bits = 0;
+  bool getElementBits(uint64_t index, uint64_t &bits) const {
+    bits = 0;
     uint64_t byteIndex = index * m_bytesPerElement;
     std::memcpy(&bits, m_data.data() + byteIndex, m_bytesPerElement);
-    return pimUtils::signExt(bits, m_dataType);
+    bits = pimUtils::signExt(bits, m_dataType);
+    return true;
   }
 
-  // get an element of type T at index
-  template<typename T>
-  T getElement(uint64_t index) const {
-     return *reinterpret_cast<const T*>(m_data.data() + index);
-  }
-
-  // print bytes
+  // print all bytes
   void print() const {
     std::printf("DEBUG: data-type = %s, num-elements = %llu, byts-per-element = %u\n",
         pimUtils::pimDataTypeEnumToStr(m_dataType).c_str(), m_numElements, m_bytesPerElement);
@@ -169,14 +164,15 @@ private:
 class pimObjInfo
 {
 public:
-  pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement)
+  pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, pimDevice* device)
     : m_objId(objId),
       m_assocObjId(objId),
       m_dataType(dataType),
       m_allocType(allocType),
       m_data(dataType, numElements),
       m_numElements(numElements),
-      m_bitsPerElement(bitsPerElement)
+      m_bitsPerElement(bitsPerElement),
+      m_device(device)
   {}
   ~pimObjInfo() {}
 
@@ -196,6 +192,7 @@ public:
   PimDataType getDataType() const { return m_dataType; }
   uint64_t getNumElements() const { return m_numElements; }
   unsigned getBitsPerElement() const { return m_bitsPerElement; }
+  pimDevice* getDevice() { return m_device; }
   bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
   bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
   bool isHLayout() const { return m_allocType == PIM_ALLOC_H || m_allocType == PIM_ALLOC_H1; }
@@ -210,17 +207,30 @@ public:
   std::string getDataTypeName() const;
   void print() const;
 
-  // raw data accessors
-  const pimDataHolder& data() const { return m_data; }
-  pimDataHolder& data() { return m_data; }
+  // Note: Below functions are wraper APIs to access PIM object data holder
+  // For regular PIM objects:
+  // - Support host-to-device, device-to-host, and device-to-device copying
+  // - Use bit representation to set or get an element at specific element index
+  // - Support ranges in [idxBegin, idxEnd). Use full range if idxEnd is 0
+  // For reference PIM objects:
+  // - A ref object directly access the data holder of the ref-to object
+  // - Dual-contact ref negates all bits during operations
+  void copyFromHost(void* src, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  void copyToHost(void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const;
+  void copyToObj(pimObjInfo& destObj, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const;
+  void setElementBits(uint64_t index, uint64_t bits);
+  uint64_t getElementBits(uint64_t index) const;
+  template <typename T> void setElement(uint64_t index, T val) {
+    setElementBits(index, pimUtils::castTypeToBits(val));
+  }
 
   // Note: Below two functions are for supporting mixed functional and micro-ops level simulation.
   // Functional simulation purely uses this PIM data holder for simulation speed,
   // while micro-ops level simulation uses simulated 2D memory arrays.
   // When a functional API is called during micro-ops level simulation, call below two functions
   // to sync the data between this PIM data holder and simulated memory arrays.
-  void syncFromSimulatedMem(pimDevice *device);
-  void syncToSimulatedMem(pimDevice *device) const;
+  void syncFromSimulatedMem();
+  void syncToSimulatedMem() const;
 
 private:
   PimObjId m_objId = -1;
@@ -237,6 +247,7 @@ private:
   unsigned m_maxElementsPerRegion = 0;
   unsigned m_numColsPerElem = 0; // number of cols per element
   bool m_isDualContactRef = false;
+  pimDevice* m_device = nullptr; // for accessing simulated memory
 };
 
 
