@@ -525,7 +525,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::SUB,          { 1597,  822, 2024 } },
       { PimCmdEnum::MUL,          { 2222, 1200, 3664 } },
       { PimCmdEnum::DIV,          { 3292, 1749, 5024 } },
-      { PimCmdEnum::MUL_SCALAR,   { 1852, 1000, 3054 } },
+      { PimCmdEnum::MUL_SCALAR,   { 2222, 1200, 3664 } },
     }}
   }},
 };

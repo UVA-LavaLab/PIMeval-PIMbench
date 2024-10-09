@@ -78,7 +78,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       {  1, "pimSub"                 },
       {  2, "pimMul"                 },
       {  3, "pimDiv"                 },
-      {  4, "pimAbs"                 }, // TODO
+      {  4, "pimAbs"                 },
       //{  5, "pimAnd"                 }, // not supported
       //{  6, "pimOr"                  }, // not supported
       //{  7, "pimXor"                 }, // not supported
