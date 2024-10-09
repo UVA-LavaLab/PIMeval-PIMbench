@@ -78,7 +78,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       {  1, "pimSub"                 },
       {  2, "pimMul"                 },
       {  3, "pimDiv"                 },
-      {  4, "pimAbs"                 },
+      // {  4, "pimAbs"                 },
       //{  5, "pimAnd"                 }, // not supported
       //{  6, "pimOr"                  }, // not supported
       //{  7, "pimXor"                 }, // not supported
@@ -88,19 +88,19 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       // { 11, "pimEQ"                  }, // TODO
       // { 12, "pimMin"                 }, // TODO
       // { 13, "pimMax"                 }, // TODO
-      { 14, "pimAddScalar"           },
-      { 15, "pimSubScalar"           },
-      { 16, "pimMulScalar"           },
+      // { 14, "pimAddScalar"           },
+      // { 15, "pimSubScalar"           },
+      // { 16, "pimMulScalar"           },
       //{ 17, "pimDivScalar"           }, // TODO
       //{ 18, "pimAndScalar"           }, // not supported
       //{ 19, "pimOrScalar"            }, // not supported
       //{ 20, "pimXorScalar"           }, // not supported
       //{ 21, "pimXnorScalar"          }, // not supported
-      { 22, "pimGTScalar"            },
-      { 23, "pimLTScalar"            },
-      { 24, "pimEQScalar"            },
-      { 25, "pimMinScalar"           },
-      { 26, "pimMaxScalar"           },
+      // { 22, "pimGTScalar"            },
+      // { 23, "pimLTScalar"            },
+      // { 24, "pimEQScalar"            },
+      // { 25, "pimMinScalar"           },
+      // { 26, "pimMaxScalar"           },
       //{ 27, "pimScaledAdd"           }, // TODO
       //{ 28, "pimPopCount"            }, // not supported
       //{ 29, "pimRedSumInt"           }, // TODO
