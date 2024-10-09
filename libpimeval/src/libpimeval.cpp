@@ -149,6 +149,14 @@ pimBroadcastUInt(PimObjId dest, uint64_t value)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Load vector with a float32 value
+PimStatus
+pimBroadcastFP32(PimObjId dest, float value)
+{
+  bool ok = pimSim::get()->pimBroadcast(dest, value);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM add
 PimStatus
 pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)

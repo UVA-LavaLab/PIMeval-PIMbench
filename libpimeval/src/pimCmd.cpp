@@ -387,21 +387,27 @@ pimCmdFunc1::computeRegion(unsigned index)
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64 || dataType == PIM_FP32) {
       bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
       if (isSigned) {
         int64_t signedOperand = objSrc.getElementBits(elemIdx);
         int64_t result = 0;
         if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalarValue, result, bitsPerElementSrc)) return false;
         objDest.setElement(elemIdx, result);
-      } else {
+      } else if (dataType != PIM_FP32) { // signed int.
         uint64_t unsignedOperand = objSrc.getElementBits(elemIdx);
         uint64_t result = 0;
         if(!computeResult(unsignedOperand, m_cmdType, m_scalarValue, result, bitsPerElementSrc)) return false;
         objDest.setElement(elemIdx, result);
-      }
-    } else {
+      } else if (dataType == PIM_FP32){
+        uint64_t bits = objSrc.getElementBits(elemIdx);
+        float floatOperand = pimUtils::castBitsToType<float>(bits);
+        float result = 0.0;
+        if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result, bitsPerElementSrc)) return false;
+        objDest.setElement(elemIdx, result);
+      } else {
       assert(0); // todo: data type
+      }
     }
   }
   return true;
