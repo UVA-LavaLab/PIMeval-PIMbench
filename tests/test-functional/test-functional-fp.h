@@ -88,19 +88,19 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       // { 11, "pimEQ"                  }, // TODO
       // { 12, "pimMin"                 }, // TODO
       // { 13, "pimMax"                 }, // TODO
-      { 14, "pimAddScalar"           }, // TODO
-      { 15, "pimSubScalar"           }, // TODO
-      { 16, "pimMulScalar"           }, // TODO
+      { 14, "pimAddScalar"           },
+      { 15, "pimSubScalar"           },
+      { 16, "pimMulScalar"           },
       //{ 17, "pimDivScalar"           }, // TODO
       //{ 18, "pimAndScalar"           }, // not supported
       //{ 19, "pimOrScalar"            }, // not supported
       //{ 20, "pimXorScalar"           }, // not supported
       //{ 21, "pimXnorScalar"          }, // not supported
-      { 22, "pimGTScalar"            }, // TODO
-      { 23, "pimLTScalar"            }, // TODO
-      { 24, "pimEQScalar"            }, // TODO
-      { 25, "pimMinScalar"           }, // TODO
-      { 26, "pimMaxScalar"           }, // TODO
+      { 22, "pimGTScalar"            },
+      { 23, "pimLTScalar"            },
+      { 24, "pimEQScalar"            },
+      { 25, "pimMinScalar"           },
+      { 26, "pimMaxScalar"           },
       //{ 27, "pimScaledAdd"           }, // TODO
       //{ 28, "pimPopCount"            }, // not supported
       //{ 29, "pimRedSumInt"           }, // TODO
@@ -108,7 +108,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       //{ 31, "pimRedSumRangedInt"     }, // TODO
       //{ 32, "pimRedSumRangedUInt"    }, // TODO
       //{ 33, "pimBroadcastInt"        }, // TODO
-      //{ 34, "pimBroadcastUInt"       }, // TODO
+      //{ 34, "pimBroadcastFP32"       }, // TODO
       { 35, "pimRotateElementsRight" },
       { 36, "pimRotateElementsLeft"  },
       { 37, "pimShiftElementsRight"  },
@@ -171,7 +171,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 31: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
       case 32: status = pimRedSumRangedUInt     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
       case 33: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 34: status = pimBroadcastUInt        (objDest, scalarVal);                   break;
+      case 34: status = pimBroadcastFP32          (objDest, scalarVal);                   break;
       case 35: status = pimRotateElementsRight  (objDest);                              break;
       case 36: status = pimRotateElementsLeft   (objDest);                              break;
       case 37: status = pimShiftElementsRight   (objDest);                              break;
@@ -245,7 +245,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 31: assert(0); break; // pimRedSumRangedInt
           case 32: assert(0); break; // pimRedSumRangedUInt
           case 33: expected = valInt; break; // pimBroadcastInt
-          case 34: expected = val;    break; // pimBroadcastUInt
+          case 34: expected = val;    break; // pimBroadcastFP32
           case 35: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
           case 36: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
           case 37: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight
