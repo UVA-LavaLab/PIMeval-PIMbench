@@ -29,6 +29,8 @@ $SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 export PIMEVAL_TARGET=PIM_DEVICE_BANK_LEVEL
 $SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
+# replace number of threads with #
+sed -i 's/thread pool with [0-9]\+ threads/thread pool with # threads/g' $LOCAL
 
 # STEP 2: Compare result_local.txt with result_golden.txt
 #         Catch any differences between the two

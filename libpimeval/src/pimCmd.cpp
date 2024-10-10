@@ -524,7 +524,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
         case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
         default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
           assert(0);
         }
         objDest.setElement(elemIdx, result);
@@ -554,7 +554,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
         case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
         default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", m_cmdType);
+          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
           assert(0);
         }
         objDest.setElement(elemIdx, result);
