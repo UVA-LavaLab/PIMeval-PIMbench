@@ -126,8 +126,8 @@ int main(int argc, char* argv[])
   if (params.shouldVerify) 
   {
     // verify result
-    #pragma omp parallel for
     bool is_correct = true;
+    #pragma omp parallel for
     for (unsigned i = 0; i < params.vectorLength; ++i)
     {
       int result = A * X[i];
