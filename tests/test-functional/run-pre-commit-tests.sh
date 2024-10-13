@@ -21,14 +21,20 @@ echo "PIMeval Functional Testing Results" | tee -a $LOCAL
 echo "##################################" | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_BITSIMD_V_AP
-$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_FULCRUM
-$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
 export PIMEVAL_TARGET=PIM_DEVICE_BANK_LEVEL
-$SCRIPT_DIR/test-functional.out | tee -a $LOCAL
+$SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
+# replace number of threads with #
+if [[ "$OSTYPE" == "darwin"* ]]; then # OSX
+    sed -i '' 's/thread pool with [0-9]* threads/thread pool with # threads/g' $LOCAL
+else # Linux
+    sed -i 's/thread pool with [0-9]* threads/thread pool with # threads/g' $LOCAL
+fi
 
 # STEP 2: Compare result_local.txt with result_golden.txt
 #         Catch any differences between the two

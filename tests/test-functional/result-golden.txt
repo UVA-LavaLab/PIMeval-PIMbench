@@ -8,7 +8,7 @@ PIM-Info: Config: #ranks = 1, #bankPerRank = 1, #subarrayPerBank = 4, #rowsPerSu
 PIM-Info: Aggregate every two subarrays as a single core
 PIM-Info: Created performance energy model for bit-serial PIM
 PIM-Info: Created PIM device with 2 cores, each with 2048 rows and 256 columns.
-PIM-Info: Created thread pool with 9 threads.
+PIM-Info: Created thread pool with # threads.
 ================================================================
 INFO: PIMeval Functional Tests for INT8
 ================================================================
@@ -900,7 +900,7 @@ PIM-Info: Config: #ranks = 1, #bankPerRank = 1, #subarrayPerBank = 4, #rowsPerSu
 PIM-Info: Aggregate every two subarrays as a single core
 PIM-Info: Created performance energy model for Fulcrum
 PIM-Info: Created PIM device with 2 cores, each with 2048 rows and 256 columns.
-PIM-Info: Created thread pool with 9 threads.
+PIM-Info: Created thread pool with # threads.
 ================================================================
 INFO: PIMeval Functional Tests for INT8
 ================================================================
@@ -1777,7 +1777,7 @@ PIM-Info: Config: #ranks = 1, #bankPerRank = 1, #subarrayPerBank = 4, #rowsPerSu
 PIM-Info: Aggregate all subarrays within a bank as a single core
 PIM-Info: Created performance energy model for bank-level PIM
 PIM-Info: Created PIM device with 1 cores, each with 4096 rows and 256 columns.
-PIM-Info: Created thread pool with 9 threads.
+PIM-Info: Created thread pool with # threads.
 ================================================================
 INFO: PIMeval Functional Tests for INT8
 ================================================================
