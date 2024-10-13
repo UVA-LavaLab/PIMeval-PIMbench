@@ -93,7 +93,7 @@ pimObjInfo::copyFromHost(void* src, uint64_t idxBegin, uint64_t idxEnd)
 {
   // handle reference
   if (m_refObjId != -1) {
-    pimObjInfo &refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    pimObjInfo& refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
     if (isDualContactRef()) {
       uint64_t numBytes = refObj.m_data.getNumBytes(idxBegin, idxEnd);
       std::vector<uint8_t> buffer(numBytes);
@@ -156,7 +156,7 @@ pimObjInfo::setElementBits(uint64_t index, uint64_t bits)
 {
   // handle reference
   if (m_refObjId != -1) {
-    pimObjInfo &refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    pimObjInfo& refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
     if (isDualContactRef()) {
       bits = ~bits;
       refObj.m_data.setElementBits(index, bits);
@@ -174,7 +174,7 @@ pimObjInfo::getElementBits(uint64_t index) const
 {
   // handle reference
   if (m_refObjId != -1) {
-    pimObjInfo &refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    pimObjInfo& refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
     if (isDualContactRef()) {
       uint64_t bits = 0;
       refObj.m_data.getElementBits(index, bits);
