@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
   }
   inputMatrix.clear();
   inputMatrix.resize(resultMatrix1.size());
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(224, 224, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(resultMatrix2.size());
-  for (int i = 0; i < resultMatrix2.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix2.size(); ++i)
   {
     addPadding(112, 112, 1, resultMatrix2[i], inputMatrix[i]);
   }
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(128);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(112, 112, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(128);
-  for (int i = 0; i < resultMatrix2.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix2.size(); ++i)
   {
     addPadding(56, 56, 1, resultMatrix2[i], inputMatrix[i]);
   }
@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(256);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(56, 56, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(256);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(56, 56, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
   }
   inputMatrix.clear();
   inputMatrix.resize(256);
-  for (int i = 0; i < resultMatrix2.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix2.size(); ++i)
   {
     addPadding(28, 28, 1, resultMatrix2[i], inputMatrix[i]);
   }
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(28, 28, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(28, 28, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix2.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix2.size(); ++i)
   {
     addPadding(14, 14, 1, resultMatrix2[i], inputMatrix[i]);
   }
@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(14, 14, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -692,7 +692,7 @@ int main(int argc, char *argv[])
   }  
   inputMatrix.clear();
   inputMatrix.resize(512);
-  for (int i = 0; i < resultMatrix1.size(); ++i)
+  for (unsigned long int i = 0; i < resultMatrix1.size(); ++i)
   {
     addPadding(14, 14, 1, resultMatrix1[i], inputMatrix[i]);
   }
@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
   // Create a vector of pairs to store value-index pairs
   std::vector<std::pair<double, int>> valueIndexPairs;
   // Populate the vector with value-index pairs
-  for (int i = 0; i < resultVector.size(); ++i) {
+  for (unsigned long int i = 0; i < resultVector.size(); ++i) {
       valueIndexPairs.push_back(std::make_pair(resultVector[i], i));
   }
   // Sort the vector of pairs based on values in descending order
