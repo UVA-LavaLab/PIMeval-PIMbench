@@ -123,9 +123,9 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   }
 
   int idx = 0;
-  for (long unsigned int i = 0; i < filterMatrix.size(); ++i)
+  for (uint64_t i = 0; i < filterMatrix.size(); ++i)
   {
-    for (long unsigned int j = 0; j < filterMatrix[i].size(); ++j)
+    for (uint64_t j = 0; j < filterMatrix[i].size(); ++j)
     {
       PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
       if (status != PIM_OK)
@@ -148,7 +148,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     matrixObjects.push_back(obj);
   }
 
-  for (long unsigned int i = 0; i < inputMatrix.size(); i++)
+  for (uint64_t i = 0; i < inputMatrix.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
@@ -240,7 +240,7 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
         std::vector<std::vector<int>> decompMat;
 	      decomposeMatrix(inputHeight, inputWidth, kernelMatrix[i].size(), kernelMatrix[i][0].size(), stride, 0, inputMatrix[k], decompMat);
         // Merge the matrices
-        for (long unsigned int idx = 0; idx < mergedMat.size(); idx++) {
+        for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
           mergedMat[idx].insert(mergedMat[idx].end(),
                                 std::make_move_iterator(decompMat[idx].begin()),
                                 std::make_move_iterator(decompMat[idx].end()));
@@ -260,7 +260,7 @@ void conv2(std::vector<std::vector<std::vector<int>>> &inputMatrix, std::vector<
 
       for (int m = 0; m < hopSize; ++m)
       {
-        for (long unsigned int n = m + hopSize; n < outVector.size(); n += hopSize)
+        for (uint64_t n = m + hopSize; n < outVector.size(); n += hopSize)
         {
           dstVec[m] += outVector[n];
         }
@@ -312,7 +312,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     pimObjectList[i] = obj;
   }
 
-  for (long unsigned int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -322,7 +322,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     }
   }
 
-  for (long unsigned int i = 1; i < pimObjectList.size(); i++)
+  for (uint64_t i = 1; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimMax(pimObjectList[0], pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)
@@ -557,7 +557,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
       return;
   }
 
-  for (long unsigned int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -573,7 +573,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
       return;
   }  
 
-  for (long unsigned int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimMax(RELUConstObj, pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)
