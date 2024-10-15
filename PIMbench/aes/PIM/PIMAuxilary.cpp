@@ -106,16 +106,15 @@ void pimXor_(PIMAuxilary* src1, PIMAuxilary* src2, PIMAuxilary* dst) {
     }
     status = pimCopyHostToDevice((void*)dst->array.data(), dst->pimObjId); 
     assert(status == PIM_OK);
-    int PimObjId = -1;
 
     // status = pimXor(PimObjId, PimObjId, PimObjId); // TODO: Debug Xor
-    assert(status == PIM_OK);
+    // assert(status == PIM_OK);
 }
 
 void pimCopyDeviceToDevice(PIMAuxilary* src, PIMAuxilary* dst) { 
     PimStatus status; 
     status = pimCopyDeviceToHost(src->pimObjId, src->array.data());
-    for(int i = 0; i < dst->array.size(); i++) {
+    for(uint64_t i = 0; i < dst->array.size(); i++) {
             dst->array[i] = src->array[i];
     }
     status = pimCopyHostToDevice(dst->array.data(), dst->pimObjId);
