@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %llu bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
+  printf("This file has %lu bytes of image data with a brightness coefficient of %d\n", imgDataBytes, params.brightnessCoefficient);
 
   if (!createDevice(params.configFile))
   {
