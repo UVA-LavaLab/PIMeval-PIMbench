@@ -78,20 +78,20 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       {  1, "pimSub"                 },
       {  2, "pimMul"                 },
       {  3, "pimDiv"                 },
-      // {  4, "pimAbs"                 }, // TODO
+      {  4, "pimAbs"                 },
       //{  5, "pimAnd"                 }, // not supported
       //{  6, "pimOr"                  }, // not supported
       //{  7, "pimXor"                 }, // not supported
       //{  8, "pimXnor"                }, // not supported
-      //{  9, "pimGT"                  }, // TODO
-      // { 10, "pimLT"                  }, // TODO
-      // { 11, "pimEQ"                  }, // TODO
-      // { 12, "pimMin"                 }, // TODO
-      // { 13, "pimMax"                 }, // TODO
-      // { 14, "pimAddScalar"           }, // TODO
-      // { 15, "pimSubScalar"           }, // TODO
-      // { 16, "pimMulScalar"           }, // TODO
-      //{ 17, "pimDivScalar"           }, // TODO
+      // {  9, "pimGT"                  }, 
+      // { 10, "pimLT"                  },
+      // { 11, "pimEQ"                  },
+      // { 12, "pimMin"                 },
+      // { 13, "pimMax"                 },
+      { 14, "pimAddScalar"           },
+      { 15, "pimSubScalar"           },
+      { 16, "pimMulScalar"           },
+      { 17, "pimDivScalar"           },
       //{ 18, "pimAndScalar"           }, // not supported
       //{ 19, "pimOrScalar"            }, // not supported
       //{ 20, "pimXorScalar"           }, // not supported

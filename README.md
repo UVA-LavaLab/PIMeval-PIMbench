@@ -150,7 +150,7 @@ PIMeval-PIMbench/
 <!--
 ### How To Build
 * Run `make` at root directory or subdirectories
-  * `make perf`: Build with `-Ofast` for performance measurement (default)
+  * `make perf`: Build with `-O3` for performance measurement (default)
   * `make debug`: Build with `-g` and `-DDEBUG` for debugging and printing verbose messages
 * Multi-threaded building
   * `make -j<n_proc>`
