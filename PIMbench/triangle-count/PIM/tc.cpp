@@ -256,7 +256,7 @@ int run_rowmaxusage_opt(const vector<vector<bool>>& adjMatrix, const vector<vect
                 // Parallelizing the loop with OpenMP
                 #pragma omp parallel for reduction(+:host_time_if, words) 
 #endif
-                for (int k = 0; k < wordsPerMatrixRow; ++k) {
+                for (uint64_t k = 0; k < wordsPerMatrixRow; ++k) {
                     unsigned int op1 = bitAdjMatrix[i][k];
                     unsigned int op2 = bitAdjMatrix[j][k];
                     auto ifstart = std::chrono::high_resolution_clock::now();
@@ -334,7 +334,7 @@ int run_adjmatrix(const vector<vector<bool>>& adjMatrix, const vector<vector<UIN
             if (adjMatrix[i][j]) 
             { // If there's an edge between i and j
                 ++oneCount;
-                for (int k = 0; k < wordsPerMatrixRow; ++k) {
+                for (uint64_t k = 0; k < wordsPerMatrixRow; ++k) {
                     unsigned int op1 = bitAdjMatrix[i][k];
                     unsigned int op2 = bitAdjMatrix[j][k];
                     ++words;
@@ -394,13 +394,12 @@ int run_adjlist(const unordered_map<int, unordered_set<int>>& adjList, uint64_t 
     vector<uint32_t> opt_src1, opt_src2;
     double host_time_if = 0.0;
     for (auto it_u = adjList.begin(); it_u != adjList.end(); ++it_u) {
-        const auto& u = it_u->first;
         const auto& neighborsU = it_u->second;
         for (auto it_v = neighborsU.begin(); it_v != neighborsU.end(); ++it_v) {
             const auto& neighborsV = adjList.find(*it_v)->second;
             convertToBitMap(neighborsU, 0, src1);
             convertToBitMap(neighborsV, 0, src2);
-            for (int j = 0; j < wordsPerMatrixRow; ++j) {
+            for (uint64_t j = 0; j < wordsPerMatrixRow; ++j) {
                 if(USE_OPT) {
                     auto ifstart = std::chrono::high_resolution_clock::now();
                     if(src1[j] == 0 || src2[j] == 0) {
