@@ -45,7 +45,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
 
   // Cover scalar value testing
   // PIMeval uses uint64_t to represent bits of scalarValue
-  const float scalarValFloat = 123.0;
+  const float scalarValFloat = 123.0f;
   const uint64_t scalarVal = *reinterpret_cast<const uint64_t*>(&scalarValFloat);
   const int64_t scalarValInt = -11; // for int broadcasting
   vecSrc1[500] = static_cast<T>(scalarVal); // cover scalar EQ
@@ -83,11 +83,11 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       //{  6, "pimOr"                  }, // not supported
       //{  7, "pimXor"                 }, // not supported
       //{  8, "pimXnor"                }, // not supported
-      // {  9, "pimGT"                  }, 
-      // { 10, "pimLT"                  },
-      // { 11, "pimEQ"                  },
-      // { 12, "pimMin"                 },
-      // { 13, "pimMax"                 },
+      {  9, "pimGT"                  }, 
+      { 10, "pimLT"                  },
+      { 11, "pimEQ"                  },
+      { 12, "pimMin"                 },
+      { 13, "pimMax"                 },
       { 14, "pimAddScalar"           },
       { 15, "pimSubScalar"           },
       { 16, "pimMulScalar"           },
@@ -96,19 +96,19 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       //{ 19, "pimOrScalar"            }, // not supported
       //{ 20, "pimXorScalar"           }, // not supported
       //{ 21, "pimXnorScalar"          }, // not supported
-      // { 22, "pimGTScalar"            }, // TODO
-      // { 23, "pimLTScalar"            }, // TODO
-      // { 24, "pimEQScalar"            }, // TODO
-      // { 25, "pimMinScalar"           }, // TODO
-      // { 26, "pimMaxScalar"           }, // TODO
-      //{ 27, "pimScaledAdd"           }, // TODO
+      { 22, "pimGTScalar"            },
+      { 23, "pimLTScalar"            },
+      { 24, "pimEQScalar"            },
+      { 25, "pimMinScalar"           },
+      { 26, "pimMaxScalar"           },
+      { 27, "pimScaledAdd"           },
       //{ 28, "pimPopCount"            }, // not supported
-      //{ 29, "pimRedSumInt"           }, // TODO
-      //{ 30, "pimRedSumUInt"          }, // TODO
-      //{ 31, "pimRedSumRangedInt"     }, // TODO
-      //{ 32, "pimRedSumRangedUInt"    }, // TODO
-      //{ 33, "pimBroadcastInt"        }, // TODO
-      //{ 34, "pimBroadcastFP32"       }, // TODO
+      //{ 29, "pimRedSumInt"           }, // not supported
+      { 30, "pimRedSumFP32"          },
+      //{ 31, "pimRedSumRangedInt"     }, // not supported
+      // { 32, "pimRedSumRangedFP32"    },
+      //{ 33, "pimBroadcastInt"        }, // not supported
+      { 34, "pimBroadcastFP32"       },
       { 35, "pimRotateElementsRight" },
       { 36, "pimRotateElementsLeft"  },
       { 37, "pimShiftElementsRight"  },
@@ -136,6 +136,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
 
     int64_t sumInt = 0;
     uint64_t sumUInt = 0;
+    float sumFP32 = 0.0f;
     switch (testId) {
       case  0: status = pimAdd                  (objSrc1, objSrc2, objDest);            break;
       case  1: status = pimSub                  (objSrc1, objSrc2, objDest);            break;
@@ -167,11 +168,11 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 27: status = pimScaledAdd            (objSrc1, objSrc2, objDest, scalarVal); break;
       case 28: status = pimPopCount             (objSrc1, objDest);                     break;
       case 29: status = pimRedSumInt            (objSrc1, &sumInt);                     break;
-      case 30: status = pimRedSumUInt           (objSrc1, &sumUInt);                    break;
+      case 30: status = pimRedSumFP32           (objSrc1, &sumFP32);                    break;
       case 31: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      case 32: status = pimRedSumRangedUInt     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
+      //case 32: status = pimRedSumRangedFP32     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
       case 33: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 34: status = pimBroadcastFP32          (objDest, scalarVal);                   break;
+      case 34: status = pimBroadcastFP32          (objDest, scalarValFloat);            break;
       case 35: status = pimRotateElementsRight  (objDest);                              break;
       case 36: status = pimRotateElementsLeft   (objDest);                              break;
       case 37: status = pimShiftElementsRight   (objDest);                              break;
@@ -204,6 +205,14 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
         sumUIntExpected += vecSrc1[i];
       }
       assert(sumUInt == sumUIntExpected);
+    }else if (testName == "pimRedSumFP32" || testName == "pimRedSumRangedFP32") {
+      uint64_t begin = (testName == "pimRedSumFP32" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedSumFP32" ? numElements : idxEnd);
+      float sumFP32Expected = 0.0f;
+      for (uint64_t i = begin; i < end; ++i) {
+        sumFP32Expected += vecSrc1[i];
+      }
+      assert(sumFP32 == sumFP32Expected);
     } else {
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
@@ -241,9 +250,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 27: expected = (vecSrc1[i] * val) + vecSrc2[i];      break; // pimScaledAdd
           case 28: expected = std::bitset<sizeof(T) * 8>(vecSrc1[i]).count(); break; // pimPopCount
           case 29: assert(0); break; // pimRedSumInt
-          case 30: assert(0); break; // pimRedSumUInt
+          case 30: assert(0); break; // pimRedSumFP32
           case 31: assert(0); break; // pimRedSumRangedInt
-          case 32: assert(0); break; // pimRedSumRangedUInt
+          case 32: assert(0); break; // pimRedSumRangedFP32
           case 33: expected = valInt; break; // pimBroadcastInt
           case 34: expected = val;    break; // pimBroadcastFP32
           case 35: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
