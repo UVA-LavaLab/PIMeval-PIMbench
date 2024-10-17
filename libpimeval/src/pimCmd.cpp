@@ -394,7 +394,7 @@ pimCmdFunc1::computeRegion(unsigned index)
         int64_t result = 0;
         if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalarValue, result, bitsPerElementSrc)) return false;
         objDest.setElement(elemIdx, result);
-      } else if (dataType != PIM_FP32) { // signed int.
+      } else if (dataType != PIM_FP32) { // unsigned int.
         uint64_t unsignedOperand = objSrc.getElementBits(elemIdx);
         uint64_t result = 0;
         if(!computeResult(unsignedOperand, m_cmdType, m_scalarValue, result, bitsPerElementSrc)) return false;
@@ -403,7 +403,7 @@ pimCmdFunc1::computeRegion(unsigned index)
         uint64_t bits = objSrc.getElementBits(elemIdx);
         float floatOperand = pimUtils::castBitsToType<float>(bits);
         float result = 0.0;
-        if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result, bitsPerElementSrc)) return false;
+        if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
         objDest.setElement(elemIdx, result);
       } else {
       assert(0); // todo: data type
@@ -493,96 +493,33 @@ pimCmdFunc2::computeRegion(unsigned index)
   unsigned numElementsInRegion = src1Region.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
-
-    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
-      uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
-      uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
-      // The following if-else block is the perfect example of where a Template would have been much more cleaner and efficient and less error prone
-      if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+    if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64 || dataType == PIM_FP32) {
+      bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
+      if (isSigned) {
+        uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
+        uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
         int64_t operand1 = pimUtils::signExt(operandBits1, dataType);
         int64_t operand2 = pimUtils::signExt(operandBits2, dataType);
         int64_t result = 0;
-        switch (m_cmdType) {
-        case PimCmdEnum::ADD: result = operand1 + operand2; break;
-        case PimCmdEnum::SUB: result = operand1 - operand2; break;
-        case PimCmdEnum::MUL: result = operand1 * operand2; break;
-        case PimCmdEnum::DIV:
-          if (operand2 == 0) {
-            std::printf("PIM-Error: Division by zero\n");
-            return false;
-          }
-          result = operand1 / operand2;
-          break;
-        case PimCmdEnum::AND: result = operand1 & operand2; break;
-        case PimCmdEnum::OR: result = operand1 | operand2; break;
-        case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
-        case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
-        case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
-        case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
-        case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
-        case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
-        default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
-          assert(0);
-        }
+        if(!computeResult(operand1, operand2, m_cmdType, (int64_t)m_scalarValue, result)) return false;
+        objDest.setElement(elemIdx, result);
+      } else if (dataType != PIM_FP32) { // unsigned int.
+        uint64_t unsignedOperand1 = objSrc1.getElementBits(elemIdx);
+        uint64_t unsignedOperand2 = objSrc2.getElementBits(elemIdx);
+        uint64_t result = 0;
+        if(!computeResult(unsignedOperand1, unsignedOperand2, m_cmdType, m_scalarValue, result)) return false;
+        objDest.setElement(elemIdx, result);
+      } else if (dataType == PIM_FP32){
+        uint64_t bits1 = objSrc1.getElementBits(elemIdx);
+        uint64_t bits2 = objSrc2.getElementBits(elemIdx);
+        float floatOperand1 = pimUtils::castBitsToType<float>(bits1);
+        float floatOperand2 = pimUtils::castBitsToType<float>(bits2);
+        float result = 0.0;
+        if(!computeResultFP(floatOperand1, floatOperand2, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
         objDest.setElement(elemIdx, result);
       } else {
-        uint64_t operand1 = operandBits1;
-        uint64_t operand2 = operandBits2;
-        uint64_t result = 0;
-        switch (m_cmdType) {
-        case PimCmdEnum::ADD: result = operand1 + operand2; break;
-        case PimCmdEnum::SUB: result = operand1 - operand2; break;
-        case PimCmdEnum::MUL: result = operand1 * operand2; break;
-        case PimCmdEnum::DIV:
-          if (operand2 == 0) {
-            std::printf("PIM-Error: Division by zero\n");
-            return false;
-          }
-          result = operand1 / operand2;
-          break;
-        case PimCmdEnum::AND: result = operand1 & operand2; break;
-        case PimCmdEnum::OR: result = operand1 | operand2; break;
-        case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
-        case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
-        case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
-        case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
-        case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
-        case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
-        case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
-        default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
-          assert(0);
-        }
-        objDest.setElement(elemIdx, result);
-      }
-    } else if (dataType == PIM_FP32) {
-      uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
-      uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
-      float operand1 = pimUtils::castBitsToType<float>(operandBits1);
-      float operand2 = pimUtils::castBitsToType<float>(operandBits2);
-      float result = 0;
-      switch (m_cmdType) {
-      case PimCmdEnum::ADD: result = operand1 + operand2; break;
-      case PimCmdEnum::SUB: result = operand1 - operand2; break;
-      case PimCmdEnum::MUL: result = operand1 * operand2; break;
-      case PimCmdEnum::DIV:
-        if (operand2 == 0) {
-          std::printf("PIM-Error: Division by zero\n");
-          return false;
-        }
-        result = operand1 / operand2;
-        break;
-      default:
-        std::printf("PIM-Error: Unsupported FP32 cmd type %d\n", static_cast<int>(m_cmdType));
-        assert(0);
-      }
-      objDest.setElement(elemIdx, result);
-    } else {
       assert(0); // todo: data type
+      }
     }
   }
   return true;
@@ -659,7 +596,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
-      T operand = pimUtils::signExt(operandBits, objSrc.getDataType());
+      T operand = pimUtils::signExt(operandBits, objSrc.getDataType()); // How do we incorporate FP32 in here?
       m_regionSum[index] += operand;
     }
     currIdx += 1;
@@ -1218,3 +1155,4 @@ pimCmdAnalogAAP::printDebugInfo() const
 // Explicit template instantiation
 template class pimCmdRedSum<uint64_t>;
 template class pimCmdRedSum<int64_t>;
+template class pimCmdRedSum<float>;
