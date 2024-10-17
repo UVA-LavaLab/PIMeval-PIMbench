@@ -102,7 +102,7 @@ void
 pimSim::initThreadPool(unsigned maxNumThreads)
 {
   m_threadPool.reset();
-  unsigned hwThreads = std::thread::hardware_concurrency();
+  unsigned hwThreads = 1;//std::thread::hardware_concurrency();
   if (maxNumThreads == 0) {
     m_numThreads = hwThreads;
   } else {

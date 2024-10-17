@@ -139,7 +139,7 @@ protected:
     }
   }
 
-  PimCmdEnum m_cmdType;
+  PimCmdEnum m_cmdType = PimCmdEnum::NOOP;
   pimDevice* m_device = nullptr;
 
   //! @class  pimCmd::regionWorker
