@@ -7,7 +7,9 @@
 #include "pimPerfEnergyBitSerial.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
+#ifdef PRINT_HALIDE
 #include <iostream>
+#endif
 
 
 //! @brief  Get performance and energy for bit-serial PIM
@@ -60,11 +62,13 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   }
 
   if (!ok) {
+#ifdef PRINT_HALIDE
     std::cout << "PIM-Warning: Unimplemented bit-serial runtime estimation for"
               << " device=" << pimUtils::pimDeviceEnumToStr(deviceType)
               << " cmd=" << pimCmd::getName(cmdType, "")
               << " dataType=" << pimUtils::pimDataTypeEnumToStr(dataType)
               << std::endl;
+#endif
     msRuntime = 1000000;
   }
   msRuntime *= numPass;
@@ -168,7 +172,9 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
     }
     case PIM_DEVICE_SIMDRAM:
       // todo
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: SIMDRAM performance stats not implemented yet." << std::endl;
+#endif
       break;
     case PIM_DEVICE_BITSIMD_H:
       // Sequentially process all elements per CPU cycle

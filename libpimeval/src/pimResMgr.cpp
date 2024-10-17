@@ -6,7 +6,9 @@
 
 #include "pimResMgr.h"       // for pimResMgr
 #include "pimDevice.h"       // for pimDevice
+#ifdef PRINT_HALIDE
 #include <iostream>          // for cout
+#endif
 #include <cstdio>            // for printf
 #include <algorithm>         // for sort, prev
 #include <stdexcept>         // for throw, invalid_argument
@@ -264,8 +266,10 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
   #endif
 
   if (numElements == 0 || bitsPerElement == 0) {
+#ifdef PRINT_HALIDE
     std::cout << "PIM-Error: Invalid parameters to allocate " << numElements << " elements of "
               << bitsPerElement << "bits" << std::endl;
+#endif
     return -1;
   }
 
@@ -310,7 +314,9 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
 
   if (numRegions > numCores) {
     if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Error: Obj requires " << numRegions << " regions among " << numCores << " cores. Abort." << std::endl;
+#endif
       return -1;
     } else {
       #if defined(DEBUG)

@@ -6,7 +6,9 @@
 
 #include "pimPerfEnergyFulcrum.h"
 #include "pimCmd.h"
+#ifdef PRINT_HALIDE
 #include <iostream>
+#endif
 
 
 //! @brief  Perf energy model of Fulcrum for func1
@@ -68,7 +70,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       break;
     }
     default:
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+#endif
       break;
   }
 
@@ -140,7 +144,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
       break;
     }
     default:
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+#endif
       break;
   }
 

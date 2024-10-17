@@ -7,7 +7,10 @@
 #include "pimUtils.h"
 #include "libpimeval.h"
 #include <fstream>
+
+#ifdef PRINT_HALIDE
 #include <iostream>
+#endif
 #include <sstream>
 #include <unordered_map>
 #include <string>
@@ -248,7 +251,10 @@ pimUtils::readFileContent(const char* fileName, std::string& fileContent) {
     std::ifstream fileStream(fileName);
 
     if (!fileStream.is_open()) {
+
+#ifdef PRINT_HALIDE
         std::cerr << "PIM-Error: Could not open the file: " << fileName << std::endl;
+#endif
         return false;
     }
 

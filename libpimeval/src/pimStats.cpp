@@ -10,7 +10,9 @@
 #include <chrono>            // for chrono
 #include <cstdint>           // for uint64_t
 #include <cstdio>            // for printf
+#ifdef PRINT_HALIDE
 #include <iostream>          // for cout
+#endif
 #include <iomanip>           // for setw, fixed, setprecision
 
 
@@ -108,6 +110,7 @@ pimStatsMgr::showCopyStats() const
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
   double totalMsRuntime = m_elapsedTimeCopiedMainToDevice + m_elapsedTimeCopiedDeviceToMain + m_elapsedTimeCopiedDeviceToDevice;
   double totalMjEnergy = m_mJCopiedMainToDevice + m_mJCopiedDeviceToMain + m_mJCopiedDeviceToDevice;
+#ifdef PRINT_HALIDE
   std::cout << std::setw(45) << "Host to Device" << " : " << bytesCopiedMainToDevice << " bytes" << std::endl;
   std::cout << std::setw(45) << "Device to Host" << " : " << bytesCopiedDeviceToMain << " bytes" << std::endl;
   std::cout << std::setw(45) << "Device to Device" << " : " << bytesCopiedDeviceToDevice << " bytes" << std::endl;
@@ -115,6 +118,7 @@ pimStatsMgr::showCopyStats() const
             << std::setw(14) << std::fixed << std::setprecision(6) << totalMsRuntime << " ms Estimated Runtime "
             << std::setw(14) << std::fixed << std::setprecision(6) << totalMjEnergy << " mj Estimated Energy"
             << std::endl;
+#endif
 }
 
 //! @brief  Show PIM cmd and perf stats

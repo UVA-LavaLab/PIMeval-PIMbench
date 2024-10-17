@@ -16,7 +16,9 @@
 #include <string>            // for string
 #include <memory>            // for unique_ptr
 #include <cassert>           // for assert
+#ifdef PRINT_HALIDE
 #include <iostream>          // for cout
+#endif
 
 class pimDevice;
 
@@ -141,9 +143,11 @@ public:
 
   // print all bytes for debugging
   void print() const {
+#ifdef PRINT_HALIDE
     std::cout << "PIM obj data holder: data-type = " << pimUtils::pimDataTypeEnumToStr(m_dataType)
               << ", num-elements = " << m_numElements
               << ", bytes-per-element = " << m_bytesPerElement << std::endl;
+#endif
     for (size_t i = 0; i < m_data.size(); ++i) {
       std::printf(" %02x", m_data[i]);
       if ((i + 1) % 64 == 0) { std::printf("\n"); }

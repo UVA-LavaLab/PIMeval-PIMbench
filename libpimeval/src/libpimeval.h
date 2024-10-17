@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <cstdarg>
 
+extern "C" {
+
 //! @brief  PIM API return status
 enum PimStatus {
   PIM_ERROR = 0,
@@ -208,6 +210,8 @@ PimStatus pimOpRotateLH(PimObjId objId, PimRowReg src);
 PimObjId pimCreateDualContactRef(PimObjId refId);
 PimStatus pimOpAP(int numSrc, ...);
 PimStatus pimOpAAP(int numSrc, int numDest, ...);
+
+}
 
 #endif
 

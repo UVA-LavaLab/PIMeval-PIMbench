@@ -6,7 +6,9 @@
 
 #include "pimPerfEnergyBankLevel.h"
 #include "pimCmd.h"
+#ifdef PRINT_HALIDE
 #include <iostream>
+#endif
 
 
 //! @brief  Perf energy model of bank-level PIM for func1
@@ -61,7 +63,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       break;
     }
     default:
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+#endif
       break;
   }
 
@@ -140,7 +144,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       break;
     }
     default:
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+#endif
       break;
   }
 

@@ -9,7 +9,9 @@
 #include "pimPerfEnergyBitSerial.h"
 #include "pimPerfEnergyFulcrum.h"
 #include "pimPerfEnergyBankLevel.h"
+#ifdef PRINT_HALIDE
 #include <iostream>
+#endif
 
 
 //! @brief  A factory function to create perf energy model for sim target
@@ -21,16 +23,28 @@ pimPerfEnergyFactory::createPerfEnergyModel(const pimPerfEnergyModelParams& para
     case PIM_DEVICE_BITSIMD_V_AP:
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Info: Created performance energy model for bit-serial PIM" << std::endl;
+#endif
       return std::make_unique<pimPerfEnergyBitSerial>(params);
     case PIM_DEVICE_FULCRUM:
+
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Info: Created performance energy model for Fulcrum" << std::endl;
+#endif
       return std::make_unique<pimPerfEnergyFulcrum>(params);
     case PIM_DEVICE_BANK_LEVEL:
+
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Info: Created performance energy model for bank-level PIM" << std::endl;
+#endif
       return std::make_unique<pimPerfEnergyBankLevel>(params);
     default:
+
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: Created performance energy base model for unrecognized simulation target" << std::endl;
+#endif
+      break;
   }
   return std::make_unique<pimPerfEnergyBase>(params);
 }
@@ -85,7 +99,9 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
     }
     default:
     {
+#ifdef PRINT_HALIDE
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+#endif
       break;
     }
   }

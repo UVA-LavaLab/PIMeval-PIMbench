@@ -4,7 +4,7 @@
 # See the LICENSE file in the root of this repository for more details.
 
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17
+CXXFLAGS := -Wall -Wextra -std=c++17 
 CXXFLAGS_DEBUG := -g
 # Note: If specify -DNDEBUG, assert will be disabled
 CXXFLAGS_PERF := -Ofast -Wno-unused-parameter
