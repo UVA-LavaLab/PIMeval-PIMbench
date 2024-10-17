@@ -675,7 +675,6 @@ int testAesAddRoundKey() {
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
     unsigned long numElements = totalCols;
-    unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
     // Initialize PIM device
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numRanks, numBanks, numSubarrayPerBank, numRows, numCols);
@@ -763,7 +762,6 @@ int testAesAddRoundKeyCpy(void) {
     unsigned numCols = 1024; 
     unsigned totalCols = numCols * numCores;
     unsigned long numElements = totalCols;
-    unsigned long numBytes = numElements * AES_BLOCK_SIZE;
    
     // Initialize PIM device
     PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, numRanks, numBanks, numSubarrayPerBank, numRows, numCols);
@@ -1230,7 +1228,7 @@ int testAes256EncryptEcb(void) {
         assert(status == PIM_OK);
     }
 
-    for (int offset = 0; offset < numBytes; offset += AES_BLOCK_SIZE) {
+    for (unsigned long offset = 0; offset < numBytes; offset += AES_BLOCK_SIZE) {
         memcpy(ctx_key_global, key, 32);
         aes256Init(key);
         aes256EncryptEcb(bufIn, offset);
@@ -1316,7 +1314,7 @@ int testAes256DecryptEcb(void) {
         assert(status == PIM_OK);
     }
 
-    for (int offset = 0; offset < numBytes; offset += AES_BLOCK_SIZE) {
+    for (unsigned long offset = 0; offset < numBytes; offset += AES_BLOCK_SIZE) {
         memcpy(ctx_key_global, key, 32);
         aes256Init(key);
         aes256EncryptEcb(bufIn, offset);
@@ -1555,7 +1553,6 @@ int testDemo(int argc, char **argv) {
     FILE *file;
     uint8_t *buf;
     unsigned long numbytes;
-    clock_t start, end;
     int padding;
     uint8_t key[32]; // Encryption/Decryption key.
 
@@ -1907,41 +1904,24 @@ void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf) {
 }
 
 void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* outObjBuf) {
-    int status;
     for (int j = 0; j < AES_BLOCK_SIZE; j++){ 
         pimXor((*inputObjBuf)[j]->pimObjId, (*keyObjBuf)[j]->pimObjId, (*outObjBuf)[j]->pimObjId); 
     }   
 }
 
 void aesAddRoundKeyCpy(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* cpkObjBuf, std::vector<PIMAuxilary*>* outObjBuf) {
-int status;
-
-    /* for (int j = 0; j < 16; j++){ 
-       cpk[j] = key[j];
-    } */
     for (int j = 0; j < 16; j++){ 
         pimCopyDeviceToDevice((*keyObjBuf)[j]->pimObjId, (*cpkObjBuf)[j]->pimObjId);
     } 
-
-    /* for (int j = 0; j < 16; j++){ 
-       buf[j] ^= cpk[j];
-    } */
     for (int j = 0; j < 16; j++){ 
         pimXor((*inputObjBuf)[j]->pimObjId, (*cpkObjBuf)[j]->pimObjId, (*outObjBuf)[j]->pimObjId); 
     }   
-
-    /* for (int j = 0; j < 16; j++){ 
-       cpk[16 + j] = key[16 + j];
-    } */
     for (int j = 0; j < 16; j++){ 
         pimCopyDeviceToDevice((*keyObjBuf)[16 + j]->pimObjId, (*cpkObjBuf)[16 + j]->pimObjId);
     } 
-
-    
 }
 
 void aesShiftRows(std::vector<PIMAuxilary*>* inputObjBuf) {
-    int status;
     PIMAuxilary* iObj = new PIMAuxilary((*inputObjBuf)[0]);
     PIMAuxilary* jObj = new PIMAuxilary((*inputObjBuf)[0]);
  
@@ -1968,11 +1948,8 @@ void aesShiftRows(std::vector<PIMAuxilary*>* inputObjBuf) {
 }
 
 void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
-    int status;
     PIMAuxilary* iObj = new PIMAuxilary((*inputObjBuf)[0]);
     PIMAuxilary* jObj = new PIMAuxilary((*inputObjBuf)[0]);
-
-
 
     pimCopyDeviceToDevice((*inputObjBuf)[1]->pimObjId, iObj->pimObjId);
     pimCopyDeviceToDevice((*inputObjBuf)[13]->pimObjId, (*inputObjBuf)[1]->pimObjId);
@@ -1996,7 +1973,6 @@ void aesShiftRowsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
 }
 
 void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf) {
-    int status; 
 
     // uint8_t a, b, c, d, e, f;
     PIMAuxilary* aObj = new PIMAuxilary((*inputObjBuf)[0]);
@@ -2103,7 +2079,6 @@ void aesMixColumns(std::vector<PIMAuxilary*>* inputObjBuf) {
 
 
 void aesMixColumnsInv(std::vector<PIMAuxilary*>* inputObjBuf) {
-    int status; 
     
     // uint8_t a, b, c, d, e, x, y, z, t0;
     PIMAuxilary* aObj = new PIMAuxilary((*inputObjBuf)[0]);
@@ -2500,8 +2475,7 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
 void encryptdemo(uint8_t key[32], std::vector<PIMAuxilary*>* inputObjBuf, unsigned long numCalls) {
     aes256Init(key);
     unsigned long offset = 0;
-    
-    for (int  pass = 0; pass < numCalls; ++pass) {
+    for (unsigned long  pass = 0; pass < numCalls; ++pass) {
         aes256EncryptEcb(inputObjBuf, offset);
         offset += AES_BLOCK_SIZE;
     }
@@ -2511,7 +2485,7 @@ void decryptdemo(uint8_t key[32], std::vector<PIMAuxilary*>* inputObjBuf, unsign
     aes256Init(key);
     unsigned long offset = 0;
 
-    for (int  pass = 0; pass < numCalls; ++pass) {
+    for (unsigned long  pass = 0; pass < numCalls; ++pass) {
         aes256DecryptEcb(inputObjBuf, offset);
         offset += AES_BLOCK_SIZE;
     }
