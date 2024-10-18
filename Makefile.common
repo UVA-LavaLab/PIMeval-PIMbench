@@ -25,9 +25,9 @@ ifeq ($(MAKECMDGOALS),debug)
 	CXXFLAGS += -g -DDEBUG
 endif
 ifeq ($(MAKECMDGOALS),perf)
-	CXXFLAGS += -Ofast -Wno-unknown-pragmas
+	CXXFLAGS += -O3 -Wno-unknown-pragmas
 endif
 ifeq ($(MAKECMDGOALS),dramsim3_integ)
-	CXXFLAGS += -Ofast -DDRAMSIM3_INTEG
+	CXXFLAGS += -O3 -DDRAMSIM3_INTEG
 endif
 
