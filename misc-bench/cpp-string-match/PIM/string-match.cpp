@@ -207,8 +207,8 @@ int main(int argc, char* argv[])
     string_match_cpu(needle, haystack, matches_cpu);
 
     // verify result
-    #pragma omp parallel for
     bool is_correct = true;
+    #pragma omp parallel for
     for (unsigned i = 0; i < matches.size(); ++i)
     {
       if (matches[i] != matches_cpu[i])
