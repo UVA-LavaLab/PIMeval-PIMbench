@@ -153,49 +153,6 @@ void string_match(string& needle, string& haystack, vector<uint8_t>& matches) {
   assert (status == PIM_OK);
 }
 
-// a,b,c,0,0,0,0,0,0,0,0,0
-// 0,0,0,a,b,c,0,0,0,0,0,0
-// Linear: s-k shifts
-// 12-3=9
-
-// a,b,c,0,0,0,0,0,0,0,0,0
-// 0,0,0,a,b,c,0,0,0,0,0,0
-// k + 2k
-// 3 + 6 = 9
-
-// The same
-
-
-// 5-2
-
-// abcde
-// ab
-
-
-
-// Idea 2: Hash
-// a,b,c,d,e,a,b,c
-// a,b,c
-
-
-// a,b,c,d,e,a,b,c
-// b,c,d,e,a,b,c,0
-// Shift left needle.size()-1 times
-// "Hash" characters
-// "Hash" key (on host?)
-
-
-// Gives possible match array
-//     -> must get actual matches
-// 1,0,0,1,0,1,0,0
-//     -> getting actual matches from potential matches seems difficult, will probably need host code?
-//     -> Idea 1: pull potential matches back to host, then check on host
-//     -> Idea 2: take matches back to pim, put key at every match index in new pim obj, compare using strategy
-
-
-// Worth looking into hash based strategies, because:
-//     -> Current implementation has O(needle.size()^2) element shifts, which are slow already
-
 void string_match_cpu(string& needle, string& haystack, vector<uint8_t>& matches) {
   size_t pos = haystack.find(needle, 0);
 
