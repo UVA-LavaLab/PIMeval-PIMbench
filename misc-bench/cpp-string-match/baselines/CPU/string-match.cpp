@@ -133,6 +133,9 @@ int main(int argc, char **argv)
     // Original looks for a line to match completely, not just an occurance
     // In the below example, original would return false for "eld"
     // However, my current implementation would return true for "eld"
+    // Solution Idea: treat needle as "\n" + needle + "\n"
+    // Use "\n" or "\r"
+    // Must adapt to begining and end of haystack
     haystack = "abc\ndef\nghi\neldkslkdfj\nhelloworld";
     needles = {"abc", "lmp", "helloworld", "eld"};
   } 
