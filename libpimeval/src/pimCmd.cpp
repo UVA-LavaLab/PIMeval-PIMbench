@@ -590,14 +590,23 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   const pimRegion& srcRegion = objSrc.getRegions()[index];
+  PimDataType dataType = objSrc.getDataType();
 
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   uint64_t currIdx = srcRegion.getElemIdxBegin();
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
-      T operand = pimUtils::signExt(operandBits, objSrc.getDataType()); // How do we incorporate FP32 in here?
-      m_regionSum[index] += operand;
+      bool isFloat = (dataType == PIM_FP32);
+      if(!isFloat){
+        T integerOperand = pimUtils::signExt(operandBits, dataType);
+        m_regionSum[index] += integerOperand;
+      } else if (isFloat){
+        float floatOperand = pimUtils::castBitsToType<float>(operandBits);
+        m_regionSum[index] += floatOperand;
+      } else {
+        assert(0); // todo: data type
+      }
     }
     currIdx += 1;
   }

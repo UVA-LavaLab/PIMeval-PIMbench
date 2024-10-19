@@ -170,7 +170,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 29: status = pimRedSumInt            (objSrc1, &sumInt);                     break;
       case 30: status = pimRedSumFP32           (objSrc1, &sumFP32);                    break;
       case 31: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      //case 32: status = pimRedSumRangedFP32     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
+      case 32: status = pimRedSumRangedFP32     (objSrc1, idxBegin, idxEnd, &sumFP32);  break;
       case 33: status = pimBroadcastInt         (objDest, scalarValInt);                break;
       case 34: status = pimBroadcastFP32          (objDest, scalarValFloat);            break;
       case 35: status = pimRotateElementsRight  (objDest);                              break;
@@ -264,7 +264,6 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           default: assert(0);
         }
         if (vecDest[i] != expected) {
-          // FP32 DIVISION sometimes(in extreme cases where float precision has limit) gives different results that have only very small difference compared to the number itself.
           if (numError < maxErrorToShow) {
           std::cout << "Error: Index = " << i << " Result = " << std::fixed << std::setprecision(12) << vecDest[i] << " Expected = " << std::fixed << std::setprecision(12) << expected << std::endl;
           }
