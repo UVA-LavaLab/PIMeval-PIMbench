@@ -198,7 +198,10 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
   m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
 
-  m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  // Disable simulated memory creation for functional simulation
+  if (m_deviceType != PIM_FUNCTIONAL) {
+    m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  }
 
   std::printf("PIM-Info: Created PIM device with %u cores, each with %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
@@ -291,7 +294,11 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   const pimParamsDram& paramsDram = pimSim::get()->getParamsDram(); // created before pimDevice ctor
   pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
   m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
-  m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+
+  // Disable simulated memory creation for functional simulation
+  if (m_deviceType != PIM_FUNCTIONAL) {
+    m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  }
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 

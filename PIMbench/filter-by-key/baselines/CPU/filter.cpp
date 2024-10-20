@@ -1,9 +1,3 @@
-/**
- * @file filter.cpp
- * @brief Template for a Host Application Source File.
- *
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,32 +7,24 @@
 #include <stdint.h>
 #include <iomanip>
 #include <chrono>
+#include <time.h>
 
-#include <omp.h>
 #include "../../../utilBaselines.h"
 
-#define MY_RANGE 100
+#define MY_RANGE 1000
 
 using namespace std;
+
 
 /**
  * @brief cpu database filtering kernel
  */
 
-void filterByKey(std::vector<int> &Vector, uint64_t vector_size, int key, std::vector<bool> & bitMap)
-{
-#pragma omp parallel for
-  for (uint64_t i = 0; i < vector_size; ++i)
-  {
-    if (key > Vector[i])
-      bitMap[i] = true;
-  }
-}
 
 typedef struct Params
 {
     uint64_t inVectorSize;
-    int key;
+    uint64_t key;
     bool shouldVerify;
 } Params;
 
@@ -57,7 +43,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.inVectorSize = 65536;
-  p.key = 1;
+  p.key = 10;
   p.shouldVerify = false;
 
   int opt;
@@ -90,78 +76,51 @@ struct Params getInputParams(int argc, char **argv)
 /**
  * @brief Main of the Host Application.
  */
+
+// static const uint64_t inVectorSize = 1073741824;
+
 int main(int argc, char **argv){
 
     struct Params p = getInputParams(argc, argv);
 
     uint64_t inVectorSize = p.inVectorSize;
 
-    vector<int32_t> inVector(inVectorSize);
-    vector<int32_t> outVector;
+    vector<uint64_t> inVector(inVectorSize);
 
     std::cout << "DB element size: " << inVectorSize << std::endl;
 
-    srand(8746219);
-#pragma omp parallel for
+    srand((unsigned)time(NULL));
     for (uint64_t i = 0; i < inVectorSize; i++){
         inVector[i] = rand() % MY_RANGE;
     }
-    std::vector<bool> bitMap(inVectorSize, false);
-    
+
+    uint64_t dummyVectorSize = 1073741824;
+    vector<int> dummyVector1(dummyVectorSize, 0);
+    uint64_t buffer_in_CPU = 0;
+    uint64_t selectedNum = 0;
+
+    // Flushing the cache
+    for (uint64_t j = 0; j < dummyVectorSize; j++){
+      dummyVector1[j] += rand() % MY_RANGE;
+    }
+
     auto start = std::chrono::high_resolution_clock::now();
-    
-    // run scan
-    filterByKey(inVector, inVectorSize, p.key, bitMap);
-    
-    // select data whose bitmap is '1'
-    // Do parallel reduction with a degree of (32) by creating 32 subarrays and then combining the results in these 32 array serially.
-    uint64_t nThreads = 16;
-    cout << "nThreads = " << nThreads << endl;
-    uint64_t outSubSize = inVectorSize/nThreads;
-    vector<vector<int32_t>> outSubVector(nThreads);
-
-#pragma omp parallel num_threads(nThreads)
-    for (uint64_t i = 0; i < outSubSize; i++){
-        int tid = omp_get_thread_num();
-        uint64_t index = tid * outSubSize + i;
-        if(index < inVectorSize){
-          if(bitMap[index] == true){
-            outSubVector[tid].push_back(inVector[index]);
-          }
-        }
+    std::chrono::duration<double, std::milli> elapsedTime;
+    for (uint64_t i = 0; i < inVectorSize; i++){
+      if(p.key > inVector[i]){
+        buffer_in_CPU += inVector[i];
+        selectedNum++;
+      }
     }
-    int outSize = 0;
-
-#pragma omp critical
-    for (uint64_t i = 0; i < nThreads; i++){
-      outSize += outSubVector[i].size();
-    }
-#pragma omp critical
-    for (uint64_t i = 0; i < nThreads; i++){
-      outVector.insert(outVector.end(), outSubVector[i].begin(), outSubVector[i].end());
-    }
-
+    uint64_t outSize = selectedNum;
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsedTime = (end - start);
+    elapsedTime = (end - start);
 
     if(p.shouldVerify == true){
-      // for (uint64_t i = 0; i < inVectorSize; i++){
-      //   cout << inVector[i] << " ";
-      // }
-      // cout <<endl;
-      // cout << "------------------------------------" <<endl;
-      // for (uint64_t i = 0; i < inVectorSize; i++){
-      //   cout << bitMap[i] << " ";
-      // }
-      // cout <<endl;
-      // cout << "------------------------------------" <<endl;
-      // for (uint64_t i = 0; i < outVector.size(); i++){
-      //   cout << outVector[i] << " ";
-      // }
-      // cout << endl;
-      cout << outVector.size() <<" out of " << inVectorSize << " selected" << endl;
+      cout << outSize <<" out of " << inVectorSize << " selected" << endl;
     }
     cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
+    cout << endl;
 
     return 0;
 }

@@ -4,12 +4,15 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#include "pimResMgr.h"
-#include "pimDevice.h"
-#include <cstdio>
-#include <algorithm>
-#include <stdexcept>
-#include <memory>
+#include "pimResMgr.h"       // for pimResMgr
+#include "pimDevice.h"       // for pimDevice
+#include <iostream>          // for cout
+#include <cstdio>            // for printf
+#include <algorithm>         // for sort, prev
+#include <stdexcept>         // for throw, invalid_argument
+#include <memory>            // for make_unique
+#include <cassert>           // for assert
+#include <string>            // for string
 
 
 //! @brief  Print info of a PIM region
@@ -84,6 +87,156 @@ pimObjInfo::getRegionsOfCore(PimCoreId coreId) const
   return regions;
 }
 
+//! @brief  Copy data from host memory to PIM object data holder, with ref support
+void
+pimObjInfo::copyFromHost(void* src, uint64_t idxBegin, uint64_t idxEnd)
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    pimObjInfo& refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    if (isDualContactRef()) {
+      uint64_t numBytes = refObj.m_data.getNumBytes(idxBegin, idxEnd);
+      std::vector<uint8_t> buffer(numBytes);
+      std::memcpy(buffer.data(), src, numBytes);
+      for (auto& byte : buffer) { byte = ~byte; }
+      refObj.m_data.copyFromHost(buffer.data(), idxBegin, idxEnd);
+    } else {
+      assert(0); // to be extended
+    }
+    return;
+  }
+  m_data.copyFromHost(src, idxBegin, idxEnd);
+}
+
+//! @brief  Copy data from PIM object data holder to host memory, with ref support
+void
+pimObjInfo::copyToHost(void* dest, uint64_t idxBegin, uint64_t idxEnd) const
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    pimObjInfo &refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    if (isDualContactRef()) {
+      uint64_t numBytes = refObj.m_data.getNumBytes(idxBegin, idxEnd);
+      std::vector<uint8_t> buffer(numBytes);
+      refObj.m_data.copyToHost(buffer.data(), idxBegin, idxEnd);
+      for (auto& byte : buffer) { byte = ~byte; }
+      std::memcpy(dest, buffer.data(), numBytes);
+    } else {
+      assert(0); // to be extended
+    }
+    return;
+  }
+  m_data.copyToHost(dest, idxBegin, idxEnd);
+}
+
+//! @brief  Copy data from a PIM object data holder to another, with ref support
+void
+pimObjInfo::copyToObj(pimObjInfo& destObj, uint64_t idxBegin, uint64_t idxEnd) const
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    pimObjInfo &refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    if (isDualContactRef()) {
+      uint64_t numBytes = m_data.getNumBytes(idxBegin, idxEnd);
+      std::vector<uint8_t> buffer(numBytes);
+      m_data.copyToHost(buffer.data(), idxBegin, idxEnd);
+      for (auto& byte : buffer) { byte = ~byte; }
+      refObj.m_data.copyFromHost(buffer.data(), idxBegin, idxEnd);
+    } else {
+      assert(0); // to be extended
+    }
+    return;
+  }
+  m_data.copyToObj(destObj.m_data, idxBegin, idxEnd);
+}
+
+//! @brief  Set an element at index with bit presentation, with ref support
+void
+pimObjInfo::setElementBits(uint64_t index, uint64_t bits)
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    pimObjInfo& refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    if (isDualContactRef()) {
+      bits = ~bits;
+      refObj.m_data.setElementBits(index, bits);
+    } else {
+      assert(0); // to be extended
+    }
+    return;
+  }
+  m_data.setElementBits(index, bits);
+}
+
+//! @brief  Get bit representation of an element at index, with ref support
+uint64_t
+pimObjInfo::getElementBits(uint64_t index) const
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    pimObjInfo& refObj = m_device->getResMgr()->getObjInfo(m_refObjId);
+    if (isDualContactRef()) {
+      uint64_t bits = 0;
+      refObj.m_data.getElementBits(index, bits);
+      bits = ~bits;
+      return bits;
+    } else {
+      assert(0); // to be extended
+    }
+    return 0;
+  }
+  uint64_t bits = 0;
+  m_data.getElementBits(index, bits);
+  return bits;
+}
+
+//! @brief  Sync PIM object data from simulated memory
+void
+pimObjInfo::syncFromSimulatedMem()
+{
+  pimObjInfo &obj = (m_refObjId != -1 ? m_device->getResMgr()->getObjInfo(m_refObjId) : *this);
+  unsigned numBits = getBitsPerElement();
+  for (size_t i = 0; i < m_regions.size(); ++i) {
+    pimRegion& region = m_regions[i];
+    PimCoreId coreId = region.getCoreId();
+    pimCore& core = m_device->getCore(coreId);
+    uint64_t elemIdxBegin = region.getElemIdxBegin();
+    uint64_t numElemInRegion = region.getNumElemInRegion();
+    for (uint64_t j = 0; j < numElemInRegion; ++j) {
+      auto [rowLoc, colLoc] = region.locateIthElemInRegion(j);
+      uint64_t bits = isVLayout() ? core.getBitsV(rowLoc, colLoc, numBits)
+                                  : core.getBitsH(rowLoc, colLoc, numBits);
+      obj.m_data.setElementBits(elemIdxBegin + j, bits);
+    }
+  }
+}
+
+//! @brief  Sync PIM object data to simulated memory
+void
+pimObjInfo::syncToSimulatedMem() const
+{
+  const pimObjInfo &obj = (m_refObjId != -1 ? m_device->getResMgr()->getObjInfo(m_refObjId) : *this);
+  unsigned numBits = getBitsPerElement();
+  for (size_t i = 0; i < m_regions.size(); ++i) {
+    const pimRegion& region = m_regions[i];
+    PimCoreId coreId = region.getCoreId();
+    pimCore& core = m_device->getCore(coreId);
+    uint64_t elemIdxBegin = region.getElemIdxBegin();
+    uint64_t numElemInRegion = region.getNumElemInRegion();
+    for (uint64_t j = 0; j < numElemInRegion; ++j) {
+      uint64_t bits = 0;
+      obj.m_data.getElementBits(elemIdxBegin + j, bits);
+      auto [rowLoc, colLoc] = region.locateIthElemInRegion(j);
+      if (isVLayout()) {
+        core.setBitsV(rowLoc, colLoc, bits, numBits);
+      } else {
+        core.setBitsH(rowLoc, colLoc, bits, numBits);
+      }
+    }
+  }
+}
+
+
 //! @brief  pimResMgr ctor
 pimResMgr::pimResMgr(pimDevice* device)
   : m_device(device),
@@ -114,7 +267,8 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
   #endif
 
   if (numElements == 0 || bitsPerElement == 0) {
-    std::printf("PIM-Error: Invalid parameters to allocate %llu elements of %u bits\n", numElements, bitsPerElement);
+    std::cout << "PIM-Error: Invalid parameters to allocate " << numElements << " elements of "
+              << bitsPerElement << "bits" << std::endl;
     return -1;
   }
   unsigned bitsOfDataType = pimUtils::getNumBitsOfDataType(dataType);
@@ -125,7 +279,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
   }
 
   std::vector<PimCoreId> sortedCoreId = getCoreIdsSortedByLeastUsage();
-  pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
+  pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement, m_device);
   m_availObjId++;
 
   unsigned numCores = m_device->getNumCores();
@@ -165,8 +319,7 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
 
   if (numRegions > numCores) {
     if (allocType == PIM_ALLOC_V1 || allocType == PIM_ALLOC_H1) {
-      std::printf("PIM-Error: Obj requires %llu regions among %u cores. Abort since wrapping up is disabled.\n",
-                  numRegions, numCores);
+      std::cout << "PIM-Error: Obj requires " << numRegions << " regions among " << numCores << " cores. Abort." << std::endl;
       return -1;
     } else {
       #if defined(DEBUG)
@@ -273,7 +426,7 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
   assert(allocType == assocObj.getAllocType());
 
   // allocate associated regions
-  pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement);
+  pimObjInfo newObj(m_availObjId, dataType, allocType, numElements, bitsPerElement, m_device);
   m_availObjId++;
 
   bool success = true;

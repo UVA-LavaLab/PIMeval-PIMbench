@@ -32,6 +32,22 @@ enum PimDeviceEnum {
   PIM_DEVICE_BANK_LEVEL,
 };
 
+/**
+ * @enum PimDeviceProtocol
+ * @brief Enum representing different memory protocols.
+ *
+ * @var PIM_DEVICE_PROTOCOL_DDR
+ * Standard DDR protocol. Typically used in general-purpose memory systems.
+ *
+ * @var PIM_DEVICE_PROTOCOL_LPDDR
+ * Low Power DDR (LPDDR) protocol.
+ *
+*/
+enum PimDeviceProtocolEnum {
+  PIM_DEVICE_PROTOCOL_DDR = 0,
+  PIM_DEVICE_PROTOCOL_LPDDR,
+};
+
 //! @brief  PIM allocation types
 enum PimAllocEnum {
   PIM_ALLOC_AUTO = 0, // Auto determine vertical or horizontal layout based on device type
@@ -113,21 +129,21 @@ PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
-PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalerValue);
-// multiply src1 with scalerValue and add the multiplication result with src2. Save the result to dest. 
-PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalerValue);
+PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+// multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
+PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
 PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
 PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
@@ -136,6 +152,7 @@ PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, i
 PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
+PimStatus pimBroadcastFP32(PimObjId dest, float value);
 PimStatus pimRotateElementsRight(PimObjId src);
 PimStatus pimRotateElementsLeft(PimObjId src);
 PimStatus pimShiftElementsRight(PimObjId src);

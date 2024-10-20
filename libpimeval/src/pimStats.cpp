@@ -7,7 +7,11 @@
 #include "pimStats.h"
 #include "pimSim.h"
 #include "pimUtils.h"
-#include <algorithm>
+#include <chrono>            // for chrono
+#include <cstdint>           // for uint64_t
+#include <cstdio>            // for printf
+#include <iostream>          // for cout
+#include <iomanip>           // for setw, fixed, setprecision
 
 
 //! @brief  Show PIM stats
@@ -104,10 +108,13 @@ pimStatsMgr::showCopyStats() const
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
   double totalMsRuntime = m_elapsedTimeCopiedMainToDevice + m_elapsedTimeCopiedDeviceToMain + m_elapsedTimeCopiedDeviceToDevice;
   double totalMjEnergy = m_mJCopiedMainToDevice + m_mJCopiedDeviceToMain + m_mJCopiedDeviceToDevice;
-  std::printf(" %44s : %llu bytes\n", "Host to Device", bytesCopiedMainToDevice);
-  std::printf(" %44s : %llu bytes\n", "Device to Host", bytesCopiedDeviceToMain);
-  std::printf(" %44s : %llu bytes\n", "Device to Device", bytesCopiedDeviceToDevice);
-  std::printf(" %44s : %llu bytes %14f ms Estimated Runtime %14f mj Estimated Energy\n", "TOTAL ---------", totalBytes, totalMsRuntime, totalMjEnergy);
+  std::cout << std::setw(45) << "Host to Device" << " : " << bytesCopiedMainToDevice << " bytes" << std::endl;
+  std::cout << std::setw(45) << "Device to Host" << " : " << bytesCopiedDeviceToMain << " bytes" << std::endl;
+  std::cout << std::setw(45) << "Device to Device" << " : " << bytesCopiedDeviceToDevice << " bytes" << std::endl;
+  std::cout << std::setw(45) << "TOTAL ---------" << " : " << totalBytes << " bytes "
+            << std::setw(14) << std::fixed << std::setprecision(6) << totalMsRuntime << " ms Estimated Runtime "
+            << std::setw(14) << std::fixed << std::setprecision(6) << totalMjEnergy << " mj Estimated Energy"
+            << std::endl;
 }
 
 //! @brief  Show PIM cmd and perf stats
