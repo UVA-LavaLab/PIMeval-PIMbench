@@ -106,7 +106,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       //{ 29, "pimRedSumInt"           }, // not supported
       { 30, "pimRedSumFP32"          },
       //{ 31, "pimRedSumRangedInt"     }, // not supported
-      // { 32, "pimRedSumRangedFP32"    },
+      { 32, "pimRedSumRangedFP32"    },
       //{ 33, "pimBroadcastInt"        }, // not supported
       { 34, "pimBroadcastFP32"       },
       { 35, "pimRotateElementsRight" },
@@ -205,7 +205,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
         sumUIntExpected += vecSrc1[i];
       }
       assert(sumUInt == sumUIntExpected);
-    }else if (testName == "pimRedSumFP32" || testName == "pimRedSumRangedFP32") {
+    } else if (testName == "pimRedSumFP32" || testName == "pimRedSumRangedFP32") {
       uint64_t begin = (testName == "pimRedSumFP32" ? 0 : idxBegin);
       uint64_t end = (testName == "pimRedSumFP32" ? numElements : idxEnd);
       float sumFP32Expected = 0.0f;
