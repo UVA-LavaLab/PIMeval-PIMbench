@@ -27,8 +27,11 @@
 #include <climits>
 #include <numeric>
 >>>>>>> 86ba1ee (implement min max reduce)
-
-
+#include <cmath>
+#include <numeric>
+#include <climits>
+#include <algorithm>  // for std::min_element and std::max_element
+#include <limits>     // for std::numeric_limits
 //! @brief  Get PIM command name from command type enum
 std::string
 pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
@@ -772,7 +775,7 @@ pimCmdReduction<T>::updateStats() const
     numPass = objSrc.getMaxNumRegionsPerCore();
   }
 
-  pimParamsPerf::perfEnergy mPerfEnergy = pimSim::get()->getParamsPerf()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }

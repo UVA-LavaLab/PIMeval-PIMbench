@@ -430,6 +430,9 @@ public:
   virtual bool sanityCheck() const override;
   virtual bool computeRegion(unsigned index) override;
   virtual bool updateStats() const override;
+   T getOperand(uint64_t operandBits, PimDataType dataType) {
+    return pimUtils::signExt(operandBits, dataType);
+  }
 protected:
   PimObjId m_src;
   T* m_result;
