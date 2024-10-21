@@ -212,7 +212,8 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       for (uint64_t i = begin; i < end; ++i) {
         sumFP32Expected += vecSrc1[i];
       }
-      assert(sumFP32 == sumFP32Expected);
+      // Allowing a small tolerance here because of multithreaded reduction in pimCmd
+      assert(safeAbs(sumFP32 - sumFP32Expected) < 0.01);
     } else {
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
