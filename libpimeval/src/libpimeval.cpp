@@ -71,6 +71,20 @@ pimAllocAssociated(PimObjId assocId, PimDataType dataType)
   return pimSim::get()->pimAllocAssociated(bitsPerElement, assocId, dataType);
 }
 
+//! @brief  Allocate a PIM resource
+PimObjId
+pimAllocCustomized(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType, unsigned bitsPerElement)
+{
+  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+}
+
+//! @brief  Allocate a PIM resource, with an associated object as reference
+PimObjId
+pimAllocAssociatedCustomized(PimObjId assocId, PimDataType dataType, unsigned bitsPerElement)
+{
+  return pimSim::get()->pimAllocAssociated(bitsPerElement, assocId, dataType);
+}
+
 //! @brief  Free a PIM resource
 PimStatus
 pimFree(PimObjId obj)

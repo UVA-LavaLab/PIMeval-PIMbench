@@ -76,6 +76,7 @@ std::string
 pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 {
   switch (dataType) {
+  case PIM_BOOL: return "bool";
   case PIM_INT8: return "int8";
   case PIM_INT16: return "int16";
   case PIM_INT32: return "int32";
@@ -94,6 +95,7 @@ unsigned
 pimUtils::getNumBitsOfDataType(PimDataType dataType)
 {
   switch (dataType) {
+  case PIM_BOOL: return 1;
   case PIM_INT8: return 8;
   case PIM_INT16: return 16;
   case PIM_INT32: return 32;
