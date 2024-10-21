@@ -601,7 +601,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
       if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
         m_regionSum[index] += integerOperand;
-      } else if (isFP){
+      } else if (isFP) {
         float floatOperand = pimUtils::castBitsToType<float>(operandBits);
         m_regionSum[index] += floatOperand;
       } else {
