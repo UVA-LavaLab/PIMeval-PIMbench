@@ -253,7 +253,7 @@ private:
   }
 
   template<typename T>
-  inline bool computeResultFP(T operand, PimCmdEnum cmdType, T scalerValue, T& result, int bitsPerElementSrc) {
+  inline bool computeResultFP(T operand, PimCmdEnum cmdType, T scalerValue, T& result) {
     result = operand;
     switch (cmdType) {
     case PimCmdEnum::ADD_SCALAR: result += scalerValue; break;
@@ -316,6 +316,68 @@ protected:
   PimObjId m_src2;
   PimObjId m_dest;
   uint64_t m_scalarValue;
+private:
+  template<typename T>
+  inline bool computeResult(T operand1, T operand2, PimCmdEnum cmdType, T scalarValue, T& result) {
+    switch (cmdType) {
+    case PimCmdEnum::ADD: result = operand1 + operand2; break;
+    case PimCmdEnum::SUB: result = operand1 - operand2; break;
+    case PimCmdEnum::MUL: result = operand1 * operand2; break;
+    case PimCmdEnum::DIV:
+        if (operand2 == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+        }
+        result = operand1 / operand2;
+        break;
+    case PimCmdEnum::AND: result = operand1 & operand2; break;
+    case PimCmdEnum::OR: result = operand1 | operand2; break;
+    case PimCmdEnum::XOR: result = operand1 ^ operand2; break;
+    case PimCmdEnum::XNOR: result = ~(operand1 ^ operand2); break;
+    case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
+    case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
+    case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+    case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
+    case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
+    case PimCmdEnum::SCALED_ADD: result = (operand1 * scalarValue) + operand2; break;
+    default:
+        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+          assert(0);
+    }
+    return true;
+  }
+
+  template<typename T>
+  inline bool computeResultFP(T operand1, T operand2, PimCmdEnum cmdType, T scalarValue, T& result) {
+    switch (cmdType) {
+    case PimCmdEnum::ADD: result = operand1 + operand2; break;
+    case PimCmdEnum::SUB: result = operand1 - operand2; break;
+    case PimCmdEnum::MUL: result = operand1 * operand2; break;
+    case PimCmdEnum::DIV:
+        if (operand2 == 0) {
+            std::printf("PIM-Error: Division by zero\n");
+            return false;
+        }
+        result = operand1 / operand2;
+        break;
+    case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
+    case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
+    case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+    case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
+    case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
+    case PimCmdEnum::SCALED_ADD: result = (operand1 * scalarValue) + operand2; break;
+    case PimCmdEnum::AND:
+    case PimCmdEnum::OR:
+    case PimCmdEnum::XOR:
+    case PimCmdEnum::XNOR:
+        std::printf("PIM-Error: Cannot perform bitwise operation on floating point values.\n");
+        return false;
+    default:
+        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+          assert(0);
+    }
+    return true;
+  }
 };
 
 //! @class  pimCmdedSum
