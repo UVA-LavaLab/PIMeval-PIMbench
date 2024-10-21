@@ -598,7 +598,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
       bool isFP = (dataType == PIM_FP32);
-      if(!isFP){
+      if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
         m_regionSum[index] += integerOperand;
       } else if (isFP){
