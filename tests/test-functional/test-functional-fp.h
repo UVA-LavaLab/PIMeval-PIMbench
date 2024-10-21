@@ -46,7 +46,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
   // Cover scalar value testing
   // PIMeval uses uint64_t to represent bits of scalarValue
   const float scalarValFloat = 123.0f;
-  const uint64_t scalarVal = *reinterpret_cast<const uint64_t*>(&scalarValFloat);
+  const uint64_t scalarVal = *reinterpret_cast<const uint32_t*>(&scalarValFloat);
   const int64_t scalarValInt = -11; // for int broadcasting
   vecSrc1[500] = static_cast<T>(scalarVal); // cover scalar EQ
   vecSrc1[501] = static_cast<T>(scalarVal - 1); // cover scalar LT
