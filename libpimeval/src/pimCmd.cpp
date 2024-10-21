@@ -407,7 +407,7 @@ pimCmdFunc1::computeRegion(unsigned index)
       if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
       objDest.setElement(elemIdx, result);
     } else {
-    assert(0); // todo: data type
+      assert(0); // todo: data type
     }
   }
   return true;
