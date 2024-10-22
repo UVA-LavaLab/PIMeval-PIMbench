@@ -213,7 +213,10 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
         sumFP32Expected += vecSrc1[i];
       }
       // Allowing a small tolerance here because of multithreaded reduction in pimCmd
-      assert(safeAbs(sumFP32 - sumFP32Expected) < 0.01);
+      if (!fuzzyEqualPercent(sumFP32, sumFP32Expected)) {
+        std::cout << "Large FP reduction sum error: Result: " << sumFP32 << " Expected: " << sumFP32Expected << std::endl;
+        assert(0);
+      }
     } else {
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
