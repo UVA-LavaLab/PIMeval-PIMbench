@@ -74,6 +74,9 @@ enum PimDataType {
   PIM_UINT32,
   PIM_UINT64,
   PIM_FP32,
+  PIM_FP16,
+  PIM_BF16,
+  PIM_FP8,
 };
 
 //! @brief  PIM device properties

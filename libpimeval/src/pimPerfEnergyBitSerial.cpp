@@ -161,8 +161,8 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
         msRuntime += aggregateMs;
         mjEnergy += aggregateMs * cpuTDP;
         mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      } else if (dataType == PIM_FP32) {
-        std::cout << "PIM-Warning: Perf energy model for FP32 reduction sum on bit-serial PIM is not available yet." << std::endl;
+      } else if (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8) {
+        std::cout << "PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet." << std::endl;
         msRuntime = 999999999.9; // todo
         mjEnergy = 999999999.9; // todo
       } else {
