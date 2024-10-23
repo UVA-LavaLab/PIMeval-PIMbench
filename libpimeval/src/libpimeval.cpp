@@ -368,6 +368,38 @@ pimPopCount(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM find the min value of PIM object of signed int element. Result returned to a host variable
+PimStatus
+pimRedMinInt(PimObjId src, int64_t* min)
+{
+  bool ok = pimSim::get()->pimRedMin(src, min);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM find the min value of PIM object of unsigned int element. Result returned to a host variable
+PimStatus
+pimRedMinUInt(PimObjId src, uint64_t* min)
+{
+  bool ok = pimSim::get()->pimRedMin(src, min);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM find the max value of PIM object of signed int element. Result returned to a host variable
+PimStatus
+pimRedMaxInt(PimObjId src, int64_t* max)
+{
+  bool ok = pimSim::get()->pimRedMax(src, max);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM find the max value of PIM object of unsigned int element. Result returned to a host variable
+PimStatus
+pimRedMaxUInt(PimObjId src, uint64_t* max)
+{
+  bool ok = pimSim::get()->pimRedMax(src, max);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM reduction sum for signed int. Result returned to a host variable
 PimStatus
 pimRedSumInt(PimObjId src, int64_t* sum)
