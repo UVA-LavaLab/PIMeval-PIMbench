@@ -1044,7 +1044,9 @@ template bool pimSim::pimBroadcast<float>(PimObjId dest, float value);
 
 template bool pimSim::pimRedSum<uint64_t>(PimObjId src, uint64_t* sum);
 template bool pimSim::pimRedSum<int64_t>(PimObjId src, int64_t* sum);
+template bool pimSim::pimRedSum<float>(PimObjId src, float* sum);
 
 template bool pimSim::pimRedSumRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
 template bool pimSim::pimRedSumRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
+template bool pimSim::pimRedSumRanged<float>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
 
