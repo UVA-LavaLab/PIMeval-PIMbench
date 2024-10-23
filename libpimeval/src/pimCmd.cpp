@@ -555,7 +555,6 @@ pimCmdFunc2::updateStats() const
   return true;
 }
 
-
 //! @brief  PIM CMD: redsum non-ranged/ranged
 template <typename T> bool
 pimCmdRedSum<T>::execute()
