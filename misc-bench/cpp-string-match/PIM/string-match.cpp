@@ -23,6 +23,7 @@ typedef struct Params
 {
   uint64_t stringLength;
   uint64_t keyLength;
+  uint64_t numKeys;
   char *configFile;
   char *inputFile;
   bool shouldVerify;
@@ -35,8 +36,9 @@ void usage()
           "\n"
           "\n    -s    string size (default=2048 elements)"
           "\n    -k    key size (default = 20 elements)"
+          "\n    -n    number of keys (default = 4 keys)"
           "\n    -c    dramsim config file"
-          "\n    -i    input file containing string and key (default=generates strings with random characters)"
+          "\n    -i    input file containing string and keys (default=generates strings with random characters)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
@@ -46,12 +48,13 @@ struct Params getInputParams(int argc, char **argv)
   struct Params p;
   p.stringLength = 2048;
   p.keyLength = 20;
+  p.numKeys = 4;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:s:k:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:s:k:n:c:i:v:")) >= 0)
   {
     switch (opt)
     {
@@ -64,6 +67,9 @@ struct Params getInputParams(int argc, char **argv)
       break;
     case 'k':
       p.keyLength = strtoull(optarg, NULL, 0);
+      break;
+    case 'n':
+      p.numKeys = strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -114,9 +120,6 @@ void string_match(string& needle, string& haystack, vector<uint8_t>& matches) {
   PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT8);
   assert(haystack_pim != -1);
 
-  PimObjId needle_pim = pimAllocAssociated(haystack_pim, PIM_UINT8);
-  assert(needle_pim != -1);
-
   // Both can be replaced with booleans/1 bit ints
   PimObjId intermediate_pim = pimAllocAssociated(haystack_pim, PIM_UINT8);
   assert(intermediate_pim != -1);
@@ -130,14 +133,11 @@ void string_match(string& needle, string& haystack, vector<uint8_t>& matches) {
   assert (status == PIM_OK);
 
   for(uint64_t i=0; i < needle.size(); ++i) {
-    status = pimBroadcastUInt(haystack_pim, (uint64_t) needle[i]);
-    assert (status == PIM_OK);
-
     if(i == 0) {
-      status = pimEQ(haystack_pim, needle_pim, result_pim);
+      status = pimEQScalar(haystack_pim, result_pim, (uint64_t) needle[i]);
       assert (status == PIM_OK);
     } else {
-      status = pimEQ(haystack_pim, needle_pim, intermediate_pim);
+      status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needle[i]);
       assert (status == PIM_OK);
 
       status = pimAnd(result_pim, intermediate_pim, result_pim);
@@ -182,8 +182,10 @@ int main(int argc, char* argv[])
   vector<uint8_t> matches;
   if (params.inputFile == nullptr)
   {
-    getString(haystack, params.stringLength);
-    getString(needle, params.keyLength);
+    // getString(haystack, params.stringLength);
+    // getString(needle, params.keyLength);
+    haystack = "dabcd";
+    needle = "abc";
   } 
   else 
   {
@@ -213,7 +215,7 @@ int main(int argc, char* argv[])
     {
       if (matches[i] != matches_cpu[i])
       {
-        std::cout << "Wrong answer: " << matches[i] << " (expected " << matches_cpu[i] << "), at index: " << i << std::endl;
+        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), at index: " << i << std::endl;
         is_correct = false;
       }
     }
