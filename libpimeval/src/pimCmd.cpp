@@ -634,6 +634,7 @@ pimCmdReduction<T>::computeRegion(unsigned index)
           m_regionResult[index] += integerOperand;
         } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
           m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
+          //std::printf("PIM-Info: %d (obj id %d)\n", m_regionResult[index], integerOperand);
         } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
           m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
         }
