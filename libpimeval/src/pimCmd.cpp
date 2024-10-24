@@ -14,7 +14,6 @@
 #include <cstdio>            // for printf
 #include <unordered_map>     // for unordered_map
 #include <unordered_set>     // for unordered_set
-=======
 #include "pimCmd.h"
 #include "pimSim.h"
 #include "pimDevice.h"
@@ -26,7 +25,6 @@
 #include <unordered_set>
 #include <climits>
 #include <numeric>
->>>>>>> 86ba1ee (implement min max reduce)
 #include <cmath>
 #include <numeric>
 #include <climits>
@@ -561,7 +559,107 @@ pimCmdFunc2::updateStats() const
   return true;
 }
 
+
 //! @brief  PIM CMD: redsum non-ranged/ranged
+template <typename T> bool
+pimCmdRedSum<T>::execute()
+{
+  #if defined(DEBUG)
+  std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
+  #endif
+
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    objSrc.syncFromSimulatedMem();
+  }
+
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  unsigned numRegions = objSrc.getRegions().size();
+
+  // prepare per-region storage
+  m_regionSum.resize(numRegions, 0);
+
+  computeAllRegions(numRegions);
+
+  // reduction
+  for (unsigned i = 0; i < numRegions; ++i) {
+    *m_result += m_regionSum[i];
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
+template <typename T> bool
+pimCmdRedSum<T>::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+  if (!isValidObjId(resMgr, m_src) || !m_result) {
+    return false;
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: redsum non-ranged/ranged - compute region
+template <typename T> bool
+pimCmdRedSum<T>::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  const pimRegion& srcRegion = objSrc.getRegions()[index];
+
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+  uint64_t currIdx = srcRegion.getElemIdxBegin();
+  for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
+    if (currIdx >= m_idxBegin) {
+      uint64_t operandBits = objSrc.getElementBits(currIdx);
+      T operand = pimUtils::signExt(operandBits, objSrc.getDataType());
+      m_regionSum[index] += operand;
+    }
+    currIdx += 1;
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: redsum non-ranged/ranged - update stats
+template <typename T> bool
+pimCmdRedSum<T>::updateStats() const
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  PimDataType dataType = objSrc.getDataType();
+  bool isVLayout = objSrc.isVLayout();
+
+  unsigned numPass = 0;
+  if (m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+    // determine numPass for ranged redSum
+    std::unordered_map<PimCoreId, unsigned> activeRegionPerCore;
+    uint64_t index = 0;
+    for (const auto& region : objSrc.getRegions()) {
+      PimCoreId coreId = region.getCoreId();
+      unsigned numElementsInRegion = region.getNumElemInRegion();
+      bool isActive = index < m_idxEnd && index + numElementsInRegion - 1 >= m_idxBegin;
+      if (isActive) {
+        activeRegionPerCore[coreId]++;
+      }
+      index += numElementsInRegion;
+    }
+    for (const auto& [coreId, count] : activeRegionPerCore) {
+      if (numPass < count) {
+        numPass = count;
+      }
+    }
+  } else {
+    numPass = objSrc.getMaxNumRegionsPerCore();
+  }
+
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
+  return true;
+}
 template <typename T> bool
 pimCmdRedSum<T>::execute()
 {
