@@ -601,12 +601,14 @@ pimCmdReduction<T>::execute()
   computeAllRegions(numRegions);
 
   // reduction
-  if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-    *m_result = std::accumulate(m_regionResult.begin(), m_regionResult.end(), T(0));
-  } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-    *m_result = *std::min_element(m_regionResult.begin(), m_regionResult.end());
-  } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-    *m_result = *std::max_element(m_regionResult.begin(), m_regionResult.end());
+  for (unsigned i = 0; i < numRegions; ++i) {
+    if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+      *m_result += m_regionResult[i];
+    } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
+      *m_result = *m_result > m_regionResult[i] ? m_regionResult[i] : *m_result;
+    } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
+      *m_result = *m_result < m_regionResult[i] ? m_regionResult[i] : *m_result;
+    }
   }
 
   updateStats();
@@ -624,7 +626,7 @@ pimCmdReduction<T>::computeRegion(unsigned index)
 
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
-      auto operandBits = objSrc.getElementBits(currIdx);
+      uint64_t operandBits = objSrc.getElementBits(currIdx);
       bool isFP = (dataType == PIM_FP32);
       if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
@@ -636,7 +638,7 @@ pimCmdReduction<T>::computeRegion(unsigned index)
           m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
         }
       } else if (isFP) {
-        float floatOperand = pimUtils::signExt(operandBits, dataType);
+        float floatOperand = pimUtils::castBitsToType<float>(operandBits);
         if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
           m_regionResult[index] += floatOperand;
         } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
