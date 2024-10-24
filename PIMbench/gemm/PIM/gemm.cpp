@@ -122,12 +122,37 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
+#ifdef USE_SCALAR_OP
+
     status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
       return;
     }
+#else
+    PimObjId srcBroad = pimAllocAssociated(srcObj2, PIM_INT32);
+    status = pimBroadcastInt(srcBroad, srcVector[i]);
+
+    if (status != PIM_OK)
+    {
+        std::cout << "Abort" << std::endl;
+        return;
+    }
+
+    status = pimMul(srcObj1, srcBroad, srcObj2);
+
+    if (status != PIM_OK)
+    {
+        std::cout << "Abort" << std::endl;
+        return;
+    }
+
+    pimFree(srcBroad);
+
+
+
+#endif
 
     status = pimAdd(srcObj2, dstObj, dstObj);
     if (status != PIM_OK)

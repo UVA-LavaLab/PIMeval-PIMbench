@@ -480,6 +480,7 @@ pimCmdFunc2::sanityCheck() const
 bool
 pimCmdFunc2::computeRegion(unsigned index)
 {
+
   const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
   const pimObjInfo& objSrc2 = m_device->getResMgr()->getObjInfo(m_src2);
   pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
