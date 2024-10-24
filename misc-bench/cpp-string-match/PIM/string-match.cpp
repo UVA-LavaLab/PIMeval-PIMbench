@@ -115,54 +115,92 @@ void print_pim_int(PimObjId pim_obj, uint64_t len) {
   std::cout << std::endl;
 }
 
-void string_match(string& needle, string& haystack, vector<uint8_t>& matches) {
+void string_match(vector<string>& needles, string& haystack, vector<vector<uint8_t>>& matches) {
+
+  uint64_t num_needles = needles.size();
 
   PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT8);
   assert(haystack_pim != -1);
 
-  // Both can be replaced with booleans/1 bit ints
+  // intermediate_pim, and pim_results[i] can be replaced with booleans/1 bit ints
   PimObjId intermediate_pim = pimAllocAssociated(haystack_pim, PIM_UINT8);
   assert(intermediate_pim != -1);
 
-  PimObjId result_pim = pimAllocAssociated(haystack_pim, PIM_UINT8);
-  assert(result_pim != -1);
-
-  // Algorithm Start  
+  vector<PimObjId> pim_results;
+  for(uint64_t i=0; i<num_needles; ++i) {
+    pim_results.push_back(pimAllocAssociated(haystack_pim, PIM_UINT8));
+    assert(pim_results.back() != -1);
+  }
 
   PimStatus status = pimCopyHostToDevice((void *)haystack.c_str(), haystack_pim);
   assert (status == PIM_OK);
 
-  for(uint64_t i=0; i < needle.size(); ++i) {
-    if(i == 0) {
-      status = pimEQScalar(haystack_pim, result_pim, (uint64_t) needle[i]);
-      assert (status == PIM_OK);
-    } else {
-      status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needle[i]);
-      assert (status == PIM_OK);
+  // Algorithm Start
+  uint64_t needles_finished = 0;
 
-      status = pimAnd(result_pim, intermediate_pim, result_pim);
-      assert (status == PIM_OK);
+  for(uint64_t char_idx=0; needles_finished < num_needles; ++char_idx) {
+    for(uint64_t needle_idx=0; needle_idx < num_needles; ++needle_idx) {
+
+      if(char_idx >= needles[needle_idx].size()) {
+        continue;
+      }
+
+      if(char_idx == 0) {
+        status = pimEQScalar(haystack_pim, pim_results[needle_idx], (uint64_t) needles[needle_idx][char_idx]);
+        assert (status == PIM_OK);
+      } else {
+        status = pimEQScalar(haystack_pim, pim_results[needle_idx], (uint64_t) needles[needle_idx][char_idx]);
+        assert (status == PIM_OK);
+
+        status = pimAnd(pim_results[needle_idx], intermediate_pim, pim_results[needle_idx]);
+        assert (status == PIM_OK);
+      }
+
+      if(char_idx + 1 == needles[needle_idx].size()) {
+        ++needles_finished;
+      }
     }
 
-    if(i+1 != needle.size()) {
+    if(needles_finished < num_needles) {
       pimShiftElementsLeft(haystack_pim);
     }
   }
+  // for(uint64_t i=0; i < needle.size(); ++i) {
+  //   if(i == 0) {
+  //     status = pimEQScalar(haystack_pim, result_pim, (uint64_t) needle[i]);
+  //     assert (status == PIM_OK);
+  //   } else {
+  //     status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needle[i]);
+  //     assert (status == PIM_OK);
 
-  status = pimCopyDeviceToHost(result_pim, (void *)matches.data());
-  assert (status == PIM_OK);
+  //     status = pimAnd(result_pim, intermediate_pim, result_pim);
+  //     assert (status == PIM_OK);
+  //   }
+
+  //   if(i+1 != needle.size()) {
+  //     pimShiftElementsLeft(haystack_pim);
+  //   }
+  // }
+
+  for(uint64_t needle_idx = 0; needle_idx < num_needles; ++needle_idx) {
+    status = pimCopyDeviceToHost(pim_results[needle_idx], (void *)matches[needle_idx].data());
+    assert (status == PIM_OK);
+  }
 }
 
-void string_match_cpu(string& needle, string& haystack, vector<uint8_t>& matches) {
-  size_t pos = haystack.find(needle, 0);
+void string_match_cpu(vector<string>& needles, string& haystack, vector<vector<uint8_t>>& matches) {
 
-  if (pos == string::npos) {
-    return;
-  }
+  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
+    size_t pos = haystack.find(needles[needle_idx], 0);
 
-  while (pos != string::npos) {
-      matches[pos] = 1;
-      pos = haystack.find(needle, pos + 1);
+    if (pos == string::npos) {
+      continue;
+    }
+
+    while (pos != string::npos) {
+        matches[needle_idx][pos] = 1;
+        pos = haystack.find(needles[needle_idx], pos + 1);
+    }
   }
 }
 
@@ -177,15 +215,16 @@ void getString(string& str, uint64_t len) {
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
-  std::cout << "Running PIM string match for string size: " << params.stringLength << ", key size: " << params.keyLength << "\n";
-  string haystack, needle;
-  vector<uint8_t> matches;
+  std::cout << "Running PIM string match for string size: " << params.stringLength << ", key size: " << params.keyLength << ", number of keys: " << params.numKeys << "\n";
+  string haystack;
+  vector<string> needles;
+  vector<vector<uint8_t>> matches;
   if (params.inputFile == nullptr)
   {
     // getString(haystack, params.stringLength);
     // getString(needle, params.keyLength);
     haystack = "dabcd";
-    needle = "abc";
+    needles = {"abc", "d"};
   } 
   else 
   {
@@ -198,25 +237,39 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  matches.resize(haystack.size());
+  matches.resize(needles.size());
+
+  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
+    matches[needle_idx].resize(haystack.size());
+  }
+
   //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  string_match(needle, haystack, matches);
+  string_match(needles, haystack, matches);
 
   if (params.shouldVerify) 
   {
-    vector<uint8_t> matches_cpu;
-    matches_cpu.resize(haystack.size());
-    string_match_cpu(needle, haystack, matches_cpu);
+    vector<vector<uint8_t>> matches_cpu;
+    
+    matches_cpu.resize(needles.size());
+
+    for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
+      matches_cpu[needle_idx].resize(haystack.size());
+    }
+
+    string_match_cpu(needles, haystack, matches_cpu);
 
     // verify result
     bool is_correct = true;
     #pragma omp parallel for
     for (unsigned i = 0; i < matches.size(); ++i)
     {
-      if (matches[i] != matches_cpu[i])
+      for (unsigned j = 0; j < haystack.size(); ++j)
       {
-        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), at index: " << i << std::endl;
-        is_correct = false;
+        if (matches[i][j] != matches_cpu[i][j])
+        {
+          std::cout << "Wrong answer: " << unsigned(matches[i][j]) << " (expected " << unsigned(matches_cpu[i][j]) << "), for needle: " << i << " at position " << j << std::endl;
+          is_correct = false;
+        }
       }
     }
     if(is_correct) {
