@@ -386,6 +386,32 @@ private:
 
 //! @class  pimCmdedSum
 //! @brief  Pim CMD: RedSum non-ranged/ranged
+template <typename T> class pimCmdRedSum : public pimCmd
+{
+public:
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result)
+    : pimCmd(cmdType), m_src(src), m_result(result)
+  {
+    assert(cmdType == PimCmdEnum::REDSUM);
+  }
+  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result, uint64_t idxBegin, uint64_t idxEnd)
+    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
+  {
+    assert(cmdType == PimCmdEnum::REDSUM_RANGE);
+  }
+  virtual ~pimCmdRedSum() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected:
+  PimObjId m_src;
+  T* m_result;
+  std::vector<T> m_regionSum;
+  uint64_t m_idxBegin = 0;
+  uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
+};
+
 template <typename T> class pimCmdReduction : public pimCmd
 {
 public:
