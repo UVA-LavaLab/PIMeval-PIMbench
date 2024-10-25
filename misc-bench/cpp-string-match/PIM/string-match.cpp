@@ -177,10 +177,6 @@ void string_match_cpu(vector<string>& needles, string& haystack, vector<vector<u
   for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
     size_t pos = haystack.find(needles[needle_idx], 0);
 
-    if (pos == string::npos) {
-      continue;
-    }
-
     while (pos != string::npos) {
         matches[needle_idx][pos] = 1;
         pos = haystack.find(needles[needle_idx], pos + 1);
@@ -206,7 +202,11 @@ int main(int argc, char* argv[])
   if (params.inputFile == nullptr)
   {
     // getString(haystack, params.stringLength);
-    // getString(needle, params.keyLength);
+    // for(uint64_t i=0; i < params.numKeys; ++i) {
+    //   needles.push_back("");
+    //   getString(needles.back(), params.keyLength);
+    // }
+    
     haystack = "dabcd";
     needles = {"abc", "d"};
   } 
