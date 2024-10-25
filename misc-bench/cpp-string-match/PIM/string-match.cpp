@@ -149,7 +149,7 @@ void string_match(vector<string>& needles, string& haystack, vector<vector<uint8
         status = pimEQScalar(haystack_pim, pim_results[needle_idx], (uint64_t) needles[needle_idx][char_idx]);
         assert (status == PIM_OK);
       } else {
-        status = pimEQScalar(haystack_pim, pim_results[needle_idx], (uint64_t) needles[needle_idx][char_idx]);
+        status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needles[needle_idx][char_idx]);
         assert (status == PIM_OK);
 
         status = pimAnd(pim_results[needle_idx], intermediate_pim, pim_results[needle_idx]);
@@ -165,22 +165,6 @@ void string_match(vector<string>& needles, string& haystack, vector<vector<uint8
       pimShiftElementsLeft(haystack_pim);
     }
   }
-  // for(uint64_t i=0; i < needle.size(); ++i) {
-  //   if(i == 0) {
-  //     status = pimEQScalar(haystack_pim, result_pim, (uint64_t) needle[i]);
-  //     assert (status == PIM_OK);
-  //   } else {
-  //     status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needle[i]);
-  //     assert (status == PIM_OK);
-
-  //     status = pimAnd(result_pim, intermediate_pim, result_pim);
-  //     assert (status == PIM_OK);
-  //   }
-
-  //   if(i+1 != needle.size()) {
-  //     pimShiftElementsLeft(haystack_pim);
-  //   }
-  // }
 
   for(uint64_t needle_idx = 0; needle_idx < num_needles; ++needle_idx) {
     status = pimCopyDeviceToHost(pim_results[needle_idx], (void *)matches[needle_idx].data());
