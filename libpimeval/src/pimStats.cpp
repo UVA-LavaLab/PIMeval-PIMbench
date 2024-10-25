@@ -127,12 +127,18 @@ pimStatsMgr::showCmdStats() const
   double totalMsRuntime = 0.0;
   double totalMjEnergy = 0.0;
   for (const auto& it : m_cmdPerf) {
-    std::printf(" %44s : %10d %14f %14f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy);
+    std::cout << std::setw(45) << it.first.c_str() << " : " << std::setw(10) <<  it.second.first << " "
+              << std::setw(14) << std::fixed << std::setprecision(6) << it.second.second.m_msRuntime << " "
+              << std::setw(14) << std::fixed << std::setprecision(6) << it.second.second.m_mjEnergy
+              << std::endl;
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
     totalMjEnergy += it.second.second.m_mjEnergy;
   }
-  std::printf(" %44s : %10d %14f %14f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy);
+  std::cout << std::setw(45) << "TOTAL ---------" << " : " << std::setw(10) <<  totalCmd << " "
+            << std::setw(14) << std::fixed << std::setprecision(6) << totalMsRuntime << " "
+            << std::setw(14) << std::fixed << std::setprecision(6) << totalMjEnergy
+            << std::endl;
 
   // analyze micro-ops
   int numR = 0;
