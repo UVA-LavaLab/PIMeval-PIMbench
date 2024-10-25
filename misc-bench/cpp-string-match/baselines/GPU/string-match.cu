@@ -1,5 +1,5 @@
-/* File:     scale.cu
- * Purpose:  Implement vector scaling on a GPU
+/* File:     string-match.cu
+ * Purpose:  Implement string matching on a GPU
  *
  */
 
@@ -25,6 +25,7 @@ typedef struct Params
 {
   uint64_t stringLength;
   uint64_t keyLength;
+  uint64_t numKeys;
   char *inputFile;
   bool shouldVerify;
 } Params;
@@ -36,9 +37,9 @@ void usage()
           "\n"
           "\n    -s    string size (default=2048 elements)"
           "\n    -k    key size (default = 20 elements)"
-          "\n    -c    dramsim config file"
-          "\n    -i    input file containing string and key (default=generates strings with random characters)"
-          "\n    -v    t = verifies PIM output with host output. (default=false)"
+          "\n    -n    number of keys (default = 4 keys)"
+          "\n    -i    input file containing string and keys (default=generates strings with random characters)"
+          "\n    -v    t = verifies GPU output with host output. (default=false)"
           "\n");
 }
 
@@ -47,6 +48,7 @@ struct Params input_params(int argc, char **argv)
   struct Params p;
   p.stringLength = 2048;
   p.keyLength = 20;
+  p.numKeys = 4;
   p.inputFile = nullptr;
   p.shouldVerify = false;
 
@@ -64,6 +66,9 @@ struct Params input_params(int argc, char **argv)
       break;
     case 'k':
       p.keyLength = strtoull(optarg, NULL, 0);
+      break;
+    case 'n':
+      p.numKeys = strtoull(optarg, NULL, 0);
       break;
     case 'i':
       p.inputFile = optarg;
