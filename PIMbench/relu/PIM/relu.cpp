@@ -15,7 +15,7 @@ using namespace std;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  int row, column, dim;
+  uint64_t row, column, dim;
   char *imageMatrixFile;
   char *dramConfigFile;
   bool shouldVerify;
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
     return 1;
 
   // Calculate matrix dimensions
-  int inputDepth = inputMatrix.size();
+  uint64_t inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
 
@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
   }
 
   uint64_t idx = 0;
-  for (int i = 0; i < inputDepth; i += 1)
+  for (uint64_t i = 0; i < inputDepth; i += 1)
   {  
     for (int r = 0; r < inputHeight; ++r)
     {
