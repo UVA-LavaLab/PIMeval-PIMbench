@@ -21,7 +21,7 @@ typedef vector<vector<vector<int>>> Image3D;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  int row, column, dim, stride, kernelSize, kernelDim, padding, batchSize;
+  uint64_t row, column, dim, stride, kernelSize, kernelDim, padding, batchSize;
   char *kernelMatrixFile;
   char *imageMatrixFile;
   char *dramConfigFile;
@@ -128,14 +128,14 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
 {
   decompMatrix.resize(filterRow * filterColumn, std::vector<int>(matrixRow * matrixColumn, 0));
   int colIdx = 0;
-  for (int i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
+  for (uint64_t i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
   {
-    for (int j = 0; j < (inputMatrix[i].size() - filterColumn + 1); j += stride)
+    for (uint64_t j = 0; j < (inputMatrix[i].size() - filterColumn + 1); j += stride)
     {
       int rowIDX = 0;
-      for (int k = i; k < i + filterRow; k++)
+      for (uint64_t k = i; k < i + filterRow; k++)
       {
-        for (int l = j; l < j + filterColumn; l++)
+        for (uint64_t l = j; l < j + filterColumn; l++)
         {
           decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
         }
@@ -168,9 +168,9 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   }
 
   int idx = 0;
-  for (int i = 0; i < filterMatrix.size(); ++i)
+  for (uint64_t i = 0; i < filterMatrix.size(); ++i)
   {
-    for (int j = 0; j < filterMatrix[i].size(); ++j)
+    for (uint64_t j = 0; j < filterMatrix[i].size(); ++j)
     {
       PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
       if (status != PIM_OK)
@@ -193,7 +193,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     matrixObjects.push_back(obj);
   }
 
-  for (int i = 0; i < inputMatrix.size(); i++)
+  for (uint64_t i = 0; i < inputMatrix.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
@@ -289,9 +289,9 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
 
   int mismatch_counter = 0;
   std::cout << "Comparing PIM convolution results with CPU results for batchId: " << batchId << std::endl;
-  for (int i = 0; i < output.size(); ++i) {
-      for (int j = 0; j < output[0].size(); ++j) {
-          for (int k = 0; k < output[0][0].size(); ++k) {
+  for (uint64_t i = 0; i < output.size(); ++i) {
+      for (uint64_t j = 0; j < output[0].size(); ++j) {
+          for (uint64_t k = 0; k < output[0][0].size(); ++k) {
               if (output[i][j][k] !=  PIMResult[i][j][k]) {
 		if (moreDebugPrints == true) {      
                   std::cout<< "Mismatch between PIM and CPU results at index: " << i << ", " << j << ", " << k << "; PIM result: " << PIMResult[i][j][k] << ", CPU result:" << output[i][j][k] << std::endl;
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
   if (params.imageMatrixFile == nullptr)
   {
     // Generate input matrices for the batch
-    for (int b = 0; b < params.batchSize; ++b) {
+    for (uint64_t b = 0; b < params.batchSize; ++b) {
       inputMatrix[b].resize(params.dim);
       for (auto &mat : inputMatrix[b]) {
         getMatrix(params.row, params.column, params.padding, mat);
@@ -362,7 +362,6 @@ int main(int argc, char *argv[])
   }
   // Get the device parameters
   uint64_t numCols = deviceProp.numColPerSubarray;
-  uint64_t numRows = deviceProp.numRowPerSubarray;
   uint64_t numOfBits = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;  
 
   // Calculate the input, kernel and the output dimensions 
@@ -376,7 +375,7 @@ int main(int argc, char *argv[])
 
   // Calculate the required number of PIM rows and number of matrices per row   
   uint64_t numOfPIMRow = params.kernelSize * params.kernelSize;
-  uint64_t numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfBits) / (outputHeight * outputWidth * params.batchSize))), params.dim);  
+  uint64_t numOfMatPerRow = std::min(static_cast<uint64_t>(std::floor((1.0 * numCols * numOfBits) / (outputHeight * outputWidth * params.batchSize))), params.dim);  
 
   std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
@@ -391,11 +390,11 @@ int main(int argc, char *argv[])
     std::vector<int> dstVec(outputHeight * outputWidth * params.batchSize);
     for (uint64_t j = 0; j < params.dim; j += numOfMatPerRow)
     {
-      int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
+      uint64_t matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
       for (uint64_t k = j; k < matChunk; k++)
       { 
-        for (int b = 0; b < params.batchSize; ++b) 
+        for (uint64_t b = 0; b < params.batchSize; ++b) 
         {
           std::vector<std::vector<int>> decompMat;
           getDecomposedMatrix(params.row, params.column, kernelMatrix[i].size(), kernelMatrix[i][0].size(), params.stride, inputMatrix[b][k], decompMat);
@@ -404,7 +403,7 @@ int main(int argc, char *argv[])
             std::cout << "[INFO]: Decomposed Matrix:" << std::endl;
             printMatrix(decompMat);
           }
-          for (u_int64_t idx = 0; idx < mergedMat.size(); idx++)
+          for (uint64_t idx = 0; idx < mergedMat.size(); idx++)
           {
             mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
             mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
@@ -430,7 +429,7 @@ int main(int argc, char *argv[])
 
       auto start = std::chrono::high_resolution_clock::now();
 
-      int hopSize = outputWidth * outputHeight * params.batchSize;
+      uint64_t hopSize = outputWidth * outputHeight * params.batchSize;
       if (j == 0)
       {
         std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
@@ -453,7 +452,7 @@ int main(int argc, char *argv[])
     }
 
     int ddx = 0;
-    for (int b = 0; b < params.batchSize; ++b) 
+    for (uint64_t b = 0; b < params.batchSize; ++b) 
     {
     for (uint64_t r = 0; r < outputHeight; ++r)
       {
@@ -468,7 +467,7 @@ int main(int argc, char *argv[])
   if (params.shouldVerify  == true)
   {
     // Perform convolution on CPU and compare results with PIM for each matrix in the batch
-    for (int b = 0; b < params.batchSize; ++b) 
+    for (uint64_t b = 0; b < params.batchSize; ++b) 
     {
       VerifyWithCPU(inputMatrix[b], resultMatrix[b], kernelMatrix, params.padding, params.stride, b, params.moreDebugPrints);
     }
