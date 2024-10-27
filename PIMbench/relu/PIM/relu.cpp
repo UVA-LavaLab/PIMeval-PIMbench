@@ -150,7 +150,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     pimObjectList[i] = obj;
   }
   
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -160,7 +160,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     }
   }
 
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimMaxScalar(pimObjectList[i], pimObjectList[0], reluConst);
     if (status != PIM_OK)
