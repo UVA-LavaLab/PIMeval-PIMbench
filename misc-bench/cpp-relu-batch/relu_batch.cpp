@@ -154,7 +154,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     pimObjectList[i] = obj;
   }
   
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -164,7 +164,7 @@ void performRelu(const std::vector<std::vector<int>> &inputMatrix, std::vector<i
     }
   }
 
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimMaxScalar(pimObjectList[i], pimObjectList[0], reluConst);
     if (status != PIM_OK)
@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
 
 
   // Calculate matrix dimensions
-  int inputDepth = inputMatrix.size();
+  uint64_t inputDepth = inputMatrix.size();
   int inputHeight = inputMatrix[0].size();
   int inputWidth = inputMatrix[0][0].size();
 
@@ -275,7 +275,6 @@ int main(int argc, char *argv[]) {
   // Initialize result matrix with the same dimensions as input matrix
   std::vector<std::vector<std::vector<int>>> resultMatrix(inputDepth, std::vector<std::vector<int>>(inputHeight, std::vector<int>(inputWidth)));
 
-  int tempcol = 0;
   std::vector<std::vector<int>> decompMat;
   std::vector<std::vector<int>> mergedMat(numOfPIMRow);
   std::vector<int> outVector;
@@ -295,7 +294,6 @@ int main(int argc, char *argv[]) {
       for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
         mergedMat[idx].reserve(mergedMat[idx].size() + decompMat[idx].size());
         mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(decompMat[idx].begin()), make_move_iterator(decompMat[idx].end()));
-        tempcol = mergedMat[idx].size();
       }
     }
 
@@ -314,7 +312,7 @@ int main(int argc, char *argv[]) {
   }
 
   uint64_t idx = 0;
-  for (int i = 0; i < inputDepth; i += 1)
+  for (uint64_t i = 0; i < inputDepth; i += 1)
   {  
     for (int r = 0; r < inputHeight; ++r)
     {

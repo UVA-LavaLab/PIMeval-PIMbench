@@ -15,7 +15,7 @@ using namespace std;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  int row, column, dim, stride, padding, kernelHeight, kernelWidth;
+  uint64_t row, column, dim, stride, padding, kernelHeight, kernelWidth;
   char *dramConfigFile;
   char *imageMatrixFile;
   bool shouldVerify;
@@ -167,7 +167,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     pimObjectList[i] = obj;
   }
 
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -177,7 +177,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     }
   }
 
-  for (int i = 1; i < pimObjectList.size(); i++)
+  for (uint64_t i = 1; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimMax(pimObjectList[0], pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)

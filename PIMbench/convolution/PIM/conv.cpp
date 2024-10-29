@@ -21,7 +21,7 @@ typedef vector<vector<vector<int>>> Image3D;
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  int row, column, dim, stride, kernelHeight, kernelWidth, kernelDim, padding;
+  uint64_t row, column, dim, stride, kernelHeight, kernelWidth, kernelDim, padding;
   char *kernelMatrixFile;
   char *imageMatrixFile;
   char *dramConfigFile;
@@ -128,14 +128,14 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
 {
   decompMatrix.resize(filterRow * filterColumn, std::vector<int>(matrixRow * matrixColumn, 0));
   int colIdx = 0;
-  for (int i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
+  for (uint64_t i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
   {
-    for (int j = 0; j < (inputMatrix[i].size() - filterColumn + 1); j += stride)
+    for (uint64_t j = 0; j < (inputMatrix[i].size() - filterColumn + 1); j += stride)
     {
       int rowIDX = 0;
-      for (int k = i; k < i + filterRow; k++)
+      for (uint64_t k = i; k < i + filterRow; k++)
       {
-        for (int l = j; l < j + filterColumn; l++)
+        for (uint64_t l = j; l < j + filterColumn; l++)
         {
           decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
         }
@@ -168,9 +168,9 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   }
 
   int idx = 0;
-  for (int i = 0; i < filterMatrix.size(); ++i)
+  for (uint64_t i = 0; i < filterMatrix.size(); ++i)
   {
-    for (int j = 0; j < filterMatrix[i].size(); ++j)
+    for (uint64_t j = 0; j < filterMatrix[i].size(); ++j)
     {
       PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
       if (status != PIM_OK)
@@ -193,7 +193,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
     matrixObjects.push_back(obj);
   }
 
-  for (int i = 0; i < inputMatrix.size(); i++)
+  for (uint64_t i = 0; i < inputMatrix.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
     if (status != PIM_OK)
@@ -289,9 +289,9 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
 
   int mismatch_counter = 0;
   std::cout << "Comparing PIM convolution results with CPU results " << std::endl;
-  for (int i = 0; i < output.size(); ++i) {
-    for (int j = 0; j < output[0].size(); ++j) {
-      for (int k = 0; k < output[0][0].size(); ++k) {
+  for (uint64_t i = 0; i < output.size(); ++i) {
+    for (uint64_t j = 0; j < output[0].size(); ++j) {
+      for (uint64_t k = 0; k < output[0][0].size(); ++k) {
         if (output[i][j][k] !=  PIMResult[i][j][k]) {
 		      if (moreDebugPrints == true) {      
             std::cout<< "Mismatch between PIM and CPU results at index: " << i << ", " << j << ", " << k << "; PIM result: " << PIMResult[i][j][k] << ", CPU result:" << output[i][j][k] << std::endl;
@@ -304,7 +304,7 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
  
   if (moreDebugPrints == true) { 
     std::cout << "Ouput matrix from CPU:" << std::endl;
-    for (int i = 0; i < output.size(); ++i) {
+    for (uint64_t i = 0; i < output.size(); ++i) {
       std::cout << "Layer " << i << ":\n";
       printMatrix(output[i]);
       std::cout << "\n";
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
   if (params.imageMatrixFile == nullptr)
   {
     inputMatrix.resize(params.dim);
-    for (int i = 0; i < params.dim; i++)
+    for (uint64_t i = 0; i < params.dim; i++)
     {
       getMatrix(params.row, params.column, params.padding, inputMatrix[i]);
     }
@@ -382,17 +382,17 @@ int main(int argc, char *argv[])
   std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
-  for (int i = 0; i < params.kernelDim; i++)
+  for (uint64_t i = 0; i < params.kernelDim; i++)
   {
     int tempcol = 0;
     std::vector<int> dstVec(outMatRow * outMatCol);
-    for (int j = 0; j < params.dim; j += numOfMatPerRow)
+    for (uint64_t j = 0; j < params.dim; j += numOfMatPerRow)
     {
-      int matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
+      uint64_t matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
 
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
       std::vector<std::vector<int>> decompMat;      
-      for (int k = j; k < matChunk; k++)
+      for (uint64_t k = j; k < matChunk; k++)
       {
         getDecomposedMatrix(params.row, params.column, kernelHeight, kernelWidth, params.stride, inputMatrix[k], decompMat);
         if (params.moreDebugPrints == true) { 
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
           printMatrix(decompMat);
         }
         // Merge the matrices
-        for (int idx = 0; idx < mergedMat.size(); idx++) {
+        for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
           mergedMat[idx].insert(mergedMat[idx].end(),
                                 std::make_move_iterator(decompMat[idx].begin()),
                                 std::make_move_iterator(decompMat[idx].end()));
@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
       }      
       for (int m = 0; m < hopSize; ++m)
       {
-        for (int n = m + hopSize; n < outVector.size(); n += hopSize)
+        for (uint64_t n = m + hopSize; n < outVector.size(); n += hopSize)
         {
           dstVec[m] += outVector[n];
         }
