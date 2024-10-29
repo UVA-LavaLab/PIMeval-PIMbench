@@ -1,12 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Python utility to compare PIMeval functional testing results
+with Python2 and Python3 compatibility
 Copyright (c) 2024 University of Virginia
 This file is licensed under the MIT License.
 See the LICENSE file in the root of this repository for more details.
 """
 
+from __future__ import print_function
 import difflib
 import os
 import sys
