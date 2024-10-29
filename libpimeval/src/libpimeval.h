@@ -145,9 +145,11 @@ PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t sca
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
 PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
 PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
+PimStatus pimRedSumFP32(PimObjId src, float* sum);
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
 PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
+PimStatus pimRedSumRangedFP32(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
 PimStatus pimBroadcastFP32(PimObjId dest, float value);

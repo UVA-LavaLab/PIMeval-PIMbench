@@ -391,6 +391,14 @@ pimRedSumUInt(PimObjId src, uint64_t* sum)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM reduction sum for float. Result returned to a host variable
+PimStatus
+pimRedSumFP32(PimObjId src, float* sum)
+{
+  bool ok = pimSim::get()->pimRedSum(src, sum);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM reduction sum for a range of an signed int obj. Result returned to a host variable
 PimStatus
 pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum)
@@ -402,6 +410,14 @@ pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* su
 //! @brief  PIM reduction sum for a range of an unsigned int obj. Result returned to a host variable
 PimStatus
 pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum)
+{
+  bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM reduction sum for a range of an float obj. Result returned to a host variable
+PimStatus
+pimRedSumRangedFP32(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;
