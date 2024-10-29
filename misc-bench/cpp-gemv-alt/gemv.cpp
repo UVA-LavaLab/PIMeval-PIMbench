@@ -103,7 +103,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 
   PimStatus status = pimCopyHostToDevice((void *)srcVector.data(), srcObj2);
   dst.reserve(row);
-  for (int i = 0; i < row; ++i)
+  for (uint64_t i = 0; i < row; ++i)
   {
     status = pimCopyHostToDevice((void *)srcMatrix[i].data(), srcObj1);
     if (status != PIM_OK)
