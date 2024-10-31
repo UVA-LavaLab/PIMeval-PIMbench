@@ -38,8 +38,12 @@ fi
 
 # STEP 2: Compare result_local.txt with result_golden.txt
 #         Catch any differences between the two
+# Note: There are FP errors due to non-associative FP operations and CPU/OS/compiler differences.
+#   Type 1: FP errors in PIMeval computation results, e.g., multi-theaded FP reduction sum
+#   Type 2: FP errors in PIMeval outputs, e.g., performance and energy numbers
+#   The fuzzyEqualPercent function is for handling Type 1. The fuzzy_diff.py is for Type 2.
 
-if diff "$GOLDEN" "$LOCAL" > /dev/null; then
+if $SCRIPT_DIR/fuzzy_diff.py "$GOLDEN" "$LOCAL" > /dev/null; then
     echo
     echo "########################################################################################"
     echo "PIMeval Functional Testing >>>>> PASSED"
@@ -51,7 +55,7 @@ else
     echo
     echo "########################################################################################"
     echo
-    diff "$GOLDEN" "$LOCAL"
+    $SCRIPT_DIR/fuzzy_diff.py "$GOLDEN" "$LOCAL"
     echo
     echo "########################################################################################"
     echo "PIMeval Functional Testing >>>>> FAILED !!!!!"
