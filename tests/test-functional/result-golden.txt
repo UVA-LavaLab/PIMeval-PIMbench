@@ -44,13 +44,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 [PASS] INT8 pimPopCount
 [PASS] INT8 pimBroadcastInt
 [PASS] INT8 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT8 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT8 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT8 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT8 pimShiftElementsLeft
 [PASS] INT8 pimShiftBitsRight
 [PASS] INT8 pimShiftBitsLeft
@@ -98,20 +94,20 @@ PIM Command Stats:
                               popcount.int8.v :          1 8000000.000000       0.000000
                                 redsum.int8.v :          2       0.004038       0.002857
                           redsum_range.int8.v :          2       0.003029       0.002206
-                         rotate_elem_l.int8.v :          1       0.005185       0.000022
-                         rotate_elem_r.int8.v :          1       0.005185       0.000022
+                         rotate_elem_l.int8.v :          1       0.005185       0.000024
+                         rotate_elem_r.int8.v :          1       0.005185       0.000024
                             scaled_add.int8.v :          1       0.031896       0.020445
                           shift_bits_l.int8.v :          1       0.004404       0.000000
                           shift_bits_r.int8.v :          1       0.004404       0.000000
-                          shift_elem_l.int8.v :          1       0.005185       0.000022
-                          shift_elem_r.int8.v :          1       0.005185       0.000022
+                          shift_elem_l.int8.v :          1       0.005185       0.000024
+                          shift_elem_r.int8.v :          1       0.005185       0.000024
                                    sub.int8.v :          1       0.007032       0.004521
                             sub_scalar.int8.v :          1       0.005400       0.003460
                                   xnor.int8.v :          1       0.006816       0.004386
                            xnor_scalar.int8.v :          1       0.005184       0.003324
                                    xor.int8.v :          1       0.007032       0.004521
                             xor_scalar.int8.v :          1       0.005400       0.003460
-                              TOTAL --------- :         41 8000000.488860       0.295251
+                              TOTAL --------- :         41 8000000.488860       0.295259
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT8
@@ -147,13 +143,9 @@ INFO: PIMeval Functional Tests for UINT8
 [PASS] UINT8 pimPopCount
 [PASS] UINT8 pimBroadcastInt
 [PASS] UINT8 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT8 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT8 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT8 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT8 pimShiftElementsLeft
 [PASS] UINT8 pimShiftBitsRight
 [PASS] UINT8 pimShiftBitsLeft
@@ -201,20 +193,20 @@ PIM Command Stats:
                              popcount.uint8.v :          1       0.000000       0.000000
                                redsum.uint8.v :          2       0.004038       0.002857
                          redsum_range.uint8.v :          2       0.003029       0.002206
-                        rotate_elem_l.uint8.v :          1       0.005185       0.000022
-                        rotate_elem_r.uint8.v :          1       0.005185       0.000022
+                        rotate_elem_l.uint8.v :          1       0.005185       0.000024
+                        rotate_elem_r.uint8.v :          1       0.005185       0.000024
                            scaled_add.uint8.v :          1       0.031896       0.020445
                          shift_bits_l.uint8.v :          1       0.004404       0.000000
                          shift_bits_r.uint8.v :          1       0.004404       0.000000
-                         shift_elem_l.uint8.v :          1       0.005185       0.000022
-                         shift_elem_r.uint8.v :          1       0.005185       0.000022
+                         shift_elem_l.uint8.v :          1       0.005185       0.000024
+                         shift_elem_r.uint8.v :          1       0.005185       0.000024
                                   sub.uint8.v :          1       0.007032       0.004521
                            sub_scalar.uint8.v :          1       0.005400       0.003460
                                  xnor.uint8.v :          1       0.006816       0.004386
                           xnor_scalar.uint8.v :          1       0.005184       0.003324
                                   xor.uint8.v :          1       0.007032       0.004521
                            xor_scalar.uint8.v :          1       0.005400       0.003460
-                              TOTAL --------- :         41       0.490288       0.296255
+                              TOTAL --------- :         41       0.490288       0.296263
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT16
@@ -251,13 +243,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 [PASS] INT16 pimPopCount
 [PASS] INT16 pimBroadcastInt
 [PASS] INT16 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT16 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT16 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT16 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT16 pimShiftElementsLeft
 [PASS] INT16 pimShiftBitsRight
 [PASS] INT16 pimShiftBitsLeft
@@ -305,20 +293,20 @@ PIM Command Stats:
                              popcount.int16.v :          1 8000000.000000       0.000000
                                redsum.int16.v :          2       0.008075       0.005464
                          redsum_range.int16.v :          2       0.006057       0.004161
-                        rotate_elem_l.int16.v :          1       0.010370       0.000044
-                        rotate_elem_r.int16.v :          1       0.010370       0.000044
+                        rotate_elem_l.int16.v :          1       0.010370       0.000048
+                        rotate_elem_r.int16.v :          1       0.010370       0.000048
                            scaled_add.int16.v :          1       0.108312       0.069399
                          shift_bits_l.int16.v :          1       0.009012       0.000000
                          shift_bits_r.int16.v :          1       0.009012       0.000000
-                         shift_elem_l.int16.v :          1       0.010370       0.000044
-                         shift_elem_r.int16.v :          1       0.010370       0.000044
+                         shift_elem_l.int16.v :          1       0.010370       0.000048
+                         shift_elem_r.int16.v :          1       0.010370       0.000048
                                   sub.int16.v :          1       0.014040       0.009028
                            sub_scalar.int16.v :          1       0.010776       0.006905
                                  xnor.int16.v :          1       0.013632       0.008772
                           xnor_scalar.int16.v :          1       0.010368       0.006649
                                   xor.int16.v :          1       0.014040       0.009028
                            xor_scalar.int16.v :          1       0.010776       0.006905
-                              TOTAL --------- :         41 8000001.443402       0.888587
+                              TOTAL --------- :         41 8000001.443402       0.888602
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT16
@@ -355,13 +343,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 [PASS] UINT16 pimPopCount
 [PASS] UINT16 pimBroadcastInt
 [PASS] UINT16 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT16 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT16 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT16 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT16 pimShiftElementsLeft
 [PASS] UINT16 pimShiftBitsRight
 [PASS] UINT16 pimShiftBitsLeft
@@ -409,20 +393,20 @@ PIM Command Stats:
                             popcount.uint16.v :          1 8000000.000000       0.000000
                               redsum.uint16.v :          2       0.008075       0.005464
                         redsum_range.uint16.v :          2       0.006057       0.004161
-                       rotate_elem_l.uint16.v :          1       0.010370       0.000044
-                       rotate_elem_r.uint16.v :          1       0.010370       0.000044
+                       rotate_elem_l.uint16.v :          1       0.010370       0.000048
+                       rotate_elem_r.uint16.v :          1       0.010370       0.000048
                           scaled_add.uint16.v :          1       0.108312       0.069399
                         shift_bits_l.uint16.v :          1       0.009012       0.000000
                         shift_bits_r.uint16.v :          1       0.009012       0.000000
-                        shift_elem_l.uint16.v :          1       0.010370       0.000044
-                        shift_elem_r.uint16.v :          1       0.010370       0.000044
+                        shift_elem_l.uint16.v :          1       0.010370       0.000048
+                        shift_elem_r.uint16.v :          1       0.010370       0.000048
                                  sub.uint16.v :          1       0.014040       0.009028
                           sub_scalar.uint16.v :          1       0.010776       0.006905
                                 xnor.uint16.v :          1       0.013632       0.008772
                          xnor_scalar.uint16.v :          1       0.010368       0.006649
                                  xor.uint16.v :          1       0.014040       0.009028
                           xor_scalar.uint16.v :          1       0.010776       0.006905
-                              TOTAL --------- :         41 8000001.446078       0.890489
+                              TOTAL --------- :         41 8000001.446078       0.890505
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT32
@@ -458,13 +442,9 @@ INFO: PIMeval Functional Tests for INT32
 [PASS] INT32 pimPopCount
 [PASS] INT32 pimBroadcastInt
 [PASS] INT32 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT32 pimShiftElementsLeft
 [PASS] INT32 pimShiftBitsRight
 [PASS] INT32 pimShiftBitsLeft
@@ -512,20 +492,20 @@ PIM Command Stats:
                              popcount.int32.v :          1       0.073272       0.046997
                                redsum.int32.v :          2       0.016150       0.010678
                          redsum_range.int32.v :          2       0.012113       0.008071
-                        rotate_elem_l.int32.v :          1       0.020741       0.000088
-                        rotate_elem_r.int32.v :          1       0.020741       0.000088
+                        rotate_elem_l.int32.v :          1       0.020741       0.000095
+                        rotate_elem_r.int32.v :          1       0.020741       0.000095
                            scaled_add.int32.v :          1       0.394776       0.252877
                          shift_bits_l.int32.v :          1       0.018228       0.000000
                          shift_bits_r.int32.v :          1       0.018228       0.000000
-                         shift_elem_l.int32.v :          1       0.020741       0.000088
-                         shift_elem_r.int32.v :          1       0.020741       0.000088
+                         shift_elem_l.int32.v :          1       0.020741       0.000095
+                         shift_elem_r.int32.v :          1       0.020741       0.000095
                                   sub.int32.v :          1       0.028056       0.018041
                            sub_scalar.int32.v :          1       0.021528       0.013795
                                  xnor.int32.v :          1       0.027264       0.017544
                           xnor_scalar.int32.v :          1       0.020736       0.013298
                                   xor.int32.v :          1       0.028056       0.018041
                            xor_scalar.int32.v :          1       0.021528       0.013795
-                              TOTAL --------- :         41       4.824285       3.019761
+                              TOTAL --------- :         41       4.824285       3.019792
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT32
@@ -561,13 +541,9 @@ INFO: PIMeval Functional Tests for UINT32
 [PASS] UINT32 pimPopCount
 [PASS] UINT32 pimBroadcastInt
 [PASS] UINT32 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT32 pimShiftElementsLeft
 [PASS] UINT32 pimShiftBitsRight
 [PASS] UINT32 pimShiftBitsLeft
@@ -615,20 +591,20 @@ PIM Command Stats:
                             popcount.uint32.v :          1       0.073272       0.046997
                               redsum.uint32.v :          2       0.016150       0.010678
                         redsum_range.uint32.v :          2       0.012113       0.008071
-                       rotate_elem_l.uint32.v :          1       0.020741       0.000088
-                       rotate_elem_r.uint32.v :          1       0.020741       0.000088
+                       rotate_elem_l.uint32.v :          1       0.020741       0.000095
+                       rotate_elem_r.uint32.v :          1       0.020741       0.000095
                           scaled_add.uint32.v :          1       0.394776       0.252877
                         shift_bits_l.uint32.v :          1       0.018228       0.000000
                         shift_bits_r.uint32.v :          1       0.018228       0.000000
-                        shift_elem_l.uint32.v :          1       0.020741       0.000088
-                        shift_elem_r.uint32.v :          1       0.020741       0.000088
+                        shift_elem_l.uint32.v :          1       0.020741       0.000095
+                        shift_elem_r.uint32.v :          1       0.020741       0.000095
                                  sub.uint32.v :          1       0.028056       0.018041
                           sub_scalar.uint32.v :          1       0.021528       0.013795
                                 xnor.uint32.v :          1       0.027264       0.017544
                          xnor_scalar.uint32.v :          1       0.020736       0.013298
                                  xor.uint32.v :          1       0.028056       0.018041
                           xor_scalar.uint32.v :          1       0.021528       0.013795
-                              TOTAL --------- :         41       4.829457       3.023460
+                              TOTAL --------- :         41       4.829457       3.023491
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT64
@@ -670,13 +646,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 [PASS] INT64 pimPopCount
 [PASS] INT64 pimBroadcastInt
 [PASS] INT64 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT64 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT64 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT64 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT64 pimShiftElementsLeft
 [PASS] INT64 pimShiftBitsRight
 [PASS] INT64 pimShiftBitsLeft
@@ -724,20 +696,20 @@ PIM Command Stats:
                              popcount.int64.v :          1 8000000.000000       0.000000
                                redsum.int64.v :          2       0.032298       0.021104
                          redsum_range.int64.v :          2       0.024224       0.015891
-                        rotate_elem_l.int64.v :          1       0.041481       0.000175
-                        rotate_elem_r.int64.v :          1       0.041481       0.000175
+                        rotate_elem_l.int64.v :          1       0.041481       0.000190
+                        rotate_elem_r.int64.v :          1       0.041481       0.000190
                            scaled_add.int64.v :          1 8000000.000000       0.000000
                          shift_bits_l.int64.v :          1       0.036660       0.000000
                          shift_bits_r.int64.v :          1       0.036660       0.000000
-                         shift_elem_l.int64.v :          1       0.041481       0.000175
-                         shift_elem_r.int64.v :          1       0.041481       0.000175
+                         shift_elem_l.int64.v :          1       0.041481       0.000190
+                         shift_elem_r.int64.v :          1       0.041481       0.000190
                                   sub.int64.v :          1       0.056088       0.036066
                            sub_scalar.int64.v :          1       0.043032       0.027574
                                  xnor.int64.v :          1       0.054528       0.035087
                           xnor_scalar.int64.v :          1       0.041472       0.026595
                                   xor.int64.v :          1       0.056088       0.036066
                            xor_scalar.int64.v :          1       0.043032       0.027574
-                              TOTAL --------- :         41 48000001.586163       0.865508
+                              TOTAL --------- :         41 48000001.586163       0.865569
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT64
@@ -779,13 +751,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 [PASS] UINT64 pimPopCount
 [PASS] UINT64 pimBroadcastInt
 [PASS] UINT64 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT64 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT64 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT64 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT64 pimShiftElementsLeft
 [PASS] UINT64 pimShiftBitsRight
 [PASS] UINT64 pimShiftBitsLeft
@@ -833,20 +801,20 @@ PIM Command Stats:
                             popcount.uint64.v :          1 8000000.000000       0.000000
                               redsum.uint64.v :          2       0.032298       0.021104
                         redsum_range.uint64.v :          2       0.024224       0.015891
-                       rotate_elem_l.uint64.v :          1       0.041481       0.000175
-                       rotate_elem_r.uint64.v :          1       0.041481       0.000175
+                       rotate_elem_l.uint64.v :          1       0.041481       0.000190
+                       rotate_elem_r.uint64.v :          1       0.041481       0.000190
                           scaled_add.uint64.v :          1 8000000.000000       0.000000
                         shift_bits_l.uint64.v :          1       0.036660       0.000000
                         shift_bits_r.uint64.v :          1       0.036660       0.000000
-                        shift_elem_l.uint64.v :          1       0.041481       0.000175
-                        shift_elem_r.uint64.v :          1       0.041481       0.000175
+                        shift_elem_l.uint64.v :          1       0.041481       0.000190
+                        shift_elem_r.uint64.v :          1       0.041481       0.000190
                                  sub.uint64.v :          1       0.056088       0.036066
                           sub_scalar.uint64.v :          1       0.043032       0.027574
                                 xnor.uint64.v :          1       0.054528       0.035087
                          xnor_scalar.uint64.v :          1       0.041472       0.026595
                                  xor.uint64.v :          1       0.056088       0.036066
                           xor_scalar.uint64.v :          1       0.043032       0.027574
-                              TOTAL --------- :         41 48000001.577031       0.859772
+                              TOTAL --------- :         41 48000001.577031       0.859833
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP32
@@ -889,13 +857,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 PIM-Warning: Perf energy model for FP32 reduction sum on bit-serial PIM is not available yet.
 PIM-Warning: Perf energy model for FP32 reduction sum on bit-serial PIM is not available yet.
 [PASS] FP32 pimBroadcastFP32
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] FP32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] FP32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] FP32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] FP32 pimShiftElementsLeft
 ----------------------------------------
 PIM Params:
@@ -936,14 +900,14 @@ PIM Command Stats:
                             mul_scalar.fp32.v :          1       1.012152       0.650623
                                 redsum.fp32.v :          1 999999999.900000 999999999.900000
                           redsum_range.fp32.v :          1 999999999.900000 999999999.900000
-                         rotate_elem_l.fp32.v :          1       0.020741       0.000088
-                         rotate_elem_r.fp32.v :          1       0.020741       0.000088
+                         rotate_elem_l.fp32.v :          1       0.020741       0.000095
+                         rotate_elem_r.fp32.v :          1       0.020741       0.000095
                             scaled_add.fp32.v :          1 8000000.000000       0.000000
-                          shift_elem_l.fp32.v :          1       0.020741       0.000088
-                          shift_elem_r.fp32.v :          1       0.020741       0.000088
+                          shift_elem_l.fp32.v :          1       0.020741       0.000095
+                          shift_elem_r.fp32.v :          1       0.020741       0.000095
                                    sub.fp32.v :          1       0.698748       0.449430
                             sub_scalar.fp32.v :          1 8000000.000000       0.000000
-                              TOTAL --------- :         27 2120000004.796471 2000000002.959303
+                              TOTAL --------- :         27 2120000004.796471 2000000002.959334
 ----------------------------------------
 Result: COMPLETED
 PIMeval Functional Testing
@@ -988,13 +952,9 @@ INFO: PIMeval Functional Tests for INT8
 [PASS] INT8 pimPopCount
 [PASS] INT8 pimBroadcastInt
 [PASS] INT8 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT8 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT8 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT8 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT8 pimShiftElementsLeft
 [PASS] INT8 pimShiftBitsRight
 [PASS] INT8 pimShiftBitsLeft
@@ -1042,20 +1002,20 @@ PIM Command Stats:
                               popcount.int8.h :          1       0.036904       0.023201
                                 redsum.int8.h :          2       0.006197       0.004118
                           redsum_range.int8.h :          2       0.004151       0.002841
-                         rotate_elem_l.int8.h :          1       0.006435       0.000022
-                         rotate_elem_r.int8.h :          1       0.006435       0.000022
+                         rotate_elem_l.int8.h :          1       0.006435       0.000036
+                         rotate_elem_r.int8.h :          1       0.006435       0.000036
                             scaled_add.int8.h :          1       0.006211       0.004093
                           shift_bits_l.int8.h :          1       0.003141       0.002105
                           shift_bits_r.int8.h :          1       0.003141       0.002105
-                          shift_elem_l.int8.h :          1       0.006435       0.000022
-                          shift_elem_r.int8.h :          1       0.006435       0.000022
+                          shift_elem_l.int8.h :          1       0.006435       0.000036
+                          shift_elem_r.int8.h :          1       0.006435       0.000036
                                    sub.int8.h :          1       0.009401       0.006084
                             sub_scalar.int8.h :          1       0.003141       0.002105
                                   xnor.int8.h :          1       0.009401       0.005962
                            xnor_scalar.int8.h :          1       0.003141       0.002105
                                    xor.int8.h :          1       0.009401       0.005962
                             xor_scalar.int8.h :          1       0.003141       0.002105
-                              TOTAL --------- :         41       0.263296       0.153416
+                              TOTAL --------- :         41       0.263296       0.153475
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT8
@@ -1091,13 +1051,9 @@ INFO: PIMeval Functional Tests for UINT8
 [PASS] UINT8 pimPopCount
 [PASS] UINT8 pimBroadcastInt
 [PASS] UINT8 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT8 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT8 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT8 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT8 pimShiftElementsLeft
 [PASS] UINT8 pimShiftBitsRight
 [PASS] UINT8 pimShiftBitsLeft
@@ -1145,20 +1101,20 @@ PIM Command Stats:
                              popcount.uint8.h :          1       0.036904       0.023201
                                redsum.uint8.h :          2       0.006197       0.004118
                          redsum_range.uint8.h :          2       0.004151       0.002841
-                        rotate_elem_l.uint8.h :          1       0.006435       0.000022
-                        rotate_elem_r.uint8.h :          1       0.006435       0.000022
+                        rotate_elem_l.uint8.h :          1       0.006435       0.000036
+                        rotate_elem_r.uint8.h :          1       0.006435       0.000036
                            scaled_add.uint8.h :          1       0.006211       0.004093
                          shift_bits_l.uint8.h :          1       0.003141       0.002105
                          shift_bits_r.uint8.h :          1       0.003141       0.002105
-                         shift_elem_l.uint8.h :          1       0.006435       0.000022
-                         shift_elem_r.uint8.h :          1       0.006435       0.000022
+                         shift_elem_l.uint8.h :          1       0.006435       0.000036
+                         shift_elem_r.uint8.h :          1       0.006435       0.000036
                                   sub.uint8.h :          1       0.009401       0.006084
                            sub_scalar.uint8.h :          1       0.003141       0.002105
                                  xnor.uint8.h :          1       0.009401       0.005962
                           xnor_scalar.uint8.h :          1       0.003141       0.002105
                                   xor.uint8.h :          1       0.009401       0.005962
                            xor_scalar.uint8.h :          1       0.003141       0.002105
-                              TOTAL --------- :         41       0.263296       0.153416
+                              TOTAL --------- :         41       0.263296       0.153475
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT16
@@ -1194,13 +1150,9 @@ INFO: PIMeval Functional Tests for INT16
 [PASS] INT16 pimPopCount
 [PASS] INT16 pimBroadcastInt
 [PASS] INT16 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT16 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT16 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT16 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT16 pimShiftElementsLeft
 [PASS] INT16 pimShiftBitsRight
 [PASS] INT16 pimShiftBitsLeft
@@ -1248,20 +1200,20 @@ PIM Command Stats:
                              popcount.int16.h :          1       0.073152       0.045858
                                redsum.int16.h :          2       0.012238       0.007889
                          redsum_range.int16.h :          2       0.008243       0.005395
-                        rotate_elem_l.int16.h :          1       0.015786       0.000043
-                        rotate_elem_r.int16.h :          1       0.015786       0.000043
+                        rotate_elem_l.int16.h :          1       0.015786       0.000102
+                        rotate_elem_r.int16.h :          1       0.015786       0.000102
                            scaled_add.int16.h :          1       0.012252       0.007987
                          shift_bits_l.int16.h :          1       0.006162       0.004073
                          shift_bits_r.int16.h :          1       0.006162       0.004073
-                         shift_elem_l.int16.h :          1       0.015786       0.000043
-                         shift_elem_r.int16.h :          1       0.015786       0.000043
+                         shift_elem_l.int16.h :          1       0.015786       0.000102
+                         shift_elem_r.int16.h :          1       0.015786       0.000102
                                   sub.int16.h :          1       0.018653       0.011981
                            sub_scalar.int16.h :          1       0.006162       0.004073
                                  xnor.int16.h :          1       0.018653       0.011732
                           xnor_scalar.int16.h :          1       0.006162       0.004073
                                   xor.int16.h :          1       0.018653       0.011732
                            xor_scalar.int16.h :          1       0.006162       0.004073
-                              TOTAL --------- :         41       0.533160       0.300592
+                              TOTAL --------- :         41       0.533160       0.300829
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT16
@@ -1297,13 +1249,9 @@ INFO: PIMeval Functional Tests for UINT16
 [PASS] UINT16 pimPopCount
 [PASS] UINT16 pimBroadcastInt
 [PASS] UINT16 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT16 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT16 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT16 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT16 pimShiftElementsLeft
 [PASS] UINT16 pimShiftBitsRight
 [PASS] UINT16 pimShiftBitsLeft
@@ -1351,20 +1299,20 @@ PIM Command Stats:
                             popcount.uint16.h :          1       0.073152       0.045858
                               redsum.uint16.h :          2       0.012238       0.007889
                         redsum_range.uint16.h :          2       0.008243       0.005395
-                       rotate_elem_l.uint16.h :          1       0.015786       0.000043
-                       rotate_elem_r.uint16.h :          1       0.015786       0.000043
+                       rotate_elem_l.uint16.h :          1       0.015786       0.000102
+                       rotate_elem_r.uint16.h :          1       0.015786       0.000102
                           scaled_add.uint16.h :          1       0.012252       0.007987
                         shift_bits_l.uint16.h :          1       0.006162       0.004073
                         shift_bits_r.uint16.h :          1       0.006162       0.004073
-                        shift_elem_l.uint16.h :          1       0.015786       0.000043
-                        shift_elem_r.uint16.h :          1       0.015786       0.000043
+                        shift_elem_l.uint16.h :          1       0.015786       0.000102
+                        shift_elem_r.uint16.h :          1       0.015786       0.000102
                                  sub.uint16.h :          1       0.018653       0.011981
                           sub_scalar.uint16.h :          1       0.006162       0.004073
                                 xnor.uint16.h :          1       0.018653       0.011732
                          xnor_scalar.uint16.h :          1       0.006162       0.004073
                                  xor.uint16.h :          1       0.018653       0.011732
                           xor_scalar.uint16.h :          1       0.006162       0.004073
-                              TOTAL --------- :         41       0.533160       0.300592
+                              TOTAL --------- :         41       0.533160       0.300829
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT32
@@ -1400,13 +1348,9 @@ INFO: PIMeval Functional Tests for INT32
 [PASS] INT32 pimPopCount
 [PASS] INT32 pimBroadcastInt
 [PASS] INT32 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT32 pimShiftElementsLeft
 [PASS] INT32 pimShiftBitsRight
 [PASS] INT32 pimShiftBitsLeft
@@ -1454,20 +1398,20 @@ PIM Command Stats:
                              popcount.int32.h :          1       0.146232       0.091537
                                redsum.int32.h :          2       0.024418       0.015491
                          redsum_range.int32.h :          2       0.016428       0.010504
-                        rotate_elem_l.int32.h :          1       0.043646       0.000086
-                        rotate_elem_r.int32.h :          1       0.043646       0.000086
+                        rotate_elem_l.int32.h :          1       0.043646       0.000323
+                        rotate_elem_r.int32.h :          1       0.043646       0.000323
                            scaled_add.int32.h :          1       0.024432       0.015839
                          shift_bits_l.int32.h :          1       0.012252       0.008040
                          shift_bits_r.int32.h :          1       0.012252       0.008040
-                         shift_elem_l.int32.h :          1       0.043646       0.000086
-                         shift_elem_r.int32.h :          1       0.043646       0.000086
+                         shift_elem_l.int32.h :          1       0.043646       0.000323
+                         shift_elem_r.int32.h :          1       0.043646       0.000323
                                   sub.int32.h :          1       0.037305       0.023872
                            sub_scalar.int32.h :          1       0.012252       0.008042
                                  xnor.int32.h :          1       0.037305       0.023366
                           xnor_scalar.int32.h :          1       0.012252       0.008040
                                   xor.int32.h :          1       0.037305       0.023366
                            xor_scalar.int32.h :          1       0.012252       0.008040
-                              TOTAL --------- :         41       1.113199       0.597316
+                              TOTAL --------- :         41       1.113199       0.598266
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT32
@@ -1503,13 +1447,9 @@ INFO: PIMeval Functional Tests for UINT32
 [PASS] UINT32 pimPopCount
 [PASS] UINT32 pimBroadcastInt
 [PASS] UINT32 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT32 pimShiftElementsLeft
 [PASS] UINT32 pimShiftBitsRight
 [PASS] UINT32 pimShiftBitsLeft
@@ -1557,20 +1497,20 @@ PIM Command Stats:
                             popcount.uint32.h :          1       0.146232       0.091537
                               redsum.uint32.h :          2       0.024418       0.015491
                         redsum_range.uint32.h :          2       0.016428       0.010504
-                       rotate_elem_l.uint32.h :          1       0.043646       0.000086
-                       rotate_elem_r.uint32.h :          1       0.043646       0.000086
+                       rotate_elem_l.uint32.h :          1       0.043646       0.000323
+                       rotate_elem_r.uint32.h :          1       0.043646       0.000323
                           scaled_add.uint32.h :          1       0.024432       0.015839
                         shift_bits_l.uint32.h :          1       0.012252       0.008040
                         shift_bits_r.uint32.h :          1       0.012252       0.008040
-                        shift_elem_l.uint32.h :          1       0.043646       0.000086
-                        shift_elem_r.uint32.h :          1       0.043646       0.000086
+                        shift_elem_l.uint32.h :          1       0.043646       0.000323
+                        shift_elem_r.uint32.h :          1       0.043646       0.000323
                                  sub.uint32.h :          1       0.037305       0.023872
                           sub_scalar.uint32.h :          1       0.012252       0.008042
                                 xnor.uint32.h :          1       0.037305       0.023366
                          xnor_scalar.uint32.h :          1       0.012252       0.008040
                                  xor.uint32.h :          1       0.037305       0.023366
                           xor_scalar.uint32.h :          1       0.012252       0.008040
-                              TOTAL --------- :         41       1.113199       0.597316
+                              TOTAL --------- :         41       1.113199       0.598266
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT64
@@ -1606,13 +1546,9 @@ INFO: PIMeval Functional Tests for INT64
 [PASS] INT64 pimPopCount
 [PASS] INT64 pimBroadcastInt
 [PASS] INT64 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT64 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT64 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT64 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT64 pimShiftElementsLeft
 [PASS] INT64 pimShiftBitsRight
 [PASS] INT64 pimShiftBitsLeft
@@ -1660,20 +1596,20 @@ PIM Command Stats:
                              popcount.int64.h :          1       0.292392       0.182897
                                redsum.int64.h :          2       0.048778       0.030696
                          redsum_range.int64.h :          2       0.032701       0.020661
-                        rotate_elem_l.int64.h :          1       0.135582       0.000172
-                        rotate_elem_r.int64.h :          1       0.135582       0.000172
+                        rotate_elem_l.int64.h :          1       0.135582       0.001122
+                        rotate_elem_r.int64.h :          1       0.135582       0.001122
                            scaled_add.int64.h :          1       0.048792       0.031544
                          shift_bits_l.int64.h :          1       0.024432       0.015976
                          shift_bits_r.int64.h :          1       0.024432       0.015976
-                         shift_elem_l.int64.h :          1       0.135582       0.000172
-                         shift_elem_r.int64.h :          1       0.135582       0.000172
+                         shift_elem_l.int64.h :          1       0.135582       0.001122
+                         shift_elem_r.int64.h :          1       0.135582       0.001122
                                   sub.int64.h :          1       0.074610       0.047654
                            sub_scalar.int64.h :          1       0.024432       0.015979
                                  xnor.int64.h :          1       0.074610       0.046634
                           xnor_scalar.int64.h :          1       0.024432       0.015976
                                   xor.int64.h :          1       0.074610       0.046634
                            xor_scalar.int64.h :          1       0.024432       0.015976
-                              TOTAL --------- :         41       2.418053       1.190705
+                              TOTAL --------- :         41       2.418053       1.194505
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT64
@@ -1709,13 +1645,9 @@ INFO: PIMeval Functional Tests for UINT64
 [PASS] UINT64 pimPopCount
 [PASS] UINT64 pimBroadcastInt
 [PASS] UINT64 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT64 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT64 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT64 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT64 pimShiftElementsLeft
 [PASS] UINT64 pimShiftBitsRight
 [PASS] UINT64 pimShiftBitsLeft
@@ -1763,20 +1695,20 @@ PIM Command Stats:
                             popcount.uint64.h :          1       0.292392       0.182897
                               redsum.uint64.h :          2       0.048778       0.030696
                         redsum_range.uint64.h :          2       0.032701       0.020661
-                       rotate_elem_l.uint64.h :          1       0.135582       0.000172
-                       rotate_elem_r.uint64.h :          1       0.135582       0.000172
+                       rotate_elem_l.uint64.h :          1       0.135582       0.001122
+                       rotate_elem_r.uint64.h :          1       0.135582       0.001122
                           scaled_add.uint64.h :          1       0.048792       0.031544
                         shift_bits_l.uint64.h :          1       0.024432       0.015976
                         shift_bits_r.uint64.h :          1       0.024432       0.015976
-                        shift_elem_l.uint64.h :          1       0.135582       0.000172
-                        shift_elem_r.uint64.h :          1       0.135582       0.000172
+                        shift_elem_l.uint64.h :          1       0.135582       0.001122
+                        shift_elem_r.uint64.h :          1       0.135582       0.001122
                                  sub.uint64.h :          1       0.074610       0.047654
                           sub_scalar.uint64.h :          1       0.024432       0.015979
                                 xnor.uint64.h :          1       0.074610       0.046634
                          xnor_scalar.uint64.h :          1       0.024432       0.015976
                                  xor.uint64.h :          1       0.074610       0.046634
                           xor_scalar.uint64.h :          1       0.024432       0.015976
-                              TOTAL --------- :         41       2.418053       1.190705
+                              TOTAL --------- :         41       2.418053       1.194505
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP32
@@ -1802,13 +1734,9 @@ INFO: PIMeval Functional Tests for FP32
 [PASS] FP32 pimMaxScalar
 [PASS] FP32 pimScaledAdd
 [PASS] FP32 pimBroadcastFP32
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] FP32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] FP32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] FP32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] FP32 pimShiftElementsLeft
 ----------------------------------------
 PIM Params:
@@ -1849,14 +1777,14 @@ PIM Command Stats:
                             mul_scalar.fp32.h :          1       0.012252       0.008042
                                 redsum.fp32.h :          1       0.012209       0.007745
                           redsum_range.fp32.h :          1       0.008214       0.005252
-                         rotate_elem_l.fp32.h :          1       0.043646       0.000086
-                         rotate_elem_r.fp32.h :          1       0.043646       0.000086
+                         rotate_elem_l.fp32.h :          1       0.043646       0.000323
+                         rotate_elem_r.fp32.h :          1       0.043646       0.000323
                             scaled_add.fp32.h :          1       0.024432       0.015839
-                          shift_elem_l.fp32.h :          1       0.043646       0.000086
-                          shift_elem_r.fp32.h :          1       0.043646       0.000086
+                          shift_elem_l.fp32.h :          1       0.043646       0.000323
+                          shift_elem_r.fp32.h :          1       0.043646       0.000323
                                    sub.fp32.h :          1       0.037305       0.023872
                             sub_scalar.fp32.h :          1       0.012252       0.008042
-                              TOTAL --------- :         27       0.700757       0.336492
+                              TOTAL --------- :         27       0.700757       0.337442
 ----------------------------------------
 Result: COMPLETED
 PIMeval Functional Testing
@@ -1901,13 +1829,9 @@ INFO: PIMeval Functional Tests for INT8
 [PASS] INT8 pimPopCount
 [PASS] INT8 pimBroadcastInt
 [PASS] INT8 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT8 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT8 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT8 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT8 pimShiftElementsLeft
 [PASS] INT8 pimShiftBitsRight
 [PASS] INT8 pimShiftBitsLeft
@@ -1955,20 +1879,20 @@ PIM Command Stats:
                               popcount.int8.h :          1       0.002629       0.004276
                                 redsum.int8.h :          2       0.005086       0.005935
                           redsum_range.int8.h :          2       0.003446       0.004047
-                         rotate_elem_l.int8.h :          1       0.012759       0.000043
-                         rotate_elem_r.int8.h :          1       0.012759       0.000043
+                         rotate_elem_l.int8.h :          1       0.012759       0.000058
+                         rotate_elem_r.int8.h :          1       0.012759       0.000058
                             scaled_add.int8.h :          1       0.017591       0.014931
                           shift_bits_l.int8.h :          1       0.002629       0.004276
                           shift_bits_r.int8.h :          1       0.002629       0.004276
-                          shift_elem_l.int8.h :          1       0.012759       0.000043
-                          shift_elem_r.int8.h :          1       0.012759       0.000043
+                          shift_elem_l.int8.h :          1       0.012759       0.000058
+                          shift_elem_r.int8.h :          1       0.012759       0.000058
                                    sub.int8.h :          1       0.029313       0.022244
                             sub_scalar.int8.h :          1       0.002629       0.004276
                                   xnor.int8.h :          1       0.029313       0.022244
                            xnor_scalar.int8.h :          1       0.002629       0.004276
                                    xor.int8.h :          1       0.029313       0.022244
                             xor_scalar.int8.h :          1       0.002629       0.004276
-                              TOTAL --------- :         41       0.508001       0.392762
+                              TOTAL --------- :         41       0.508001       0.392822
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT8
@@ -2004,13 +1928,9 @@ INFO: PIMeval Functional Tests for UINT8
 [PASS] UINT8 pimPopCount
 [PASS] UINT8 pimBroadcastInt
 [PASS] UINT8 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT8 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT8 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT8 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT8 pimShiftElementsLeft
 [PASS] UINT8 pimShiftBitsRight
 [PASS] UINT8 pimShiftBitsLeft
@@ -2058,20 +1978,20 @@ PIM Command Stats:
                              popcount.uint8.h :          1       0.002629       0.004276
                                redsum.uint8.h :          2       0.005086       0.005935
                          redsum_range.uint8.h :          2       0.003446       0.004047
-                        rotate_elem_l.uint8.h :          1       0.012759       0.000043
-                        rotate_elem_r.uint8.h :          1       0.012759       0.000043
+                        rotate_elem_l.uint8.h :          1       0.012759       0.000058
+                        rotate_elem_r.uint8.h :          1       0.012759       0.000058
                            scaled_add.uint8.h :          1       0.017591       0.014931
                          shift_bits_l.uint8.h :          1       0.002629       0.004276
                          shift_bits_r.uint8.h :          1       0.002629       0.004276
-                         shift_elem_l.uint8.h :          1       0.012759       0.000043
-                         shift_elem_r.uint8.h :          1       0.012759       0.000043
+                         shift_elem_l.uint8.h :          1       0.012759       0.000058
+                         shift_elem_r.uint8.h :          1       0.012759       0.000058
                                   sub.uint8.h :          1       0.029313       0.022244
                            sub_scalar.uint8.h :          1       0.002629       0.004276
                                  xnor.uint8.h :          1       0.029313       0.022244
                           xnor_scalar.uint8.h :          1       0.002629       0.004276
                                   xor.uint8.h :          1       0.029313       0.022244
                            xor_scalar.uint8.h :          1       0.002629       0.004276
-                              TOTAL --------- :         41       0.508001       0.392762
+                              TOTAL --------- :         41       0.508001       0.392822
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT16
@@ -2107,13 +2027,9 @@ INFO: PIMeval Functional Tests for INT16
 [PASS] INT16 pimPopCount
 [PASS] INT16 pimBroadcastInt
 [PASS] INT16 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT16 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT16 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT16 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT16 pimShiftElementsLeft
 [PASS] INT16 pimShiftBitsRight
 [PASS] INT16 pimShiftBitsLeft
@@ -2161,20 +2077,20 @@ PIM Command Stats:
                              popcount.int16.h :          1       0.005129       0.008472
                                redsum.int16.h :          2       0.010086       0.011691
                          redsum_range.int16.h :          2       0.006806       0.007915
-                        rotate_elem_l.int16.h :          1       0.031536       0.000086
-                        rotate_elem_r.int16.h :          1       0.031536       0.000086
+                        rotate_elem_l.int16.h :          1       0.031536       0.000145
+                        rotate_elem_r.int16.h :          1       0.031536       0.000145
                            scaled_add.int16.h :          1       0.035153       0.029843
                          shift_bits_l.int16.h :          1       0.005129       0.008472
                          shift_bits_r.int16.h :          1       0.005129       0.008472
-                         shift_elem_l.int16.h :          1       0.031536       0.000086
-                         shift_elem_r.int16.h :          1       0.031536       0.000086
+                         shift_elem_l.int16.h :          1       0.031536       0.000145
+                         shift_elem_r.int16.h :          1       0.031536       0.000145
                                   sub.int16.h :          1       0.058625       0.044489
                            sub_scalar.int16.h :          1       0.005129       0.008472
                                  xnor.int16.h :          1       0.058625       0.044489
                           xnor_scalar.int16.h :          1       0.005129       0.008472
                                   xor.int16.h :          1       0.058625       0.044489
                            xor_scalar.int16.h :          1       0.005129       0.008472
-                              TOTAL --------- :         41       1.037680       0.783781
+                              TOTAL --------- :         41       1.037680       0.784018
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT16
@@ -2210,13 +2126,9 @@ INFO: PIMeval Functional Tests for UINT16
 [PASS] UINT16 pimPopCount
 [PASS] UINT16 pimBroadcastInt
 [PASS] UINT16 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT16 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT16 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT16 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT16 pimShiftElementsLeft
 [PASS] UINT16 pimShiftBitsRight
 [PASS] UINT16 pimShiftBitsLeft
@@ -2264,20 +2176,20 @@ PIM Command Stats:
                             popcount.uint16.h :          1       0.005129       0.008472
                               redsum.uint16.h :          2       0.010086       0.011691
                         redsum_range.uint16.h :          2       0.006806       0.007915
-                       rotate_elem_l.uint16.h :          1       0.031536       0.000086
-                       rotate_elem_r.uint16.h :          1       0.031536       0.000086
+                       rotate_elem_l.uint16.h :          1       0.031536       0.000145
+                       rotate_elem_r.uint16.h :          1       0.031536       0.000145
                           scaled_add.uint16.h :          1       0.035153       0.029843
                         shift_bits_l.uint16.h :          1       0.005129       0.008472
                         shift_bits_r.uint16.h :          1       0.005129       0.008472
-                        shift_elem_l.uint16.h :          1       0.031536       0.000086
-                        shift_elem_r.uint16.h :          1       0.031536       0.000086
+                        shift_elem_l.uint16.h :          1       0.031536       0.000145
+                        shift_elem_r.uint16.h :          1       0.031536       0.000145
                                  sub.uint16.h :          1       0.058625       0.044489
                           sub_scalar.uint16.h :          1       0.005129       0.008472
                                 xnor.uint16.h :          1       0.058625       0.044489
                          xnor_scalar.uint16.h :          1       0.005129       0.008472
                                  xor.uint16.h :          1       0.058625       0.044489
                           xor_scalar.uint16.h :          1       0.005129       0.008472
-                              TOTAL --------- :         41       1.037680       0.783781
+                              TOTAL --------- :         41       1.037680       0.784018
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT32
@@ -2313,13 +2225,9 @@ INFO: PIMeval Functional Tests for INT32
 [PASS] INT32 pimPopCount
 [PASS] INT32 pimBroadcastInt
 [PASS] INT32 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT32 pimShiftElementsLeft
 [PASS] INT32 pimShiftBitsRight
 [PASS] INT32 pimShiftBitsLeft
@@ -2367,20 +2275,20 @@ PIM Command Stats:
                              popcount.int32.h :          1       0.010129       0.016863
                                redsum.int32.h :          2       0.020086       0.023203
                          redsum_range.int32.h :          2       0.013486       0.015605
-                        rotate_elem_l.int32.h :          1       0.087146       0.000171
-                        rotate_elem_r.int32.h :          1       0.087146       0.000171
+                        rotate_elem_l.int32.h :          1       0.087146       0.000409
+                        rotate_elem_r.int32.h :          1       0.087146       0.000409
                            scaled_add.int32.h :          1       0.070278       0.059669
                          shift_bits_l.int32.h :          1       0.010129       0.016863
                          shift_bits_r.int32.h :          1       0.010129       0.016863
-                         shift_elem_l.int32.h :          1       0.087146       0.000171
-                         shift_elem_r.int32.h :          1       0.087146       0.000171
+                         shift_elem_l.int32.h :          1       0.087146       0.000409
+                         shift_elem_r.int32.h :          1       0.087146       0.000409
                                   sub.int32.h :          1       0.117250       0.088978
                            sub_scalar.int32.h :          1       0.010129       0.016863
                                  xnor.int32.h :          1       0.117250       0.088977
                           xnor_scalar.int32.h :          1       0.010129       0.016863
                                   xor.int32.h :          1       0.117250       0.088977
                            xor_scalar.int32.h :          1       0.010129       0.016863
-                              TOTAL --------- :         41       2.169218       1.565773
+                              TOTAL --------- :         41       2.169218       1.566723
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT32
@@ -2416,13 +2324,9 @@ INFO: PIMeval Functional Tests for UINT32
 [PASS] UINT32 pimPopCount
 [PASS] UINT32 pimBroadcastInt
 [PASS] UINT32 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT32 pimShiftElementsLeft
 [PASS] UINT32 pimShiftBitsRight
 [PASS] UINT32 pimShiftBitsLeft
@@ -2470,20 +2374,20 @@ PIM Command Stats:
                             popcount.uint32.h :          1       0.010129       0.016863
                               redsum.uint32.h :          2       0.020086       0.023203
                         redsum_range.uint32.h :          2       0.013486       0.015605
-                       rotate_elem_l.uint32.h :          1       0.087146       0.000171
-                       rotate_elem_r.uint32.h :          1       0.087146       0.000171
+                       rotate_elem_l.uint32.h :          1       0.087146       0.000409
+                       rotate_elem_r.uint32.h :          1       0.087146       0.000409
                           scaled_add.uint32.h :          1       0.070278       0.059669
                         shift_bits_l.uint32.h :          1       0.010129       0.016863
                         shift_bits_r.uint32.h :          1       0.010129       0.016863
-                        shift_elem_l.uint32.h :          1       0.087146       0.000171
-                        shift_elem_r.uint32.h :          1       0.087146       0.000171
+                        shift_elem_l.uint32.h :          1       0.087146       0.000409
+                        shift_elem_r.uint32.h :          1       0.087146       0.000409
                                  sub.uint32.h :          1       0.117250       0.088978
                           sub_scalar.uint32.h :          1       0.010129       0.016863
                                 xnor.uint32.h :          1       0.117250       0.088977
                          xnor_scalar.uint32.h :          1       0.010129       0.016863
                                  xor.uint32.h :          1       0.117250       0.088977
                           xor_scalar.uint32.h :          1       0.010129       0.016863
-                              TOTAL --------- :         41       2.169218       1.565773
+                              TOTAL --------- :         41       2.169218       1.566723
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT64
@@ -2519,13 +2423,9 @@ INFO: PIMeval Functional Tests for INT64
 [PASS] INT64 pimPopCount
 [PASS] INT64 pimBroadcastInt
 [PASS] INT64 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] INT64 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] INT64 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] INT64 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] INT64 pimShiftElementsLeft
 [PASS] INT64 pimShiftBitsRight
 [PASS] INT64 pimShiftBitsLeft
@@ -2573,20 +2473,20 @@ PIM Command Stats:
                              popcount.int64.h :          1       0.020129       0.033645
                                redsum.int64.h :          2       0.040086       0.046227
                          redsum_range.int64.h :          2       0.026886       0.031031
-                        rotate_elem_l.int64.h :          1       0.270582       0.000343
-                        rotate_elem_r.int64.h :          1       0.270582       0.000343
+                        rotate_elem_l.int64.h :          1       0.270582       0.001293
+                        rotate_elem_r.int64.h :          1       0.270582       0.001293
                            scaled_add.int64.h :          1       0.140529       0.119320
                          shift_bits_l.int64.h :          1       0.020129       0.033645
                          shift_bits_r.int64.h :          1       0.020129       0.033645
-                         shift_elem_l.int64.h :          1       0.270582       0.000343
-                         shift_elem_r.int64.h :          1       0.270582       0.000343
+                         shift_elem_l.int64.h :          1       0.270582       0.001293
+                         shift_elem_r.int64.h :          1       0.270582       0.001293
                                   sub.int64.h :          1       0.234500       0.177956
                            sub_scalar.int64.h :          1       0.020129       0.033645
                                  xnor.int64.h :          1       0.234500       0.177955
                           xnor_scalar.int64.h :          1       0.020129       0.033645
                                   xor.int64.h :          1       0.234500       0.177955
                            xor_scalar.int64.h :          1       0.020129       0.033645
-                              TOTAL --------- :         41       4.721206       3.129805
+                              TOTAL --------- :         41       4.721206       3.133604
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT64
@@ -2622,13 +2522,9 @@ INFO: PIMeval Functional Tests for UINT64
 [PASS] UINT64 pimPopCount
 [PASS] UINT64 pimBroadcastInt
 [PASS] UINT64 pimBroadcastUInt
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] UINT64 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] UINT64 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] UINT64 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] UINT64 pimShiftElementsLeft
 [PASS] UINT64 pimShiftBitsRight
 [PASS] UINT64 pimShiftBitsLeft
@@ -2676,20 +2572,20 @@ PIM Command Stats:
                             popcount.uint64.h :          1       0.020129       0.033645
                               redsum.uint64.h :          2       0.040086       0.046227
                         redsum_range.uint64.h :          2       0.026886       0.031031
-                       rotate_elem_l.uint64.h :          1       0.270582       0.000343
-                       rotate_elem_r.uint64.h :          1       0.270582       0.000343
+                       rotate_elem_l.uint64.h :          1       0.270582       0.001293
+                       rotate_elem_r.uint64.h :          1       0.270582       0.001293
                           scaled_add.uint64.h :          1       0.140529       0.119320
                         shift_bits_l.uint64.h :          1       0.020129       0.033645
                         shift_bits_r.uint64.h :          1       0.020129       0.033645
-                        shift_elem_l.uint64.h :          1       0.270582       0.000343
-                        shift_elem_r.uint64.h :          1       0.270582       0.000343
+                        shift_elem_l.uint64.h :          1       0.270582       0.001293
+                        shift_elem_r.uint64.h :          1       0.270582       0.001293
                                  sub.uint64.h :          1       0.234500       0.177956
                           sub_scalar.uint64.h :          1       0.020129       0.033645
                                 xnor.uint64.h :          1       0.234500       0.177955
                          xnor_scalar.uint64.h :          1       0.020129       0.033645
                                  xor.uint64.h :          1       0.234500       0.177955
                           xor_scalar.uint64.h :          1       0.020129       0.033645
-                              TOTAL --------- :         41       4.721206       3.129805
+                              TOTAL --------- :         41       4.721206       3.133604
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP32
@@ -2715,13 +2611,9 @@ INFO: PIMeval Functional Tests for FP32
 [PASS] FP32 pimMaxScalar
 [PASS] FP32 pimScaledAdd
 [PASS] FP32 pimBroadcastFP32
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_r
 [PASS] FP32 pimRotateElementsRight
-PIM-Warning: Perf energy model not available for PIM command rotate_elem_l
 [PASS] FP32 pimRotateElementsLeft
-PIM-Warning: Perf energy model not available for PIM command shift_elem_r
 [PASS] FP32 pimShiftElementsRight
-PIM-Warning: Perf energy model not available for PIM command shift_elem_l
 [PASS] FP32 pimShiftElementsLeft
 ----------------------------------------
 PIM Params:
@@ -2762,13 +2654,13 @@ PIM Command Stats:
                             mul_scalar.fp32.h :          1       0.010129       0.016863
                                 redsum.fp32.h :          1       0.010043       0.011601
                           redsum_range.fp32.h :          1       0.006743       0.007802
-                         rotate_elem_l.fp32.h :          1       0.087146       0.000171
-                         rotate_elem_r.fp32.h :          1       0.087146       0.000171
+                         rotate_elem_l.fp32.h :          1       0.087146       0.000409
+                         rotate_elem_r.fp32.h :          1       0.087146       0.000409
                             scaled_add.fp32.h :          1       0.070278       0.059669
-                          shift_elem_l.fp32.h :          1       0.087146       0.000171
-                          shift_elem_r.fp32.h :          1       0.087146       0.000171
+                          shift_elem_l.fp32.h :          1       0.087146       0.000409
+                          shift_elem_r.fp32.h :          1       0.087146       0.000409
                                    sub.fp32.h :          1       0.117250       0.088978
                             sub_scalar.fp32.h :          1       0.010129       0.016863
-                              TOTAL --------- :         27       1.602358       1.060802
+                              TOTAL --------- :         27       1.602358       1.061752
 ----------------------------------------
 Result: COMPLETED
