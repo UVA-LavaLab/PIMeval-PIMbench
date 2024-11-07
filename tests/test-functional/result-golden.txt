@@ -854,9 +854,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 [PASS] FP32 pimMaxScalar
 PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=scaled_add dataType=fp32
 [PASS] FP32 pimScaledAdd
-PIM-Warning: Perf energy model for FP32 reduction sum on bit-serial PIM is not available yet.
-PIM-Warning: Perf energy model for FP32 reduction sum on bit-serial PIM is not available yet.
-[PASS] FP32 pimBroadcastFP32
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+[PASS] FP32 pimBroadcastFP
 [PASS] FP32 pimRotateElementsRight
 [PASS] FP32 pimRotateElementsLeft
 [PASS] FP32 pimShiftElementsRight
@@ -908,6 +908,300 @@ PIM Command Stats:
                                    sub.fp32.v :          1       0.698748       0.449430
                             sub_scalar.fp32.v :          1 8000000.000000       0.000000
                               TOTAL --------- :         27 2120000004.796471 2000000002.959334
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for FP16
+================================================================
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=add dataType=fp16
+[PASS] FP16 pimAdd
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=sub dataType=fp16
+[PASS] FP16 pimSub
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=mul dataType=fp16
+[PASS] FP16 pimMul
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=div dataType=fp16
+[PASS] FP16 pimDiv
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=abs dataType=fp16
+[PASS] FP16 pimAbs
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=gt dataType=fp16
+[PASS] FP16 pimGT
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=lt dataType=fp16
+[PASS] FP16 pimLT
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=eq dataType=fp16
+[PASS] FP16 pimEQ
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=min dataType=fp16
+[PASS] FP16 pimMin
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=max dataType=fp16
+[PASS] FP16 pimMax
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=add_scalar dataType=fp16
+[PASS] FP16 pimAddScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=sub_scalar dataType=fp16
+[PASS] FP16 pimSubScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=mul_scalar dataType=fp16
+[PASS] FP16 pimMulScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=div_scalar dataType=fp16
+[PASS] FP16 pimDivScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=gt_scalar dataType=fp16
+[PASS] FP16 pimGTScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=lt_scalar dataType=fp16
+[PASS] FP16 pimLTScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=eq_scalar dataType=fp16
+[PASS] FP16 pimEQScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=min_scalar dataType=fp16
+[PASS] FP16 pimMinScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=max_scalar dataType=fp16
+[PASS] FP16 pimMaxScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=scaled_add dataType=fp16
+[PASS] FP16 pimScaledAdd
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+[PASS] FP16 pimBroadcastFP
+[PASS] FP16 pimRotateElementsRight
+[PASS] FP16 pimRotateElementsLeft
+[PASS] FP16 pimShiftElementsRight
+[PASS] FP16 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 2
+        Number of Rows per Core : 2048
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.249129 ms Estimated Runtime       0.388264 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                   abs.fp16.v :          1 8000000.000000       0.000000
+                                   add.fp16.v :          1 8000000.000000       0.000000
+                            add_scalar.fp16.v :          1 8000000.000000       0.000000
+                             broadcast.fp16.v :          1       0.011904       0.007434
+                                   div.fp16.v :          1 8000000.000000       0.000000
+                            div_scalar.fp16.v :          1 8000000.000000       0.000000
+                                    eq.fp16.v :          1 8000000.000000       0.000000
+                             eq_scalar.fp16.v :          1 8000000.000000       0.000000
+                                    gt.fp16.v :          1 8000000.000000       0.000000
+                             gt_scalar.fp16.v :          1 8000000.000000       0.000000
+                                    lt.fp16.v :          1 8000000.000000       0.000000
+                             lt_scalar.fp16.v :          1 8000000.000000       0.000000
+                                   max.fp16.v :          1 8000000.000000       0.000000
+                            max_scalar.fp16.v :          1 8000000.000000       0.000000
+                                   min.fp16.v :          1 8000000.000000       0.000000
+                            min_scalar.fp16.v :          1 8000000.000000       0.000000
+                                   mul.fp16.v :          1 8000000.000000       0.000000
+                            mul_scalar.fp16.v :          1 8000000.000000       0.000000
+                                redsum.fp16.v :          1 999999999.900000 999999999.900000
+                          redsum_range.fp16.v :          1 999999999.900000 999999999.900000
+                         rotate_elem_l.fp16.v :          1       0.020741       0.000095
+                         rotate_elem_r.fp16.v :          1       0.020741       0.000095
+                            scaled_add.fp16.v :          1 8000000.000000       0.000000
+                          shift_elem_l.fp16.v :          1       0.020741       0.000095
+                          shift_elem_r.fp16.v :          1       0.020741       0.000095
+                                   sub.fp16.v :          1 8000000.000000       0.000000
+                            sub_scalar.fp16.v :          1 8000000.000000       0.000000
+                              TOTAL --------- :         27 2159999999.894867 1999999999.807814
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for BF16
+================================================================
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=add dataType=bf16
+[PASS] BF16 pimAdd
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=sub dataType=bf16
+[PASS] BF16 pimSub
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=mul dataType=bf16
+[PASS] BF16 pimMul
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=div dataType=bf16
+[PASS] BF16 pimDiv
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=abs dataType=bf16
+[PASS] BF16 pimAbs
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=gt dataType=bf16
+[PASS] BF16 pimGT
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=lt dataType=bf16
+[PASS] BF16 pimLT
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=eq dataType=bf16
+[PASS] BF16 pimEQ
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=min dataType=bf16
+[PASS] BF16 pimMin
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=max dataType=bf16
+[PASS] BF16 pimMax
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=add_scalar dataType=bf16
+[PASS] BF16 pimAddScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=sub_scalar dataType=bf16
+[PASS] BF16 pimSubScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=mul_scalar dataType=bf16
+[PASS] BF16 pimMulScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=div_scalar dataType=bf16
+[PASS] BF16 pimDivScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=gt_scalar dataType=bf16
+[PASS] BF16 pimGTScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=lt_scalar dataType=bf16
+[PASS] BF16 pimLTScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=eq_scalar dataType=bf16
+[PASS] BF16 pimEQScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=min_scalar dataType=bf16
+[PASS] BF16 pimMinScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=max_scalar dataType=bf16
+[PASS] BF16 pimMaxScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=scaled_add dataType=bf16
+[PASS] BF16 pimScaledAdd
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+[PASS] BF16 pimBroadcastFP
+[PASS] BF16 pimRotateElementsRight
+[PASS] BF16 pimRotateElementsLeft
+[PASS] BF16 pimShiftElementsRight
+[PASS] BF16 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 2
+        Number of Rows per Core : 2048
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.268919 ms Estimated Runtime       0.418634 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                   abs.bf16.v :          1 8000000.000000       0.000000
+                                   add.bf16.v :          1 8000000.000000       0.000000
+                            add_scalar.bf16.v :          1 8000000.000000       0.000000
+                             broadcast.bf16.v :          1       0.011904       0.007434
+                                   div.bf16.v :          1 8000000.000000       0.000000
+                            div_scalar.bf16.v :          1 8000000.000000       0.000000
+                                    eq.bf16.v :          1 8000000.000000       0.000000
+                             eq_scalar.bf16.v :          1 8000000.000000       0.000000
+                                    gt.bf16.v :          1 8000000.000000       0.000000
+                             gt_scalar.bf16.v :          1 8000000.000000       0.000000
+                                    lt.bf16.v :          1 8000000.000000       0.000000
+                             lt_scalar.bf16.v :          1 8000000.000000       0.000000
+                                   max.bf16.v :          1 8000000.000000       0.000000
+                            max_scalar.bf16.v :          1 8000000.000000       0.000000
+                                   min.bf16.v :          1 8000000.000000       0.000000
+                            min_scalar.bf16.v :          1 8000000.000000       0.000000
+                                   mul.bf16.v :          1 8000000.000000       0.000000
+                            mul_scalar.bf16.v :          1 8000000.000000       0.000000
+                                redsum.bf16.v :          1 999999999.900000 999999999.900000
+                          redsum_range.bf16.v :          1 999999999.900000 999999999.900000
+                         rotate_elem_l.bf16.v :          1       0.020741       0.000095
+                         rotate_elem_r.bf16.v :          1       0.020741       0.000095
+                            scaled_add.bf16.v :          1 8000000.000000       0.000000
+                          shift_elem_l.bf16.v :          1       0.020741       0.000095
+                          shift_elem_r.bf16.v :          1       0.020741       0.000095
+                                   sub.bf16.v :          1 8000000.000000       0.000000
+                            sub_scalar.bf16.v :          1 8000000.000000       0.000000
+                              TOTAL --------- :         27 2159999999.894867 1999999999.807814
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for FP8
+================================================================
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=add dataType=fp8
+[PASS] FP8 pimAdd
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=sub dataType=fp8
+[PASS] FP8 pimSub
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=mul dataType=fp8
+[PASS] FP8 pimMul
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=div dataType=fp8
+[PASS] FP8 pimDiv
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=abs dataType=fp8
+[PASS] FP8 pimAbs
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=gt dataType=fp8
+[PASS] FP8 pimGT
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=lt dataType=fp8
+[PASS] FP8 pimLT
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=eq dataType=fp8
+[PASS] FP8 pimEQ
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=min dataType=fp8
+[PASS] FP8 pimMin
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=max dataType=fp8
+[PASS] FP8 pimMax
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=add_scalar dataType=fp8
+[PASS] FP8 pimAddScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=sub_scalar dataType=fp8
+[PASS] FP8 pimSubScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=mul_scalar dataType=fp8
+[PASS] FP8 pimMulScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=div_scalar dataType=fp8
+[PASS] FP8 pimDivScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=gt_scalar dataType=fp8
+[PASS] FP8 pimGTScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=lt_scalar dataType=fp8
+[PASS] FP8 pimLTScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=eq_scalar dataType=fp8
+[PASS] FP8 pimEQScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=min_scalar dataType=fp8
+[PASS] FP8 pimMinScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=max_scalar dataType=fp8
+[PASS] FP8 pimMaxScalar
+PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=scaled_add dataType=fp8
+[PASS] FP8 pimScaledAdd
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
+[PASS] FP8 pimBroadcastFP
+[PASS] FP8 pimRotateElementsRight
+[PASS] FP8 pimRotateElementsLeft
+[PASS] FP8 pimShiftElementsRight
+[PASS] FP8 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 2
+        Number of Rows per Core : 2048
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.288710 ms Estimated Runtime       0.449005 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                    abs.fp8.v :          1 8000000.000000       0.000000
+                                    add.fp8.v :          1 8000000.000000       0.000000
+                             add_scalar.fp8.v :          1 8000000.000000       0.000000
+                              broadcast.fp8.v :          1       0.011904       0.007434
+                                    div.fp8.v :          1 8000000.000000       0.000000
+                             div_scalar.fp8.v :          1 8000000.000000       0.000000
+                                     eq.fp8.v :          1 8000000.000000       0.000000
+                              eq_scalar.fp8.v :          1 8000000.000000       0.000000
+                                     gt.fp8.v :          1 8000000.000000       0.000000
+                              gt_scalar.fp8.v :          1 8000000.000000       0.000000
+                                     lt.fp8.v :          1 8000000.000000       0.000000
+                              lt_scalar.fp8.v :          1 8000000.000000       0.000000
+                                    max.fp8.v :          1 8000000.000000       0.000000
+                             max_scalar.fp8.v :          1 8000000.000000       0.000000
+                                    min.fp8.v :          1 8000000.000000       0.000000
+                             min_scalar.fp8.v :          1 8000000.000000       0.000000
+                                    mul.fp8.v :          1 8000000.000000       0.000000
+                             mul_scalar.fp8.v :          1 8000000.000000       0.000000
+                                 redsum.fp8.v :          1 999999999.900000 999999999.900000
+                           redsum_range.fp8.v :          1 999999999.900000 999999999.900000
+                          rotate_elem_l.fp8.v :          1       0.020741       0.000095
+                          rotate_elem_r.fp8.v :          1       0.020741       0.000095
+                             scaled_add.fp8.v :          1 8000000.000000       0.000000
+                           shift_elem_l.fp8.v :          1       0.020741       0.000095
+                           shift_elem_r.fp8.v :          1       0.020741       0.000095
+                                    sub.fp8.v :          1 8000000.000000       0.000000
+                             sub_scalar.fp8.v :          1 8000000.000000       0.000000
+                              TOTAL --------- :         27 2159999999.894867 1999999999.807814
 ----------------------------------------
 Result: COMPLETED
 PIMeval Functional Testing
@@ -1733,7 +2027,7 @@ INFO: PIMeval Functional Tests for FP32
 [PASS] FP32 pimMinScalar
 [PASS] FP32 pimMaxScalar
 [PASS] FP32 pimScaledAdd
-[PASS] FP32 pimBroadcastFP32
+[PASS] FP32 pimBroadcastFP
 [PASS] FP32 pimRotateElementsRight
 [PASS] FP32 pimRotateElementsLeft
 [PASS] FP32 pimShiftElementsRight
@@ -1784,6 +2078,234 @@ PIM Command Stats:
                           shift_elem_r.fp32.h :          1       0.043646       0.000323
                                    sub.fp32.h :          1       0.037305       0.023872
                             sub_scalar.fp32.h :          1       0.012252       0.008042
+                              TOTAL --------- :         27       0.700757       0.337442
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for FP16
+================================================================
+[PASS] FP16 pimAdd
+[PASS] FP16 pimSub
+[PASS] FP16 pimMul
+[PASS] FP16 pimDiv
+[PASS] FP16 pimAbs
+[PASS] FP16 pimGT
+[PASS] FP16 pimLT
+[PASS] FP16 pimEQ
+[PASS] FP16 pimMin
+[PASS] FP16 pimMax
+[PASS] FP16 pimAddScalar
+[PASS] FP16 pimSubScalar
+[PASS] FP16 pimMulScalar
+[PASS] FP16 pimDivScalar
+[PASS] FP16 pimGTScalar
+[PASS] FP16 pimLTScalar
+[PASS] FP16 pimEQScalar
+[PASS] FP16 pimMinScalar
+[PASS] FP16 pimMaxScalar
+[PASS] FP16 pimScaledAdd
+[PASS] FP16 pimBroadcastFP
+[PASS] FP16 pimRotateElementsRight
+[PASS] FP16 pimRotateElementsLeft
+[PASS] FP16 pimShiftElementsRight
+[PASS] FP16 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_FULCRUM
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 2
+        Number of Rows per Core : 2048
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.249129 ms Estimated Runtime       0.388264 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                   abs.fp16.h :          1       0.012252       0.008042
+                                   add.fp16.h :          1       0.037305       0.023872
+                            add_scalar.fp16.h :          1       0.012252       0.008042
+                             broadcast.fp16.h :          1       0.023055       0.014584
+                                   div.fp16.h :          1       0.037305       0.023872
+                            div_scalar.fp16.h :          1       0.012252       0.008042
+                                    eq.fp16.h :          1       0.037305       0.023366
+                             eq_scalar.fp16.h :          1       0.012252       0.008040
+                                    gt.fp16.h :          1       0.037305       0.023366
+                             gt_scalar.fp16.h :          1       0.012252       0.008040
+                                    lt.fp16.h :          1       0.037305       0.023366
+                             lt_scalar.fp16.h :          1       0.012252       0.008040
+                                   max.fp16.h :          1       0.037305       0.023366
+                            max_scalar.fp16.h :          1       0.012252       0.008040
+                                   min.fp16.h :          1       0.037305       0.023366
+                            min_scalar.fp16.h :          1       0.012252       0.008040
+                                   mul.fp16.h :          1       0.037305       0.023872
+                            mul_scalar.fp16.h :          1       0.012252       0.008042
+                                redsum.fp16.h :          1       0.012209       0.007745
+                          redsum_range.fp16.h :          1       0.008214       0.005252
+                         rotate_elem_l.fp16.h :          1       0.043646       0.000323
+                         rotate_elem_r.fp16.h :          1       0.043646       0.000323
+                            scaled_add.fp16.h :          1       0.024432       0.015839
+                          shift_elem_l.fp16.h :          1       0.043646       0.000323
+                          shift_elem_r.fp16.h :          1       0.043646       0.000323
+                                   sub.fp16.h :          1       0.037305       0.023872
+                            sub_scalar.fp16.h :          1       0.012252       0.008042
+                              TOTAL --------- :         27       0.700757       0.337442
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for BF16
+================================================================
+[PASS] BF16 pimAdd
+[PASS] BF16 pimSub
+[PASS] BF16 pimMul
+[PASS] BF16 pimDiv
+[PASS] BF16 pimAbs
+[PASS] BF16 pimGT
+[PASS] BF16 pimLT
+[PASS] BF16 pimEQ
+[PASS] BF16 pimMin
+[PASS] BF16 pimMax
+[PASS] BF16 pimAddScalar
+[PASS] BF16 pimSubScalar
+[PASS] BF16 pimMulScalar
+[PASS] BF16 pimDivScalar
+[PASS] BF16 pimGTScalar
+[PASS] BF16 pimLTScalar
+[PASS] BF16 pimEQScalar
+[PASS] BF16 pimMinScalar
+[PASS] BF16 pimMaxScalar
+[PASS] BF16 pimScaledAdd
+[PASS] BF16 pimBroadcastFP
+[PASS] BF16 pimRotateElementsRight
+[PASS] BF16 pimRotateElementsLeft
+[PASS] BF16 pimShiftElementsRight
+[PASS] BF16 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_FULCRUM
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 2
+        Number of Rows per Core : 2048
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.268919 ms Estimated Runtime       0.418634 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                   abs.bf16.h :          1       0.012252       0.008042
+                                   add.bf16.h :          1       0.037305       0.023872
+                            add_scalar.bf16.h :          1       0.012252       0.008042
+                             broadcast.bf16.h :          1       0.023055       0.014584
+                                   div.bf16.h :          1       0.037305       0.023872
+                            div_scalar.bf16.h :          1       0.012252       0.008042
+                                    eq.bf16.h :          1       0.037305       0.023366
+                             eq_scalar.bf16.h :          1       0.012252       0.008040
+                                    gt.bf16.h :          1       0.037305       0.023366
+                             gt_scalar.bf16.h :          1       0.012252       0.008040
+                                    lt.bf16.h :          1       0.037305       0.023366
+                             lt_scalar.bf16.h :          1       0.012252       0.008040
+                                   max.bf16.h :          1       0.037305       0.023366
+                            max_scalar.bf16.h :          1       0.012252       0.008040
+                                   min.bf16.h :          1       0.037305       0.023366
+                            min_scalar.bf16.h :          1       0.012252       0.008040
+                                   mul.bf16.h :          1       0.037305       0.023872
+                            mul_scalar.bf16.h :          1       0.012252       0.008042
+                                redsum.bf16.h :          1       0.012209       0.007745
+                          redsum_range.bf16.h :          1       0.008214       0.005252
+                         rotate_elem_l.bf16.h :          1       0.043646       0.000323
+                         rotate_elem_r.bf16.h :          1       0.043646       0.000323
+                            scaled_add.bf16.h :          1       0.024432       0.015839
+                          shift_elem_l.bf16.h :          1       0.043646       0.000323
+                          shift_elem_r.bf16.h :          1       0.043646       0.000323
+                                   sub.bf16.h :          1       0.037305       0.023872
+                            sub_scalar.bf16.h :          1       0.012252       0.008042
+                              TOTAL --------- :         27       0.700757       0.337442
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for FP8
+================================================================
+[PASS] FP8 pimAdd
+[PASS] FP8 pimSub
+[PASS] FP8 pimMul
+[PASS] FP8 pimDiv
+[PASS] FP8 pimAbs
+[PASS] FP8 pimGT
+[PASS] FP8 pimLT
+[PASS] FP8 pimEQ
+[PASS] FP8 pimMin
+[PASS] FP8 pimMax
+[PASS] FP8 pimAddScalar
+[PASS] FP8 pimSubScalar
+[PASS] FP8 pimMulScalar
+[PASS] FP8 pimDivScalar
+[PASS] FP8 pimGTScalar
+[PASS] FP8 pimLTScalar
+[PASS] FP8 pimEQScalar
+[PASS] FP8 pimMinScalar
+[PASS] FP8 pimMaxScalar
+[PASS] FP8 pimScaledAdd
+[PASS] FP8 pimBroadcastFP
+[PASS] FP8 pimRotateElementsRight
+[PASS] FP8 pimRotateElementsLeft
+[PASS] FP8 pimShiftElementsRight
+[PASS] FP8 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_FULCRUM
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 2
+        Number of Rows per Core : 2048
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.288710 ms Estimated Runtime       0.449005 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                    abs.fp8.h :          1       0.012252       0.008042
+                                    add.fp8.h :          1       0.037305       0.023872
+                             add_scalar.fp8.h :          1       0.012252       0.008042
+                              broadcast.fp8.h :          1       0.023055       0.014584
+                                    div.fp8.h :          1       0.037305       0.023872
+                             div_scalar.fp8.h :          1       0.012252       0.008042
+                                     eq.fp8.h :          1       0.037305       0.023366
+                              eq_scalar.fp8.h :          1       0.012252       0.008040
+                                     gt.fp8.h :          1       0.037305       0.023366
+                              gt_scalar.fp8.h :          1       0.012252       0.008040
+                                     lt.fp8.h :          1       0.037305       0.023366
+                              lt_scalar.fp8.h :          1       0.012252       0.008040
+                                    max.fp8.h :          1       0.037305       0.023366
+                             max_scalar.fp8.h :          1       0.012252       0.008040
+                                    min.fp8.h :          1       0.037305       0.023366
+                             min_scalar.fp8.h :          1       0.012252       0.008040
+                                    mul.fp8.h :          1       0.037305       0.023872
+                             mul_scalar.fp8.h :          1       0.012252       0.008042
+                                 redsum.fp8.h :          1       0.012209       0.007745
+                           redsum_range.fp8.h :          1       0.008214       0.005252
+                          rotate_elem_l.fp8.h :          1       0.043646       0.000323
+                          rotate_elem_r.fp8.h :          1       0.043646       0.000323
+                             scaled_add.fp8.h :          1       0.024432       0.015839
+                           shift_elem_l.fp8.h :          1       0.043646       0.000323
+                           shift_elem_r.fp8.h :          1       0.043646       0.000323
+                                    sub.fp8.h :          1       0.037305       0.023872
+                             sub_scalar.fp8.h :          1       0.012252       0.008042
                               TOTAL --------- :         27       0.700757       0.337442
 ----------------------------------------
 Result: COMPLETED
@@ -2079,7 +2601,7 @@ PIM Command Stats:
                          redsum_range.int16.h :          2       0.006806       0.007915
                         rotate_elem_l.int16.h :          1       0.031536       0.000145
                         rotate_elem_r.int16.h :          1       0.031536       0.000145
-                           scaled_add.int16.h :          1       0.035153       0.029843
+                           scaled_add.int16.h :          1       0.035154       0.029843
                          shift_bits_l.int16.h :          1       0.005129       0.008472
                          shift_bits_r.int16.h :          1       0.005129       0.008472
                          shift_elem_l.int16.h :          1       0.031536       0.000145
@@ -2178,7 +2700,7 @@ PIM Command Stats:
                         redsum_range.uint16.h :          2       0.006806       0.007915
                        rotate_elem_l.uint16.h :          1       0.031536       0.000145
                        rotate_elem_r.uint16.h :          1       0.031536       0.000145
-                          scaled_add.uint16.h :          1       0.035153       0.029843
+                          scaled_add.uint16.h :          1       0.035154       0.029843
                         shift_bits_l.uint16.h :          1       0.005129       0.008472
                         shift_bits_r.uint16.h :          1       0.005129       0.008472
                         shift_elem_l.uint16.h :          1       0.031536       0.000145
@@ -2277,7 +2799,7 @@ PIM Command Stats:
                          redsum_range.int32.h :          2       0.013486       0.015605
                         rotate_elem_l.int32.h :          1       0.087146       0.000409
                         rotate_elem_r.int32.h :          1       0.087146       0.000409
-                           scaled_add.int32.h :          1       0.070278       0.059669
+                           scaled_add.int32.h :          1       0.070279       0.059669
                          shift_bits_l.int32.h :          1       0.010129       0.016863
                          shift_bits_r.int32.h :          1       0.010129       0.016863
                          shift_elem_l.int32.h :          1       0.087146       0.000409
@@ -2376,7 +2898,7 @@ PIM Command Stats:
                         redsum_range.uint32.h :          2       0.013486       0.015605
                        rotate_elem_l.uint32.h :          1       0.087146       0.000409
                        rotate_elem_r.uint32.h :          1       0.087146       0.000409
-                          scaled_add.uint32.h :          1       0.070278       0.059669
+                          scaled_add.uint32.h :          1       0.070279       0.059669
                         shift_bits_l.uint32.h :          1       0.010129       0.016863
                         shift_bits_r.uint32.h :          1       0.010129       0.016863
                         shift_elem_l.uint32.h :          1       0.087146       0.000409
@@ -2610,7 +3132,7 @@ INFO: PIMeval Functional Tests for FP32
 [PASS] FP32 pimMinScalar
 [PASS] FP32 pimMaxScalar
 [PASS] FP32 pimScaledAdd
-[PASS] FP32 pimBroadcastFP32
+[PASS] FP32 pimBroadcastFP
 [PASS] FP32 pimRotateElementsRight
 [PASS] FP32 pimRotateElementsLeft
 [PASS] FP32 pimShiftElementsRight
@@ -2656,11 +3178,239 @@ PIM Command Stats:
                           redsum_range.fp32.h :          1       0.006743       0.007802
                          rotate_elem_l.fp32.h :          1       0.087146       0.000409
                          rotate_elem_r.fp32.h :          1       0.087146       0.000409
-                            scaled_add.fp32.h :          1       0.070278       0.059669
+                            scaled_add.fp32.h :          1       0.070279       0.059669
                           shift_elem_l.fp32.h :          1       0.087146       0.000409
                           shift_elem_r.fp32.h :          1       0.087146       0.000409
                                    sub.fp32.h :          1       0.117250       0.088978
                             sub_scalar.fp32.h :          1       0.010129       0.016863
+                              TOTAL --------- :         27       1.602358       1.061752
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for FP16
+================================================================
+[PASS] FP16 pimAdd
+[PASS] FP16 pimSub
+[PASS] FP16 pimMul
+[PASS] FP16 pimDiv
+[PASS] FP16 pimAbs
+[PASS] FP16 pimGT
+[PASS] FP16 pimLT
+[PASS] FP16 pimEQ
+[PASS] FP16 pimMin
+[PASS] FP16 pimMax
+[PASS] FP16 pimAddScalar
+[PASS] FP16 pimSubScalar
+[PASS] FP16 pimMulScalar
+[PASS] FP16 pimDivScalar
+[PASS] FP16 pimGTScalar
+[PASS] FP16 pimLTScalar
+[PASS] FP16 pimEQScalar
+[PASS] FP16 pimMinScalar
+[PASS] FP16 pimMaxScalar
+[PASS] FP16 pimScaledAdd
+[PASS] FP16 pimBroadcastFP
+[PASS] FP16 pimRotateElementsRight
+[PASS] FP16 pimRotateElementsLeft
+[PASS] FP16 pimShiftElementsRight
+[PASS] FP16 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 1
+        Number of Rows per Core : 4096
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.249129 ms Estimated Runtime       0.388264 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                   abs.fp16.h :          1       0.010129       0.016863
+                                   add.fp16.h :          1       0.117250       0.088978
+                            add_scalar.fp16.h :          1       0.010129       0.016863
+                             broadcast.fp16.h :          1       0.010171       0.011618
+                                   div.fp16.h :          1       0.117250       0.088978
+                            div_scalar.fp16.h :          1       0.010129       0.016863
+                                    eq.fp16.h :          1       0.117250       0.088977
+                             eq_scalar.fp16.h :          1       0.010129       0.016863
+                                    gt.fp16.h :          1       0.117250       0.088977
+                             gt_scalar.fp16.h :          1       0.010129       0.016863
+                                    lt.fp16.h :          1       0.117250       0.088977
+                             lt_scalar.fp16.h :          1       0.010129       0.016863
+                                   max.fp16.h :          1       0.117250       0.088977
+                            max_scalar.fp16.h :          1       0.010129       0.016863
+                                   min.fp16.h :          1       0.117250       0.088977
+                            min_scalar.fp16.h :          1       0.010129       0.016863
+                                   mul.fp16.h :          1       0.117250       0.088978
+                            mul_scalar.fp16.h :          1       0.010129       0.016863
+                                redsum.fp16.h :          1       0.010043       0.011601
+                          redsum_range.fp16.h :          1       0.006743       0.007802
+                         rotate_elem_l.fp16.h :          1       0.087146       0.000409
+                         rotate_elem_r.fp16.h :          1       0.087146       0.000409
+                            scaled_add.fp16.h :          1       0.070279       0.059669
+                          shift_elem_l.fp16.h :          1       0.087146       0.000409
+                          shift_elem_r.fp16.h :          1       0.087146       0.000409
+                                   sub.fp16.h :          1       0.117250       0.088978
+                            sub_scalar.fp16.h :          1       0.010129       0.016863
+                              TOTAL --------- :         27       1.602358       1.061752
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for BF16
+================================================================
+[PASS] BF16 pimAdd
+[PASS] BF16 pimSub
+[PASS] BF16 pimMul
+[PASS] BF16 pimDiv
+[PASS] BF16 pimAbs
+[PASS] BF16 pimGT
+[PASS] BF16 pimLT
+[PASS] BF16 pimEQ
+[PASS] BF16 pimMin
+[PASS] BF16 pimMax
+[PASS] BF16 pimAddScalar
+[PASS] BF16 pimSubScalar
+[PASS] BF16 pimMulScalar
+[PASS] BF16 pimDivScalar
+[PASS] BF16 pimGTScalar
+[PASS] BF16 pimLTScalar
+[PASS] BF16 pimEQScalar
+[PASS] BF16 pimMinScalar
+[PASS] BF16 pimMaxScalar
+[PASS] BF16 pimScaledAdd
+[PASS] BF16 pimBroadcastFP
+[PASS] BF16 pimRotateElementsRight
+[PASS] BF16 pimRotateElementsLeft
+[PASS] BF16 pimShiftElementsRight
+[PASS] BF16 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 1
+        Number of Rows per Core : 4096
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.268919 ms Estimated Runtime       0.418634 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                   abs.bf16.h :          1       0.010129       0.016863
+                                   add.bf16.h :          1       0.117250       0.088978
+                            add_scalar.bf16.h :          1       0.010129       0.016863
+                             broadcast.bf16.h :          1       0.010171       0.011618
+                                   div.bf16.h :          1       0.117250       0.088978
+                            div_scalar.bf16.h :          1       0.010129       0.016863
+                                    eq.bf16.h :          1       0.117250       0.088977
+                             eq_scalar.bf16.h :          1       0.010129       0.016863
+                                    gt.bf16.h :          1       0.117250       0.088977
+                             gt_scalar.bf16.h :          1       0.010129       0.016863
+                                    lt.bf16.h :          1       0.117250       0.088977
+                             lt_scalar.bf16.h :          1       0.010129       0.016863
+                                   max.bf16.h :          1       0.117250       0.088977
+                            max_scalar.bf16.h :          1       0.010129       0.016863
+                                   min.bf16.h :          1       0.117250       0.088977
+                            min_scalar.bf16.h :          1       0.010129       0.016863
+                                   mul.bf16.h :          1       0.117250       0.088978
+                            mul_scalar.bf16.h :          1       0.010129       0.016863
+                                redsum.bf16.h :          1       0.010043       0.011601
+                          redsum_range.bf16.h :          1       0.006743       0.007802
+                         rotate_elem_l.bf16.h :          1       0.087146       0.000409
+                         rotate_elem_r.bf16.h :          1       0.087146       0.000409
+                            scaled_add.bf16.h :          1       0.070279       0.059669
+                          shift_elem_l.bf16.h :          1       0.087146       0.000409
+                          shift_elem_r.bf16.h :          1       0.087146       0.000409
+                                   sub.bf16.h :          1       0.117250       0.088978
+                            sub_scalar.bf16.h :          1       0.010129       0.016863
+                              TOTAL --------- :         27       1.602358       1.061752
+----------------------------------------
+================================================================
+INFO: PIMeval Functional Tests for FP8
+================================================================
+[PASS] FP8 pimAdd
+[PASS] FP8 pimSub
+[PASS] FP8 pimMul
+[PASS] FP8 pimDiv
+[PASS] FP8 pimAbs
+[PASS] FP8 pimGT
+[PASS] FP8 pimLT
+[PASS] FP8 pimEQ
+[PASS] FP8 pimMin
+[PASS] FP8 pimMax
+[PASS] FP8 pimAddScalar
+[PASS] FP8 pimSubScalar
+[PASS] FP8 pimMulScalar
+[PASS] FP8 pimDivScalar
+[PASS] FP8 pimGTScalar
+[PASS] FP8 pimLTScalar
+[PASS] FP8 pimEQScalar
+[PASS] FP8 pimMinScalar
+[PASS] FP8 pimMaxScalar
+[PASS] FP8 pimScaledAdd
+[PASS] FP8 pimBroadcastFP
+[PASS] FP8 pimRotateElementsRight
+[PASS] FP8 pimRotateElementsLeft
+[PASS] FP8 pimShiftElementsRight
+[PASS] FP8 pimShiftElementsLeft
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+            Number of PIM Cores : 1
+        Number of Rows per Core : 4096
+        Number of Cols per Core : 256
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 28.500000
+                 Row Write (ns) : 43.500000
+                      tCCD (ns) : 3.000000
+Data Copy Stats:
+                               Host to Device : 48000 bytes
+                               Device to Host : 432000 bytes
+                             Device to Device : 64000 bytes
+                              TOTAL --------- : 480000 bytes       0.288710 ms Estimated Runtime       0.449005 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT EstimatedRuntime(ms) EstimatedEnergyConsumption(mJ)
+                                    abs.fp8.h :          1       0.010129       0.016863
+                                    add.fp8.h :          1       0.117250       0.088978
+                             add_scalar.fp8.h :          1       0.010129       0.016863
+                              broadcast.fp8.h :          1       0.010171       0.011618
+                                    div.fp8.h :          1       0.117250       0.088978
+                             div_scalar.fp8.h :          1       0.010129       0.016863
+                                     eq.fp8.h :          1       0.117250       0.088977
+                              eq_scalar.fp8.h :          1       0.010129       0.016863
+                                     gt.fp8.h :          1       0.117250       0.088977
+                              gt_scalar.fp8.h :          1       0.010129       0.016863
+                                     lt.fp8.h :          1       0.117250       0.088977
+                              lt_scalar.fp8.h :          1       0.010129       0.016863
+                                    max.fp8.h :          1       0.117250       0.088977
+                             max_scalar.fp8.h :          1       0.010129       0.016863
+                                    min.fp8.h :          1       0.117250       0.088977
+                             min_scalar.fp8.h :          1       0.010129       0.016863
+                                    mul.fp8.h :          1       0.117250       0.088978
+                             mul_scalar.fp8.h :          1       0.010129       0.016863
+                                 redsum.fp8.h :          1       0.010043       0.011601
+                           redsum_range.fp8.h :          1       0.006743       0.007802
+                          rotate_elem_l.fp8.h :          1       0.087146       0.000409
+                          rotate_elem_r.fp8.h :          1       0.087146       0.000409
+                             scaled_add.fp8.h :          1       0.070279       0.059669
+                           shift_elem_l.fp8.h :          1       0.087146       0.000409
+                           shift_elem_r.fp8.h :          1       0.087146       0.000409
+                                    sub.fp8.h :          1       0.117250       0.088978
+                             sub_scalar.fp8.h :          1       0.010129       0.016863
                               TOTAL --------- :         27       1.602358       1.061752
 ----------------------------------------
 Result: COMPLETED

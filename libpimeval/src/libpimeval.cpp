@@ -151,7 +151,7 @@ pimBroadcastUInt(PimObjId dest, uint64_t value)
 
 //! @brief  Load vector with a float32 value
 PimStatus
-pimBroadcastFP32(PimObjId dest, float value)
+pimBroadcastFP(PimObjId dest, float value)
 {
   bool ok = pimSim::get()->pimBroadcast(dest, value);
   return ok ? PIM_OK : PIM_ERROR;
@@ -379,7 +379,7 @@ pimRedSumUInt(PimObjId src, uint64_t* sum)
 
 //! @brief  PIM reduction sum for float. Result returned to a host variable
 PimStatus
-pimRedSumFP32(PimObjId src, float* sum)
+pimRedSumFP(PimObjId src, float* sum)
 {
   bool ok = pimSim::get()->pimRedSum(src, sum);
   return ok ? PIM_OK : PIM_ERROR;
@@ -403,7 +403,7 @@ pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* 
 
 //! @brief  PIM reduction sum for a range of an float obj. Result returned to a host variable
 PimStatus
-pimRedSumRangedFP32(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum)
+pimRedSumRangedFP(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum)
 {
   bool ok = pimSim::get()->pimRedSumRanged(src, idxBegin, idxEnd, sum);
   return ok ? PIM_OK : PIM_ERROR;

@@ -106,9 +106,10 @@ pimUtils::getNumBitsOfDataType(PimDataType dataType)
   case PIM_UINT32: return 32;
   case PIM_UINT64: return 64;
   case PIM_FP32: return 32;
-  case PIM_FP16: return 16;
-  case PIM_BF16: return 16;
-  case PIM_FP8: return 8;
+  // In option 1, PIMeval performs float operations for functional simulation
+  case PIM_FP16: return 32;
+  case PIM_BF16: return 32;
+  case PIM_FP8: return 32;
   default:
     assert(0);
   }
