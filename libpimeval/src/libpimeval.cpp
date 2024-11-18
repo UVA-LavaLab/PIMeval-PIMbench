@@ -367,6 +367,43 @@ pimPopCount(PimObjId src, PimObjId dest)
   bool ok = pimSim::get()->pimPopCount(src, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
+// Updated pimRedMin function
+PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
+    if (idxEnd == 0) idxEnd = getLength(src); // Assume getLength returns the length of the source
+    switch (getType(src)) { // Assume getType fetches the type of data
+        case PIM_TYPE_INT64:
+            *reinterpret_cast<int64_t*>(min) = calculateRedMin<int64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_UINT64:
+            *reinterpret_cast<uint64_t*>(min) = calculateRedMin<uint64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_FLOAT:
+            *reinterpret_cast<float*>(min) = calculateRedMin<float>(src, idxBegin, idxEnd);
+            break;
+        default:
+            return PIM_STATUS_INVALID_TYPE;
+    }
+    return PIM_STATUS_SUCCESS;
+}
+
+// Updated pimRedMax function
+PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
+    if (idxEnd == 0) idxEnd = getLength(src); // Assume getLength returns the length of the source
+    switch (getType(src)) { // Assume getType fetches the type of data
+        case PIM_TYPE_INT64:
+            *reinterpret_cast<int64_t*>(max) = calculateRedMax<int64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_UINT64:
+            *reinterpret_cast<uint64_t*>(max) = calculateRedMax<uint64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_FLOAT:
+            *reinterpret_cast<float*>(max) = calculateRedMax<float>(src, idxBegin, idxEnd);
+            break;
+        default:
+            return PIM_STATUS_INVALID_TYPE;
+    }
+    return PIM_STATUS_SUCCESS;
+}
 
 //! @brief  PIM find the min value of PIM object of signed int element. Result returned to a host variable
 PimStatus

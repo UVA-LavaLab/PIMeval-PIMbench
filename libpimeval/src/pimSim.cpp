@@ -750,6 +750,51 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::POPCOUNT, src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
+// Updated pimRedMin implementation in pimSim
+bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
+    pimPerfMon perfMon("pimRedMin");
+    if (!isValidDevice()) return false;
+
+    if (idxEnd == 0) idxEnd = getLength(src); // Get total length if idxEnd is not provided
+
+    switch (getType(src)) { // Type detection and casting
+        case PIM_TYPE_INT64:
+            *reinterpret_cast<int64_t*>(min) = calculateRedMin<int64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_UINT64:
+            *reinterpret_cast<uint64_t*>(min) = calculateRedMin<uint64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_FLOAT:
+            *reinterpret_cast<float*>(min) = calculateRedMin<float>(src, idxBegin, idxEnd);
+            break;
+        default:
+            return false; // Invalid type
+    }
+    return true;
+}
+
+// Updated pimRedMax implementation in pimSim
+bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
+    pimPerfMon perfMon("pimRedMax");
+    if (!isValidDevice()) return false;
+
+    if (idxEnd == 0) idxEnd = getLength(src); // Get total length if idxEnd is not provided
+
+    switch (getType(src)) { // Type detection and casting
+        case PIM_TYPE_INT64:
+            *reinterpret_cast<int64_t*>(max) = calculateRedMax<int64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_UINT64:
+            *reinterpret_cast<uint64_t*>(max) = calculateRedMax<uint64_t>(src, idxBegin, idxEnd);
+            break;
+        case PIM_TYPE_FLOAT:
+            *reinterpret_cast<float*>(max) = calculateRedMax<float>(src, idxBegin, idxEnd);
+            break;
+        default:
+            return false; // Invalid type
+    }
+    return true;
+}
 
 template <typename T> bool
 pimSim::pimRedMin(PimObjId src, T* min)

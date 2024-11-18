@@ -154,6 +154,8 @@ PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
 PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
 PimStatus pimRedSumFP32(PimObjId src, float* sum);
 // Min/Max Reduction APIs
+PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimRedMinInt(PimObjId src, int64_t* min);
 PimStatus pimRedMinUInt(PimObjId src, uint64_t* min);
 PimStatus pimRedMaxInt(PimObjId src, int64_t* max);
