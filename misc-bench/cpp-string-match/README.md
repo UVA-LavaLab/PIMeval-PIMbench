@@ -54,7 +54,13 @@ To compile for the CPU variant, use:
 
 ```bash
 cd baselines/CPU
+apptainer build string-match.sif string-match-container.def
+apptainer run string-match.sif
+mkdir build
+cd build
+cmake ..
 make
+cd src
 ```
 
 ### GPU Variant
