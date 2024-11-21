@@ -1,8 +1,8 @@
 # Scale
 
-String match is an operation involving two strings that determines indices where one string, the needle, appears in another string, the haystack. This particular version of string match creates an array of the length haystack where every position indicates whether there is a match of the needle and the haystack starting at that position. For example:
+String match is an operation involving two strings that determines indices where one string, the needle, appears in another string, the haystack. This particular version of string match creates an array of the length of the haystack where every position indicates whether there is a match of the needle and the haystack starting at that position, for 1 or more needles and 1 haystack. For example:
 
-string_match("abcdabc", "abc") -> [1, 0, 0, 0, 1, 0, 0]
+string_match("abcdabc", ["abc"]) -> [1, 0, 0, 0, 1, 0, 0]
 
 ## Directory Structure
 
@@ -13,8 +13,13 @@ cpp-string-match/
 │   ├── string-match.cpp
 ├── baselines/
 │   ├── CPU/
-│   │   ├── Makefile
-│   │   ├── string-match.cpp
+│   │   ├── CMakeLists.txt
+│   │   ├── string-match-container.def
+│   │   ├── .gitignore
+│   │   ├── hyperscan/ (submodule)
+│   │   ├── src/
+│   │   │   ├── CMakeLists.txt
+│   │   │   ├── string-match.cpp
 │   ├── GPU/
 │   │   ├── Makefile
 │   │   ├── string-match.cu
@@ -36,7 +41,7 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of string has been implemented using the standard C++ library, as well as with parallelization from OpenMP.
+The CPU variant of string matching uses [hyperscan](https://github.com/intel/hyperscan) to match the strings.
 
 #### GPU
 
@@ -50,7 +55,7 @@ The PIM variant is implemented using C++ with some speedup from OpenMP. Three di
 
 ### CPU Variant
 
-To compile for the CPU variant, use:
+The CPU varient requires [apptainer](https://apptainer.org/) to run the container to compile in (but can run outside of the container). To compile for the CPU variant, use:
 
 ```bash
 cd baselines/CPU
@@ -60,7 +65,6 @@ mkdir build
 cd build
 cmake ..
 make
-cd src
 ```
 
 ### GPU Variant
