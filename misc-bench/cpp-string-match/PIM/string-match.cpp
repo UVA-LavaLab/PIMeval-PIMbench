@@ -201,14 +201,14 @@ int main(int argc, char* argv[])
   vector<vector<uint8_t>> matches;
   if (params.inputFile == nullptr)
   {
-    // getString(haystack, params.stringLength);
-    // for(uint64_t i=0; i < params.numKeys; ++i) {
-    //   needles.push_back("");
-    //   getString(needles.back(), params.keyLength);
-    // }
+    getString(haystack, params.stringLength);
+    for(uint64_t i=0; i < params.numKeys; ++i) {
+      needles.push_back("");
+      getString(needles.back(), params.keyLength);
+    }
     
-    haystack = "dabcd";
-    needles = {"abc", "d"};
+    // haystack = "dabcslkdfjdljed";
+    // needles = {"abc", "d", "z", "bcslk", "dabcs"};
   } 
   else 
   {

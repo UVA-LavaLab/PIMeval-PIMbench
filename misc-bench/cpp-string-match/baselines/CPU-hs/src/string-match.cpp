@@ -160,8 +160,8 @@ int main(int argc, char **argv)
       getString(needles.back(), params.keyLength);
     }
 
-    haystack = "dabcslkdfjdljed";
-    needles = {"abc", "d", "z", "bcslk", "dabcs"};
+    // haystack = "dabcslkdfjdljed";
+    // needles = {"abc", "d", "z", "bcslk", "dabcs"};
   } 
   else 
   {
