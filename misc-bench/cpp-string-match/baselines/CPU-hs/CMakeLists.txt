@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(MyHyperscanProject)
+project(string-match-hs)
 
 # Add the Hyperscan subdirectory
 add_subdirectory(hyperscan)
