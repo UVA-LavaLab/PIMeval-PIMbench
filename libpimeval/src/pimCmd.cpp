@@ -492,6 +492,8 @@ pimCmdFunc2::computeRegion(unsigned index)
   // perform the computation
   uint64_t elemIdxBegin = src1Region.getElemIdxBegin();
   unsigned numElementsInRegion = src1Region.getNumElemInRegion();
+
+  //std::printf("Num elements in region %d\n", numElementsInRegion);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
 
@@ -500,9 +502,11 @@ pimCmdFunc2::computeRegion(unsigned index)
       uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
       // The following if-else block is the perfect example of where a Template would have been much more cleaner and efficient and less error prone
       if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64) {
+
         int64_t operand1 = pimUtils::signExt(operandBits1, dataType);
         int64_t operand2 = pimUtils::signExt(operandBits2, dataType);
         int64_t result = 0;
+
         switch (m_cmdType) {
         case PimCmdEnum::ADD: result = operand1 + operand2; break;
         case PimCmdEnum::SUB: result = operand1 - operand2; break;
@@ -525,7 +529,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
         case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
         default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+          std::printf("PIM-Error: Unexpected cmd type INT %d\n", static_cast<int>(m_cmdType));
           assert(0);
         }
         objDest.setElement(elemIdx, result);
@@ -555,7 +559,7 @@ pimCmdFunc2::computeRegion(unsigned index)
         case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
         case PimCmdEnum::SCALED_ADD: result = (operand1 * m_scalarValue) + operand2; break;
         default:
-          std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+          std::printf("PIM-Error: Unexpected cmd type NON-INT %d\n", static_cast<int>(m_cmdType));
           assert(0);
         }
         objDest.setElement(elemIdx, result);
@@ -1045,7 +1049,7 @@ pimCmdRRegOp::execute()
         break;
       }
       default:
-        std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(m_cmdType));
+        std::printf("PIM-Error: Unexpected cmd type Execute %d\n", static_cast<int>(m_cmdType));
         assert(0);
       }
     }
