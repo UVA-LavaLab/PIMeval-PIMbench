@@ -104,11 +104,11 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       { 27, "pimScaledAdd"           },
       //{ 28, "pimPopCount"            }, // not supported
       //{ 29, "pimRedSumInt"           }, // not supported
-      { 30, "pimRedSumFP32"          },
+      { 30, "pimRedSumFP"          },
       //{ 31, "pimRedSumRangedInt"     }, // not supported
-      { 32, "pimRedSumRangedFP32"    },
+      { 32, "pimRedSumRangedFP"    },
       //{ 33, "pimBroadcastInt"        }, // not supported
-      { 34, "pimBroadcastFP32"       },
+      { 34, "pimBroadcastFP"       },
       { 35, "pimRotateElementsRight" },
       { 36, "pimRotateElementsLeft"  },
       { 37, "pimShiftElementsRight"  },
@@ -168,11 +168,11 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 27: status = pimScaledAdd            (objSrc1, objSrc2, objDest, scalarVal); break;
       case 28: status = pimPopCount             (objSrc1, objDest);                     break;
       case 29: status = pimRedSumInt            (objSrc1, &sumInt);                     break;
-      case 30: status = pimRedSumFP32           (objSrc1, &sumFP32);                    break;
+      case 30: status = pimRedSumFP           (objSrc1, &sumFP32);                    break;
       case 31: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      case 32: status = pimRedSumRangedFP32     (objSrc1, idxBegin, idxEnd, &sumFP32);  break;
+      case 32: status = pimRedSumRangedFP     (objSrc1, idxBegin, idxEnd, &sumFP32);  break;
       case 33: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 34: status = pimBroadcastFP32          (objDest, scalarValFloat);            break;
+      case 34: status = pimBroadcastFP          (objDest, scalarValFloat);            break;
       case 35: status = pimRotateElementsRight  (objDest);                              break;
       case 36: status = pimRotateElementsLeft   (objDest);                              break;
       case 37: status = pimShiftElementsRight   (objDest);                              break;
@@ -205,9 +205,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
         sumUIntExpected += vecSrc1[i];
       }
       assert(sumUInt == sumUIntExpected);
-    } else if (testName == "pimRedSumFP32" || testName == "pimRedSumRangedFP32") {
-      uint64_t begin = (testName == "pimRedSumFP32" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumFP32" ? numElements : idxEnd);
+    } else if (testName == "pimRedSumFP" || testName == "pimRedSumRangedFP") {
+      uint64_t begin = (testName == "pimRedSumFP" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedSumFP" ? numElements : idxEnd);
       float sumFP32Expected = 0.0f;
       for (uint64_t i = begin; i < end; ++i) {
         sumFP32Expected += vecSrc1[i];
@@ -254,11 +254,11 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 27: expected = (vecSrc1[i] * val) + vecSrc2[i];      break; // pimScaledAdd
           case 28: expected = std::bitset<sizeof(T) * 8>(vecSrc1[i]).count(); break; // pimPopCount
           case 29: assert(0); break; // pimRedSumInt
-          case 30: assert(0); break; // pimRedSumFP32
+          case 30: assert(0); break; // pimRedSumFP
           case 31: assert(0); break; // pimRedSumRangedInt
-          case 32: assert(0); break; // pimRedSumRangedFP32
+          case 32: assert(0); break; // pimRedSumRangedFP
           case 33: expected = valInt; break; // pimBroadcastInt
-          case 34: expected = val;    break; // pimBroadcastFP32
+          case 34: expected = val;    break; // pimBroadcastFP
           case 35: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
           case 36: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
           case 37: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight

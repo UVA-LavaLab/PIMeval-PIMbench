@@ -74,6 +74,9 @@ enum PimDataType {
   PIM_UINT32,
   PIM_UINT64,
   PIM_FP32,
+  PIM_FP16,
+  PIM_BF16,
+  PIM_FP8,
 };
 
 //! @brief  PIM device properties
@@ -146,14 +149,14 @@ PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t sca
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
 PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
 PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
-PimStatus pimRedSumFP32(PimObjId src, float* sum);
+PimStatus pimRedSumFP(PimObjId src, float* sum);
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
 PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
-PimStatus pimRedSumRangedFP32(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
+PimStatus pimRedSumRangedFP(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
-PimStatus pimBroadcastFP32(PimObjId dest, float value);
+PimStatus pimBroadcastFP(PimObjId dest, float value);
 PimStatus pimRotateElementsRight(PimObjId src);
 PimStatus pimRotateElementsLeft(PimObjId src);
 PimStatus pimShiftElementsRight(PimObjId src);
