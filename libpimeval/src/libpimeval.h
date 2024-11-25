@@ -156,18 +156,10 @@ PimStatus pimRedSumFP32(PimObjId src, float* sum);
 // Min/Max Reduction APIs
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimRedMinInt(PimObjId src, int64_t* min);
-PimStatus pimRedMinUInt(PimObjId src, uint64_t* min);
-PimStatus pimRedMaxInt(PimObjId src, int64_t* max);
-PimStatus pimRedMaxUInt(PimObjId src, uint64_t* max);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
-PimStatus pimRedMinRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* min);
-PimStatus pimRedMinRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* min);
-PimStatus pimRedMaxRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* max);
-PimStatus pimRedMaxRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* max);
-PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
-PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
-PimStatus pimRedSumRangedFP(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
+
+PimStatus pimRedSumRangedFP32(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
 PimStatus pimBroadcastFP(PimObjId dest, float value);

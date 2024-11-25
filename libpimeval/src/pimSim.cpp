@@ -750,100 +750,37 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::POPCOUNT, src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
-// Updated pimRedMin implementation in pimSim
+
+//! @brief  Min reduction operation
+template <typename T>
 bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
-    pimPerfMon perfMon("pimRedMin");
-    if (!isValidDevice()) return false;
-
-    if (idxEnd == 0) idxEnd = getLength(src); // Get total length if idxEnd is not provided
-
-    switch (getType(src)) { // Type detection and casting
-        case PIM_TYPE_INT64:
-            *reinterpret_cast<int64_t*>(min) = calculateRedMin<int64_t>(src, idxBegin, idxEnd);
-            break;
-        case PIM_TYPE_UINT64:
-            *reinterpret_cast<uint64_t*>(min) = calculateRedMin<uint64_t>(src, idxBegin, idxEnd);
-            break;
-        case PIM_TYPE_FLOAT:
-            *reinterpret_cast<float*>(min) = calculateRedMin<float>(src, idxBegin, idxEnd);
-            break;
-        default:
-            return false; // Invalid type
-    }
-    return true;
-}
-
-// Updated pimRedMax implementation in pimSim
-bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
-    pimPerfMon perfMon("pimRedMax");
-    if (!isValidDevice()) return false;
-
-    if (idxEnd == 0) idxEnd = getLength(src); // Get total length if idxEnd is not provided
-
-    switch (getType(src)) { // Type detection and casting
-        case PIM_TYPE_INT64:
-            *reinterpret_cast<int64_t*>(max) = calculateRedMax<int64_t>(src, idxBegin, idxEnd);
-            break;
-        case PIM_TYPE_UINT64:
-            *reinterpret_cast<uint64_t*>(max) = calculateRedMax<uint64_t>(src, idxBegin, idxEnd);
-            break;
-        case PIM_TYPE_FLOAT:
-            *reinterpret_cast<float*>(max) = calculateRedMax<float>(src, idxBegin, idxEnd);
-            break;
-        default:
-            return false; // Invalid type
-    }
-    return true;
-}
-
-template <typename T> bool
-pimSim::pimRedMin(PimObjId src, T* min)
-{
   pimPerfMon perfMon("pimRedMin");
   if (!isValidDevice()) { return false; }
-  *min = std::numeric_limits<T>::max();
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMIN, src, min);
+  if (!min) { return false; }
+
+  // Create the reduction command for Min operation
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMIN, src, min, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
 
-template <typename T> bool
-pimSim::pimRedMax(PimObjId src, T* max)
-{
+//! @brief  Max reduction operation
+template <typename T>
+bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
   pimPerfMon perfMon("pimRedMax");
   if (!isValidDevice()) { return false; }
-  *max = std::numeric_limits<T>::lowest();
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMAX, src, max);
+  if (!max) { return false; }
+
+  // Create the reduction command for Max operation
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMAX, src, max, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
-
-template <typename T> bool
-pimSim::pimRedMinRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* min)
-{
-  pimPerfMon perfMon("pimRedMinRanged");
-  if (!isValidDevice()) { return false; }
-  *min = std::numeric_limits<T>::max();
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMIN_RANGE, src, min, idxBegin, idxEnd);
-  return m_device->executeCmd(std::move(cmd));
-}
-
-template <typename T> bool
-pimSim::pimRedMaxRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* max)
-{
-  pimPerfMon perfMon("pimRedMaxRanged");
-  if (!isValidDevice()) { return false; }
-  *max = std::numeric_limits<T>::lowest();
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMAX_RANGE, src, max, idxBegin, idxEnd);
-  return m_device->executeCmd(std::move(cmd));
-}
-
-// Update the existing sum reduction functions to use pimCmdReduction
 template <typename T> bool
 pimSim::pimRedSum(PimObjId src, T* sum)
 {
   pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDSUM, src, sum);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM, src, sum);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -853,7 +790,7 @@ pimSim::pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum
   pimPerfMon perfMon("pimRedSumRanged");
   if (!isValidDevice()) { return false; }
   *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
 bool
@@ -1143,16 +1080,6 @@ pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
 template bool pimSim::pimBroadcast<uint64_t>(PimObjId dest, uint64_t value);
 template bool pimSim::pimBroadcast<int64_t>(PimObjId dest, int64_t value);
 template bool pimSim::pimBroadcast<float>(PimObjId dest, float value);
-
-template bool pimSim::pimRedMin<uint64_t>(PimObjId src, uint64_t* min);
-template bool pimSim::pimRedMin<int64_t>(PimObjId src, int64_t* min);
-template bool pimSim::pimRedMax<uint64_t>(PimObjId src, uint64_t* max);
-template bool pimSim::pimRedMax<int64_t>(PimObjId src, int64_t* max);
-
-template bool pimSim::pimRedMinRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* min);
-template bool pimSim::pimRedMinRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* min);
-template bool pimSim::pimRedMaxRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* max);
-template bool pimSim::pimRedMaxRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* max);
 
 // Existing sum reduction instantiations
 template bool pimSim::pimRedSum<uint64_t>(PimObjId src, uint64_t* sum);
