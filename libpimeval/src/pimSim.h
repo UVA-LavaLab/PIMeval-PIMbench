@@ -99,7 +99,6 @@ public:
   bool pimPopCount(PimObjId src, PimObjId dest);
   template <typename T> bool pimRedSum(PimObjId src, T* sum);
   template <typename T> bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum);
-  template <typename T> bool pimRedMin(PimObjId src, T* min);
   template <typename T> bool pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   template <typename T> bool pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   template <typename T> bool pimBroadcast(PimObjId dest, T value);
