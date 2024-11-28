@@ -370,13 +370,13 @@ pimPopCount(PimObjId src, PimObjId dest)
 
 // Implementation of min reduction
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
-    bool ok = pimSim::get()->pimRedMin(src, min, idxBegin, idxEnd);
+    bool ok = pimSim::get()->pimRedMin<float>(src, min, idxBegin, idxEnd);
     return ok ? PIM_OK : PIM_ERROR;
 }
 
 // Implementation of max reduction
 PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
-    bool ok = pimSim::get()->pimRedMax(src, max, idxBegin, idxEnd);
+    bool ok = pimSim::get()->pimRedMax<float>(src, max, idxBegin, idxEnd);
     return ok ? PIM_OK : PIM_ERROR;
 }
 
