@@ -560,8 +560,8 @@ pimCmdFunc2::updateStats() const
 }
 
 //! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
-template <typename T> bool
-pimCmdReduction<T>::sanityCheck() const
+bool
+pimCmdReduction::sanityCheck() const
 {
   pimResMgr* resMgr = m_device->getResMgr();
   if (!isValidObjId(resMgr, m_src) || !m_result) {
@@ -570,8 +570,8 @@ pimCmdReduction<T>::sanityCheck() const
   return true;
 }
 
-template <typename T> bool
-pimCmdReduction<T>::execute()
+bool
+pimCmdReduction::execute()
 {
   #if defined(DEBUG)
   std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
@@ -587,36 +587,33 @@ pimCmdReduction<T>::execute()
   }
 
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+
+  PimDataType dataType = objSrc.getDataType();
+
   unsigned numRegions = objSrc.getRegions().size();
 
   // prepare per-region storage
-  if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-    m_regionResult.resize(numRegions, 0);
-  } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-    m_regionResult.resize(numRegions, std::numeric_limits<T>::max());
-  } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-    m_regionResult.resize(numRegions, std::numeric_limits<T>::lowest());
-  }
+  initializeRegionResult(dataType, m_cmdType, numRegions);
 
   computeAllRegions(numRegions);
 
   // reduction
-  for (unsigned i = 0; i < numRegions; ++i) {
-    if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-      *m_result += m_regionResult[i];
-    } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-      *m_result = *m_result > m_regionResult[i] ? m_regionResult[i] : *m_result;
-    } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-      *m_result = *m_result < m_regionResult[i] ? m_regionResult[i] : *m_result;
-    }
-  }
+  // for (unsigned i = 0; i < numRegions; ++i) {
+  //   if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+  //     *m_result += m_regionResult[i];
+  //   } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
+  //     *m_result = *m_result > m_regionResult[i] ? m_regionResult[i] : *m_result;
+  //   } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
+  //     *m_result = *m_result < m_regionResult[i] ? m_regionResult[i] : *m_result;
+  //   }
+  // }
 
   updateStats();
   return true;
 }
 
-template <typename T> bool
-pimCmdReduction<T>::computeRegion(unsigned index)
+bool
+pimCmdReduction::computeRegion(unsigned index)
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   const pimRegion& srcRegion = objSrc.getRegions()[index];
@@ -627,37 +624,38 @@ pimCmdReduction<T>::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
-      bool isFP = (dataType == PIM_FP32);
-      if (!isFP) {
-        T integerOperand = pimUtils::signExt(operandBits, dataType);
-        if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-          m_regionResult[index] += integerOperand;
-        } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-          m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
-          //std::printf("PIM-Info: %d (obj id %d)\n", m_regionResult[index], integerOperand);
-        } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-          m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
-        }
-      } else if (isFP) {
-        float floatOperand = pimUtils::castBitsToType<float>(operandBits);
-        if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-          m_regionResult[index] += floatOperand;
-        } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-          m_regionResult[index] = m_regionResult[index] > floatOperand ? floatOperand : m_regionResult[index];
-        } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-          m_regionResult[index] = m_regionResult[index] < floatOperand ? floatOperand : m_regionResult[index];
-        }
-      } else {
-        assert(0); // todo: data type
-      }
+      computeResult(m_cmdType, dataType, index, operandBits);
+      // bool isFP = (dataType == PIM_FP32);
+      // if (!isFP) {
+      //   T integerOperand = pimUtils::signExt(operandBits, dataType);
+      //   if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+      //     m_regionResult[index] += integerOperand;
+      //   } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
+      //     m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
+      //     //std::printf("PIM-Info: %d (obj id %d)\n", m_regionResult[index], integerOperand);
+      //   } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
+      //     m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
+      //   }
+      // } else if (isFP) {
+      //   float floatOperand = pimUtils::castBitsToType<float>(operandBits);
+      //   if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+      //     m_regionResult[index] += floatOperand;
+      //   } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
+      //     m_regionResult[index] = m_regionResult[index] > floatOperand ? floatOperand : m_regionResult[index];
+      //   } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
+      //     m_regionResult[index] = m_regionResult[index] < floatOperand ? floatOperand : m_regionResult[index];
+      //   }
+      // } else {
+      //   assert(0); // todo: data type
+      // }
     }
     currIdx += 1;
   }
   return true;
 }
 
-template <typename T> bool
-pimCmdReduction<T>::updateStats() const
+bool
+pimCmdReduction::updateStats() const
 {
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
   PimDataType dataType = objSrc.getDataType();
@@ -1202,8 +1200,3 @@ pimCmdAnalogAAP::printDebugInfo() const
   std::printf("PIM-Info: %s (#src = %lu, #dest = %lu, rows =%s)\n",
               getName().c_str(), m_srcRows.size(), m_destRows.size(), msg.c_str());
 }
-
-// Explicit template instantiation
-template class pimCmdReduction<uint64_t>;
-template class pimCmdReduction<int64_t>;
-template class pimCmdReduction<float>;

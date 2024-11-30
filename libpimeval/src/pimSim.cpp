@@ -752,47 +752,38 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 }
 
 //! @brief  Min reduction operation
-template <typename T>
 bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
   pimPerfMon perfMon("pimRedMin");
   if (!isValidDevice()) { return false; }
   if (!min) { return false; }
 
   // Create the reduction command for Min operation
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMIN, src, min, idxBegin, idxEnd);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction>(PimCmdEnum::REDMIN, src, min, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
 
 //! @brief  Max reduction operation
-template <typename T>
 bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
   pimPerfMon perfMon("pimRedMax");
   if (!isValidDevice()) { return false; }
   if (!max) { return false; }
 
   // Create the reduction command for Max operation
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction<T>>(PimCmdEnum::REDMAX, src, max, idxBegin, idxEnd);
-  return m_device->executeCmd(std::move(cmd));
-}
-template <typename T> bool
-pimSim::pimRedSum(PimObjId src, T* sum)
-{
-  pimPerfMon perfMon("pimRedSum");
-  if (!isValidDevice()) { return false; }
-  *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM, src, sum);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction>(PimCmdEnum::REDMAX, src, max, idxBegin, idxEnd);
   return m_device->executeCmd(std::move(cmd));
 }
 
-template <typename T> bool
-pimSim::pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum)
+bool
+pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
 {
-  pimPerfMon perfMon("pimRedSumRanged");
+  pimPerfMon perfMon("pimRedSum");
   if (!isValidDevice()) { return false; }
-  *sum = 0;
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRedSum<T>>(PimCmdEnum::REDSUM_RANGE, src, sum, idxBegin, idxEnd);
+  if (!sum) { return false; }
+
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction>(PimCmdEnum::REDSUM, src, sum);
   return m_device->executeCmd(std::move(cmd));
 }
+
 bool
 pimSim::pimRotateElementsRight(PimObjId src)
 {
@@ -1080,12 +1071,3 @@ pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
 template bool pimSim::pimBroadcast<uint64_t>(PimObjId dest, uint64_t value);
 template bool pimSim::pimBroadcast<int64_t>(PimObjId dest, int64_t value);
 template bool pimSim::pimBroadcast<float>(PimObjId dest, float value);
-
-// Existing sum reduction instantiations
-template bool pimSim::pimRedSum<uint64_t>(PimObjId src, uint64_t* sum);
-template bool pimSim::pimRedSum<int64_t>(PimObjId src, int64_t* sum);
-template bool pimSim::pimRedSum<float>(PimObjId src, float* sum);
-template bool pimSim::pimRedSumRanged<uint64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
-template bool pimSim::pimRedSumRanged<int64_t>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
-template bool pimSim::pimRedSumRanged<float>(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
-
