@@ -16,6 +16,7 @@
 #include <climits>            // for numeric_limits
 #include <cassert>           // for assert
 #include <bitset>            // for bitset
+#include <variant>
 
 class pimDevice;
 
