@@ -7,7 +7,6 @@
 #include "libpimeval.h"
 #include "pimSim.h"
 #include "pimUtils.h"
-#include <limits>
 
 //! @brief  Create a PIM device
 PimStatus
