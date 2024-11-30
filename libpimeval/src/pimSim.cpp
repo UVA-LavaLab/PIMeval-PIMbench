@@ -758,7 +758,41 @@ bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxE
   if (!min) { return false; }
 
   // Create the reduction command for Min operation
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction>(PimCmdEnum::REDMIN, src, min, idxBegin, idxEnd);
+  const PimDataType dataType = m_device->getResMgr()->getObjInfo(src).getDataType();
+  std::unique_ptr<pimCmd> cmd;
+  PimCmdEnum cmdType = (idxBegin < idxEnd && idxEnd > 0) ? PimCmdEnum::REDMIN_RANGE : PimCmdEnum::REDMIN;
+  switch (dataType) {
+    case PimDataType::PIM_INT8:
+      cmd = std::make_unique<pimCmdReduction<int8_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_INT16:
+      cmd = std::make_unique<pimCmdReduction<int16_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_INT32:
+      cmd = std::make_unique<pimCmdReduction<int32_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_INT64:
+      cmd = std::make_unique<pimCmdReduction<int64_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT8:
+      cmd = std::make_unique<pimCmdReduction<uint8_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT16:
+      cmd = std::make_unique<pimCmdReduction<uint16_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT32:
+      cmd = std::make_unique<pimCmdReduction<uint32_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT64:
+      cmd = std::make_unique<pimCmdReduction<uint64_t>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_FP32:
+      cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, min, idxBegin, idxEnd);
+      break;
+    default:
+      std::printf("PIM-Error: Unsupported datatype.\n");
+      return false;
+  }
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -769,7 +803,41 @@ bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxE
   if (!max) { return false; }
 
   // Create the reduction command for Max operation
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction>(PimCmdEnum::REDMAX, src, max, idxBegin, idxEnd);
+  const PimDataType dataType = m_device->getResMgr()->getObjInfo(src).getDataType();
+  std::unique_ptr<pimCmd> cmd;
+  PimCmdEnum cmdType = (idxBegin < idxEnd && idxEnd > 0) ? PimCmdEnum::REDMAX_RANGE : PimCmdEnum::REDMAX;
+  switch (dataType) {
+    case PimDataType::PIM_INT8:
+      cmd = std::make_unique<pimCmdReduction<int8_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_INT16:
+      cmd = std::make_unique<pimCmdReduction<int16_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_INT32:
+      cmd = std::make_unique<pimCmdReduction<int32_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_INT64:
+      cmd = std::make_unique<pimCmdReduction<int64_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT8:
+      cmd = std::make_unique<pimCmdReduction<uint8_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT16:
+      cmd = std::make_unique<pimCmdReduction<uint16_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT32:
+      cmd = std::make_unique<pimCmdReduction<uint32_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT64:
+      cmd = std::make_unique<pimCmdReduction<uint64_t>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_FP32:
+      cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, max, idxBegin, idxEnd);
+      break;
+    default:
+      std::printf("PIM-Error: Unsupported datatype.\n");
+      return false;
+  }
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -780,7 +848,29 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
   if (!isValidDevice()) { return false; }
   if (!sum) { return false; }
 
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdReduction>(PimCmdEnum::REDSUM, src, sum);
+  const PimDataType dataType = m_device->getResMgr()->getObjInfo(src).getDataType();
+  std::unique_ptr<pimCmd> cmd;
+  PimCmdEnum cmdType = (idxBegin < idxEnd && idxEnd > 0) ? PimCmdEnum::REDSUM_RANGE : PimCmdEnum::REDSUM;
+  switch (dataType) {
+    case PimDataType::PIM_INT8:
+    case PimDataType::PIM_INT16:
+    case PimDataType::PIM_INT32:
+    case PimDataType::PIM_INT64:
+      cmd = std::make_unique<pimCmdReduction<int64_t>>(cmdType, src, sum, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_UINT8:
+    case PimDataType::PIM_UINT16:
+    case PimDataType::PIM_UINT32:
+    case PimDataType::PIM_UINT64:
+      cmd = std::make_unique<pimCmdReduction<uint64_t>>(cmdType, src, sum, idxBegin, idxEnd);
+      break;
+    case PimDataType::PIM_FP32:
+      cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, sum, idxBegin, idxEnd);
+      break;
+    default:
+      std::printf("PIM-Error: Unsupported datatype.\n");
+      return false;
+  }
   return m_device->executeCmd(std::move(cmd));
 }
 

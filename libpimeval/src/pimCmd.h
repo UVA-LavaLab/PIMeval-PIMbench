@@ -387,6 +387,7 @@ private:
 
 //! @class  pimCmdReductiom
 //! @brief  Pim CMD: Reduction non-ranged/ranged
+template <typename T>
 class pimCmdReduction : public pimCmd
 {
 public:
@@ -408,103 +409,9 @@ public:
 protected:
   PimObjId m_src;
   void* m_result;
-  std::vector<std::variant<int8_t, int16_t, int32_t, int64_t,
-                          uint8_t, uint16_t, uint32_t, uint64_t,
-                          float, double>> m_regionResult;
+  std::vector<T> m_regionResult;
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
-private:
-  template <typename T>
-  T getDefaultValue(PimCmdEnum cmdType) {
-    if (cmdType == PimCmdEnum::REDSUM || cmdType == PimCmdEnum::REDSUM_RANGE) {
-        return 0;
-    } else if (cmdType == PimCmdEnum::REDMIN || cmdType == PimCmdEnum::REDMIN_RANGE) {
-        return std::numeric_limits<T>::max();
-    } else if (cmdType == PimCmdEnum::REDMAX || cmdType == PimCmdEnum::REDMAX_RANGE) {
-        return std::numeric_limits<T>::lowest();
-    }
-    throw std::runtime_error("Unsupported command type.");
-  }
-
-  void initializeRegionResult(PimDataType dataType, PimCmdEnum cmdType, unsigned numRegions) {
-    switch (dataType) {
-    case PimDataType::PIM_INT8:
-        m_regionResult.resize(numRegions, getDefaultValue<int8_t>(cmdType));
-        break;
-    case PimDataType::PIM_INT16:
-        m_regionResult.resize(numRegions, getDefaultValue<int16_t>(cmdType));
-        break;
-    case PimDataType::PIM_INT32:
-        m_regionResult.resize(numRegions, getDefaultValue<int32_t>(cmdType));
-        break;
-    case PimDataType::PIM_INT64:
-        m_regionResult.resize(numRegions, getDefaultValue<int64_t>(cmdType));
-        break;
-    case PimDataType::PIM_UINT8:
-        m_regionResult.resize(numRegions, getDefaultValue<uint8_t>(cmdType));
-        break;
-    case PimDataType::PIM_UINT16:
-        m_regionResult.resize(numRegions, getDefaultValue<uint16_t>(cmdType));
-        break;
-    case PimDataType::PIM_UINT32:
-        m_regionResult.resize(numRegions, getDefaultValue<uint32_t>(cmdType));
-        break;
-    case PimDataType::PIM_UINT64:
-        m_regionResult.resize(numRegions, getDefaultValue<uint64_t>(cmdType));
-        break;
-    case PimDataType::PIM_FP32:
-        m_regionResult.resize(numRegions, getDefaultValue<float>(cmdType));
-        break;
-    default:
-        throw std::runtime_error("Unsupported data type.");
-    }
-  }
-
-  template <typename T>
-  void assignResult(PimCmdEnum cmdType, T value, unsigned index) {
-    if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-      m_regionResult[index] =  std::get<T>(m_regionResult[index]) + value;
-    } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-      m_regionResult[index] = std::get<T>(m_regionResult[index]) > value ? value : m_regionResult[index];
-    } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-      m_regionResult[index] = std::get<T>(m_regionResult[index]) < value ? value : m_regionResult[index];
-    }
-  }
-
-  void computeResult(PimCmdEnum cmdType, PimDataType dataType, unsigned regionID, uint64_t operandBits) {
-    switch (dataType) {
-    case PimDataType::PIM_INT8:
-        assignResult<int8_t>(cmdType, pimUtils::signExt(operandBits, dataType), regionID);
-        break;
-    case PimDataType::PIM_INT16:
-        assignResult<int16_t>(cmdType, pimUtils::signExt(operandBits, dataType), regionID);
-        break;
-    case PimDataType::PIM_INT32:
-        assignResult<int32_t>(cmdType, pimUtils::signExt(operandBits, dataType), regionID);
-        break;
-    case PimDataType::PIM_INT64:
-        assignResult<int64_t>(cmdType, pimUtils::signExt(operandBits, dataType), regionID);
-        break;
-    case PimDataType::PIM_UINT8:
-        assignResult<uint8_t>(cmdType, static_cast<uint8_t>(operandBits), regionID);
-        break;
-    case PimDataType::PIM_UINT16:
-        assignResult<uint16_t>(cmdType, static_cast<uint16_t>(operandBits), regionID);
-        break;
-    case PimDataType::PIM_UINT32:
-        assignResult<uint32_t>(cmdType, static_cast<uint32_t>(operandBits), regionID);
-        break;
-    case PimDataType::PIM_UINT64:
-        assignResult<uint64_t>(cmdType, static_cast<uint64_t>(operandBits), regionID);
-        break;
-    case PimDataType::PIM_FP32:
-        assignResult<float>(cmdType, pimUtils::castBitsToType<float>(operandBits), regionID);
-        break;
-    default:
-        throw std::runtime_error("Unsupported data type.");
-    }
-  }
-
 };
 
 //! @class  pimCmdBroadcast
