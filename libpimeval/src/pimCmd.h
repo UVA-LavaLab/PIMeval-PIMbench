@@ -397,9 +397,10 @@ public:
     assert(cmdType == PimCmdEnum::REDSUM || cmdType == PimCmdEnum::REDMIN || cmdType == PimCmdEnum::REDMAX);
   }
   pimCmdReduction(PimCmdEnum cmdType, PimObjId src, void* result, uint64_t idxBegin, uint64_t idxEnd)
-    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
+    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin)
   {
-    assert(cmdType == PimCmdEnum::REDSUM_RANGE || cmdType == PimCmdEnum::REDMIN_RANGE || cmdType == PimCmdEnum::REDMAX_RANGE);
+    assert(cmdType == PimCmdEnum::REDSUM || cmdType == PimCmdEnum::REDMIN || cmdType == PimCmdEnum::REDMAX || cmdType == PimCmdEnum::REDSUM_RANGE || cmdType == PimCmdEnum::REDMIN_RANGE || cmdType == PimCmdEnum::REDMAX_RANGE);
+    if (idxEnd) m_idxEnd = idxEnd;
   }
   virtual ~pimCmdReduction() {}
   virtual bool execute() override;

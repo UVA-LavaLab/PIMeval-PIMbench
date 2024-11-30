@@ -45,12 +45,12 @@ void testRedMin(PimDeviceEnum deviceType)
     status = pimCopyHostToDevice((void*)src.data(), obj);
     assert(status == PIM_OK);
 
-    uint64_t min = 0;
-    status = pimRedMin(obj, &min);
+    uint32_t min = std::numeric_limits<uint32_t>::max();
+    status = pimRedMin(obj, static_cast<void*>(&min));
     assert(status == PIM_OK);
 
-    uint64_t minRanged = 0;
-    status = pimRedMin(obj, &minRanged, idxBegin, idxEnd);
+    uint32_t minRanged = std::numeric_limits<uint32_t>::max();;
+    status = pimRedMin(obj, static_cast<void*>(&minRanged), idxBegin, idxEnd);
     assert(status == PIM_OK);
 
     std::cout << "Result: RedMin: PIM " << min << " expected " << expectedMin << std::endl;

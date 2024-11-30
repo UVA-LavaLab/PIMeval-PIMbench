@@ -45,11 +45,11 @@ void testRedMax(PimDeviceEnum deviceType)
     status = pimCopyHostToDevice((void*)src.data(), obj);
     assert(status == PIM_OK);
 
-    uint64_t max = 0;
+    uint64_t max = std::numeric_limits<uint32_t>::lowest();
     status = pimRedMax(obj, &max);
     assert(status == PIM_OK);
 
-    uint64_t maxRanged = 0;
+    uint64_t maxRanged = std::numeric_limits<uint32_t>::lowest();;
     status = pimRedMax(obj, &maxRanged, idxBegin, idxEnd);
     assert(status == PIM_OK);
 

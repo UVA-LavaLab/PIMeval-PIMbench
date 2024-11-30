@@ -102,26 +102,20 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       { 26, "pimMaxScalar"           },
       { 27, "pimScaledAdd"           },
       { 28, "pimPopCount"            },
-      { 29, "pimRedMinInt"           },
-      { 30, "pimRedMinUInt"          },
-      { 31, "pimRedMinRangedInt"     },
-      { 32, "pimRedMinRangedUInt"    },
-      { 33, "pimRedMaxInt"           },
-      { 34, "pimRedMaxUInt"          },
-      { 35, "pimRedMaxRangedInt"     },
-      { 36, "pimRedMaxRangedUInt"    },
-      { 37, "pimRedSumInt"           },
-      { 38, "pimRedSumUInt"          },
-      { 39, "pimRedSumRangedInt"     },
-      { 40, "pimRedSumRangedUInt"    },
-      { 41, "pimBroadcastInt"        },
-      { 42, "pimBroadcastUInt"       },
-      { 43, "pimRotateElementsRight" },
-      { 44, "pimRotateElementsLeft"  },
-      { 45, "pimShiftElementsRight"  },
-      { 46, "pimShiftElementsLeft"   },
-      { 47, "pimShiftBitsRight"      },
-      { 48, "pimShiftBitsLeft"       },
+      { 29, "pimRedMin"              },
+      { 30, "pimRedMinRanged"        },
+      { 31, "pimRedMax"              },
+      { 32, "pimRedMaxRanged"        },
+      { 33, "pimRedSum"              },
+      { 34, "pimRedSumRanged"        },
+      { 35, "pimBroadcastInt"        },
+      { 36, "pimBroadcastUInt"       },
+      { 37, "pimRotateElementsRight" },
+      { 38, "pimRotateElementsLeft"  },
+      { 39, "pimShiftElementsRight"  },
+      { 40, "pimShiftElementsLeft"   },
+      { 41, "pimShiftBitsRight"      },
+      { 42, "pimShiftBitsLeft"       },
   };
 
   // Running tests
@@ -142,7 +136,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
     }
 
     int64_t sumInt = 0;
-    uint64_t sumUInt = 0;
+    T min = std::numeric_limits<T>::max(), max = std::numeric_limits<T>::lowest();
     switch (testId) {
       case  0: status = pimAdd                  (objSrc1, objSrc2, objDest);            break;
       case  1: status = pimSub                  (objSrc1, objSrc2, objDest);            break;
@@ -173,26 +167,20 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       case 26: status = pimMaxScalar            (objSrc1, objDest, scalarVal);          break;
       case 27: status = pimScaledAdd            (objSrc1, objSrc2, objDest, scalarVal); break;
       case 28: status = pimPopCount             (objSrc1, objDest);                     break;
-      case 29: status = pimRedMinInt            (objSrc1, &sumInt);                     break;
-      case 30: status = pimRedMinUInt           (objSrc1, &sumUInt);                    break;
-      case 31: status = pimRedMinRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      case 32: status = pimRedMinRangedUInt     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
-      case 33: status = pimRedMaxInt            (objSrc1, &sumInt);                     break;
-      case 34: status = pimRedMaxUInt           (objSrc1, &sumUInt);                    break;
-      case 35: status = pimRedMaxRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      case 36: status = pimRedMaxRangedUInt     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;   
-      case 37: status = pimRedSumInt            (objSrc1, &sumInt);                     break;
-      case 38: status = pimRedSumUInt           (objSrc1, &sumUInt);                    break;
-      case 39: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      case 40: status = pimRedSumRangedUInt     (objSrc1, idxBegin, idxEnd, &sumUInt);  break;
-      case 41: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 42: status = pimBroadcastUInt        (objDest, scalarVal);                   break;
-      case 43: status = pimRotateElementsRight  (objDest);                              break;
-      case 44: status = pimRotateElementsLeft   (objDest);                              break;
-      case 45: status = pimShiftElementsRight   (objDest);                              break;
-      case 46: status = pimShiftElementsLeft    (objDest);                              break;
-      case 47: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
-      case 48: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
+      case 29: status = pimRedMin               (objSrc1, static_cast<void*>(&min));    break;
+      case 30: status = pimRedMin               (objSrc1, static_cast<void*>(&min), idxBegin, idxEnd);      break;
+      case 31: status = pimRedMax               (objSrc1, static_cast<void*>(&max));                     break;
+      case 32: status = pimRedMax               (objSrc1, static_cast<void*>(&max), idxBegin, idxEnd);                    break;   
+      case 33: status = pimRedSum               (objSrc1, static_cast<void*>(&sumInt));                     break;
+      case 34: status = pimRedSum               (objSrc1, static_cast<void*>(&sumInt), idxBegin, idxEnd);            break;
+      case 35: status = pimBroadcastInt         (objDest, scalarValInt);                break;
+      case 36: status = pimBroadcastUInt        (objDest, scalarVal);                   break;
+      case 37: status = pimRotateElementsRight  (objDest);                              break;
+      case 38: status = pimRotateElementsLeft   (objDest);                              break;
+      case 39: status = pimShiftElementsRight   (objDest);                              break;
+      case 40: status = pimShiftElementsLeft    (objDest);                              break;
+      case 41: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
+      case 42: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
       default: assert(0);
     }
     assert(status == PIM_OK);
@@ -208,54 +196,33 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
     }
 
     // Verify results
-    if (testName == "pimRedMinInt" || testName == "pimRedMinRangedInt") {
-      uint64_t begin = (testName == "pimRedMinInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedMinInt" ? numElements : idxEnd);
+    if (testName == "pimRedMin" || testName == "pimRedMinRanged") {
+      uint64_t begin = (testName == "pimRedMin" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedMin" ? numElements : idxEnd);
       T sumIntExpected = vecSrc1[begin];
       for (uint64_t i = begin+1; i < end; ++i) {
         sumIntExpected = sumIntExpected > vecSrc1[i] ? vecSrc1[i] : sumIntExpected;
       }
-      assert(sumInt == sumIntExpected);
-    } else if (testName == "pimRedMinUInt" || testName == "pimRedMinRangedUInt") {
-      uint64_t begin = (testName == "pimRedMinUInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedMinUInt" ? numElements : idxEnd);
+      assert(min == sumIntExpected);
+      std::cout << "[PASS] " << category << " " << testName << std::endl;
+    } else if (testName == "pimRedMax" || testName == "pimRedMaxRanged") {
+      uint64_t begin = (testName == "pimRedMax" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedMax" ? numElements : idxEnd);
       T sumIntExpected = vecSrc1[begin];
-      for (uint64_t i = begin+1; i < end; ++i) {
-        sumIntExpected = sumIntExpected > vecSrc1[i] ? vecSrc1[i] : sumIntExpected;
-      }
-      assert(sumUInt == sumIntExpected);
-    } else if (testName == "pimRedMaxInt" || testName == "pimRedMaxRangedInt") {
-      uint64_t begin = (testName == "pimRedMaxInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedMaxInt" ? numElements : idxEnd);
-      T sumIntExpected = vecSrc1[begin];
-      for (uint64_t i = begin; i < end; ++i) {
+      for (uint64_t i = begin + 1; i < end; ++i) {
         sumIntExpected = sumIntExpected < vecSrc1[i] ? vecSrc1[i] : sumIntExpected;
       }
-      assert(sumInt == sumIntExpected);
-    } else if (testName == "pimRedMaxUInt" || testName == "pimRedMaxRangedUInt") {
-      uint64_t begin = (testName == "pimRedMaxUInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedMaxUInt" ? numElements : idxEnd);
-      T sumIntExpected = vecSrc1[begin];
-      for (uint64_t i = begin; i < end; ++i) {
-        sumIntExpected = sumIntExpected < vecSrc1[i] ? vecSrc1[i] : sumIntExpected;
-      }
-      assert(sumUInt == sumIntExpected);
-    } else if (testName == "pimRedSumInt" || testName == "pimRedSumRangedInt") {
-      uint64_t begin = (testName == "pimRedSumInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumInt" ? numElements : idxEnd);
+      assert(max == sumIntExpected);
+      std::cout << "[PASS] " << category << " " << testName << std::endl;
+    } else if (testName == "pimRedSum" || testName == "pimRedSumRanged") {
+      uint64_t begin = (testName == "pimRedSum" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedSum" ? numElements : idxEnd);
       int64_t sumIntExpected = 0;
       for (uint64_t i = begin; i < end; ++i) {
         sumIntExpected += vecSrc1[i];
       }
       assert(sumInt == sumIntExpected);
-    } else if (testName == "pimRedSumUInt" || testName == "pimRedSumRangedUInt") {
-      uint64_t begin = (testName == "pimRedSumUInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumUInt" ? numElements : idxEnd);
-      uint64_t sumUIntExpected = 0;
-      for (uint64_t i = begin; i < end; ++i) {
-        sumUIntExpected += vecSrc1[i];
-      }
-      assert(sumUInt == sumUIntExpected);
+      std::cout << "[PASS] " << category << " " << testName << std::endl;
     } else {
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
@@ -298,20 +265,14 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
           case 32: assert(0); break; // pimRedSumRangedUInt
           case 33: assert(0); break; // pimRedSumInt
           case 34: assert(0); break; // pimRedSumUInt
-          case 35: assert(0); break; // pimRedSumRangedInt
-          case 36: assert(0); break; // pimRedSumRangedUInt
-          case 37: assert(0); break; // pimRedSumInt
-          case 38: assert(0); break; // pimRedSumUInt
-          case 39: assert(0); break; // pimRedSumRangedInt
-          case 40: assert(0); break; // pimRedSumRangedUInt
-          case 41: expected = valInt; break; // pimBroadcastInt
-          case 42: expected = val;    break; // pimBroadcastUInt
-          case 43: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
-          case 44: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
-          case 45: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight
-          case 46: expected = (i == numElements - 1 ? 0 : vecSrc1[i + 1]);               break; // pimShiftElementsLeft
-          case 47: expected = vecSrc1[i] >> shiftAmount; break; // pimShiftBitsRight
-          case 48: expected = vecSrc1[i] << shiftAmount; break; // pimShiftBitsLeft
+          case 35: expected = valInt; break; // pimBroadcastInt
+          case 36: expected = val;    break; // pimBroadcastUInt
+          case 37: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
+          case 38: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
+          case 39: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight
+          case 40: expected = (i == numElements - 1 ? 0 : vecSrc1[i + 1]);               break; // pimShiftElementsLeft
+          case 41: expected = vecSrc1[i] >> shiftAmount; break; // pimShiftBitsRight
+          case 42: expected = vecSrc1[i] << shiftAmount; break; // pimShiftBitsLeft
           default: assert(0);
         }
         if (vecDest[i] != expected) {

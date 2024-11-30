@@ -52,11 +52,11 @@ void testRedSum(PimDeviceEnum deviceType)
     status = pimCopyHostToDevice((void*)src.data(), obj);
     assert(status == PIM_OK);
     uint64_t sum = 0;
-    status = pimRedSumUInt(obj, &sum);
+    status = pimRedSum(obj, static_cast<void*>(&sum));
     assert(status == PIM_OK);
 
     uint64_t sumRanged = 0;
-    status = pimRedSumRangedUInt(obj, idxBegin, idxEnd, &sumRanged);
+    status = pimRedSum(obj, static_cast<void*>(&sumRanged), idxBegin, idxEnd);
     assert(status == PIM_OK);
 
     std::cout << "Result: RedSum: PIM " << sum << " expected 32-bit " << sum32 << " 64-bit " << sum64 << std::endl;

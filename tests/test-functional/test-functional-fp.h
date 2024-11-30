@@ -104,15 +104,15 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       { 27, "pimScaledAdd"           },
       //{ 28, "pimPopCount"            }, // not supported
       //{ 29, "pimRedSumInt"           }, // not supported
-      { 30, "pimRedSumFP"          },
+      { 29, "pimRedSumFP32"          },
       //{ 31, "pimRedSumRangedInt"     }, // not supported
-      { 32, "pimRedSumRangedFP"    },
+      { 30, "pimRedSumRangedFP32"    },
       //{ 33, "pimBroadcastInt"        }, // not supported
-      { 34, "pimBroadcastFP"       },
-      { 35, "pimRotateElementsRight" },
-      { 36, "pimRotateElementsLeft"  },
-      { 37, "pimShiftElementsRight"  },
-      { 38, "pimShiftElementsLeft"   },
+      { 32, "pimBroadcastFP32"       },
+      { 33, "pimRotateElementsRight" },
+      { 34, "pimRotateElementsLeft"  },
+      { 35, "pimShiftElementsRight"  },
+      { 36, "pimShiftElementsLeft"   },
       //{ 39, "pimShiftBitsRight"      }, // not supported
       //{ 40, "pimShiftBitsLeft"       }, // not supported
   };
@@ -134,8 +134,6 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       assert(status == PIM_OK);
     }
 
-    int64_t sumInt = 0;
-    uint64_t sumUInt = 0;
     float sumFP32 = 0.0f;
     switch (testId) {
       case  0: status = pimAdd                  (objSrc1, objSrc2, objDest);            break;
@@ -167,16 +165,14 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 26: status = pimMaxScalar            (objSrc1, objDest, scalarVal);          break;
       case 27: status = pimScaledAdd            (objSrc1, objSrc2, objDest, scalarVal); break;
       case 28: status = pimPopCount             (objSrc1, objDest);                     break;
-      case 29: status = pimRedSumInt            (objSrc1, &sumInt);                     break;
-      case 30: status = pimRedSumFP           (objSrc1, &sumFP32);                    break;
-      case 31: status = pimRedSumRangedInt      (objSrc1, idxBegin, idxEnd, &sumInt);   break;
-      case 32: status = pimRedSumRangedFP     (objSrc1, idxBegin, idxEnd, &sumFP32);  break;
-      case 33: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 34: status = pimBroadcastFP          (objDest, scalarValFloat);            break;
-      case 35: status = pimRotateElementsRight  (objDest);                              break;
-      case 36: status = pimRotateElementsLeft   (objDest);                              break;
-      case 37: status = pimShiftElementsRight   (objDest);                              break;
-      case 38: status = pimShiftElementsLeft    (objDest);                              break;
+      case 29: status = pimRedSum               (objSrc1, static_cast<void*>(&sumFP32));                    break;
+      case 30: status = pimRedSum               (objSrc1, static_cast<void*>(&sumFP32), idxBegin, idxEnd);   break;
+      case 31: status = pimBroadcastInt         (objDest, scalarValInt);                break;
+      case 32: status = pimBroadcastFP32          (objDest, scalarValFloat);            break;
+      case 33: status = pimRotateElementsRight  (objDest);                              break;
+      case 34: status = pimRotateElementsLeft   (objDest);                              break;
+      case 35: status = pimShiftElementsRight   (objDest);                              break;
+      case 36: status = pimShiftElementsLeft    (objDest);                              break;
       // case 39: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
       // case 40: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
       default: assert(0);
@@ -194,25 +190,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
     }
 
     // Verify results
-    if (testName == "pimRedSumInt" || testName == "pimRedSumRangedInt") {
-      uint64_t begin = (testName == "pimRedSumInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumInt" ? numElements : idxEnd);
-      int64_t sumIntExpected = 0;
-      for (uint64_t i = begin; i < end; ++i) {
-        sumIntExpected += vecSrc1[i];
-      }
-      assert(sumInt == sumIntExpected);
-    } else if (testName == "pimRedSumUInt" || testName == "pimRedSumRangedUInt") {
-      uint64_t begin = (testName == "pimRedSumUInt" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumUInt" ? numElements : idxEnd);
-      uint64_t sumUIntExpected = 0;
-      for (uint64_t i = begin; i < end; ++i) {
-        sumUIntExpected += vecSrc1[i];
-      }
-      assert(sumUInt == sumUIntExpected);
-    } else if (testName == "pimRedSumFP" || testName == "pimRedSumRangedFP") {
-      uint64_t begin = (testName == "pimRedSumFP" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumFP" ? numElements : idxEnd);
+    if (testName == "pimRedSumFP32" || testName == "pimRedSumRangedFP32") {
+      uint64_t begin = (testName == "pimRedSumFP32" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedSumFP32" ? numElements : idxEnd);
       float sumFP32Expected = 0.0f;
       for (uint64_t i = begin; i < end; ++i) {
         sumFP32Expected += vecSrc1[i];

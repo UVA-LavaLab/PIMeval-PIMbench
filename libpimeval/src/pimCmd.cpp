@@ -73,6 +73,10 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::MAX_SCALAR, "max_scalar" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
+    { PimCmdEnum::REDMIN, "redmin" },
+    { PimCmdEnum::REDMIN_RANGE, "redmin_range" },
+    { PimCmdEnum::REDMAX, "redmax" },
+    { PimCmdEnum::REDMAX_RANGE, "redmax_range" },
     { PimCmdEnum::ROTATE_ELEM_R, "rotate_elem_r" },
     { PimCmdEnum::ROTATE_ELEM_L, "rotate_elem_l" },
     { PimCmdEnum::SHIFT_ELEM_R, "shift_elem_r" },
@@ -573,10 +577,6 @@ pimCmdReduction<T>::sanityCheck() const
     std::printf("PIM-Error: The beginning of the reduction range for PIM object ID %d is greater than the number of elements\n", m_src);
     return false;
   }
-  if (m_idxEnd > numElements) {
-    std::printf("PIM-Error: The end of the reduction range for PIM object ID %d is greater than the number of elements\n", m_src);
-    return false;
-  }
   if (m_idxEnd < m_idxBegin) {
     std::printf("PIM-Error: The end index of the reduction range for PIM object ID %d is less than the start index\n", m_src);
     return false;
@@ -615,21 +615,24 @@ pimCmdReduction<T>::execute()
   }
 
   computeAllRegions(numRegions);
-
+  
   //reduction
   for (unsigned i = 0; i < numRegions; ++i) {
+    // std::cout << "Region: " << i << ": " << static_cast<int64_t>(m_regionResult[i]) << "\n";
     if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
         if (std::is_integral_v<T> && std::is_signed_v<T>) {
-            *static_cast<int64_t*>(m_result) += static_cast<int64_t>(m_regionResult[i]);
+          // std::cout << "Region: " << i << ": " << m_regionResult[i] << "\t" << *static_cast<int64_t*>(m_result) << "\n";
+          *static_cast<int64_t*>(m_result) += static_cast<int64_t>(m_regionResult[i]);
         } else if (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-            *static_cast<uint64_t*>(m_result) += static_cast<uint64_t>(m_regionResult[i]);
+          // std::cout << "Region: " << i << ": " << m_regionResult[i] << "\t" << *static_cast<uint64_t*>(m_result) << "\n";
+          *static_cast<uint64_t*>(m_result) += static_cast<uint64_t>(m_regionResult[i]);
         } else {
             *static_cast<float*>(m_result) += static_cast<float>(m_regionResult[i]);
         }
     } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-        *static_cast<T*>(m_result) = *static_cast<T*>(m_result) > m_regionResult[i] ? m_regionResult[i] : *static_cast<T*>(m_result);
+        *static_cast<T*>(m_result) = *static_cast<T*>(m_result) > static_cast<T>(m_regionResult[i]) ? static_cast<T>(m_regionResult[i]) : *static_cast<T*>(m_result);
     } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-        *static_cast<T*>(m_result) = *static_cast<T*>(m_result) < m_regionResult[i] ? m_regionResult[i] : *static_cast<T*>(m_result);
+        *static_cast<T*>(m_result) = *static_cast<T*>(m_result) < static_cast<T>(m_regionResult[i]) ? static_cast<T>(m_regionResult[i]) : *static_cast<T*>(m_result);
     }
   }
 
@@ -652,6 +655,7 @@ pimCmdReduction<T>::computeRegion(unsigned index)
       bool isFP = (dataType == PIM_FP32);
       if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
+        // std::cout << static_cast<int64_t>(integerOperand) << "\n";
         if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
           m_regionResult[index] += integerOperand;
         } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
