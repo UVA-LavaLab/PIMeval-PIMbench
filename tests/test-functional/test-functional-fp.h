@@ -168,7 +168,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 29: status = pimRedSum               (objSrc1, static_cast<void*>(&sumFP32));                    break;
       case 30: status = pimRedSum               (objSrc1, static_cast<void*>(&sumFP32), idxBegin, idxEnd);   break;
       case 31: status = pimBroadcastInt         (objDest, scalarValInt);                break;
-      case 32: status = pimBroadcastFP32          (objDest, scalarValFloat);            break;
+      case 32: status = pimBroadcastFP          (objDest, scalarValFloat);            break;
       case 33: status = pimRotateElementsRight  (objDest);                              break;
       case 34: status = pimRotateElementsLeft   (objDest);                              break;
       case 35: status = pimShiftElementsRight   (objDest);                              break;
