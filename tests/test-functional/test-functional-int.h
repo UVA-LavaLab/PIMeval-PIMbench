@@ -135,7 +135,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       assert(status == PIM_OK);
     }
 
-    int64_t sumInt = 0;
+    uint64_t sumInt = 0;
     T min = std::numeric_limits<T>::max(), max = std::numeric_limits<T>::lowest();
     switch (testId) {
       case  0: status = pimAdd                  (objSrc1, objSrc2, objDest);            break;

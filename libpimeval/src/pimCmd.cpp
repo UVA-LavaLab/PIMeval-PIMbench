@@ -23,12 +23,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <climits>
-#include <numeric>
 #include <cmath>
-#include <numeric>
-#include <climits>
-#include <algorithm>  // for std::min_element and std::max_element
-#include <limits>     // for std::numeric_limits
 
 //! @brief  Get PIM command name from command type enum
 std::string
@@ -618,13 +613,10 @@ pimCmdReduction<T>::execute()
   
   //reduction
   for (unsigned i = 0; i < numRegions; ++i) {
-    // std::cout << "Region: " << i << ": " << static_cast<int64_t>(m_regionResult[i]) << "\n";
     if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
         if (std::is_integral_v<T> && std::is_signed_v<T>) {
-          // std::cout << "Region: " << i << ": " << m_regionResult[i] << "\t" << *static_cast<int64_t*>(m_result) << "\n";
           *static_cast<int64_t*>(m_result) += static_cast<int64_t>(m_regionResult[i]);
         } else if (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-          // std::cout << "Region: " << i << ": " << m_regionResult[i] << "\t" << *static_cast<uint64_t*>(m_result) << "\n";
           *static_cast<uint64_t*>(m_result) += static_cast<uint64_t>(m_regionResult[i]);
         } else {
             *static_cast<float*>(m_result) += static_cast<float>(m_regionResult[i]);
@@ -655,7 +647,6 @@ pimCmdReduction<T>::computeRegion(unsigned index)
       bool isFP = (dataType == PIM_FP32);
       if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
-        // std::cout << static_cast<int64_t>(integerOperand) << "\n";
         if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
           m_regionResult[index] += integerOperand;
         } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
