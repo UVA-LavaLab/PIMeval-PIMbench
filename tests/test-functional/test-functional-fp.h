@@ -104,9 +104,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       { 27, "pimScaledAdd"           },
       //{ 28, "pimPopCount"            }, // not supported
       //{ 29, "pimRedSumInt"           }, // not supported
-      { 29, "pimRedSumFP32"          },
+      { 29, "pimRedSum"          },
       //{ 31, "pimRedSumRangedInt"     }, // not supported
-      { 30, "pimRedSumRangedFP32"    },
+      { 30, "pimRedSumRanged"    },
       //{ 33, "pimBroadcastInt"        }, // not supported
       { 32, "pimBroadcastFP32"       },
       { 33, "pimRotateElementsRight" },
@@ -190,9 +190,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
     }
 
     // Verify results
-    if (testName == "pimRedSumFP32" || testName == "pimRedSumRangedFP32") {
-      uint64_t begin = (testName == "pimRedSumFP32" ? 0 : idxBegin);
-      uint64_t end = (testName == "pimRedSumFP32" ? numElements : idxEnd);
+    if (testName == "pimRedSum" || testName == "pimRedSumRanged") {
+      uint64_t begin = (testName == "pimRedSum" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedSum" ? numElements : idxEnd);
       float sumFP32Expected = 0.0f;
       for (uint64_t i = begin; i < end; ++i) {
         sumFP32Expected += vecSrc1[i];
@@ -240,14 +240,12 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 28: expected = std::bitset<sizeof(T) * 8>(vecSrc1[i]).count(); break; // pimPopCount
           case 29: assert(0); break; // pimRedSumInt
           case 30: assert(0); break; // pimRedSumFP
-          case 31: assert(0); break; // pimRedSumRangedInt
-          case 32: assert(0); break; // pimRedSumRangedFP
-          case 33: expected = valInt; break; // pimBroadcastInt
-          case 34: expected = val;    break; // pimBroadcastFP
-          case 35: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
-          case 36: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
-          case 37: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight
-          case 38: expected = (i == numElements - 1 ? 0 : vecSrc1[i + 1]);               break; // pimShiftElementsLeft
+          case 31: expected = valInt; break; // pimBroadcastInt
+          case 32: expected = val;    break; // pimBroadcastFP
+          case 33: expected = (i == 0 ? vecSrc1.back() : vecSrc1[i - 1]);                break; // pimRotateElementsRight
+          case 34: expected = (i == numElements - 1 ? vecSrc1.front() : vecSrc1[i + 1]); break; // pimRotateElementsLeft
+          case 35: expected = (i == 0 ? 0 : vecSrc1[i - 1]);                             break; // pimShiftElementsRight
+          case 36: expected = (i == numElements - 1 ? 0 : vecSrc1[i + 1]);               break; // pimShiftElementsLeft
           //case 39: expected = vecSrc1[i] >> shiftAmount; break; // pimShiftBitsRight
           //case 40: expected = vecSrc1[i] << shiftAmount; break; // pimShiftBitsLeft
           default: assert(0);

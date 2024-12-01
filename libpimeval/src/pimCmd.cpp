@@ -644,7 +644,7 @@ pimCmdReduction<T>::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
-      bool isFP = (dataType == PIM_FP32);
+      bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
       if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
         if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
