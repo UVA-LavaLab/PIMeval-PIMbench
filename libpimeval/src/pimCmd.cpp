@@ -643,32 +643,44 @@ pimCmdReduction<T>::computeRegion(unsigned index)
 
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
-      uint64_t operandBits = objSrc.getElementBits(currIdx);
-      bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
-      if (!isFP) {
-        T integerOperand = pimUtils::signExt(operandBits, dataType);
-        if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-          m_regionResult[index] += integerOperand;
-        } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-          m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
-        } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-          m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
+        uint64_t operandBits = objSrc.getElementBits(currIdx);
+        bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
+        bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
+        bool isUnsigned = (dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
+
+        if (!isFP) {
+            T integerOperand;
+            if (isSigned) {
+                integerOperand = pimUtils::signExt(operandBits, dataType);
+            } else if (isUnsigned) {
+                integerOperand = static_cast<T>(operandBits);
+            } else {
+                assert(0); // Unexpected data type
+            }
+
+            if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+                m_regionResult[index] += integerOperand;
+            } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
+                m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
+            } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
+                m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
+            }
+        } else if (isFP) {
+            float floatOperand = pimUtils::castBitsToType<float>(operandBits);
+            if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
+                m_regionResult[index] += floatOperand;
+            } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
+                m_regionResult[index] = m_regionResult[index] > floatOperand ? floatOperand : m_regionResult[index];
+            } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
+                m_regionResult[index] = m_regionResult[index] < floatOperand ? floatOperand : m_regionResult[index];
+            }
+        } else {
+            assert(0); // Unexpected data type
         }
-      } else if (isFP) {
-        float floatOperand = pimUtils::castBitsToType<float>(operandBits);
-        if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-          m_regionResult[index] += floatOperand;
-        } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-          m_regionResult[index] = m_regionResult[index] > floatOperand ? floatOperand : m_regionResult[index];
-        } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-          m_regionResult[index] = m_regionResult[index] < floatOperand ? floatOperand : m_regionResult[index];
-        }
-      } else {
-        assert(0); // todo: data type
-      }
     }
     currIdx += 1;
-  }
+}
+
   return true;
 }
 
