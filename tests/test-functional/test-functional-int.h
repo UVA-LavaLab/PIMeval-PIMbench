@@ -221,7 +221,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       for (uint64_t i = begin; i < end; ++i) {
         sumIntExpected += vecSrc1[i];
       }
-      assert(sumInt == sumIntExpected);
+      assert(static_cast<int64_t>(sumInt) == sumIntExpected);
       std::cout << "[PASS] " << category << " " << testName << std::endl;
     } else {
       int numError = 0;
