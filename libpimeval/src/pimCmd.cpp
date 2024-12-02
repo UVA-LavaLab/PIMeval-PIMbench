@@ -172,18 +172,20 @@ pimCmdCopy::execute()
     }
   }
 
-  if (m_cmdType == PimCmdEnum::COPY_H2D) {
-    pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
-    objDest.copyFromHost(m_ptr, m_idxBegin, m_idxEnd);
-  } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
-    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    objSrc.copyToHost(m_ptr, m_idxBegin, m_idxEnd);
-  } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
-    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
-    objSrc.copyToObj(objDest, m_idxBegin, m_idxEnd);
-  } else {
-    assert(0);
+  if (!pimSim::get()->isAnalysisMode()) {
+    if (m_cmdType == PimCmdEnum::COPY_H2D) {
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objDest.copyFromHost(m_ptr, m_idxBegin, m_idxEnd);
+    } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
+      const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+      objSrc.copyToHost(m_ptr, m_idxBegin, m_idxEnd);
+    } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
+      const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objSrc.copyToObj(objDest, m_idxBegin, m_idxEnd);
+    } else {
+      assert(0);
+    }
   }
 
   // for non-functional simulation, sync dest data to simulated memory
