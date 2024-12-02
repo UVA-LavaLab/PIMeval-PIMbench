@@ -113,6 +113,10 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       { 34, "pimRotateElementsLeft"  },
       { 35, "pimShiftElementsRight"  },
       { 36, "pimShiftElementsLeft"   },
+      { 37, "pimRedMin"              },
+      { 38, "pimRedMinRanged"        },
+      { 39, "pimRedMax"              },
+      { 40, "pimRedMaxRanged"        },
       //{ 39, "pimShiftBitsRight"      }, // not supported
       //{ 40, "pimShiftBitsLeft"       }, // not supported
   };
@@ -134,6 +138,8 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       assert(status == PIM_OK);
     }
 
+    T min = std::numeric_limits<T>::max();
+    T max = std::numeric_limits<T>::lowest();
     float sumFP32 = 0.0f;
     switch (testId) {
       case  0: status = pimAdd                  (objSrc1, objSrc2, objDest);            break;
@@ -173,6 +179,10 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 34: status = pimRotateElementsLeft   (objDest);                              break;
       case 35: status = pimShiftElementsRight   (objDest);                              break;
       case 36: status = pimShiftElementsLeft    (objDest);                              break;
+      case 37: status = pimRedMin(objSrc1, static_cast<void*>(&min));                   break;
+      case 38: status = pimRedMin(objSrc1, static_cast<void*>(&min), idxBegin, idxEnd); break;
+      case 39: status = pimRedMax(objSrc1, static_cast<void*>(&max));                   break;
+      case 40: status = pimRedMax(objSrc1, static_cast<void*>(&max), idxBegin, idxEnd); break;
       // case 39: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
       // case 40: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
       default: assert(0);
@@ -190,7 +200,34 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
     }
 
     // Verify results
-    if (testName == "pimRedSum" || testName == "pimRedSumRanged") {
+    // Validation for redMin and redMax
+    if (testName == "pimRedMin" || testName == "pimRedMinRanged") {
+      uint64_t begin = (testName == "pimRedMin" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedMin" ? numElements : idxEnd);
+      T minExpected = vecSrc1[begin];
+      for (uint64_t i = begin + 1; i < end; ++i) {
+        minExpected = std::min(minExpected, vecSrc1[i]);
+      }
+      if (!fuzzyEqualPercent(min, minExpected)) {
+        std::cout << "Large FP reduction min error: Result: " << min 
+                  << " Expected: " << minExpected << std::endl;
+        assert(0);
+      }
+      std::cout << "[PASS] " << category << " " << testName << std::endl;
+    } else if (testName == "pimRedMax" || testName == "pimRedMaxRanged") {
+      uint64_t begin = (testName == "pimRedMax" ? 0 : idxBegin);
+      uint64_t end = (testName == "pimRedMax" ? numElements : idxEnd);
+      T maxExpected = vecSrc1[begin];
+      for (uint64_t i = begin + 1; i < end; ++i) {
+        maxExpected = std::max(maxExpected, vecSrc1[i]);
+      }
+      if (!fuzzyEqualPercent(max, maxExpected)) {
+        std::cout << "Large FP reduction max error: Result: " << max 
+                  << " Expected: " << maxExpected << std::endl;
+        assert(0);
+      }
+      std::cout << "[PASS] " << category << " " << testName << std::endl;
+    } else if (testName == "pimRedSum" || testName == "pimRedSumRanged") {
       uint64_t begin = (testName == "pimRedSum" ? 0 : idxBegin);
       uint64_t end = (testName == "pimRedSum" ? numElements : idxEnd);
       float sumFP32Expected = 0.0f;
