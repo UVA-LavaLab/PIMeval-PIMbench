@@ -134,6 +134,10 @@ pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
 bool
 pimCmd::computeAllRegions(unsigned numRegions)
 {
+  // skip PIM computation in analysis mode
+  if (pimSim::get()->isAnalysisMode()) {
+    return true;
+  }
   if (pimSim::get()->getNumThreads() > 1) { // MT
     std::vector<pimUtils::threadWorker*> workers;
     for (unsigned i = 0; i < numRegions; ++i) {

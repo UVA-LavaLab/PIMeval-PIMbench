@@ -83,6 +83,22 @@ pimSim::init(const std::string& simConfigFileConetnt)
       m_statsMgr = std::make_unique<pimStatsMgr>();
       m_initCalled = true;
     }
+
+    // Common PIMeval simulator settings
+    // ENV-VAR: PIMEVAL_ANALYSIS_MODE = [0|1] - Set to 1 for fast perf and energy analysis
+    // Warning: In this mode, PIM computation will be skipped. Do not use this for result-dependent PIM algorithms.
+    std::string analysisMode;
+    bool hasEnvVar = pimUtils::getEnvVar(pimUtils::envVarPimEvalAnalysisMode, analysisMode);
+    if (hasEnvVar) {
+      std::printf("PIM-Info: Environment variable %s = %s\n", pimUtils::envVarPimEvalAnalysisMode, analysisMode.c_str());
+      if (analysisMode == "1") {
+        std::printf("PIM-Info: Enabled analysis only mode. Ignoring computation during performance and energy analysis.\n");
+        m_analysisMode = true;
+      } else {
+        std::printf("PIM-Info: Disabled analysis only mode.\n");
+        m_analysisMode = false;
+      }
+    }
   }
   return true;
 }
@@ -95,6 +111,7 @@ pimSim::uninit()
   m_statsMgr.reset();
   m_paramsDram.reset();
   m_initCalled = false;
+  m_analysisMode = false;
 }
 
 //! @brief  Determine num threads and init thread pool

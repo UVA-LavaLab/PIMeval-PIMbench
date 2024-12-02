@@ -188,6 +188,11 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
     status = pimCopyDeviceToHost(objDest, (void *)vecDest.data());
     assert(status == PIM_OK);
 
+    // Skip result verification in analysis mode
+    if (pimIsAnalysisMode()) {
+      continue;
+    }
+
     // Verify results
     if (testName == "pimRedSumInt" || testName == "pimRedSumRangedInt") {
       uint64_t begin = (testName == "pimRedSumInt" ? 0 : idxBegin);
