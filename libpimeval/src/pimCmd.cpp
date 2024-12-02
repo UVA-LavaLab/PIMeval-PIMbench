@@ -646,7 +646,6 @@ pimCmdReduction<T>::computeRegion(unsigned index)
         uint64_t operandBits = objSrc.getElementBits(currIdx);
         bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
         bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
-        bool isUnsigned = (dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
 
         if (!isFP) {
             T integerOperand;
