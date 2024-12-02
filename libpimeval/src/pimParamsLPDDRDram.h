@@ -23,8 +23,8 @@ public:
   int getDeviceWidth() const override { return m_deviceWidth;}
   int getBurstLength() const override { return m_BL;}
   int getNumChipsPerRank() const override {return m_busWidth / m_deviceWidth; }
-  double getNsRowRead() const override { return m_tCK * (m_tRCD + m_tRP); }
-  double getNsRowWrite() const override { return m_tCK * (m_tWR + m_tRP + m_tRCD); }
+  double getNsRowRead() const override { return m_tCK * (m_tRAS + m_tRP); }
+  double getNsRowWrite() const override { return m_tCK * (m_tRAS + m_tRCD); }
   double getNsTCCD_S() const override { return m_tCK * m_tCCD_S; }
   double getNsTCAS() const override { return m_tCK * m_CL; }
   double getNsAAP() const override { return m_tCK * (m_tRAS + m_tRP); }
