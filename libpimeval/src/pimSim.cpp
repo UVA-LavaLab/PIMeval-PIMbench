@@ -864,10 +864,10 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
     case PimDataType::PIM_UINT64:
       cmd = std::make_unique<pimCmdReduction<uint64_t>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
-    case PimDataType::PIM_FP32:
-    case PimDataType::PIM_FP16:
     case PimDataType::PIM_FP8:
+    case PimDataType::PIM_FP16:
     case PimDataType::PIM_BF16:
+    case PimDataType::PIM_FP32:
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
     default:
