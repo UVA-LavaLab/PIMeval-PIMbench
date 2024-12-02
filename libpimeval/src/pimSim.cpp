@@ -786,6 +786,9 @@ bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxE
     case PimDataType::PIM_UINT64:
       cmd = std::make_unique<pimCmdReduction<uint64_t>>(cmdType, src, min, idxBegin, idxEnd);
       break;
+    case PimDataType::PIM_FP8:
+    case PimDataType::PIM_FP16:
+    case PimDataType::PIM_BF16:
     case PimDataType::PIM_FP32:
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, min, idxBegin, idxEnd);
       break;
@@ -831,6 +834,9 @@ bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxE
     case PimDataType::PIM_UINT64:
       cmd = std::make_unique<pimCmdReduction<uint64_t>>(cmdType, src, max, idxBegin, idxEnd);
       break;
+    case PimDataType::PIM_FP8:
+    case PimDataType::PIM_FP16:
+    case PimDataType::PIM_BF16:
     case PimDataType::PIM_FP32:
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, max, idxBegin, idxEnd);
       break;
