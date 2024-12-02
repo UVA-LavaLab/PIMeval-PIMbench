@@ -652,10 +652,6 @@ pimCmdReduction<T>::computeRegion(unsigned index)
             T integerOperand;
             if (isSigned) {
                 integerOperand = pimUtils::signExt(operandBits, dataType);
-            } else if (isUnsigned) {
-                integerOperand = static_cast<T>(operandBits);
-            } else {
-                assert(0); // Unexpected data type
             }
 
             if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
