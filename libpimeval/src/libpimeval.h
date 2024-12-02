@@ -157,7 +157,6 @@ PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idx
 
 // Note: Reduction sum range is [idxBegin, idxEnd)
 
-PimStatus pimRedSumRangedFP32(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
 PimStatus pimBroadcastFP(PimObjId dest, float value);
