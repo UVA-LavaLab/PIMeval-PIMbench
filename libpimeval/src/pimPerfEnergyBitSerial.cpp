@@ -141,6 +141,9 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+  double logicDelay = m_pclNsDelay * 1e-6; // Convert ns to ms
+  double logicPower = m_pclUwPower * 1e-6; // Convert /muW to mW
+  double operationsPerElement = bitsPerElement / 64.0; // Assume 64-bit processing
 
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
@@ -183,6 +186,28 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     default:
       assert(0);
   }
+  /*
+  msRuntime=Read Latency+(Logic Delay * Bits Per Element×Max Elements Per Region) * NumPass
+  mjEnergy=(Access Energy + Logic Power * Max Elements Per Region×Bits Per Element) * Num Cores×NumPass
+  */
+  switch (cmdType) 
+  {
+        case PimCmdEnum::REDSUM:
+        case PimCmdEnum::REDSUM_RANGE:
+        case PimCmdEnum::REDMIN:
+        case PimCmdEnum::REDMIN_RANGE:
+        case PimCmdEnum::REDMAX:
+        case PimCmdEnum::REDMAX_RANGE:
+            msRuntime = m_tR + (logicDelay * maxElementsPerRegion * operationsPerElement) * numPass;
+            mjEnergy = m_eAP * numCore + (logicPower * maxElementsPerRegion * operationsPerElement * numCore);
+            mjEnergy *= numPass;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            break;
+        default:
+            std::cout << "PIM-Warning: Unsupported reduction command for bit-serial PIM: " 
+                      << pimCmd::getName(cmdType, "") << std::endl;
+            break;
+    }
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
