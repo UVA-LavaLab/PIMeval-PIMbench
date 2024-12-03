@@ -614,17 +614,26 @@ pimCmdReduction<T>::execute()
   //reduction
   for (unsigned i = 0; i < numRegions; ++i) {
     if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-        if (std::is_integral_v<T> && std::is_signed_v<T>) {
-          *static_cast<int64_t*>(m_result) += static_cast<int64_t>(m_regionResult[i]);
-        } else if (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-          *static_cast<uint64_t*>(m_result) += static_cast<uint64_t>(m_regionResult[i]);
-        } else {
-            *static_cast<float*>(m_result) += static_cast<float>(m_regionResult[i]);
-        }
-    } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-        *static_cast<T*>(m_result) = *static_cast<T*>(m_result) > static_cast<T>(m_regionResult[i]) ? static_cast<T>(m_regionResult[i]) : *static_cast<T*>(m_result);
-    } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-        *static_cast<T*>(m_result) = *static_cast<T*>(m_result) < static_cast<T>(m_regionResult[i]) ? static_cast<T>(m_regionResult[i]) : *static_cast<T*>(m_result);
+      if (std::is_integral_v<T> && std::is_signed_v<T>)
+      {
+        *static_cast<int64_t *>(m_result) += static_cast<int64_t>(m_regionResult[i]);
+      }
+      else if (std::is_integral_v<T> && std::is_unsigned_v<T>)
+      {
+        *static_cast<uint64_t *>(m_result) += static_cast<uint64_t>(m_regionResult[i]);
+      }
+      else
+      {
+        *static_cast<float *>(m_result) += static_cast<float>(m_regionResult[i]);
+      }
+    }
+    else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE)
+    {
+      *static_cast<T *>(m_result) = *static_cast<T *>(m_result) > static_cast<T>(m_regionResult[i]) ? static_cast<T>(m_regionResult[i]) : *static_cast<T *>(m_result);
+    }
+    else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE)
+    {
+      *static_cast<T *>(m_result) = *static_cast<T *>(m_result) < static_cast<T>(m_regionResult[i]) ? static_cast<T>(m_regionResult[i]) : *static_cast<T *>(m_result);
     }
   }
 
@@ -643,37 +652,54 @@ pimCmdReduction<T>::computeRegion(unsigned index)
 
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
-        uint64_t operandBits = objSrc.getElementBits(currIdx);
-        bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
-        bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
-
-        if (!isFP) {
-            T integerOperand;
-            if (isSigned) {
-                integerOperand = pimUtils::signExt(operandBits, dataType);
-            } else {
-                integerOperand = static_cast<T>(operandBits);
-            }
-
-            if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-                m_regionResult[index] += integerOperand;
-            } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-                m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
-            } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-                m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
-            }
-        } else if (isFP) {
-            float floatOperand = pimUtils::castBitsToType<float>(operandBits);
-            if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
-                m_regionResult[index] += floatOperand;
-            } else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE) {
-                m_regionResult[index] = m_regionResult[index] > floatOperand ? floatOperand : m_regionResult[index];
-            } else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE) {
-                m_regionResult[index] = m_regionResult[index] < floatOperand ? floatOperand : m_regionResult[index];
-            }
-        } else {
-            assert(0); // Unexpected data type
+      uint64_t operandBits = objSrc.getElementBits(currIdx);
+      bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
+      bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
+      if (!isFP)
+      {
+        T integerOperand;
+        if (isSigned)
+        {
+          integerOperand = pimUtils::signExt(operandBits, dataType);
         }
+        else
+        {
+          integerOperand = static_cast<T>(operandBits);
+        }
+
+        if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE)
+        {
+          m_regionResult[index] += integerOperand;
+        }
+        else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE)
+        {
+          m_regionResult[index] = m_regionResult[index] > integerOperand ? integerOperand : m_regionResult[index];
+        }
+        else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE)
+        {
+          m_regionResult[index] = m_regionResult[index] < integerOperand ? integerOperand : m_regionResult[index];
+        }
+      }
+      else if (isFP)
+      {
+        float floatOperand = pimUtils::castBitsToType<float>(operandBits);
+        if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE)
+        {
+          m_regionResult[index] += floatOperand;
+        }
+        else if (m_cmdType == PimCmdEnum::REDMIN || m_cmdType == PimCmdEnum::REDMIN_RANGE)
+        {
+          m_regionResult[index] = m_regionResult[index] > floatOperand ? floatOperand : m_regionResult[index];
+        }
+        else if (m_cmdType == PimCmdEnum::REDMAX || m_cmdType == PimCmdEnum::REDMAX_RANGE)
+        {
+          m_regionResult[index] = m_regionResult[index] < floatOperand ? floatOperand : m_regionResult[index];
+        }
+      }
+      else
+      {
+        assert(0); // Unexpected data type
+      }
     }
     currIdx += 1;
   }
