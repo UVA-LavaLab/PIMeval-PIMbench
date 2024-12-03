@@ -653,8 +653,6 @@ pimCmdReduction<T>::computeRegion(unsigned index)
                 integerOperand = pimUtils::signExt(operandBits, dataType);
             } else {
                 integerOperand = static_cast<T>(operandBits);
-            } else {
-                assert(0); // Unexpected data type
             }
 
             if (m_cmdType == PimCmdEnum::REDSUM || m_cmdType == PimCmdEnum::REDSUM_RANGE) {
@@ -678,8 +676,7 @@ pimCmdReduction<T>::computeRegion(unsigned index)
         }
     }
     currIdx += 1;
-}
-
+  }
   return true;
 }
 
