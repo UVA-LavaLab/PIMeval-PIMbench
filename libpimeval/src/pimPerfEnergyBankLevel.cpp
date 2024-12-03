@@ -149,7 +149,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bank-level PIM for reduction sum
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;

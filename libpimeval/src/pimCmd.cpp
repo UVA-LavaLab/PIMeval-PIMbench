@@ -736,7 +736,7 @@ pimCmdReduction<T>::updateStats() const
     numPass = objSrc.getMaxNumRegionsPerCore();
   }
 
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRedSum(m_cmdType, objSrc, numPass);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForReduction(m_cmdType, objSrc, numPass);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
