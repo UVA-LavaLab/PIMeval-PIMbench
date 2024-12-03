@@ -92,13 +92,16 @@ struct PimDeviceProperties {
 typedef int PimCoreId;
 typedef int PimObjId;
 
+// PIMeval simulation
+void pimShowStats();
+void pimResetStats();
+bool pimIsAnalysisMode();
+
 // Device creation and deletion
 PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
 PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
 PimStatus pimGetDeviceProperties(PimDeviceProperties* deviceProperties);
 PimStatus pimDeleteDevice();
-void pimShowStats();
-void pimResetStats();
 
 // Resource allocation and deletion
 PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);

@@ -55,6 +55,13 @@ pimResetStats()
   pimSim::get()->resetStats();
 }
 
+//! @brief  Is analysis mode. Call this after device creation
+bool
+pimIsAnalysisMode()
+{
+  return pimSim::get()->isAnalysisMode();
+}
+
 //! @brief  Allocate a PIM resource
 PimObjId
 pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
