@@ -15,12 +15,11 @@
 
 void testRedSum(PimDeviceEnum deviceType)
 {
-  // 8GB capacity
-  unsigned numRanks = 1;
-  unsigned numBankPerRank = 2;
-  unsigned numSubarrayPerBank = 4;
+  unsigned numRanks = 4;
+  unsigned numBankPerRank = 128; // 8 chips * 16 banks
+  unsigned numSubarrayPerBank = 32;
   unsigned numRows = 1024;
-  unsigned numCols = 1024;
+  unsigned numCols = 8192;
 
   uint64_t numElements = 65536;
   std::vector<unsigned> src(numElements);
@@ -83,6 +82,8 @@ int main()
   testRedSum(PIM_DEVICE_BITSIMD_V);
 
   testRedSum(PIM_DEVICE_FULCRUM);
+
+  testRedSum(PIM_DEVICE_BANK_LEVEL);
 
   return 0;
 }
