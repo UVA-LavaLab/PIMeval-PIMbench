@@ -8,6 +8,7 @@
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
 #include <iostream>
+#include <cmath> // For log2()
 
 
 //! @brief  Get performance and energy for bit-serial PIM
@@ -142,8 +143,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
   double logicDelay = m_pclNsDelay * 1e-6; // Convert ns to ms
-  double logicPower = m_pclUwPower * 1e-6; // Convert /muW to mW
-  double operationsPerElement = bitsPerElement / 64.0; // Assume 64-bit processing
+  double logicPower = m_pclUwPower * 1e-6; // Convert muW to mW
 
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
@@ -186,23 +186,31 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     default:
       assert(0);
   }
-  /*
-  msRuntime=Read Latency+(Logic Delay * Bits Per Element×Max Elements Per Region) * NumPass
-  mjEnergy=(Access Energy + Logic Power * Max Elements Per Region×Bits Per Element) * Num Cores×NumPass
-  */
-  switch (cmdType) 
-  {
+
+  switch (cmdType) {
         case PimCmdEnum::REDSUM:
         case PimCmdEnum::REDSUM_RANGE:
+        {
+          // Use existing summation logic
+            msRuntime = m_tR + (logicDelay * maxElementsPerRegion * (bitsPerElement / 64.0)) * numPass;
+            mjEnergy = m_eAP * numCore + (logicPower * maxElementsPerRegion * (bitsPerElement / 64.0) * numCore);
+            mjEnergy *= numPass;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            break;
+        }
+
         case PimCmdEnum::REDMIN:
         case PimCmdEnum::REDMIN_RANGE:
         case PimCmdEnum::REDMAX:
         case PimCmdEnum::REDMAX_RANGE:
-            msRuntime = m_tR + (logicDelay * maxElementsPerRegion * operationsPerElement) * numPass;
-            mjEnergy = m_eAP * numCore + (logicPower * maxElementsPerRegion * operationsPerElement * numCore);
-            mjEnergy *= numPass;
+        {
+          // Reduction tree approach for min/max
+            unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
+            msRuntime = levels * logicDelay * bitsPerElement * numPass;
+            mjEnergy = levels * logicPower * bitsPerElement * numCore * numPass;
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
             break;
+        }
         default:
             std::cout << "PIM-Warning: Unsupported reduction command for bit-serial PIM: " 
                       << pimCmd::getName(cmdType, "") << std::endl;
