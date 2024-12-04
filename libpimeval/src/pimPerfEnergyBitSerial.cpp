@@ -222,38 +222,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     default:
       assert(0);
   }
-
-  switch (cmdType) {
-        case PimCmdEnum::REDSUM:
-        case PimCmdEnum::REDSUM_RANGE:
-        {
-          // Use existing summation logic
-            msRuntime = m_tR + (logicDelay * maxElementsPerRegion * (bitsPerElement / 64.0)) * numPass;
-            mjEnergy = m_eAP * numCore + (logicPower * maxElementsPerRegion * (bitsPerElement / 64.0) * numCore);
-            mjEnergy *= numPass;
-            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-            break;
-        }
-
-        case PimCmdEnum::REDMIN:
-        case PimCmdEnum::REDMIN_RANGE:
-        case PimCmdEnum::REDMAX:
-        case PimCmdEnum::REDMAX_RANGE:
-        {
-          // Reduction tree approach for min/max
-          unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, PimCmdEnum::REDMIN, dataType, bitsPerElement, numPass, obj);
-          msRuntime =  perfEnergyBS.m_msRuntime * levels;
-          mjEnergy = perfEnergyBS.m_mjEnergy * levels;
-          mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-          break;
-        }
-        default:
-            std::cout << "PIM-Warning: Unsupported reduction command for bit-serial PIM: " 
-                      << pimCmd::getName(cmdType, "") << std::endl;
-            break;
-    }
-
+  
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
