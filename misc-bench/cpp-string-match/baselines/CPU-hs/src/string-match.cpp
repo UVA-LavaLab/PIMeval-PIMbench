@@ -104,6 +104,8 @@ void string_match_cpu(vector<string>& needles, string& haystack, vector<vector<u
   for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
     hs_database_t *database;
     hs_compile_error_t *compile_err;
+
+    // TODO: Replace with hs_compile_lit_multi
     if(hs_compile_lit(needles[needle_idx].c_str(), HS_FLAG_SOM_LEFTMOST, needles[needle_idx].size(), HS_MODE_BLOCK, NULL, &database, &compile_err) != HS_SUCCESS) {
         fprintf(stderr, "Hyperscan couldn't compile pattern, exiting\"%s\": %s\n", haystack.c_str(), compile_err->message);
         hs_free_compile_error(compile_err);
