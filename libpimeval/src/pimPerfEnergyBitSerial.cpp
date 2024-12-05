@@ -142,8 +142,6 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
-  double logicDelay = m_pclNsDelay * 1e-6; // Convert ns to ms
-  double logicPower = m_pclUwPower * 1e-6; // Convert muW to mW
 
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
