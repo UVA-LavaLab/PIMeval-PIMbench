@@ -753,8 +753,8 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
 
 //! @brief  Min reduction operation
 bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
-  if (idxBegin != idxEnd && idxBegin < idxEnd) pimPerfMon perfMon("pimRedMinRanged");
-  else pimPerfMon perfMon("pimRedMin");
+  std::string tag = (idxBegin != idxEnd && idxBegin < idxEnd) ? "pimRedMinRanged" : "pimRedMin";
+  pimPerfMon perfMon(tag);
   if (!isValidDevice()) { return false; }
   if (!min) { return false; }
 
@@ -802,8 +802,8 @@ bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxE
 
 //! @brief  Max reduction operation
 bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd) {
-  if (idxBegin != idxEnd && idxBegin < idxEnd) pimPerfMon perfMon("pimRedMaxRanged");
-  else pimPerfMon perfMon("pimRedMax");
+  std::string tag = (idxBegin != idxEnd && idxBegin < idxEnd) ? "pimRedMaxRanged" : "pimRedMax";
+  pimPerfMon perfMon(tag);
   if (!isValidDevice()) { return false; }
   if (!max) { return false; }
 
@@ -852,8 +852,8 @@ bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxE
 bool
 pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
 {
-  if (idxBegin != idxEnd && idxBegin < idxEnd) pimPerfMon perfMon("pimRedSumRanged");
-  else pimPerfMon perfMon("pimRedSum");
+  std::string tag = (idxBegin != idxEnd && idxBegin < idxEnd) ? "pimRedSumRanged" : "pimRedSum";
+  pimPerfMon perfMon(tag);
   if (!isValidDevice()) { return false; }
   if (!sum) { return false; }
 
