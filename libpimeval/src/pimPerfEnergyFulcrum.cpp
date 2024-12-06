@@ -149,7 +149,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
 
 //! @brief  Perf energy model of Fulcrum for reduction sum
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -158,16 +158,30 @@ pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInf
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
-  // read a row to walker, then reduce in serial
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
-  msRuntime = m_tR + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * numPass);
-  mjEnergy = numPass * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement));
-  // reduction for all regions
-  double aggregateMs = static_cast<double>(numCore) / 3200000;
-  msRuntime += aggregateMs;
-  mjEnergy += aggregateMs * cpuTDP;
-  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-
+  switch (cmdType)
+  {
+  case PimCmdEnum::REDSUM:
+  case PimCmdEnum::REDSUM_RANGE:
+  case PimCmdEnum::REDMIN:
+  case PimCmdEnum::REDMIN_RANGE:
+  case PimCmdEnum::REDMAX:
+  case PimCmdEnum::REDMAX_RANGE:
+  {
+    // read a row to walker, then reduce in serial
+    double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
+    msRuntime = m_tR + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * numPass);
+    mjEnergy = numPass * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement));
+    // reduction for all regions
+    double aggregateMs = static_cast<double>(numCore) / 3200000;
+    msRuntime += aggregateMs;
+    mjEnergy += aggregateMs * cpuTDP;
+    mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+    break;
+  }
+  default:
+    std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+    break;
+  }
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 

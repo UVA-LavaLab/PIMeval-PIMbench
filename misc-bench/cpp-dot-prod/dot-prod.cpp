@@ -122,7 +122,7 @@ void dotProduct(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> 
     return;
   }
 
-  status = pimRedSumInt(srcObj1, &result);
+  status = pimRedSum(srcObj1, static_cast<void*>(&result));
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

@@ -149,7 +149,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bank-level PIM for reduction sum
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -158,17 +158,32 @@ pimPerfEnergyBankLevel::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
-  // How many iteration require to read / write max elements per region
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-  msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+  switch (cmdType) {
+        case PimCmdEnum::REDSUM:
+        case PimCmdEnum::REDSUM_RANGE:
+        case PimCmdEnum::REDMIN:
+        case PimCmdEnum::REDMIN_RANGE:
+        case PimCmdEnum::REDMAX:
+        case PimCmdEnum::REDMAX_RANGE:
+        {
+          // How many iteration require to read / write max elements per region
+          double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+          msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
 
-  // Refer to fulcrum documentation
-  mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
-  // reduction for all regions
-  double aggregateMs = static_cast<double>(numCore) / 3200000;
-  msRuntime += aggregateMs;
-  mjEnergy += aggregateMs * cpuTDP;
-  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+          // Refer to fulcrum documentation
+          mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
+          // reduction for all regions
+          double aggregateMs = static_cast<double>(numCore) / 3200000;
+          msRuntime += aggregateMs;
+          mjEnergy += aggregateMs * cpuTDP;
+          mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+          break;
+        }
+        default:
+          std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
+                    << pimCmd::getName(cmdType, "") << std::endl;
+          break;
+    }
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }

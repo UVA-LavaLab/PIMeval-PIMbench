@@ -13,9 +13,10 @@
 #include "pimUtils.h"        // for pimDataTypeEnumToStr, threadWorker
 #include <vector>            // for vector
 #include <string>            // for string
-#include <limits>            // for numeric_limits
+#include <climits>            // for numeric_limits
 #include <cassert>           // for assert
 #include <bitset>            // for bitset
+#include <variant>
 
 class pimDevice;
 
@@ -61,6 +62,10 @@ enum class PimCmdEnum {
   // Functional special
   REDSUM,
   REDSUM_RANGE,
+  REDMIN,
+  REDMIN_RANGE,
+  REDMAX,
+  REDMAX_RANGE,
   BROADCAST,
   ROTATE_ELEM_R,
   ROTATE_ELEM_L,
@@ -380,30 +385,32 @@ private:
   }
 };
 
-//! @class  pimCmdedSum
-//! @brief  Pim CMD: RedSum non-ranged/ranged
-template <typename T> class pimCmdRedSum : public pimCmd
+//! @class  pimCmdReductiom
+//! @brief  Pim CMD: Reduction non-ranged/ranged
+template <typename T>
+class pimCmdReduction : public pimCmd
 {
 public:
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result)
+  pimCmdReduction(PimCmdEnum cmdType, PimObjId src, void* result)
     : pimCmd(cmdType), m_src(src), m_result(result)
   {
-    assert(cmdType == PimCmdEnum::REDSUM);
+    assert(cmdType == PimCmdEnum::REDSUM || cmdType == PimCmdEnum::REDMIN || cmdType == PimCmdEnum::REDMAX);
   }
-  pimCmdRedSum(PimCmdEnum cmdType, PimObjId src, T* result, uint64_t idxBegin, uint64_t idxEnd)
-    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin), m_idxEnd(idxEnd)
+  pimCmdReduction(PimCmdEnum cmdType, PimObjId src, void* result, uint64_t idxBegin, uint64_t idxEnd)
+    : pimCmd(cmdType), m_src(src), m_result(result), m_idxBegin(idxBegin)
   {
-    assert(cmdType == PimCmdEnum::REDSUM_RANGE);
+    assert(cmdType == PimCmdEnum::REDSUM || cmdType == PimCmdEnum::REDMIN || cmdType == PimCmdEnum::REDMAX || cmdType == PimCmdEnum::REDSUM_RANGE || cmdType == PimCmdEnum::REDMIN_RANGE || cmdType == PimCmdEnum::REDMAX_RANGE);
+    if (idxEnd) m_idxEnd = idxEnd;
   }
-  virtual ~pimCmdRedSum() {}
+  virtual ~pimCmdReduction() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
   virtual bool computeRegion(unsigned index) override;
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src;
-  T* m_result;
-  std::vector<T> m_regionSum;
+  void* m_result;
+  std::vector<T> m_regionResult;
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };

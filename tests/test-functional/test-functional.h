@@ -9,6 +9,7 @@
 #include "libpimeval.h"
 #include <random>
 #include <cassert>
+#include <limits>
 #include <type_traits>
 
 

@@ -246,7 +246,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
       int64_t totalNeighbors = 0; 
 
-      status = pimRedSumInt(resultObjectList[0], &totalNeighbors);
+      status = pimRedSum(resultObjectList[0], static_cast<void*>(&totalNeighbors));
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -261,7 +261,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
           std::cout << "Abort" << std::endl;
           return;
         }
-        status = pimRedSumInt(resultObjectList[1], &centroids[i][b]);
+        status = pimRedSum(resultObjectList[1], static_cast<void*>(&centroids[i][b]));
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;
