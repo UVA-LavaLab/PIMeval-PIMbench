@@ -172,9 +172,12 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
         case PimCmdEnum::REDMIN:
         case PimCmdEnum::REDMIN_RANGE:
         {
-          // Reduction tree approach for min/max
+          // Reduction tree approach.
+          // `numpass` for one reduction min is halved because of the reduction tree based approach.
+          // The following does not consider the cost for data rearrangement. Ideally that should be considered.
+          // TODO: for ranged reduction, `numElements` should be the #elements in the range
           unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, PimCmdEnum::MIN, dataType, bitsPerElement, numPass, obj);
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
           msRuntime = perfEnergyBS.m_msRuntime * levels;
           mjEnergy = perfEnergyBS.m_mjEnergy * levels;
           break;
@@ -182,9 +185,12 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
         case PimCmdEnum::REDMAX:
         case PimCmdEnum::REDMAX_RANGE:
         {
-          // Reduction tree approach for min/max
+          // Reduction tree approach.
+          // `numpass` for one reduction min is halved because of the reduction tree based approach.
+          // The following does not consider the cost for data rearrangement. Ideally that should be considered.
+          // TODO: for ranged reduction, `numElements` should be the #elements in the range
           unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, PimCmdEnum::MAX, dataType, bitsPerElement, numPass, obj);
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
           msRuntime = perfEnergyBS.m_msRuntime * levels;
           mjEnergy = perfEnergyBS.m_mjEnergy * levels;
           break;
