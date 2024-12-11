@@ -34,9 +34,14 @@ def encode_data(hdc_model, ds_levels_quantized, ds_idxs, n_samples):
     )
     return encoded_data
 
-def search_database(hdc_model, query_enc, ref_enc):
+def search_database(hdc_model, query_enc, ref_enc, device):
     """Perform database search."""
     print("[INFO] Searching database")
+
+    # Move data to the appropriate device
+    query_enc = query_enc.to(device).float()
+    ref_enc = ref_enc.to(device).float()
+
     start_time = time.time()
     dist = torch.matmul(query_enc, ref_enc.T)
 
@@ -52,6 +57,10 @@ def search_database(hdc_model, query_enc, ref_enc):
 
 def main(args):
     print("[INFO] Starting main function")
+
+    # Set device
+    device = torch.device("cuda" if args.cuda and torch.cuda.is_available() else "cpu")
+    print(f"[INFO] Using device: {device}")
 
     # File paths
     ref_fname = f"../Dataset/human_yeast_targetdecoy_vec_{args.dim_spectra}.charge{args.charge}.npz"
@@ -78,7 +87,7 @@ def main(args):
     query_enc = encode_data(hdc_model, ds_query_levels_quantized, ds_query_idxs, args.n_query)
 
     # Database search
-    search_database(hdc_model, query_enc, ref_enc)
+    search_database(hdc_model, query_enc, ref_enc, device)
 
 if __name__ == "__main__":
     print("[INFO] Parsing command line arguments")
@@ -91,6 +100,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--binary", action="store_true", help="Use binary HDC")
     parser.add_argument("-nt", "--n_test", type=int, default=100, help="Number of test samples")
     parser.add_argument("-nq", "--n_query", type=int, default=5, help="Number of query samples")
+    parser.add_argument("--cuda", action="store_true", help="Enable GPU support for PyTorch")
     args = parser.parse_args()
 
     print("[INFO] Starting the process")
