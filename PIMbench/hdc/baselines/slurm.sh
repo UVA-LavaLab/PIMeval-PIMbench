@@ -10,5 +10,4 @@
 
 module purge
 module load apptainer
-nvidia-smi
 apptainer exec --nv ../apptainer.sif python3 hd_oms.py --cuda

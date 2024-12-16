@@ -12,7 +12,6 @@ ifeq ($(USE_OPENMP),1)
 	CXXFLAGS += -fopenmp
 endif
 
-CXXFLAGS += -g 
 EXEC := hdc.out
 SRC := hdc.cpp
 
