@@ -91,42 +91,54 @@ struct Params input_params(int argc, char **argv)
 // }
 
 static int match_callback(unsigned int id, unsigned long long from,
-                        unsigned long long to, unsigned int flags, void *ctx) {
+                        unsigned long long to, unsigned int flags, void *matches) {
     printf("Match for pattern from: %llu, id: %u, to: %llu \n", from, id, to);
-    ((uint8_t*) ctx)[from] = 1;
+    // ((uint8_t*) ctx)[from] = 1;
+    (*(vector<vector<uint8_t>>*)matches)[id][from] = 1;
+    printf("set matches arr\n");
     return 0;
 }
 
 /**
  * @brief cpu string match kernel
  */
-void string_match_cpu(vector<string>& needles, string& haystack, vector<vector<uint8_t>>& matches) {
-  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
-    hs_database_t *database;
-    hs_compile_error_t *compile_err;
+// int string_match_cpu(vector<string>& needles, string& haystack, vector<vector<uint8_t>>& matches, hs_database_t* db, hs_scratch_t* scratch) {
 
-    // TODO: Replace with hs_compile_lit_multi
-    if(hs_compile_lit(needles[needle_idx].c_str(), HS_FLAG_SOM_LEFTMOST, needles[needle_idx].size(), HS_MODE_BLOCK, NULL, &database, &compile_err) != HS_SUCCESS) {
-        fprintf(stderr, "Hyperscan couldn't compile pattern, exiting\"%s\": %s\n", haystack.c_str(), compile_err->message);
-        hs_free_compile_error(compile_err);
-        return;
-    }
+//   if(hs_scan(db, haystack.c_str(), haystack.size(), 0, scratch, match_callback, (void*) &matches) != HS_SUCCESS) {
+//     fprintf(stderr, "Hyperscan couldn't scan the haystack, exiting\n");
+//     hs_free_scratch(scratch);
+//     hs_free_database(db);
+//     return -1;
+//   }
 
-    hs_scratch_t *scratch = NULL;
-    if (hs_alloc_scratch(database, &scratch) != HS_SUCCESS) {
-        fprintf(stderr, "Hyperscan couldn't allocate scratch memory, exiting\n");
-        hs_free_database(database);
-        return;
-    }
-    // matches[needle_idx].data()
-    if(hs_scan(database, haystack.c_str(), haystack.size(), 0, scratch, match_callback, (void*) matches[needle_idx].data()) != HS_SUCCESS) {
-      fprintf(stderr, "Hyperscan couldn't scan the haystack, exiting\n");
-      hs_free_scratch(scratch);
-      hs_free_database(database);
-      return;
-    }
-  }
-}
+//   return 0;
+
+//   // for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
+//   //   hs_database_t *database;
+//   //   hs_compile_error_t *compile_err;
+
+//   //   // TODO: Replace with hs_compile_lit_multi
+//   //   if(hs_compile_lit(needles[needle_idx].c_str(), HS_FLAG_SOM_LEFTMOST, needles[needle_idx].size(), HS_MODE_BLOCK, NULL, &database, &compile_err) != HS_SUCCESS) {
+//   //       fprintf(stderr, "Hyperscan couldn't compile pattern, exiting\"%s\": %s\n", haystack.c_str(), compile_err->message);
+//   //       hs_free_compile_error(compile_err);
+//   //       return;
+//   //   }
+
+//   //   hs_scratch_t *scratch = NULL;
+//   //   if (hs_alloc_scratch(database, &scratch) != HS_SUCCESS) {
+//   //       fprintf(stderr, "Hyperscan couldn't allocate scratch memory, exiting\n");
+//   //       hs_free_database(database);
+//   //       return;
+//   //   }
+//   //   // matches[needle_idx].data()
+//   //   if(hs_scan(database, haystack.c_str(), haystack.size(), 0, scratch, match_callback, (void*) matches[needle_idx].data()) != HS_SUCCESS) {
+//   //     fprintf(stderr, "Hyperscan couldn't scan the haystack, exiting\n");
+//   //     hs_free_scratch(scratch);
+//   //     hs_free_database(database);
+//   //     return;
+//   //   }
+//   // }
+// }
 
 void getString(string& str, uint64_t len) {
   str.resize(len);
@@ -162,8 +174,8 @@ int main(int argc, char **argv)
       getString(needles.back(), params.keyLength);
     }
 
-    // haystack = "dabcslkdfjdljed";
-    // needles = {"abc", "d", "z", "bcslk", "dabcs"};
+    haystack = "dabcslkdfjdljed";
+    needles = {"abc", "d", "z", "bcslk", "dabcs"};
   } 
   else 
   {
@@ -177,11 +189,53 @@ int main(int argc, char **argv)
     matches[needle_idx].resize(haystack.size());
   }
 
+  char** needles_arr = (char**) malloc(sizeof(char*) * needles.size());
+  unsigned* flags_arr = (unsigned*) malloc(sizeof(unsigned) * needles.size());
+  unsigned* ids_arr = (unsigned*) malloc(sizeof(unsigned) * needles.size());
+  size_t* lens_arr = (size_t*) malloc(sizeof(size_t) * needles.size());
+  unsigned num_elements = needles.size();
+  unsigned mode = HS_MODE_BLOCK;
+  hs_platform_info_t* platform = NULL;
+  hs_database_t* db;
+  hs_compile_error_t* compile_err;
+
+  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
+    needles_arr[needle_idx] = (char*) needles[needle_idx].c_str();
+    flags_arr[needle_idx] = HS_FLAG_SOM_LEFTMOST;
+    ids_arr[needle_idx] = needle_idx;
+    lens_arr[needle_idx] = needles[needle_idx].size();
+  }
+
+  hs_error_t hs_err = hs_compile_lit_multi(needles_arr, flags_arr,
+  ids_arr, lens_arr, num_elements, mode, platform,
+  &db, &compile_err);
+
+  if(hs_err != HS_SUCCESS) {
+    fprintf(stderr, "Hyperscan couldn't compile pattern, ending program!\nError expression number: %d\nError text: \"%s\"", compile_err->expression, compile_err->message);
+    hs_free_compile_error(compile_err);
+    return -1;
+  }
+
+  // TODO: Check if always null
+  hs_free_compile_error(compile_err);
+
+  hs_scratch_t *scratch = NULL;
+  if (hs_alloc_scratch(db, &scratch) != HS_SUCCESS) {
+      fprintf(stderr, "Hyperscan couldn't allocate scratch memory, exiting\n");
+      hs_free_database(db);
+      return -1;
+  }
+
   auto start = std::chrono::high_resolution_clock::now();
 
   for (int32_t i = 0; i < WARMUP; i++)
   {
-    string_match_cpu(needles, haystack, matches);
+    if(hs_scan(db, haystack.c_str(), haystack.size(), 0, scratch, match_callback, (void*) &matches) != HS_SUCCESS) {
+      fprintf(stderr, "Hyperscan couldn't scan the haystack, exiting\n");
+      hs_free_scratch(scratch);
+      hs_free_database(db);
+      return -1;
+    }
   }
 
   auto end = std::chrono::high_resolution_clock::now();
@@ -191,6 +245,9 @@ int main(int argc, char **argv)
   for(vector<uint8_t> match : matches) {
     printVec(match);
   }
+
+  hs_free_database(db);
+  hs_free_scratch(scratch);
 
   return 0;
 }

@@ -61,7 +61,7 @@ The CPU varient requires [apptainer](https://apptainer.org/) to run the containe
 cd baselines/CPU
 apptainer build string-match.sif string-match-container.def
 apptainer run string-match.sif
-mkdir build
+mkdir -p build
 cd build
 cmake ..
 make
@@ -91,7 +91,7 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command that will run it for default parameters:
+After compiling, run the each executable with the following command that will run it for default parameters (Must be run in the build directory for the CPU baseline):
 
 ```bash
 ./string-match.out
