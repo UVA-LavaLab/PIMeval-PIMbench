@@ -49,6 +49,10 @@ testFunctional::runAllTests()
   ok &= testInt<uint64_t>("UINT64", PIM_UINT64);
 
   ok &= testFp<float>("FP32", PIM_FP32);
+  // In option1, we require the user to uses 4-byte float to write PIMeval apps.
+  ok &= testFp<float>("FP16", PIM_FP16);
+  ok &= testFp<float>("BF16", PIM_BF16);
+  ok &= testFp<float>("FP8", PIM_FP8);
 
   deletePimDevice();
 

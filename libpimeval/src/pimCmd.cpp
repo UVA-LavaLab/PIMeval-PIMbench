@@ -134,6 +134,10 @@ pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
 bool
 pimCmd::computeAllRegions(unsigned numRegions)
 {
+  // skip PIM computation in analysis mode
+  if (pimSim::get()->isAnalysisMode()) {
+    return true;
+  }
   if (pimSim::get()->getNumThreads() > 1) { // MT
     std::vector<pimUtils::threadWorker*> workers;
     for (unsigned i = 0; i < numRegions; ++i) {
@@ -168,18 +172,20 @@ pimCmdCopy::execute()
     }
   }
 
-  if (m_cmdType == PimCmdEnum::COPY_H2D) {
-    pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
-    objDest.copyFromHost(m_ptr, m_idxBegin, m_idxEnd);
-  } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
-    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    objSrc.copyToHost(m_ptr, m_idxBegin, m_idxEnd);
-  } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
-    const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
-    pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
-    objSrc.copyToObj(objDest, m_idxBegin, m_idxEnd);
-  } else {
-    assert(0);
+  if (!pimSim::get()->isAnalysisMode()) {
+    if (m_cmdType == PimCmdEnum::COPY_H2D) {
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objDest.copyFromHost(m_ptr, m_idxBegin, m_idxEnd);
+    } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
+      const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+      objSrc.copyToHost(m_ptr, m_idxBegin, m_idxEnd);
+    } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
+      const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objSrc.copyToObj(objDest, m_idxBegin, m_idxEnd);
+    } else {
+      assert(0);
+    }
   }
 
   // for non-functional simulation, sync dest data to simulated memory
@@ -389,7 +395,7 @@ pimCmdFunc1::computeRegion(unsigned index)
     uint64_t elemIdx = elemIdxBegin + j;
     bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
     bool isUnsigned = (dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
-    bool isFP = (dataType == PIM_FP32);
+    bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
     if (isSigned) {
       int64_t signedOperand = objSrc.getElementBits(elemIdx);
       int64_t result = 0;
@@ -495,7 +501,7 @@ pimCmdFunc2::computeRegion(unsigned index)
     uint64_t elemIdx = elemIdxBegin + j;
     bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
     bool isUnsigned = (dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
-    bool isFP = (dataType == PIM_FP32);
+    bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
     if (isSigned) {
       uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
       uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
@@ -597,7 +603,7 @@ pimCmdRedSum<T>::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
-      bool isFP = (dataType == PIM_FP32);
+      bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
       if (!isFP) {
         T integerOperand = pimUtils::signExt(operandBits, dataType);
         m_regionSum[index] += integerOperand;
