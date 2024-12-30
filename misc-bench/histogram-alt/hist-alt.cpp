@@ -17,8 +17,6 @@
 #include "../util.h"
 #include "libpimeval.h"
 
-using namespace std;
-
 #define NUMBINS 256 // RGB values at any given pixel can be a value 0 to 255 (inclusive)
 #define NUMCHANNELS 3 // Red, green, and blue color channels
 
@@ -106,8 +104,6 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::
     status = pimRedSumRangedUInt(tempObj, imgDataBytes * 2 / 3, imgDataBytes, &redCount[i]);
     assert(status == PIM_OK);
     redCount[i] += prevCount;
-
-    std::cout << i << std::endl;
   }
   pimFree(imgObj);
   pimFree(tempObj);
@@ -175,57 +171,41 @@ int main(int argc, char *argv[])
 
   std::vector<uint64_t> redCount(NUMBINS, 0), greenCount(NUMBINS, 0), blueCount(NUMBINS, 0);
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
-  std::vector<uint8_t> orderedImgData;
-
-  for (int i = 0; i < NUMCHANNELS; ++i) 
-  {
-    for (uint64_t j = 0; j < imgDataBytes; j+=NUMCHANNELS)
-    {
-      orderedImgData.push_back(imgData[i + j]);
-    }
-  }
 
   uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
            numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
   uint64_t totalAvailableBits = numCol * numRow * numCore;
   uint64_t requiredBitsforImage = ((imgDataBytes / NUMCHANNELS * 8) + 8); // Using uint8_t instead of int, only require 8 bits
   int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
-  // std::cout << "Required iterations for image: " << numItr << std::endl;
 
-  if (numItr == 1)
+  // Ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
+  uint64_t bytesPerChunk = totalAvailableBits / 8;
+  std::vector<uint8_t> redData, greenData, blueData;
+
+  for (uint64_t i = 0; i < imgDataBytes; i+=NUMCHANNELS)
   {
-    histogram(imgDataBytes, orderedImgData, redCount, greenCount, blueCount);
+    blueData.push_back(imgData[i]);
+    greenData.push_back(imgData[i + 1]);
+    redData.push_back(imgData[i + 2]);
   }
-  else
+
+  for (int itr = 0; itr < numItr; ++itr)
   {
-    //TODO: ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
-    uint64_t bytesPerChunk = totalAvailableBits / 8;
-    std::vector<uint8_t> redData, greenData, blueData;
+    uint64_t startByte = itr * bytesPerChunk;
+    uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes / NUMCHANNELS);
+    uint64_t chunkSize = endByte - startByte;
 
-    for (uint64_t i = 0; i < imgDataBytes; i+=NUMCHANNELS)
-    {
-      blueData.push_back(imgData[i]);
-      greenData.push_back(imgData[i + 1]);
-      redData.push_back(imgData[i + 2]);
-    }
+    std::vector<uint8_t> redDataChunk(redData.begin() + startByte, redData.begin() + endByte);
+    std::vector<uint8_t> greenDataChunk(greenData.begin() + startByte, greenData.begin() + endByte);
+    std::vector<uint8_t> blueDataChunk(blueData.begin() + startByte, blueData.begin() + endByte);
 
-    for (int itr = 0; itr < numItr; ++itr)
-    {
-      uint64_t startByte = itr * bytesPerChunk;
-      uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes / NUMCHANNELS);
-      uint64_t chunkSize = endByte - startByte;
+    std::vector<uint8_t> orderedImgDataChunk;
+    orderedImgDataChunk.reserve(redDataChunk.size() + greenDataChunk.size() + blueDataChunk.size());
+    orderedImgDataChunk.insert(orderedImgDataChunk.end(), blueDataChunk.begin(), blueDataChunk.end());
+    orderedImgDataChunk.insert(orderedImgDataChunk.end(), greenDataChunk.begin(), greenDataChunk.end());
+    orderedImgDataChunk.insert(orderedImgDataChunk.end(), redDataChunk.begin(), redDataChunk.end());
 
-      std::vector<uint8_t> redDataChunk(redData.begin() + startByte, redData.begin() + endByte);
-      std::vector<uint8_t> greenDataChunk(greenData.begin() + startByte, greenData.begin() + endByte);
-      std::vector<uint8_t> blueDataChunk(blueData.begin() + startByte, blueData.begin() + endByte);
-
-      std::vector<uint8_t> orderedImgDataChunk;
-      orderedImgDataChunk.insert(orderedImgDataChunk.end(), blueDataChunk.begin(), blueDataChunk.end());
-      orderedImgDataChunk.insert(orderedImgDataChunk.end(), greenDataChunk.begin(), greenDataChunk.end());
-      orderedImgDataChunk.insert(orderedImgDataChunk.end(), redDataChunk.begin(), redDataChunk.end());
-
-      histogram(chunkSize, orderedImgDataChunk, redCount, greenCount, blueCount);
-    }
+    histogram(chunkSize * NUMCHANNELS, orderedImgDataChunk, redCount, greenCount, blueCount);
   }
 
   if (params.shouldVerify)
