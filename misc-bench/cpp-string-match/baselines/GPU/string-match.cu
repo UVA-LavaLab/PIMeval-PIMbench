@@ -135,6 +135,9 @@ int main(int argc, char **argv)
   {
     getString(haystack, params.stringLength);
     getString(needle, params.keyLength);
+
+    haystack = "abcdbab";
+    needle = "ab";
   } 
   else 
   {
@@ -145,11 +148,11 @@ int main(int argc, char **argv)
   char* gpu_haystack;
   char* gpu_needle;
   uint8_t* gpu_matches;
-  matches.resize(params.stringLength);
+  matches.resize(haystack.size());
 
-  size_t haystack_sz = sizeof(char)*params.stringLength;
-  size_t needle_sz = sizeof(char)*params.keyLength;
-  size_t matches_sz = sizeof(uint8_t)*params.stringLength;
+  size_t haystack_sz = sizeof(char)*haystack.size();
+  size_t needle_sz = sizeof(char)*needle.size();
+  size_t matches_sz = sizeof(uint8_t)*haystack.size();
 
   cudaError_t cuda_error;
   cuda_error = cudaMalloc((void**)&gpu_haystack, haystack_sz);
@@ -201,7 +204,7 @@ int main(int argc, char **argv)
 
   cudaEventRecord(start, 0);
 
-  string_match<<<(params.stringLength + 1023) / 1024, 1024>>>(gpu_haystack, params.stringLength, gpu_needle, params.keyLength, gpu_matches);
+  string_match<<<(haystack.size() + 1023) / 1024, 1024>>>(gpu_haystack, haystack.size(), gpu_needle, needle.size(), gpu_matches);
   
   cuda_error = cudaGetLastError();
   if (cuda_error != cudaSuccess)
