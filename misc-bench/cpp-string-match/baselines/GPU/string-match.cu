@@ -100,7 +100,8 @@ __global__ void string_match(char* haystack, size_t haystack_len, char* needle, 
   }
 }
 
-__global__ void print_vars(char* haystack, size_t haystack_len, size_t* needles_outer, size_t num_needles, char* needles_inner, uint8_t** matches) {
+__global__ void print_vars(char* haystack, size_t haystack_len, char** needles_outer, size_t num_needles, char* needles_inner, uint8_t** matches) {
+  // char** needles_outer_ptr = (char**) needles_outer;
   printf("haystack: ");
   for(size_t i=0; i < haystack_len; ++i) {
     printf("%c", haystack[i]);
@@ -108,7 +109,7 @@ __global__ void print_vars(char* haystack, size_t haystack_len, size_t* needles_
   printf("\n");
   printf("needles:\n");
   for(size_t i=0; i < num_needles; ++i) {
-    printf("%llu (len=%llu): ", i, /*needles_outer[i+1] - */needles_outer[i]);
+    printf("%llu (len=%p): ", i, needles_outer[i+1] - needles_outer[i]);
     printf("\n");
   }
 }
@@ -225,7 +226,7 @@ int main(int argc, char **argv)
 
 
 
-  size_t* gpu_needles_outer;
+  char** gpu_needles_outer;
   cuda_error = cudaMalloc((void**)&gpu_needles_outer, needles_sz_outer);
 
   if(cuda_error != cudaSuccess) {
@@ -279,7 +280,7 @@ int main(int argc, char **argv)
   cudaEventRecord(start, 0);
 
   // string_match<<<(haystack.size() + 1023) / 1024, 1024>>>(gpu_haystack, haystack.size(), gpu_needle, needle.size(), gpu_matches);
-  print_vars<<<1,1>>>(gpu_haystack, haystack.size(), (size_t*)gpu_needles_outer, needles.size(), gpu_needles, nullptr);
+  print_vars<<<1,1>>>(gpu_haystack, haystack.size(), (char**)gpu_needles_outer, needles.size(), gpu_needles, nullptr);
   
   cuda_error = cudaGetLastError();
   if (cuda_error != cudaSuccess)
