@@ -1,3 +1,6 @@
 [submodule "misc-bench/cpp-string-match/baselines/CPU-hs/hyperscan"]
 	path = misc-bench/cpp-string-match/baselines/CPU-hs/hyperscan
 	url = https://github.com/intel/hyperscan.git
+[submodule "misc-bench/cpp-string-match/baselines/GPU-PFAC/PFAC"]
+	path = misc-bench/cpp-string-match/baselines/GPU-PFAC/PFAC
+	url = https://github.com/pfac-lib/PFAC.git

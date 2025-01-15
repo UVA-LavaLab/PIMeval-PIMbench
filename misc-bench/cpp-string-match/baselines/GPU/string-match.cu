@@ -88,15 +88,31 @@ struct Params input_params(int argc, char **argv)
 /**
  * @brief gpu string match kernel
  */
-__global__ void string_match(char* haystack, size_t haystack_len, char* needle, size_t needle_len, uint8_t* matches) {
-  size_t idx = blockIdx.x*blockDim.x + threadIdx.x;
-  if (idx < haystack_len - needle_len + 1) {
-    matches[idx] = 1;
-    for (int i = 0; i < needle_len; ++i) {
-      if (haystack[idx + i] != needle[i]) {
-          matches[idx] = 0;
-      }
+__global__ void string_match(char* haystack, size_t haystack_len, char** needles_outer, size_t num_needles, char* needles_inner, uint8_t** matches) {
+  // size_t idx = blockIdx.x*blockDim.x + threadIdx.x;
+  // if (idx < haystack_len - needle_len + 1) {
+  //   matches[idx] = 1;
+  //   for (int i = 0; i < needle_len; ++i) {
+  //     if (haystack[idx + i] != needle[i]) {
+  //         matches[idx] = 0;
+  //     }
+  //   }
+  // }
+
+  printf("haystack: ");
+  for(size_t i=0; i < haystack_len; ++i) {
+    printf("%c", haystack[i]);
+  }
+  printf("\n");
+  printf("needles:\n");
+  for(size_t i=0; i < num_needles; ++i) {
+    char* curr_needle = needles_outer[i];
+    size_t needle_len = needles_outer[i+1] - curr_needle;
+    printf("%llu (len=%llu): ", i, needle_len);
+    for(size_t j=0; j < needle_len; ++j) {
+      printf("%c", curr_needle[j]);
     }
+    printf("\n");
   }
 }
 
@@ -109,7 +125,12 @@ __global__ void print_vars(char* haystack, size_t haystack_len, char** needles_o
   printf("\n");
   printf("needles:\n");
   for(size_t i=0; i < num_needles; ++i) {
-    printf("%llu (len=%p): ", i, needles_outer[i+1] - needles_outer[i]);
+    char* curr_needle = needles_outer[i];
+    size_t needle_len = needles_outer[i+1] - curr_needle;
+    printf("%llu (len=%llu): ", i, needle_len);
+    for(size_t j=0; j < needle_len; ++j) {
+      printf("%c", curr_needle[j]);
+    }
     printf("\n");
   }
 }
@@ -133,6 +154,12 @@ void getString(string& str, uint64_t len) {
   for(uint64_t i=0; i<len; ++i) {
     str[i] = 'a' + (rand()%26);
   }
+}
+
+void get_LPS(string& needle, vector<int> lps_arr, size_t lps_it) {
+  // TODO
+  // Sets lps_arr[lps_it:lps_it+needle.size()] to lps array of needle
+  return {};
 }
 
 /**
@@ -254,6 +281,31 @@ int main(int argc, char **argv)
 
   for (size_t i = 0; i < needles.size() + 1; ++i) {
       printf("Device Pointer %zu: %p\n", i, (void*)host_needles_outer_back[i]);
+  }
+
+
+  int* gpu_lps;
+  size_t lps_sz_inner = sizeof(int) * total_needles_elems;
+
+  cuda_error = cudaMalloc((void**)&gpu_lps, lps_sz_inner);
+
+  if(cuda_error != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << "\n";
+    exit(1);
+  }
+
+  vector<int> cpu_lps(total_needles_elems);
+  size_t cpu_lps_it = 0;
+  for(string& needle : needles) {
+    get_lps(needle, cpu_lps, cpu_lps_it);
+    cpu_lps_it += needle.size();
+  }
+
+  cuda_error = cudaMemcpy((void*)gpu_lps, (void*)cpu_lps, lps_sz_inner, cudaMemcpyHostToDevice);
+
+  if(cuda_error != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << "\n";
+    exit(1);
   }
 
 
