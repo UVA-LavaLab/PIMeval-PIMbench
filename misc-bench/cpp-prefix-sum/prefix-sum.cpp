@@ -176,17 +176,17 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  int len = input.size();
+  uint64_t len = input.size();
   vector<int> deviceoutput;
   vector<int> hostoutput(len);
 
-  for (int i = 0; i < input.size(); i++)
+  for (uint64_t i = 0; i < input.size(); i++)
   {
     deviceoutput.push_back(0);
   }
 
   hostoutput[0] = input[0];
-  for (int i = 0; i < input.size(); i++)
+  for (uint64_t i = 0; i < input.size(); i++)
   {
     hostoutput[i + 1] = hostoutput[i] + input[i + 1];
   }
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
   {
     // verify result
 #pragma omp parallel for
-    for (unsigned i = 0; i < len; ++i)
+    for (uint64_t i = 0; i < len; ++i)
     {
       if (hostoutput[i] != deviceoutput[i])
       {

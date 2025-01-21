@@ -161,6 +161,10 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
         msRuntime += aggregateMs;
         mjEnergy += aggregateMs * cpuTDP;
         mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      } else if (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8) {
+        std::cout << "PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet." << std::endl;
+        msRuntime = 999999999.9; // todo
+        mjEnergy = 999999999.9; // todo
       } else {
         assert(0);
       }
@@ -238,8 +242,8 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
-  // boundary handling
-  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  // boundary handling - assume two times copying between device and host for boundary elements
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:

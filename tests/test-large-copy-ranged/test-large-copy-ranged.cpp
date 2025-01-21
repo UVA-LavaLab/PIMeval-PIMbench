@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <cinttypes>
 
 
 void testLargeCopy(PimDeviceEnum deviceType)
@@ -47,17 +48,16 @@ void testLargeCopy(PimDeviceEnum deviceType)
       if (src[i] != dest[i]) {
         numError++;
         if (numError < 100) {
-          std::printf("ERROR: found mismatch at idx %lld: src 0x%x dest 0x%x\n", i, src[i], dest[i]);
+          std::printf("ERROR: found mismatch at idx %" PRIu64 ": src 0x%x dest 0x%x\n", i, src[i], dest[i]);
         }
       }
     }
 
     pimFree(obj);
-    std::printf("Total mismatch: %lld\n", numError);
+    std::printf("Total mismatch: %" PRIu64 "\n", numError);
   }
 
   pimShowStats();
-  pimResetStats();
   pimDeleteDevice();
 }
 

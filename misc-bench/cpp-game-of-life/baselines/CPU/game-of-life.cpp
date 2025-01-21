@@ -77,19 +77,11 @@ struct Params input_params(int argc, char **argv)
   return p;
 }
 
-uint8_t get_with_default(int i, int j, const std::vector<std::vector<uint8_t>> &x) {
-  if(i >= 0 && i < (int) x.size() && j >= 0 && j < (int) x[0].size()) {
-    return x[i][j];
-  }
-  return 0;
-}
-
 /**
  * @brief cpu game of life kernel
  */
 void game_of_life(const std::vector<std::vector<uint8_t>> &x, std::vector<std::vector<uint8_t>> &y) 
 {
-  // uint8_t sum_cpu = x[0]
   int height = x.size();
   int width = x[0].size();
   uint8_t sum_cpu = x[0][1] + x[1][0] + x[1][1];
@@ -116,61 +108,49 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &x, std::vector<std::v
 
   #pragma omp parallel for
   for(int i=1; i < height-1; ++i) {
-      // sum_cpu = x[i-1][0] + x[i-1][1] + x[i][1] + x[i+1][0] + x[i+1][1];
-      // res_cpu = (uint8_t)(sum_cpu == 3);
-      // sum_cpu = (uint8_t)(sum_cpu == 2);
-      // sum_cpu &= x[i][0];
-      // res_cpu |= sum_cpu;
-      // y[i][0] = res_cpu;
-      for(int j=0; j< width; ++j) {
-        sum_cpu = x[i-1][j] + x[i+1][j];
-        if(j > 0) {
-          sum_cpu += x[i][j-1] + x[i-1][j-1] + x[i+1][j-1];
-        }
-        if(j < width-1) {
-          sum_cpu += x[i][j+1] + x[i-1][j+1] + x[i+1][j+1];
-        }
+      sum_cpu = x[i-1][0] + x[i-1][1] + x[i][1] + x[i+1][0] + x[i+1][1];
+      res_cpu = (uint8_t)(sum_cpu == 3);
+      sum_cpu = (uint8_t)(sum_cpu == 2);
+      sum_cpu &= x[i][0];
+      res_cpu |= sum_cpu;
+      y[i][0] = res_cpu;
+      for(int j=1; j< width-1; ++j) {
+        sum_cpu = x[i][j-1] + x[i][j+1] + x[i-1][j-1] + x[i-1][j] + x[i-1][j+1] + x[i+1][j-1] + x[i+1][j] + x[i+1][j+1];
         res_cpu = (uint8_t)(sum_cpu == 3);
         sum_cpu = (uint8_t)(sum_cpu == 2);
         sum_cpu &= x[i][j];
         res_cpu |= sum_cpu;
         y[i][j] = res_cpu;
       }
-      // sum_cpu = x[i-1][width-2] + x[i-1][width-1] + x[i][width-2] + x[i+1][width-2] + x[i+1][width-1];
-      // res_cpu = (uint8_t)(sum_cpu == 3);
-      // sum_cpu = (uint8_t)(sum_cpu == 2);
-      // sum_cpu &= x[i][width-1];
-      // res_cpu |= sum_cpu;
-      // y[i][width-1] = res_cpu;
+      sum_cpu = x[i-1][width-2] + x[i-1][width-1] + x[i][width-2] + x[i+1][width-2] + x[i+1][width-1];
+      res_cpu = (uint8_t)(sum_cpu == 3);
+      sum_cpu = (uint8_t)(sum_cpu == 2);
+      sum_cpu &= x[i][width-1];
+      res_cpu |= sum_cpu;
+      y[i][width-1] = res_cpu;
     }
 
-    // sum_cpu = x[height-2][0] + x[height-2][1] + x[height-1][1];
-    // res_cpu = (uint8_t)(sum_cpu == 3);
-    // sum_cpu = (uint8_t)(sum_cpu == 2);
-    // sum_cpu &= x[height-1][0];
-    // res_cpu |= sum_cpu;
-    // y[height-1][0] = res_cpu;
+    sum_cpu = x[height-2][0] + x[height-2][1] + x[height-1][1];
+    res_cpu = (uint8_t)(sum_cpu == 3);
+    sum_cpu = (uint8_t)(sum_cpu == 2);
+    sum_cpu &= x[height-1][0];
+    res_cpu |= sum_cpu;
+    y[height-1][0] = res_cpu;
     #pragma omp parallel for
-    for(int i=0; i< width; ++i) {
-      sum_cpu = x[height-2][i];
-      if(i > 0) {
-        sum_cpu += x[height-1][i-1] + x[height-2][i-1];
-      }
-      if(i < width-1) {
-        sum_cpu += x[height-1][i+1] + x[height-2][i+1];
-      }
+    for(int i=1; i< width-1; ++i) {
+      sum_cpu = x[height-1][i-1] + x[height-1][i+1] + x[height-2][i-1] + x[height-2][i] + x[height-2][i+1];
       res_cpu = (uint8_t)(sum_cpu == 3);
       sum_cpu = (uint8_t)(sum_cpu == 2);
       sum_cpu &= x[height-1][i];
       res_cpu |= sum_cpu;
       y[height-1][i] = res_cpu;
     }
-    // sum_cpu = x[height-2][width-2] + x[height-2][width-1] + x[height-1][width-2];
-    // res_cpu = (uint8_t)(sum_cpu == 3);
-    // sum_cpu = (uint8_t)(sum_cpu == 2);
-    // sum_cpu &= x[height-1][width-1];
-    // res_cpu |= sum_cpu;
-    // y[height-1][width-1] = res_cpu;
+    sum_cpu = x[height-2][width-2] + x[height-2][width-1] + x[height-1][width-2];
+    res_cpu = (uint8_t)(sum_cpu == 3);
+    sum_cpu = (uint8_t)(sum_cpu == 2);
+    sum_cpu &= x[height-1][width-1];
+    res_cpu |= sum_cpu;
+    y[height-1][width-1] = res_cpu;
 
 }
 

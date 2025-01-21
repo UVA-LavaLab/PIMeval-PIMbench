@@ -148,9 +148,9 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   m_deviceType = deviceType;
   m_simTarget = deviceType;
   if (deviceType == PIM_FUNCTIONAL) {
-    // Read envirnment variable for the simulation target
+    // Read environment variable for the simulation target
     bool readSimTargetFromMakeArgument = false;
-    std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+    std::printf("PIM-Info: Trying to read simulation target from environment variable %s\n", pimUtils::envVarPimEvalTarget);
     std::string pimEvalTarget;
     bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
     if (!readEnvVarStatus) {
@@ -198,7 +198,10 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
   m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
 
-  m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  // Disable simulated memory creation for functional simulation
+  if (m_deviceType != PIM_FUNCTIONAL) {
+    m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  }
 
   std::printf("PIM-Info: Created PIM device with %u cores, each with %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
@@ -291,7 +294,11 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   const pimParamsDram& paramsDram = pimSim::get()->getParamsDram(); // created before pimDevice ctor
   pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
   m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
-  m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+
+  // Disable simulated memory creation for functional simulation
+  if (m_deviceType != PIM_FUNCTIONAL) {
+    m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  }
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
 
@@ -335,9 +342,9 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
   } catch (const std::invalid_argument& e) {
     std::string missing = e.what();
     if (missing == "simulation_target") {
-      // Read envirnment variable for the simulation target
+      // Read environment variable for the simulation target
       bool readSimTargetFromMakeArgument = false;
-      std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+      std::printf("PIM-Info: Trying to read simulation target from environment variable %s\n", pimUtils::envVarPimEvalTarget);
       std::string pimEvalTarget;
       bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
       if (!readEnvVarStatus) {

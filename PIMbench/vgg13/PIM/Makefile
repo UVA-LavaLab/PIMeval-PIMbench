@@ -15,7 +15,7 @@ endif
 EXEC := vgg13.out
 SRC := vgg13.cpp
 
-COMPILE_WITH_JPEG ?= 1
+COMPILE_WITH_JPEG ?= 0
 ifeq ($(COMPILE_WITH_JPEG), 1)
     CXXFLAGS += -DCOMPILE_WITH_JPEG
     # Add linker flags for libjpeg

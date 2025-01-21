@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %llu bytes of image data, %llu pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
+  printf("This file has %lu bytes of image data, %lu pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
 
   if (!createDevice(params.configFile))
   {
