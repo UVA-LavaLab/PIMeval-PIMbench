@@ -101,11 +101,23 @@ void print_pim_int(PimObjId pim_obj, uint64_t len) {
   std::cout << std::endl;
 }
 
-void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches) {
+void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_vertical) {
 
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
-  uint32_t num_needles = needles.size();
+  // If vertical, each pim object takes 32 rows, 1 row if horizontal
+  // Two rows used by the haystack and intermediate
+  uint64_t max_needles_per_iteration = is_vertical ? (num_rows>>5) - 2 : num_rows - 2;
+  uint64_t num_iterations;
+  if(needles.size() <= max_needles_per_iteration) {
+    num_iterations = 1;
+  } else {
+    uint64_t needles_after_first_iteration = needles.size() - max_needles_per_iteration;
+    num_iterations = 1 + ((needles_after_first_iteration + max_needles_per_iteration - 2) / (max_needles_per_iteration - 1));
+  }
+  uint64_t needles_done = 0;
+
+  uint64_t num_needles = needles.size();
 
   PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
   assert(haystack_pim != -1);
@@ -113,75 +125,96 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
   PimObjId intermediate_pim = pimAllocAssociated(haystack_pim, PIM_UINT32);
   assert(intermediate_pim != -1);
 
-  PimObjId final_result_pim = pimAllocAssociated(haystack_pim, PIM_UINT32);
-  assert(final_result_pim != -1);
-
-  std::vector<PimObjId> pim_individual_needle_matches;
-  for(uint32_t i=0; i<num_needles; ++i) {
-    pim_individual_needle_matches.push_back(pimAllocAssociated(haystack_pim, PIM_UINT32));
-    assert(pim_individual_needle_matches.back() != -1);
-  }
-
   // TODO remove when pim conversion becomes possible
   uint32_t *haystack_32bit = (uint32_t*) malloc(sizeof(uint32_t) * haystack.size());
+  #pragma omp parallel for
   for(uint32_t i=0; i<haystack.size(); ++i) {
     haystack_32bit[i] = (uint32_t) haystack[i];
   }
 
-  PimStatus status = pimCopyHostToDevice((void *)haystack_32bit, haystack_pim);
-  assert (status == PIM_OK);
+  std::vector<PimObjId> pim_individual_needle_matches;
+  for(uint32_t i=0; i<min(num_needles, max_needles_per_iteration); ++i) {
+    pim_individual_needle_matches.push_back(pimAllocAssociated(haystack_pim, PIM_UINT32));
+    assert(pim_individual_needle_matches.back() != -1);
+  }
 
-  // Algorithm Start
-  uint64_t needles_finished = 0;
+  PimStatus status;
+  for(uint64_t iter=0; iter<num_iterations; ++iter) {
+    // TODO: would it be better to save a copy of the haystack on the device then copy it back from the device?
+    status = pimCopyHostToDevice((void *)haystack_32bit, haystack_pim);
+    assert (status == PIM_OK);
 
-  for(uint64_t char_idx=0; needles_finished < num_needles; ++char_idx) {
-    
-    for(uint64_t needle_idx=0; needle_idx < num_needles; ++needle_idx) {
+    uint64_t needles_this_iteration;
+    if(iter == 0) {
+      needles_this_iteration = min(max_needles_per_iteration, num_needles);
+    } else if(iter+1 == num_iterations) {
+      needles_this_iteration = num_needles - needles_done;
+    } {
+      needles_this_iteration = max_needles_per_iteration - 1;
+    }
 
-      if(char_idx >= needles[needle_idx].size()) {
-        continue;
+    uint64_t first_avail_pim_needle_result = iter == 0 ? 0 : 1;
+
+    // Algorithm Start
+    uint64_t needles_finished_this_iter = 0;
+
+    for(uint64_t char_idx=0; needles_finished_this_iter < needles_this_iteration; ++char_idx) {
+      
+      for(uint64_t needle_idx=0; needle_idx < needles_this_iteration; ++needle_idx) {
+        
+        uint64_t current_needle_idx = needle_idx + needles_done;
+        uint64_t needle_idx_pim = needle_idx + first_avail_pim_needle_result;
+
+        if(char_idx >= needles[current_needle_idx].size()) {
+          continue;
+        }
+
+        if(char_idx == 0) {
+          status = pimEQScalar(haystack_pim, pim_individual_needle_matches[needle_idx_pim], (uint64_t) needles[current_needle_idx][char_idx]);
+          assert (status == PIM_OK);
+        } else {
+          status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needles[current_needle_idx][char_idx]);
+          assert (status == PIM_OK);
+
+          status = pimAnd(pim_individual_needle_matches[needle_idx_pim], intermediate_pim, pim_individual_needle_matches[needle_idx_pim]);
+          assert (status == PIM_OK);
+        }
+
+        if(char_idx + 1 == needles[current_needle_idx].size()) {
+          ++needles_finished_this_iter;
+        }
       }
 
-      if(char_idx == 0) {
-        status = pimEQScalar(haystack_pim, pim_individual_needle_matches[needle_idx], (uint64_t) needles[needle_idx][char_idx]);
+      if(needles_finished_this_iter < needles_this_iteration) {
+        status = pimShiftElementsLeft(haystack_pim);
         assert (status == PIM_OK);
-      } else {
-        status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needles[needle_idx][char_idx]);
-        assert (status == PIM_OK);
-
-        status = pimAnd(pim_individual_needle_matches[needle_idx], intermediate_pim, pim_individual_needle_matches[needle_idx]);
-        assert (status == PIM_OK);
-      }
-
-      if(char_idx + 1 == needles[needle_idx].size()) {
-        ++needles_finished;
       }
     }
 
-    if(needles_finished < num_needles) {
-      status = pimShiftElementsLeft(haystack_pim);
+    // for(uint64_t needle_idx = 0; needle_idx < num_needles; ++needle_idx) {
+    //   pimMulScalar(pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[needle_idx], 1 + needle_idx);
+    // }
+
+    for(uint64_t needle_idx = 0; needle_idx < needles_this_iteration; ++needle_idx) {
+      uint64_t current_needle_idx = needle_idx + needles_done;
+      uint64_t needle_idx_pim = needle_idx + first_avail_pim_needle_result;
+
+      status = pimXorScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
+      assert (status == PIM_OK);
+
+      status = pimSubScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
+      assert (status == PIM_OK);
+
+      status = pimAndScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1 + current_needle_idx);
       assert (status == PIM_OK);
     }
-  }
 
-  // for(uint64_t needle_idx = 0; needle_idx < num_needles; ++needle_idx) {
-  //   pimMulScalar(pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[needle_idx], 1 + needle_idx);
-  // }
+    for(uint64_t needle_idx = 1; needle_idx < needles_this_iteration + first_avail_pim_needle_result; ++needle_idx) {
+      status = pimMax(pim_individual_needle_matches[0], pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[0]);
+      assert (status == PIM_OK);
+    }
 
-  for(uint64_t needle_idx = 0; needle_idx < num_needles; ++needle_idx) {
-    status = pimXorScalar(pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[needle_idx], 1);
-    assert (status == PIM_OK);
-
-    status = pimSubScalar(pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[needle_idx], 1);
-    assert (status == PIM_OK);
-
-    status = pimAndScalar(pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[needle_idx], 1 + needle_idx);
-    assert (status == PIM_OK);
-  }
-
-  for(uint64_t needle_idx = 1; needle_idx < num_needles; ++needle_idx) {
-    status = pimMax(pim_individual_needle_matches[0], pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[0]);
-    assert (status == PIM_OK);
+    needles_done += needles_this_iteration;
   }
 
   status = pimCopyDeviceToHost(pim_individual_needle_matches[0], (void *)matches.data());
@@ -205,6 +238,27 @@ void printVec(std::vector<T>& vec) {
     cout << elem << ", ";
   }
   std::cout << std::endl;
+}
+
+bool isVertical(PimDeviceProperties& deviceProp) {
+  std::cout << deviceProp.deviceType << std::endl;
+  switch (deviceProp.deviceType) {
+  case PIM_DEVICE_BITSIMD_V: return true;
+  case PIM_DEVICE_BITSIMD_V_NAND: return true;
+  case PIM_DEVICE_BITSIMD_V_MAJ: return true;
+  case PIM_DEVICE_BITSIMD_V_AP: return true;
+  case PIM_DEVICE_DRISA_NOR: return true;
+  case PIM_DEVICE_DRISA_MIXED: return true;
+  case PIM_DEVICE_SIMDRAM: return true;
+  case PIM_DEVICE_BITSIMD_H: return false;
+  case PIM_DEVICE_FULCRUM: return false;
+  case PIM_DEVICE_BANK_LEVEL: return false;
+  case PIM_DEVICE_NONE:
+  case PIM_FUNCTIONAL:
+  default:
+    assert(0);
+  }
+  return false;
 }
 
 int main(int argc, char* argv[])
@@ -259,10 +313,16 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  PimDeviceProperties deviceProp;
+  PimStatus status = pimGetDeviceProperties(&deviceProp);
+  assert(status == PIM_OK);
+  //TODO: fix
+  bool is_vertical = true;//isVertical(deviceProp);
+
   matches.resize(haystack.size(), 0);
 
   // //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  string_match(needles, haystack, matches);
+  string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, is_vertical);
 
   std::cout << "matches: ";
   printVec(matches);
