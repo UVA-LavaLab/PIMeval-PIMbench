@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
-            status = pimRedSumRangedInt(compare_results_obj[i], 0, numElements, &count_table[j]);
+            status = pimRedSum(compare_results_obj[i], static_cast<void*>(&count_table[j]),  0, numElements);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return 1;
