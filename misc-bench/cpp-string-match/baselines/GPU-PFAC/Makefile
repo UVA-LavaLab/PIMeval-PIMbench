@@ -14,7 +14,11 @@ EXEC := string-match.out
 SOURCES := string-match.cu
 
 # Header files
-INCLUDE_FLAGS := -I../../../../PIMbench
+INCLUDE_FLAGS := -I./../../include
+
+# PFAC flags
+PFAC_ROOT := ./PFAC/PFAC
+PFAC_FLAGS := -I$(PFAC_ROOT)/include -L$(PFAC_ROOT)/lib -lpfac
 
 # Compiler flags
 CFLAGS := -O3
@@ -24,8 +28,8 @@ CXXFLAGS := -std=c++17
 all: $(EXEC)
 
 # Rule to build the target executable
-$(EXEC): $(SOURCES)
-	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) $(INCLUDE_FLAGS) -o $(EXEC)
+$(EXEC): $(SOURCES) $(PFAC_ROOT)/lib/libpfac.so
+	$(NVCC) $(SOURCES) $(PFAC_FLAGS) -I$(CUDA_INCLUDE) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) $(INCLUDE_FLAGS) -o $(EXEC)
 
 # Rule to clean the project
 clean:
