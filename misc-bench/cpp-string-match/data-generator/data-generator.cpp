@@ -109,12 +109,8 @@ int main(int argc, char* argv[])
     return l.size() < r.size();
   });
 
-  // Generate random string of text of length params.textLen
-  std::string text(params.textLen, 0);
-
-  for(size_t i=0; i<params.textLen; ++i) {
-    text[i] = (rand() % 26) + 'A';
-  }
+  // Stores indices of all keys to be put into the text
+  std::vector<size_t> text_vec_of_keys;
   
   size_t text_chars_replaced_with_keys = 0;
   size_t target_text_chars_replaced_with_keys = ((double) params.keyFrequency / (double) 100.0) * params.textLen;
@@ -127,7 +123,8 @@ int main(int argc, char* argv[])
     if(next_key.size() + text_chars_replaced_with_keys > target_text_chars_replaced_with_keys) {
       last_viable_key = next_key_ind;
     }
-    text.replace(text_chars_replaced_with_keys, next_key.size(), next_key);
+    // text.replace(text_chars_replaced_with_keys, next_key.size(), next_key);
+    text_vec_of_keys.push_back(next_key_ind);
     text_chars_replaced_with_keys += next_key.size();
   }
 
@@ -135,8 +132,37 @@ int main(int argc, char* argv[])
   // Covers edge case where all keys are too long to fit without going over desired frequency,
   // otherwise causing zero matches at low key frequencies
   if((text_chars_replaced_with_keys == 0 && target_text_chars_replaced_with_keys > 0)
-  && (text_chars_replaced_with_keys + keys[0].size() < text.size())) {
+  && (keys[0].size() < params.textLen)) {
+    // text.replace(0, keys[0].size(), keys[0]);
+    text_vec_of_keys.push_back(0);
+    text_chars_replaced_with_keys = keys[0].size();
+  }
+
+  // Generate random string of text of length params.textLen
+  std::string text(params.textLen, 0);
+
+  for(size_t i=0; i<params.textLen; ++i) {
+    text[i] = (rand() % 26) + 'A';
+  }
+
+  if(text_vec_of_keys.size() == 1) {
     text.replace(0, keys[0].size(), keys[0]);
+  } else if(text_vec_of_keys.size() > 1) {
+    size_t non_key_chars_in_text = params.textLen - text_chars_replaced_with_keys;
+    size_t min_space = non_key_chars_in_text / (text_vec_of_keys.size() - 1);
+    size_t extra_spaces = non_key_chars_in_text % (text_vec_of_keys.size() - 1);
+
+    size_t text_ind = 0;
+    for(size_t i=0; i < text_vec_of_keys.size() - 1; ++i) {
+      std::string& current_key = keys[text_vec_of_keys[i]];
+      text.replace(text_ind, current_key.size(), current_key);
+      text_ind += current_key.size();
+      text_ind += min_space;
+      if(extra_spaces > 0) {
+        ++text_ind;
+        -- extra_spaces;
+      }
+    }
   }
   
   std::string outputFile(params.outputFile);
