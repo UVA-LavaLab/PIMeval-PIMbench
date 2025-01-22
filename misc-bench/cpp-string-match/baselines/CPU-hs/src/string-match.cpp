@@ -25,6 +25,7 @@ typedef struct Params
 {
   char *keysInputFile;
   char *textInputFile;
+  bool shouldVerify;
 } Params;
 
 void usage()
@@ -34,6 +35,7 @@ void usage()
           "\n"
           "\n    -k    keys input file, with each key on a seperate line (required, searches in cpp-string-match/dataset directory, note that keys are expected to be sorted by length, with smaller keys first)"
           "\n    -t    text input file to search for keys from (required, searches in cpp-string-match/dataset directory)"
+          "\n    -v    t = verifies hyperscan output with host output. (default=false)"
           "\n");
 }
 
@@ -42,9 +44,10 @@ struct Params input_params(int argc, char **argv)
   struct Params p;
   p.keysInputFile = nullptr;
   p.textInputFile = nullptr;
+  p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:k:t:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:k:t:v:")) >= 0)
   {
     switch (opt)
     {
@@ -57,6 +60,9 @@ struct Params input_params(int argc, char **argv)
       break;
     case 't':
       p.textInputFile = optarg;
+      break;
+    case 'v':
+      p.shouldVerify = (*optarg == 't') ? true : false;
       break;
     default:
       fprintf(stderr, "\nUnrecognized option!\n");
@@ -85,6 +91,17 @@ void printVec(std::vector<T>& vec) {
     cout << elem << ", ";
   }
   std::cout << std::endl;
+}
+
+void string_match_cpu(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches) {
+  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
+    size_t pos = haystack.find(needles[needle_idx], 0);
+
+    while (pos != std::string::npos) {
+        matches[pos] = std::max((unsigned long) matches[pos], needle_idx + 1);
+        pos = haystack.find(needles[needle_idx], pos + 1);
+    }
+  }
 }
 
 /**
@@ -142,8 +159,8 @@ int main(int argc, char **argv)
   }
 
   hs_error_t hs_err = hs_compile_lit_multi(needles_arr, flags_arr,
-  ids_arr, lens_arr, num_elements, mode, platform,
-  &db, &compile_err);
+                      ids_arr, lens_arr, num_elements, mode, platform,
+                      &db, &compile_err);
 
   if(hs_err != HS_SUCCESS) {
     fprintf(stderr, "Hyperscan couldn't compile pattern, ending program!\nError expression number: %d\nError text: \"%s\"", compile_err->expression, compile_err->message);
@@ -178,10 +195,34 @@ int main(int argc, char **argv)
   std::chrono::duration<double, std::milli> elapsedTime = (end - start)/WARMUP;
   std::cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
   
-  printVec(matches);
+  // printVec(matches);
 
   hs_free_database(db);
   hs_free_scratch(scratch);
+
+  if (params.shouldVerify) 
+  {
+    std::vector<int> matches_cpu;
+    
+    matches_cpu.resize(haystack.size(), 0);
+
+    string_match_cpu(needles, haystack, matches_cpu);
+
+    // verify result
+    bool is_correct = true;
+    #pragma omp parallel for
+    for (unsigned i = 0; i < matches.size(); ++i)
+    {
+      if (matches[i] != matches_cpu[i])
+      {
+        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), for position " << i << std::endl;
+        is_correct = false;
+      }
+    }
+    if(is_correct) {
+      std::cout << "Correct for string match!" << std::endl;
+    }
+  }
 
   return 0;
 }
