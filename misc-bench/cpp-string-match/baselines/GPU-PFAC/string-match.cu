@@ -135,7 +135,7 @@ float string_match_gpu(std::string& needle_filename, std::string& haystack, std:
 
   cudaEventRecord(start, 0);
 
-  pfac_error = PFAC_matchFromDevice( pfac_handle, gpu_text, haystack.size()*sizeof(int), gpu_matches);
+  pfac_error = PFAC_matchFromDevice( pfac_handle, gpu_text, haystack.size(), gpu_matches);
   if ( PFAC_STATUS_SUCCESS != pfac_error ){
       std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
       exit(1);
