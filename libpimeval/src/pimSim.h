@@ -47,6 +47,7 @@ public:
   pimStatsMgr* getStatsMgr() { return m_statsMgr.get(); }
   const pimParamsDram& getParamsDram() const { assert(m_paramsDram); return *m_paramsDram; }
   pimPerfEnergyBase* getPerfEnergyModel();
+  bool isAnalysisMode() const { return m_analysisMode; }
 
   void initThreadPool(unsigned maxNumThreads);
   pimUtils::threadPool* getThreadPool() { return m_threadPool.get(); }
@@ -145,6 +146,7 @@ private:
   std::unique_ptr<pimStatsMgr> m_statsMgr;
   std::unique_ptr<pimUtils::threadPool> m_threadPool;
   unsigned m_numThreads = 0;
+  bool m_analysisMode = false;
   std::string m_memConfigFileName;
   std::string m_configFilesPath;
   bool m_initCalled = false;

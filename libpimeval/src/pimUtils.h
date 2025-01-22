@@ -115,6 +115,7 @@ namespace pimUtils
   static constexpr const char* envVarPimEvalTarget = "PIMEVAL_TARGET";
   static constexpr const char* envVarPimEvalConfigPath = "PIMEVAL_CONFIG_PATH";
   static constexpr const char* envVarPimEvalConfigSim = "PIMEVAL_CONFIG_SIM";
+  static constexpr const char* envVarPimEvalAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
 
   //! @class  threadWorker
   //! @brief  Thread worker base class
