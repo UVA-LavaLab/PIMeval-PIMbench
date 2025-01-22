@@ -229,17 +229,6 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
   assert (status == PIM_OK);
 }
 
-void string_match_cpu(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches) {
-  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
-    size_t pos = haystack.find(needles[needle_idx], 0);
-
-    while (pos != string::npos) {
-        matches[pos] = max((unsigned long) matches[pos], needle_idx + 1);
-        pos = haystack.find(needles[needle_idx], pos + 1);
-    }
-  }
-}
-
 bool isVertical(PimDeviceProperties& deviceProp) {
   std::cout << deviceProp.deviceType << std::endl;
   switch (deviceProp.deviceType) {
