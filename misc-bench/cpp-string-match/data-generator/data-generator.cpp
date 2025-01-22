@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
   std::vector<std::string> keys;
   keys.reserve(params.numKeys);
 
+  // TODO: remove duplicate key generation, duplicate keys break pfac
   // Create params.numKeys randomly generated keys of random sizes in range [params.minKeyLen, params.maxKeyLen]
   for(size_t i=0; i<params.numKeys; ++i) {
     size_t curr_key_len = rand()%(params.maxKeyLen-params.minKeyLen + 1) + params.minKeyLen;
