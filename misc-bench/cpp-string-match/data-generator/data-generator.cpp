@@ -32,7 +32,7 @@ void usage()
           "\n    -n    number of keys (default=5)"
           "\n    -m    minimum key length (default = 1)"
           "\n    -x    maximum key length (default = 10)"
-          "\n    -f    approximate frequency of keys in generated text, 0=fully random text, 100=all keys (default = 50)"
+          "\n    -f    approximate frequency of keys in generated text, 0=no matches, 100=all keys (default = 50)"
           "\n");
 }
 
