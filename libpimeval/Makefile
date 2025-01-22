@@ -7,7 +7,7 @@ CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17
 CXXFLAGS_DEBUG := -g
 # Note: If specify -DNDEBUG, assert will be disabled
-CXXFLAGS_PERF := -Ofast -Wno-unused-parameter
+CXXFLAGS_PERF := -O3 -Wno-unused-parameter
 INC :=
 AR := ar
 ARFLAGS := rcs

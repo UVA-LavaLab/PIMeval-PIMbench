@@ -194,6 +194,7 @@ public:
   PimDataType getDataType() const { return m_dataType; }
   uint64_t getNumElements() const { return m_numElements; }
   unsigned getBitsPerElement() const { return m_bitsPerElement; }
+  unsigned getBitsPerElementPadded() const { return m_bitsPerElementPadded; }
   pimDevice* getDevice() { return m_device; }
   bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
   bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
@@ -243,6 +244,7 @@ private:
   pimDataHolder m_data;
   uint64_t m_numElements = 0;
   unsigned m_bitsPerElement = 0;
+  unsigned m_bitsPerElementPadded = 0;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
   unsigned m_maxNumRegionsPerCore = 0;
   unsigned m_numCoresUsed = 0;
