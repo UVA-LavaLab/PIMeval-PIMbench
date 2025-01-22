@@ -101,8 +101,15 @@ void print_pim_int(PimObjId pim_obj, uint64_t len) {
   std::cout << std::endl;
 }
 
-void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_vertical) {
+template <typename T>
+void printVec(std::vector<T>& vec) {
+  for(T elem : vec) {
+    std::cout << elem << ", ";
+  }
+  std::cout << std::endl;
+}
 
+void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_vertical) {
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
@@ -149,7 +156,7 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
       needles_this_iteration = min(max_needles_per_iteration, num_needles);
     } else if(iter+1 == num_iterations) {
       needles_this_iteration = num_needles - needles_done;
-    } {
+    } else {
       needles_this_iteration = max_needles_per_iteration - 1;
     }
 
@@ -232,14 +239,6 @@ void string_match_cpu(std::vector<std::string>& needles, std::string& haystack, 
   }
 }
 
-template <typename T>
-void printVec(std::vector<T>& vec) {
-  for(T elem : vec) {
-    cout << elem << ", ";
-  }
-  std::cout << std::endl;
-}
-
 bool isVertical(PimDeviceProperties& deviceProp) {
   std::cout << deviceProp.deviceType << std::endl;
   switch (deviceProp.deviceType) {
@@ -320,8 +319,7 @@ int main(int argc, char* argv[])
   bool is_vertical = true;//isVertical(deviceProp);
 
   matches.resize(haystack.size(), 0);
-
-  // //TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
+  
   string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, is_vertical);
 
   std::cout << "matches: ";
