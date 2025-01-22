@@ -128,22 +128,13 @@ float string_match_gpu(std::string& needle_filename, std::string& haystack, std:
     exit(1);
   }
 
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
   float timeElapsed = 0;
 
-  cudaEventRecord(start, 0);
-
-  pfac_error = PFAC_matchFromDevice( pfac_handle, gpu_text, haystack.size(), gpu_matches);
+  pfac_error = PFAC_matchFromDevice( pfac_handle, gpu_text, haystack.size(), gpu_matches, &timeElapsed);
   if ( PFAC_STATUS_SUCCESS != pfac_error ){
       std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
       exit(1);
   }
-  
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
 
   cuda_error = cudaGetLastError();
   if (cuda_error != cudaSuccess) {
