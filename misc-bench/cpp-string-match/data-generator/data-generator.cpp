@@ -202,9 +202,7 @@ int main(int argc, char* argv[])
         printf("Error writing to keys file\n");
         return 1;
     }
-    if(i+1 < keys.size()) {
-      fwrite(newline_char.c_str(), sizeof(char), newline_char.size(), keys_file);
-    }
+    fwrite(newline_char.c_str(), sizeof(char), newline_char.size(), keys_file);
   }
 
   fclose(keys_file);
