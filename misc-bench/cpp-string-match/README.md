@@ -1,4 +1,4 @@
-# Scale
+# String Match
 
 String match is an operation involving two strings that determines indices where one string, the needle, appears in another string, the haystack. This particular version of string match creates an array of the length of the haystack where every position indicates whether there is a match of the needle and the haystack starting at that position, for 1 or more needles and 1 haystack. For example:
 
