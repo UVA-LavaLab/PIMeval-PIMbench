@@ -15,10 +15,12 @@ endif
 EXEC := string-match.out
 SRC := string-match.cpp
 
+STRING_MATCH_INCLUDE = -I./../include
+
 debug perf dramsim3_integ: $(EXEC)
 
 $(EXEC): $(SRC) $(DEPS)
-	$(CXX) $< $(CXXFLAGS) -o $@
+	$(CXX) $< $(CXXFLAGS) $(STRING_MATCH_INCLUDE) -o $@
 
 clean:
 	rm -rf $(EXEC) *.dSYM

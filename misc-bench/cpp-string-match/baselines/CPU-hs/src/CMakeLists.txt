@@ -1,6 +1,6 @@
 SET(EXEC "string-match.out")
 SET(SRC "string-match.cpp")
-SET(INCLUDE ${CMAKE_SOURCE_DIR}/hyperscan/src ${CMAKE_SOURCE_DIR}/../../../../PIMbench)
+SET(INCLUDE ${CMAKE_SOURCE_DIR}/hyperscan/src ${CMAKE_SOURCE_DIR}/../../../../PIMbench ${CMAKE_SOURCE_DIR}/../../include)
 
 # Add the executable for your main program
 add_executable(${EXEC} ${SRC})

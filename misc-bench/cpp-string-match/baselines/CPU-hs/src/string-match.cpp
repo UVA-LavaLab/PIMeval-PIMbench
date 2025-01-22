@@ -16,9 +16,9 @@
 #include <iostream>
 #include <vector>
 #include <hs.h>
-#include <fstream>
 
 #include "utilBaselines.h"
+#include "string-match-utils.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -110,30 +110,16 @@ int main(int argc, char **argv)
 
   const std::string DATASET_FOLDER_PREFIX = "./../../../dataset/";
 
-  std::string text_input_file = params.textInputFile;
-  text_input_file = DATASET_FOLDER_PREFIX + text_input_file;
-  
-  std::ifstream text_file(text_input_file);
-  if (!text_file) {
-    std::cout << "Couldn't open text input file" << std::endl;
+  haystack = get_text_from_file(DATASET_FOLDER_PREFIX, params.textInputFile);
+  if(haystack.size() == 0) {
+    std::cout << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  std::ostringstream text_file_oss;
-  text_file_oss << text_file.rdbuf();
-  haystack = text_file_oss.str();
-
-  std::string keys_input_file = params.keysInputFile;
-  keys_input_file = DATASET_FOLDER_PREFIX + keys_input_file;
-  std::ifstream keys_file(keys_input_file);
-  if (!keys_file) {
-    std::cout << "Couldn't open keys input file" << std::endl;
+  needles = get_needles_from_file(DATASET_FOLDER_PREFIX, params.keysInputFile);
+  if(needles.size() == 0) {
+    std::cout << "There was an error opening the keys file" << std::endl;
     return 1;
-  }
-  std::string line;
-
-  while (std::getline(keys_file, line)) {
-      needles.push_back(line);
   }
 
   matches.resize(haystack.size());
