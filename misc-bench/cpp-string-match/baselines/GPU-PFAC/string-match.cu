@@ -204,18 +204,19 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // needles = get_needles_from_file(DATASET_FOLDER_PREFIX, params.keysInputFile);
-  // if(needles.size() == 0) {
-  //   std::cout << "There was an error opening the keys file" << std::endl;
-  //   return 1;
-  // }
+  needles = get_needles_from_file(DATASET_FOLDER_PREFIX, params.keysInputFile);
+  if(needles.size() == 0) {
+    std::cout << "There was an error opening the keys file" << std::endl;
+    return 1;
+  }
+
   matches.resize(haystack.size());
   std::string keys_filename = DATASET_FOLDER_PREFIX + params.keysInputFile;
   float timeElapsed = string_match_gpu(keys_filename, haystack, matches);
   printf("Execution time of string match = %f ms\n", timeElapsed);
 
-  std::cout << "matches: ";
-  printVec(matches);
+  // std::cout << "matches: ";
+  // printVec(matches);
 
   if (params.shouldVerify) 
   {
