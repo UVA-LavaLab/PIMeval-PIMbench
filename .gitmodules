@@ -3,5 +3,5 @@
 	url = https://github.com/intel/hyperscan.git
 [submodule "misc-bench/cpp-string-match/baselines/GPU-PFAC/PFAC"]
 	path = misc-bench/cpp-string-match/baselines/GPU-PFAC/PFAC
-	url = https://github.com/pfac-lib/PFAC.git
+	url = https://github.com/Arleee1/PFAC.git
 	branch = kernel_timing
