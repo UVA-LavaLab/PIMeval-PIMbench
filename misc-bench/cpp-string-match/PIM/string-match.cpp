@@ -298,8 +298,8 @@ int main(int argc, char* argv[])
   
   string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, is_vertical);
 
-  std::cout << "matches: ";
-  printVec(matches);
+  // std::cout << "matches: ";
+  // printVec(matches);
 
   if (params.shouldVerify) 
   {
