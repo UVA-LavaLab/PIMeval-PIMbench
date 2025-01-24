@@ -1,8 +1,18 @@
 # String Match
 
-String match is an operation involving two strings that determines indices where one string, the needle, appears in another string, the haystack. This particular version of string match creates an array of the length of the haystack where every position indicates whether there is a match of the needle and the haystack starting at that position, for 1 or more needles and 1 haystack. For example:
+String match takes one string (called the text), and 1 or more additional strings (called the keys), and finds all locations where the keys appear in the text. There are multiple different possible output formats for string matching, this project uses the output format from the [PFAC](https://github.com/pfac-lib/PFAC/) project, described as below:
+- The output is an array of the same length as the text
+- The elements of the output array are 32 bits
+- Each elements represents if there was a match with a key at that position in the text
+    - 0 in the output represents no match
+    - non-zero means that the key with that index matches at that position (indexs start at 1)
+- For keys that are prefixes of other keys, the longest matching key is always given as the result
 
-string_match("abcdabc", ["abc"]) -> [1, 0, 0, 0, 1, 0, 0]
+For example:
+text = "ABCAB"
+keys = ["C", "AB", "ABC"]
+
+string_match(text, keys) -> [3, 0, 1, 2, 0]
 
 ## Directory Structure
 
@@ -23,6 +33,7 @@ cpp-string-match/
 │   ├── GPU/
 │   │   ├── Makefile
 │   │   ├── string-match.cu
+│   │   ├── PFAC/ (submodule)
 ├── README.md
 ├── Makefile
 ```
@@ -45,15 +56,21 @@ The CPU variant of string matching uses [hyperscan](https://github.com/intel/hyp
 
 #### GPU
 
-The GPU variant leverages CUDA C++ to find string matches on a GPU.
+The GPU variant leverages uses the [PFAC](https://github.com/pfac-lib/PFAC/) library.
 
 ### PIM Implementation
 
-The PIM variant is implemented using C++ with some speedup from OpenMP. Three different PIM architectures can be tested with this.
+The PIM variant is implemented using C++ with some simlation speedup from OpenMP. Three different PIM architectures can be tested with this.
 
 ## Compilation Instructions for Specific Variants
 
 ### CPU Variant
+
+If the submodules have not already been initialized, run:
+
+```bash
+git submodule update --init --recursive
+```
 
 The CPU varient requires [apptainer](https://apptainer.org/) to run the container to compile in (but can run outside of the container). To compile for the CPU variant, use:
 
@@ -65,14 +82,28 @@ mkdir -p build
 cd build
 cmake ..
 make
+exit
 ```
 
 ### GPU Variant
 
-To compile for the GPU variant, use:
+If the submodules have not already been initialized, run:
 
 ```bash
+git submodule update --init --recursive
+```
+
+Due to limitations of the [PFAC](https://github.com/pfac-lib/PFAC/) library, the GPU baseline must be compiled with a cuda version < 12.0.0. To compile for the GPU variant, first compile the PFAC library using:
+
+```bash
+cd baselines/GPU/PFAC/PFAC
+make
+```
+
+Then compile the GPU string match baseline using:
+```bash
 cd baselines/GPU
+export LD_LIBRARY_PATH=$(pwd)/PFAC/PFAC/lib:$LD_LIBRARY_PATH # Replace LD_LIBRARY_PATH with DYLD_LIBRARY_PATH for Mac
 make
 ```
 
@@ -91,10 +122,10 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command that will run it for default parameters (Must be run in the build directory for the CPU baseline):
+After compiling, run the each executable with the following command (Must be run in the build directory for the CPU baseline). Note that for the GPU baseline, the LD_LIBRARY_PATH enviornment variable (DYLD_LIBRARY_PATH on Mac) must include the PFAC lib directory, as set in the compilation instructions for the GPU varient. Both the -k and -t parameters are required, and specify the keys and the text to match, reading from `dataset/<keys file>` and `dataset/<text file>`:
 
 ```bash
-./string-match.out
+./string-match.out -k <keys file> -t <text file>
 ```
 
 To see help text on all usages and how to modify any of the input parameters, use following command:
@@ -102,3 +133,6 @@ To see help text on all usages and how to modify any of the input parameters, us
 ```bash
 ./string-match.out -h
 ```
+
+## References
+Cheng-Hung Lin, Chen-Hsiung Liu, Lung-Sheng Chien, Shih-Chieh Chang, "Accelerating Pattern Matching Using a Novel Parallel Algorithm on GPUs," IEEE Transactions on Computers, vol. 62, no. 10, pp. 1906-1916, Oct. 2013, doi:10.1109/TC.2012.254
