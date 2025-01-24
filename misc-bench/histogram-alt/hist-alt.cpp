@@ -91,17 +91,17 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::
     assert(status == PIM_OK);
 
     prevCount = blueCount[i];
-    status = pimRedSumRangedUInt(tempObj, 0, imgDataBytes / 3, &blueCount[i]);
+    status = pimRedSum(tempObj, &blueCount[i], 0, imgDataBytes / 3);
     assert(status == PIM_OK);
     blueCount[i] += prevCount;
 
     prevCount = greenCount[i];
-    status = pimRedSumRangedUInt(tempObj, imgDataBytes / 3, imgDataBytes * 2 / 3, &greenCount[i]);
+    status = pimRedSum(tempObj, &greenCount[i], imgDataBytes / 3, imgDataBytes * 2 / 3);
     assert(status == PIM_OK);
     greenCount[i] += prevCount;
 
     prevCount = redCount[i];
-    status = pimRedSumRangedUInt(tempObj, imgDataBytes * 2 / 3, imgDataBytes, &redCount[i]);
+    status = pimRedSum(tempObj, &redCount[i], imgDataBytes * 2 / 3, imgDataBytes);
     assert(status == PIM_OK);
     redCount[i] += prevCount;
   }
