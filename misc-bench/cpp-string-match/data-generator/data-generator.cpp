@@ -14,6 +14,7 @@
 #include <cmath>
 #include <unordered_set>
 #include <iterator>
+#include <random>
 
 typedef struct Params
 {
@@ -158,11 +159,19 @@ int main(int argc, char* argv[])
     text_chars_replaced_with_keys = keys[0].size();
   }
 
-  // Generate random string of text of length params.textLen
+  // Generate random string of text of length params.textLen, all of uppercase letters so that there aren't extra matches
   std::string text(params.textLen, 0);
 
-  for(size_t i=0; i<params.textLen; ++i) {
-    text[i] = (rand() % 26) + 'A';
+  #pragma omp parallel
+  {
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_int_distribution<> dist('A', 'Z');
+
+      #pragma omp for
+      for (size_t i = 0; i < params.textLen; ++i) {
+          text[i] = dist(gen);
+      }
   }
 
   // Replace text with keys, approximately evenly spaced
