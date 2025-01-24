@@ -1,11 +1,11 @@
 # String Match
 
-String match takes one string (called the text), and 1 or more additional strings (called the keys), and finds all locations where the keys appear in the text. There are multiple different possible output formats for string matching, this project uses the output format from the [PFAC](https://github.com/pfac-lib/PFAC/) project, described as below:
+String match takes one string (called the text), and 1 or more additional strings (called the keys), and finds all locations where the keys appear in the text. There are multiple different possible output formats for string matching, this project uses the output format from the [PFAC](https://github.com/pfac-lib/PFAC/) project, as described below:
 - The output is an array of the same length as the text
-- The elements of the output array are 32 bits
+- The elements of the output array are 32 bit ints
 - Each elements represents if there was a match with a key at that position in the text
-    - 0 in the output represents no match
-    - non-zero means that the key with that index matches at that position (indexs start at 1)
+    - 0 in the output represents no match at the given position
+    - A non-zero value in the output means that the key with that index matches at that position (indices start at 1)
 - For keys that are prefixes of other keys, the longest matching key is always given as the result
 
 For example:
@@ -62,7 +62,7 @@ The CPU variant of string matching uses [hyperscan](https://github.com/intel/hyp
 
 #### GPU
 
-The GPU variant leverages uses the [PFAC](https://github.com/pfac-lib/PFAC/) library.
+The GPU variant leverages the [PFAC](https://github.com/pfac-lib/PFAC/) library.
 
 ### PIM Implementation
 
