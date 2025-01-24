@@ -76,40 +76,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void print_pim(PimObjId pim_obj, uint64_t len) {
-  vector<uint8_t> dst_host;
-  dst_host.resize(len, 1);
-
-  PimStatus status = pimCopyDeviceToHost(pim_obj, (void *)dst_host.data());
-  assert (status == PIM_OK);
-
-  for (auto val : dst_host) {
-    std::cout << unsigned(val) << " ";
-  }
-  std::cout << std::endl;
-}
-
-void print_pim_int(PimObjId pim_obj, uint64_t len) {
-  vector<uint32_t> dst_host;
-  dst_host.resize(len, 1);
-
-  PimStatus status = pimCopyDeviceToHost(pim_obj, (void *)dst_host.data());
-  assert (status == PIM_OK);
-
-  for (auto val : dst_host) {
-    std::cout << val << " ";
-  }
-  std::cout << std::endl;
-}
-
-template <typename T>
-void printVec(std::vector<T>& vec) {
-  for(T elem : vec) {
-    std::cout << elem << ", ";
-  }
-  std::cout << std::endl;
-}
-
 void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_vertical) {
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
@@ -198,10 +164,6 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
         assert (status == PIM_OK);
       }
     }
-
-    // for(uint64_t needle_idx = 0; needle_idx < num_needles; ++needle_idx) {
-    //   pimMulScalar(pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[needle_idx], 1 + needle_idx);
-    // }
 
     for(uint64_t needle_idx = 0; needle_idx < needles_this_iteration; ++needle_idx) {
       uint64_t current_needle_idx = needle_idx + needles_done;
@@ -297,9 +259,6 @@ int main(int argc, char* argv[])
   matches.resize(haystack.size(), 0);
   
   string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, is_vertical);
-
-  // std::cout << "matches: ";
-  // printVec(matches);
 
   if (params.shouldVerify) 
   {

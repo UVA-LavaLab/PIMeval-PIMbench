@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 
   size_t maxPossibleKeys = 0;
   for (size_t length = params.minKeyLen; length <= params.maxKeyLen; ++length) {
-      maxPossibleKeys += (size_t) (std::pow(26, length)); // 26 letters
+      maxPossibleKeys += (size_t) (std::pow(26, length));
   }
 
   if(params.numKeys > maxPossibleKeys) {

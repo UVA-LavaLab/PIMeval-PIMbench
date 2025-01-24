@@ -69,14 +69,6 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-template <typename T>
-void printVec(std::vector<T>& vec) {
-  for(T elem : vec) {
-    std::cout << elem << ", ";
-  }
-  std::cout << std::endl;
-}
-
 float string_match_gpu(std::string& needle_filename, std::string& haystack, std::vector<int>& matches) {
   PFAC_handle_t pfac_handle;
   PFAC_status_t pfac_error;
@@ -194,9 +186,6 @@ int main(int argc, char* argv[])
   std::string keys_filename = DATASET_FOLDER_PREFIX + params.keysInputFile;
   float timeElapsed = string_match_gpu(keys_filename, haystack, matches);
   printf("Execution time of string match = %f ms\n", timeElapsed);
-
-  // std::cout << "matches: ";
-  // printVec(matches);
 
   if (params.shouldVerify) 
   {

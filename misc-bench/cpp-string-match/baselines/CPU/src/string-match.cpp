@@ -75,22 +75,10 @@ struct Params input_params(int argc, char **argv)
 
 static int match_callback(unsigned int id, unsigned long long from,
                         unsigned long long to, unsigned int flags, void *matches) {
-    // printf("Match for pattern from: %llu, id: %u, to: %llu \n", from, id, to);
-    // ((uint8_t*) ctx)[from] = 1;
     (*(std::vector<int>*)matches)[from] = max(
       (*(std::vector<int>*)matches)[from]
       , (int) id);
-    // printf("set matches arr\n");
     return 0;
-}
-
-
-template <typename T>
-void printVec(std::vector<T>& vec) {
-  for(T elem : vec) {
-    cout << elem << ", ";
-  }
-  std::cout << std::endl;
 }
 
 /**
@@ -157,7 +145,6 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  // TODO: Check if always null
   hs_free_compile_error(compile_err);
 
   hs_scratch_t *scratch = NULL;
@@ -183,8 +170,6 @@ int main(int argc, char **argv)
 
   std::chrono::duration<double, std::milli> elapsedTime = (end - start)/WARMUP;
   std::cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
-  
-  // printVec(matches);
 
   hs_free_database(db);
   hs_free_scratch(scratch);
