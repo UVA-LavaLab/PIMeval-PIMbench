@@ -9,15 +9,16 @@ String match takes one string (called the text), and 1 or more additional string
 - For keys that are prefixes of other keys, the longest matching key is always given as the result
 
 For example:
-text = "ABCAB"
-keys = ["C", "AB", "ABC"]
-
-string_match(text, keys) -> [3, 0, 1, 2, 0]
+- text = "ABCAB"
+- keys = ["C", "AB", "ABC"]
+- string_match(text, keys) -> [3, 0, 1, 2, 0]
 
 ## Directory Structure
 
 ```
 cpp-string-match/
+├── include/
+│   ├── string-match-utils.h
 ├── PIM/
 │   ├── Makefile
 │   ├── string-match.cpp
@@ -34,6 +35,11 @@ cpp-string-match/
 │   │   ├── Makefile
 │   │   ├── string-match.cu
 │   │   ├── PFAC/ (submodule)
+├── data-generator/
+│   ├── Makefile
+│   ├── data-generator.cpp
+├── dataset/
+│   ├── .gitkeep
 ├── README.md
 ├── Makefile
 ```
@@ -61,6 +67,34 @@ The GPU variant leverages uses the [PFAC](https://github.com/pfac-lib/PFAC/) lib
 ### PIM Implementation
 
 The PIM variant is implemented using C++ with some simlation speedup from OpenMP. Three different PIM architectures can be tested with this.
+
+## String Matching Inputs
+
+### Data Format
+
+Running the string match algorithm requires both a text file and a keys file. Both files are read from the `dataset/` directory. The text file should consist of a string to be matched against. The keys file should contain the keys to be matched, with each key on a newline, as well as a blank line at the end of the file. Also note that keys are expected to be sorted in order of increasing length, and that duplicate keys will cause errors.
+
+### Data Generator Instructions
+
+The data generator provides a way to create synthetic string matching data with specific desired properties. To compile the data generator, run:
+
+```bash
+cd data-generator
+make
+```
+
+The data generator will write the generated text and keys to `dataset/<output folder name>/text.txt` and `dataset/<output folder name>/keys.txt`, respectively. To run the data generator, use the following:
+
+```bash
+cd data-generator
+./data-generator.out -o <output folder name>
+```
+
+To see help text on all usages and how to modify any of the input parameters, use following command:
+
+```bash
+./string-match.out -h
+```
 
 ## Compilation Instructions for Specific Variants
 
