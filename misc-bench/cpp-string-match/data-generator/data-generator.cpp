@@ -11,6 +11,9 @@
 #include <vector>
 #include <algorithm>
 #include <filesystem>
+#include <cmath>
+#include <unordered_set>
+#include <iterator>
 
 typedef struct Params
 {
@@ -93,18 +96,36 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  std::vector<std::string> keys;
-  keys.reserve(params.numKeys);
+  size_t maxPossibleKeys = 0;
+  for (size_t length = params.minKeyLen; length <= params.maxKeyLen; ++length) {
+      maxPossibleKeys += (size_t) (std::pow(26, length)); // 26 letters
+  }
 
-  // TODO: remove duplicate key generation, duplicate keys break pfac
+  if(params.numKeys > maxPossibleKeys) {
+    printf("Error: Number of keys greater than max possible keys for the given length range\n");
+    return 1;
+  }
+
+  std::unordered_set<std::string> keys_set;
+  keys_set.reserve(params.numKeys);
+
   // Create params.numKeys randomly generated keys of random sizes in range [params.minKeyLen, params.maxKeyLen]
-  for(size_t i=0; i<params.numKeys; ++i) {
+  // All keys are unique
+  while(keys_set.size() < params.numKeys) {
     size_t curr_key_len = rand()%(params.maxKeyLen-params.minKeyLen + 1) + params.minKeyLen;
-    keys.emplace_back(curr_key_len, 0);
+    std::string next_key(curr_key_len, 0);
     for(size_t j=0; j<curr_key_len; ++j) {
-        keys.back()[j] = (rand() % 26) + 'a';
+        next_key[j] = (rand() % 26) + 'a';
+    }
+    if(!keys_set.count(next_key)) {
+      keys_set.insert(next_key);
     }
   }
+
+  std::vector<std::string> keys(
+        std::make_move_iterator(keys_set.begin()),
+        std::make_move_iterator(keys_set.end())
+    );
 
   std::sort(keys.begin(), keys.end(), [](auto& l, auto& r){
     return l.size() < r.size();
@@ -124,7 +145,6 @@ int main(int argc, char* argv[])
     if(next_key.size() + text_chars_replaced_with_keys > target_text_chars_replaced_with_keys) {
       last_viable_key = next_key_ind;
     }
-    // text.replace(text_chars_replaced_with_keys, next_key.size(), next_key);
     text_vec_of_keys.push_back(next_key_ind);
     text_chars_replaced_with_keys += next_key.size();
   }
@@ -134,7 +154,6 @@ int main(int argc, char* argv[])
   // otherwise causing zero matches at low key frequencies
   if((text_chars_replaced_with_keys == 0 && target_text_chars_replaced_with_keys > 0)
   && (keys[0].size() < params.textLen)) {
-    // text.replace(0, keys[0].size(), keys[0]);
     text_vec_of_keys.push_back(0);
     text_chars_replaced_with_keys = keys[0].size();
   }
@@ -146,6 +165,7 @@ int main(int argc, char* argv[])
     text[i] = (rand() % 26) + 'A';
   }
 
+  // Replace text with keys, approximately evenly spaced
   if(text_vec_of_keys.size() == 1) {
     text.replace(0, keys[0].size(), keys[0]);
   } else if(text_vec_of_keys.size() > 1) {
