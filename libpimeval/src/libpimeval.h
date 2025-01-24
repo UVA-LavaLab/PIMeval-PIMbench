@@ -150,13 +150,13 @@ PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
-PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
-PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
-PimStatus pimRedSumFP(PimObjId src, float* sum);
+PimStatus pimRedSum(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+// Min/Max Reduction APIs
+PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
-PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
-PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
-PimStatus pimRedSumRangedFP(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, float* sum);
+
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
 PimStatus pimBroadcastFP(PimObjId dest, float value);
