@@ -1,7 +1,7 @@
-[submodule "misc-bench/cpp-string-match/baselines/CPU-hs/hyperscan"]
-	path = misc-bench/cpp-string-match/baselines/CPU-hs/hyperscan
+[submodule "misc-bench/cpp-string-match/baselines/CPU/hyperscan"]
+	path = misc-bench/cpp-string-match/baselines/CPU/hyperscan
 	url = https://github.com/intel/hyperscan.git
-[submodule "misc-bench/cpp-string-match/baselines/GPU-PFAC/PFAC"]
-	path = misc-bench/cpp-string-match/baselines/GPU-PFAC/PFAC
+[submodule "misc-bench/cpp-string-match/baselines/GPU/PFAC"]
+	path = misc-bench/cpp-string-match/baselines/GPU/PFAC
 	url = https://github.com/Arleee1/PFAC.git
 	branch = kernel_timing
