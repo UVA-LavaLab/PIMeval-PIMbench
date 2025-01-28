@@ -375,6 +375,20 @@ pimSim::getPerfEnergyModel()
   return nullptr;
 }
 
+//! @brief  Start timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimSim::startKernelTimer() const
+{
+  m_statsMgr->startKernelTimer();
+}
+
+//! @brief  End timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimSim::endKernelTimer() const
+{
+  m_statsMgr->endKernelTimer();
+}
+
 //! @brief  Show PIM command stats
 void
 pimSim::showStats() const

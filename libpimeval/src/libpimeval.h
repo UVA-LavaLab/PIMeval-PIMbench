@@ -93,6 +93,9 @@ typedef int PimCoreId;
 typedef int PimObjId;
 
 // PIMeval simulation
+// CPU runtime between start/end timer will be measured for modeling DRAM refresh
+void pimStartTimer();
+void pimEndTimer();
 void pimShowStats();
 void pimResetStats();
 bool pimIsAnalysisMode();
