@@ -4,9 +4,36 @@ import numpy as np
 import torchhd
 import torchvision
 import os
+import csv
 
 DATASETS = ["MNIST", "ISOLET", "EMG_Hand", "UCIHAR", "OMS_iPRG_demo"]
 
+hdc_query_list = [
+    "b1906_293T_proteinID_01A_QE3_122212",
+    "b1922_293T_proteinID_02A_QE3_122212",
+    "b1923_293T_proteinID_03A_QE3_122212",
+    "b1924_293T_proteinID_04A_QE3_122212",
+    "b1925_293T_proteinID_05A_QE3_122212",
+    "b1926_293T_proteinID_06A_QE3_122212",
+    "b1927_293T_proteinID_07A_QE3_122212",
+    "b1928_293T_proteinID_08A_QE3_122212",
+    "b1929_293T_proteinID_09A_QE3_122212",
+    "b1930_293T_proteinID_10A_QE3_122212",
+    "b1931_293T_proteinID_11A_QE3_122212",
+    "b1932_293T_proteinID_12A_QE3_122212",
+    "b1937_293T_proteinID_01B_QE3_122212",
+    "b1938_293T_proteinID_02B_QE3_122212",
+    "b1939_293T_proteinID_03B_QE3_122212",
+    "b1940_293T_proteinID_04B_QE3_122212",
+    "b1941_293T_proteinID_05B_QE3_122212",
+    "b1942_293T_proteinID_06B_QE3_122212",
+    "b1943_293T_proteinID_07B_QE3_122212",
+    "b1944_293T_proteinID_08B_QE3_122212",
+    "b1945_293T_proteinID_09B_QE3_122212",
+    "b1946_293T_proteinID_10B_QE3_122212",
+    "b1947_293T_proteinID_11B_QE3_122212",
+    "b1948_293T_proteinID_12B_QE3_122212",
+]
 
 def load_dataset(name, path=None):
     """
@@ -85,58 +112,14 @@ def load_dataset(name, path=None):
 
     return data_train, data_test
 
+def write_tensor_to_csv(tensor, filename):
+    dim1, dim2 = tensor.shape
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        # Write dimensions
+        writer.writerow([dim1, dim2])
+        # Write data rows
+        for row in tensor.tolist():
+            writer.writerow(row)
 
 
-def save_dataset(data_train, data_test, name):
-    directory = f'../CPP/dataset/{name}'
-
-    # Create the directory if it does not exist
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    filename = os.path.join(directory, 'train.val')
-    with open(filename, 'w') as file:
-        for sample in data_train[0]:
-            line = ""
-            for value in sample:
-                line += str(value.item()) + " "
-            file.write(line + "\n")
-
-    filename = os.path.join(directory, 'train.label')
-    with open(filename, 'w') as file:
-        for label in data_train[1]:
-            line = str(label.item())
-            file.write(line + "\n")
-
-    filename = os.path.join(directory, 'test.val')
-    with open(filename, 'w') as file:
-        for sample in data_test[0]:
-            line = ""
-            for value in sample:
-                line += str(value.item()) + " "
-            file.write(line + "\n")
-
-    filename = os.path.join(directory, 'test.label')
-    with open(filename, 'w') as file:
-        for label in data_test[1]:
-            line = str(label.item())
-            file.write(line + "\n")
-
-    test_size = data_test[1].size()[0]
-    train_size = data_train[1].size()[0]
-    sample_size = data_train[0][1].size()[0]
-    line = str(test_size) + "\n" + str(train_size) + "\n" + str(sample_size)
-    filename = os.path.join(directory, 'dataset_parameters')
-    with open(filename, 'w') as file:
-        file.write(line + "\n")
-
-def get_checksum(data_train, data_test):
-    acc = 0
-    N = (2 ** 20)
-    for sample in data_train[0]:
-            for value in sample:
-                acc = (value.item() + acc ) % N
-    for sample in data_test[0]:
-            for value in sample:
-                acc = (value.item() + acc ) % N
-    return acc

@@ -1,123 +1,106 @@
 import argparse
 import math
-import time
 import torch
+import tqdm
 import model
 import utils
-import csv
+import time
 
-def load_dataset_and_quantize(ref_fname, query_fname, n_lv):
-    """Load datasets and perform quantization."""
-    print("[INFO] Loading datasets")
-    ds_ref, ds_query = utils.load_dataset(name="OMS_iPRG_demo", path=[ref_fname, query_fname])
+# %% Parsing input arguments
+parser = argparse.ArgumentParser(description="HDC-based database search")
+parser.add_argument("--output_ref_file", type=str, default="../PIM/ref.csv", help="Output CSV file for the reference encoding")
+parser.add_argument("--output_query_file", type=str, default="../PIM/query.csv", help="Output CSV file for the query encoding")
+parser.add_argument("--warmup", type=int, default=1024, help="Warmup iterations")
+parser.add_argument("--cuda", action="store_true", default=False, help="Enable GPU support for PyTorch")
+parser.add_argument("--charge", type=int, default=2, help="Charge state (Load Mass Spec. Dataset)")
+parser.add_argument("--ref_dataset", type=str, choices=["iprg", "hcd"], default="hcd", help="Reference dataset to benchmark (e.g., iPRG2012 or Massive Human HCD)")
+parser.add_argument("--n_ref_test", type=int, default=2000, help="Number of reference samples for quick evaluation")
+parser.add_argument("--n_query_test", type=int, default=1000, help="Number of query samples for quick evaluation")
+parser.add_argument("--topk", type=int, default=5, help="Number of top-k results to search")
+parser.add_argument("--n_lv", type=int, default=64, help="Quantization levels for level HVs")
+parser.add_argument("--n_dim", type=int, default=2048, help="HV dimension (can range from 1k to 16k)")
+parser.add_argument("--binary", action="store_true", default=True, help="Enable binary representation for HVs")
+args = parser.parse_args()
 
-    print("[INFO] Quantizing datasets")
-    ds_ref["levels"][ds_ref["levels"] == -1] = 0
-    ds_query["levels"][ds_query["levels"] == -1] = 0
-
-    ds_ref_levels_quantized = model.min_max_quantize(
-        torch.tensor(ds_ref["levels"], dtype=torch.float32), int(math.log2(n_lv) - 1)
+# %% Load the dataset
+if args.ref_dataset == "iprg":
+    dim_spectra = 34976
+    ref_fname = (
+        f"../Dataset/human_yeast_targetdecoy_vec_{dim_spectra}.charge{args.charge}.npz"
     )
-    ds_query_levels_quantized = model.min_max_quantize(
-        torch.tensor(ds_query["levels"], dtype=torch.float32), int(math.log2(n_lv) - 1)
-    )
+    query_fname = f"../Dataset/iPRG2012_vec_{dim_spectra}.charge{args.charge}.npz"
+elif args.ref_dataset == "hcd":
+    dim_spectra = 27981
+    query_idx = 0  # pick one of the query files to test
+    ref_fname = f"../Dataset/oms/ref/massive_human_hcd_unique_targetdecoy_vec_{dim_spectra}.charge{args.charge}.npz"
+    query_fname = f"../Dataset/oms/query/{utils.hdc_query_list[query_idx]}_vec_{dim_spectra}.charge{args.charge}.npz"
+else:
+    raise NotImplementedError("Dataset not implemented")
+ds_ref, ds_query = utils.load_dataset(
+    name="OMS_iPRG_demo", path=[ref_fname, query_fname]
+)
+n_ref, n_query = len(ds_ref["pr_mzs"]), len(ds_query["pr_mzs"])
 
-    ds_ref_idxs = torch.tensor(ds_ref["idxs"], dtype=torch.float32)
-    ds_query_idxs = torch.tensor(ds_query["idxs"], dtype=torch.float32)
+# %% HDC Model
+n_id = dim_spectra  # Num of id HVs
+hdc_model = model.HDC_ID_LV(
+    n_class=n_ref,
+    n_lv=args.n_lv,
+    n_id=n_id,
+    n_dim=args.n_dim,
+    method_id_lv="cyclic",
+    binary=args.binary,
+)
 
-    return ds_ref_levels_quantized, ds_ref_idxs, ds_query_levels_quantized, ds_query_idxs
+# %% Data Quantization
+ds_ref["levels"][ds_ref["levels"] == -1] = 0
+ds_ref_levels_quantized = model.min_max_quantize(
+    torch.tensor(ds_ref["levels"]), int(math.log2(args.n_lv) - 1)
+)
+ds_ref_idxs = torch.tensor(ds_ref["idxs"])
+ds_query["levels"][ds_query["levels"] == -1] = 0
+ds_query_levels_quantized = model.min_max_quantize(
+    torch.tensor(ds_query["levels"]), int(math.log2(args.n_lv) - 1)
+)
+ds_query_idxs = torch.tensor(ds_query["idxs"])
 
-def encode_data(hdc_model, ds_levels_quantized, ds_idxs, n_samples):
-    """Perform HDC encoding."""
-    print(f"[INFO] Encoding {n_samples} samples")
-    encoded_data = hdc_model.encode(
-        {"lv": ds_levels_quantized[:n_samples], "idx": ds_idxs[:n_samples]}, dense=False
-    )
-    return encoded_data
+# %% HDC Encoding Step for Database Pre-building
+ref_enc = hdc_model.encode(
+    {"lv": ds_ref_levels_quantized[:args.n_ref_test], "idx": ds_ref_idxs[:args.n_ref_test]},
+    dense=False,
+)
 
-def write_tensor_to_csv(tensor, filename):
-    if not isinstance(tensor, torch.Tensor):
-        raise TypeError("Input must be a torch.Tensor")
+# %% HDC Encoding Step for Querying
+query_enc = hdc_model.encode(
+    {
+        "lv": ds_query_levels_quantized[:args.n_query_test],
+        "idx": ds_query_idxs[:args.n_query_test],
+    },
+    dense=False,
+)
 
-    dim1, dim2 = tensor.shape
+# %% Write the query and reference tensors to csv file
+utils.write_tensor_to_csv(ref_enc, args.output_ref_file)
+utils.write_tensor_to_csv(query_enc, args.output_query_file)
 
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        # Write dimensions
-        writer.writerow([dim1, dim2])
-        # Write data rows
-        for row in tensor.tolist():
-            writer.writerow(row)
+# %% Move data to the device
+device = torch.device("cuda" if args.cuda and torch.cuda.is_available() else "cpu")
+query_enc = query_enc.to(device).float()
+ref_enc = ref_enc.to(device).float()
 
-def search_database(hdc_model, query_enc, ref_enc, device):
-    """Perform database search."""
-    print("[INFO] Searching database")
+# %% Database Search
+start_time = time.time()
+for i in range(args.warmup):
+    ip = torch.matmul(query_enc, ref_enc.T)
+    if not hdc_model.binary:
+        dist = ip / ref_enc.float().norm(dim=1)
+    sim, pred = torch.topk(ip, k=args.topk, dim=-1)
+end_time = time.time()
+execution_time = (end_time - start_time) / args.warmup
 
-    # Move data to the appropriate device
-    query_enc = query_enc.to(device).float()
-    ref_enc = ref_enc.to(device).float()
-
-    start_time = time.time()
-    dist = torch.matmul(query_enc, ref_enc.T)
-    pred = dist.argmax(dim=-1)
-
-    end_time = time.time()
-    print(f"[INFO] Execution time: {end_time - start_time:.6f} seconds")
-    return pred
-
-def main(args):
-    print("[INFO] Starting main function")
-
-    # Set device
-    device = torch.device("cuda" if args.cuda and torch.cuda.is_available() else "cpu")
-    print(f"[INFO] Using device: {device}")
-
-    # File paths
-    ref_fname = f"../Dataset/human_yeast_targetdecoy_vec_{args.dim_spectra}.charge{args.charge}.npz"
-    query_fname = f"../Dataset/iPRG2012_vec_{args.dim_spectra}.charge{args.charge}.npz"
-
-    # HDC model setup
-    print("[INFO] Initializing HDC model")
-    hdc_model = model.HDC_ID_LV(
-        n_class=args.n_class,
-        n_lv=args.n_lv,
-        n_id=args.dim_spectra,
-        n_dim=args.n_dim,
-        method_id_lv="cyclic",
-        binary=True,
-    )
-
-    # Load and quantize datasets
-    ds_ref_levels_quantized, ds_ref_idxs, ds_query_levels_quantized, ds_query_idxs = load_dataset_and_quantize(
-        ref_fname, query_fname, args.n_lv
-    )
-
-    # Encoding
-    ref_enc = encode_data(hdc_model, ds_ref_levels_quantized, ds_ref_idxs, args.n_test)
-    query_enc = encode_data(hdc_model, ds_query_levels_quantized, ds_query_idxs, args.n_query)
-
-    # Write to binary file
-    write_tensor_to_csv(ref_enc, args.output_ref_file)
-    write_tensor_to_csv(query_enc, args.output_query_file)
-
-    # Database search
-    search_database(hdc_model, query_enc, ref_enc, device)
-
-if __name__ == "__main__":
-    print("[INFO] Parsing command line arguments")
-    parser = argparse.ArgumentParser(description="HDC-based database search")
-    parser.add_argument("-d", "--dim_spectra", type=int, default=34976, help="Dimension of spectra")
-    parser.add_argument("-c", "--charge", type=int, default=2, help="Charge state")
-    parser.add_argument("-nc", "--n_class", type=int, default=100, help="Number of classes")
-    parser.add_argument("-nlv", "--n_lv", type=int, default=64, help="Quantization levels")
-    parser.add_argument("-nd", "--n_dim", type=int, default=2048, help="HV dimension")
-    parser.add_argument("-nt", "--n_test", type=int, default=100, help="Number of test samples")
-    parser.add_argument("-nq", "--n_query", type=int, default=5, help="Number of query samples")
-    parser.add_argument("--cuda", action="store_true", help="Enable GPU support for PyTorch")
-    parser.add_argument("--output_ref_file", type=str, default="../PIM/ref.csv", help="Output CSV file for the reference encoding")
-    parser.add_argument("--output_query_file", type=str, default="../PIM/query.csv", help="Output CSV file for the query encoding")
-    args = parser.parse_args()
-
-    print("[INFO] Starting the process")
-    main(args)
+# %% Print informational messages
+print(f"[INFO]: device = {device}")
+print(f"[INFO] Execution time: {execution_time:.6f} seconds")
+print(f"[INFO]: {args.n_ref_test} of {n_ref} references and {args.n_query_test} of {n_query} queries are used for testing")
+print("[INFO]: Topk index results:\n", pred)
 
