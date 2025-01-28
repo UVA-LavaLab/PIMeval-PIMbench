@@ -15,13 +15,6 @@ endif
 EXEC := hdc.out
 SRC := hdc.cpp
 
-COMPILE_WITH_JPEG ?= 0
-ifeq ($(COMPILE_WITH_JPEG), 1)
-    CXXFLAGS += -DCOMPILE_WITH_JPEG
-    # Add linker flags for libjpeg
-	LDFLAGS += -ljpeg
-endif
-
 debug perf dramsim3_integ: $(EXEC)
 
 $(EXEC): $(SRC) $(DEPS)

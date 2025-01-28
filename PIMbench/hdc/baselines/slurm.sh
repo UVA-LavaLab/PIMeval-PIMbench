@@ -10,4 +10,4 @@
 
 module purge
 module load apptainer
-apptainer exec --nv ../apptainer.sif python3 hd_oms.py --cuda
+apptainer exec --nv ../apptainer.sif python3 hd_oms.py

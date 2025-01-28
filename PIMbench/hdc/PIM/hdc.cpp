@@ -6,6 +6,7 @@
 #include <cmath>
 #include <algorithm>
 #include <chrono>
+#include <cstdlib> 
 #include <getopt.h>
 #include "../../util.h"
 
@@ -15,6 +16,7 @@ typedef struct Params
   char *dramConfigFile;
   char *referenceEncodingInputFile;
   char *queryEncodingInputFile;
+  size_t topK; 
   bool shouldVerify;
 } Params;
 
@@ -24,6 +26,7 @@ void usage()
           "\nUsage:  ./hdc.out [options]"
           "\n"
           "\n    -h    help"
+          "\n    -k    top-k [default=5]"
           "\n    -v    should verify result with CPU"
           "\n    -r    input reference file"
           "\n    -q    input query file"
@@ -38,9 +41,10 @@ struct Params getInputParams(int argc, char **argv)
   p.dramConfigFile = nullptr;
   p.referenceEncodingInputFile = nullptr;
   p.queryEncodingInputFile = nullptr;
+  p.topK = 5; 
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:c:r:q:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:c:k:r:q:v:")) >= 0)
   {
     switch (opt)
     {
@@ -51,6 +55,8 @@ struct Params getInputParams(int argc, char **argv)
     case 'c':
       p.dramConfigFile = optarg;
       break;
+    case 'k': 
+      p.topK = std::stoi(optarg);
     case 'r':
       p.referenceEncodingInputFile = optarg;
       break;
@@ -202,8 +208,44 @@ void gemm(uint64_t row, uint64_t colA, uint64_t colB, std::vector<std::vector<in
   transposeMatrix(colB, row, transposedDstMat, dstMatrix);
 }
 
-std::vector<int> searchDatabase(std::vector<std::vector<int>>& queryEnc,
-                                 std::vector<std::vector<int>>& refEnc) {
+std::vector<size_t> getTopKIndices(std::vector<int> const& vec, size_t k)
+{
+    // Vector to store pairs of (value, original index).
+    std::vector<std::pair<int, size_t>> heapWithOriginIndex;
+
+    // Initialize the vector of pairs.
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        heapWithOriginIndex.push_back({vec[i], i});
+    }
+
+    // Define the comparator for a max-heap.
+    auto const heapComp = [](auto const& a, auto const& b) {
+        return a.first < b.first; // Max-heap
+    };
+
+    // Create the heap.
+    std::make_heap(heapWithOriginIndex.begin(), heapWithOriginIndex.end(), heapComp);
+
+    // Retrieve the top-k indices.
+    std::vector<size_t> topKIndices;
+    for (size_t i = 0; i < k && !heapWithOriginIndex.empty(); ++i)
+    {
+        // Extract the index of the top element.
+        topKIndices.push_back(heapWithOriginIndex.front().second);
+
+        // Remove the top element from the heap.
+        std::pop_heap(heapWithOriginIndex.begin(), heapWithOriginIndex.end(), heapComp);
+        heapWithOriginIndex.pop_back();
+    }
+
+    return topKIndices;
+}
+
+std::vector<std::vector<size_t>> searchDatabase(std::vector<std::vector<int>>& queryEnc,
+                                 std::vector<std::vector<int>>& refEnc,
+                                 size_t topK, 
+                                 bool shouldVerify) {
     std::cout << "[INFO] Searching database" << std::endl;
   
     std::vector<std::vector<int>> refEncTransposed;
@@ -216,15 +258,47 @@ std::vector<int> searchDatabase(std::vector<std::vector<int>>& queryEnc,
     uint64_t columnA = queryEnc[0].size(); 
     uint64_t columnB = refEncTransposed[0].size(); 
     gemm(row, columnA, columnB, queryEnc, refEncTransposed, dist);
-
-    // Find the index of the maximum value for each query
-    size_t query_rows = queryEnc.size();
-    std::vector<int> pred(query_rows, 0);
-
-    for (size_t i = 0; i < query_rows; ++i) {
-        pred[i] = std::max_element(dist[i].begin(), dist[i].end()) - dist[i].begin();
+    
+    if (shouldVerify)
+    {
+      cout << "[INFO] Starting verification......\n";
+      std::vector<std::vector<int>> C(row, std::vector<int>(columnB, 0));
+      for (uint64_t i = 0; i < row; ++i)
+      {
+        for (uint64_t j = 0; j < columnB; ++j)
+        {
+          for (uint64_t k = 0; k < columnA; ++k)
+          {
+            C[i][j] += queryEnc[k][i] * refEncTransposed[j][k];
+          }
+        }
+      }
+      bool shouldContinue = true;
+      for (uint64_t i = 0; i < row && shouldContinue; ++i)
+      {
+        for (uint64_t j = 0; j < columnB; ++j)
+        {
+          if (C[i][j] != dist[i][j])
+          {
+            std::cout << "[Error]: Incorrect Result.\nHost: " << C[i][j] << "\t PIM: " << dist[i][j] << "\n";
+            shouldContinue = false;
+            break;
+          }
+        }
+      }
+      std::cout << "[INFO] CPU and PIM results match.\n"; 
     }
 
+    // Find the index of the top-k elements 
+    size_t query_rows = queryEnc.size();
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<std::vector<size_t>> pred; 
+    for (size_t i = 0; i < query_rows; ++i) {
+        pred.push_back(getTopKIndices(dist[i], topK));
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> hostElapsedTime = end - start;
+    cout << "[INFO] Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
     return pred;
 }
 
@@ -238,7 +312,7 @@ int main(int argc, char *argv[])
     if (!createDevice(params.dramConfigFile))
       return 1;
 
-    std::vector<int> pred = searchDatabase(queryEnc, refEnc);
+    std::vector<std::vector<size_t>> pred = searchDatabase(queryEnc, refEnc, params.topK, params.shouldVerify);
     pimShowStats();
 
     return 0;
