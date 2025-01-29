@@ -37,41 +37,22 @@ public:
   pimStatsMgr() {}
   ~pimStatsMgr() {}
 
+  void startKernelTimer();
+  void endKernelTimer();
+
   void showStats() const;
   void resetStats();
-  
-  void recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEnergy) {
-    auto& item = m_cmdPerf[cmdName];
-    item.first++;
-    item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
-    item.second.m_mjEnergy += mPerfEnergy.m_mjEnergy;
-  }
 
-  void recordMsElapsed(const std::string& tag, double elapsed) {
-    auto& item = m_msElapsed[tag];
-    item.first++;
-    item.second += elapsed;
-  }
-
-  void recordCopyMainToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy) {
-    m_bitsCopiedMainToDevice += numBits;
-    m_elapsedTimeCopiedMainToDevice += mPerfEnergy.m_msRuntime;
-    m_mJCopiedMainToDevice += mPerfEnergy.m_mjEnergy;
-  }
-
-  void recordCopyDeviceToMain(uint64_t numBits, pimeval::perfEnergy mPerfEnergy) {
-    m_bitsCopiedDeviceToMain += numBits; 
-    m_elapsedTimeCopiedDeviceToMain += mPerfEnergy.m_msRuntime;
-    m_mJCopiedDeviceToMain += mPerfEnergy.m_mjEnergy;
-  }
-  
-  void recordCopyDeviceToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy) {
-    m_bitsCopiedDeviceToDevice += numBits;
-    m_elapsedTimeCopiedDeviceToDevice += mPerfEnergy.m_msRuntime;
-    m_mJCopiedDeviceToDevice += mPerfEnergy.m_mjEnergy;
-  }
+  void recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEnergy);
+  void recordCopyMainToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy);
+  void recordCopyDeviceToMain(uint64_t numBits, pimeval::perfEnergy mPerfEnergy);
+  void recordCopyDeviceToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy);
 
 private:
+  friend class pimPerfMon;
+  void pimApiScopeStart();
+  void pimApiScopeEnd(const std::string& tag, double elapsed);
+
   void showApiStats() const;
   void showDeviceParams() const;
   void showCopyStats() const;
@@ -89,6 +70,12 @@ private:
   double m_mJCopiedMainToDevice = 0.0;
   double m_mJCopiedDeviceToMain = 0.0;
   double m_mJCopiedDeviceToDevice = 0.0;
+
+  bool m_isKernelTimerOn = false;
+  double m_curApiMsEstRuntime = 0.0;
+  double m_kernelMsElapsedSim = 0.0;
+  double m_kernelMsEstRuntime = 0.0;
+  std::chrono::time_point<std::chrono::high_resolution_clock> m_kernelStart{};
 };
 
 #endif

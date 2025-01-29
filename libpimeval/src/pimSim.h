@@ -42,6 +42,8 @@ public:
   unsigned getNumRows() const;
   unsigned getNumCols() const;
 
+  void startKernelTimer() const;
+  void endKernelTimer() const;
   void showStats() const;
   void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr.get(); }
