@@ -10,4 +10,10 @@
 
 module purge
 module load apptainer
-apptainer exec --nv ../apptainer.sif python3 hd_oms.py
+
+# Check if "cuda" is passed as a parameter
+if [[ "$1" == "gpu" ]]; then
+    apptainer exec --nv ../apptainer.sif python3 hd_oms.py --cuda
+else
+    apptainer exec ../apptainer.sif python3 hd_oms.py
+fi

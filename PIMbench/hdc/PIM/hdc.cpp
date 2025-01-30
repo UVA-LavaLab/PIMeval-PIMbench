@@ -17,6 +17,9 @@ typedef struct Params
   char *referenceEncodingInputFile;
   char *queryEncodingInputFile;
   size_t topK; 
+  size_t nDim; 
+  size_t nRef;
+  size_t nQuery; 
   bool shouldVerify;
 } Params;
 
@@ -28,12 +31,14 @@ void usage()
           "\n    -h    help"
           "\n    -k    top-k [default=5]"
           "\n    -v    should verify result with CPU"
-          "\n    -r    input reference file"
-          "\n    -q    input query file"
+          "\n    -r    input reference file [optional in random input mode]"
+          "\n    -q    input query file [optional in random input mode]"
+          "\n    -d    hypervector dimension (can range from 1K to 16K) [default=8192]"
+          "\n    -R    number of reference samples [default=8192]"
+          "\n    -Q    number of query samples [default=8192]"
           "\n    -c    input file containing dramsim config"
           "\n");
 }
-
 
 struct Params getInputParams(int argc, char **argv)
 {
@@ -42,9 +47,12 @@ struct Params getInputParams(int argc, char **argv)
   p.referenceEncodingInputFile = nullptr;
   p.queryEncodingInputFile = nullptr;
   p.topK = 5; 
+  p.nDim = 8192; 
+  p.nRef = 8192;
+  p.nQuery = 8192;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:c:k:r:q:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:c:k:r:q:v:d:R:Q:")) >= 0)
   {
     switch (opt)
     {
@@ -57,6 +65,16 @@ struct Params getInputParams(int argc, char **argv)
       break;
     case 'k': 
       p.topK = std::stoi(optarg);
+      break;
+    case 'd': 
+      p.nDim = std::stoi(optarg);
+      break;
+    case 'R': 
+      p.nRef = std::stoi(optarg);
+      break;
+    case 'Q': 
+      p.nQuery = std::stoi(optarg);
+      break;
     case 'r':
       p.referenceEncodingInputFile = optarg;
       break;
@@ -74,7 +92,6 @@ struct Params getInputParams(int argc, char **argv)
   }
   return p;
 }
-
 
 std::vector<std::vector<int>> readCsvToVector(const std::string& filename) 
 {
@@ -306,12 +323,25 @@ int main(int argc, char *argv[])
 {
     std::cout << "[INFO] Parsing input arguements" << std::endl;
     struct Params params = getInputParams(argc, argv);
-    std::vector<std::vector<int>> refEnc = readCsvToVector(std::string(params.referenceEncodingInputFile));
-    std::vector<std::vector<int>> queryEnc = readCsvToVector(std::string(params.queryEncodingInputFile));
+
+    // Read the reference hypervectors or generate it using random values 
+    std::vector<std::vector<int>> refEnc;
+    if (params.referenceEncodingInputFile != nullptr) { 
+      refEnc = readCsvToVector(std::string(params.referenceEncodingInputFile));
+    } else { 
+      getMatrix(params.nRef, params.nDim, 0, refEnc);
+    }
+
+    // Read the query hypervectors or generate it using random values 
+    std::vector<std::vector<int>> queryEnc;
+    if (params.queryEncodingInputFile != nullptr) {
+      queryEnc = readCsvToVector(std::string(params.queryEncodingInputFile));
+    } else {
+      getMatrix(params.nQuery, params.nDim, 0, queryEnc);
+    }
     
     if (!createDevice(params.dramConfigFile))
       return 1;
-
     std::vector<std::vector<size_t>> pred = searchDatabase(queryEnc, refEnc, params.topK, params.shouldVerify);
     pimShowStats();
 

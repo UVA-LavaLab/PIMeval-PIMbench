@@ -14,11 +14,11 @@ parser.add_argument("--warmup", type=int, default=1024, help="Warmup iterations"
 parser.add_argument("--cuda", action="store_true", default=False, help="Enable GPU support for PyTorch")
 parser.add_argument("--charge", type=int, default=2, help="Charge state (Load Mass Spec. Dataset)")
 parser.add_argument("--ref-dataset", type=str, choices=["iprg", "hcd"], default="hcd", help="Reference dataset to benchmark (e.g., iPRG2012 or Massive Human HCD)")
-parser.add_argument("--n-ref-test", type=int, default=2000, help="Number of reference samples for quick evaluation")
-parser.add_argument("--n-query-test", type=int, default=1000, help="Number of query samples for quick evaluation")
+parser.add_argument("--n-ref-test", type=int, default=8192, help="Number of reference samples for quick evaluation")
+parser.add_argument("--n-query-test", type=int, default=8192, help="Number of query samples for quick evaluation")
 parser.add_argument("--topk", type=int, default=5, help="Number of top-k results to search")
 parser.add_argument("--n-lv", type=int, default=64, help="Quantization levels for level HVs")
-parser.add_argument("--n-dim", type=int, default=2048, help="HV dimension (can range from 1k to 16k)")
+parser.add_argument("--n-dim", type=int, default=8192, help="HV dimension (can range from 1k to 16k)")
 parser.add_argument("--binary", action="store_true", default=True, help="Enable binary representation for HVs")
 args = parser.parse_args()
 
@@ -100,7 +100,7 @@ execution_time = (end_time - start_time) / args.warmup
 
 # %% Print informational messages
 print(f"[INFO]: device = {device}")
-print(f"[INFO] Execution time: {execution_time:.6f} seconds")
+print(f"[INFO] Execution time: {execution_time*1.0e+3:.6f} milliseconds")
 print(f"[INFO]: {args.n_ref_test} of {n_ref} references and {args.n_query_test} of {n_query} queries are used for testing")
 print("[INFO]: Topk index results:\n", pred)
 
