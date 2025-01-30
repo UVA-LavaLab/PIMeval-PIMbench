@@ -269,7 +269,7 @@ std::vector<std::vector<size_t>> searchDatabase(std::vector<std::vector<int>>& q
         {
           for (uint64_t k = 0; k < columnA; ++k)
           {
-            C[i][j] += queryEnc[k][i] * refEncTransposed[j][k];
+            C[i][j] += queryEnc[i][k] * refEnc[j][k];
           }
         }
       }
