@@ -1,4 +1,4 @@
-// Test: C++ version of Histogram
+// Test: C++ version of Histogram alternative
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
@@ -14,10 +14,8 @@
 #include <cstring>
 #include <cassert>
 
-#include "../../util.h"
+#include "../util.h"
 #include "libpimeval.h"
-
-using namespace std;
 
 #define NUMBINS 256 // RGB values at any given pixel can be a value 0 to 255 (inclusive)
 #define NUMCHANNELS 3 // Red, green, and blue color channels
@@ -33,7 +31,7 @@ typedef struct Params
 void usage()
 {
   fprintf(stderr,
-          "\nUsage:  ./hist.out [options]"
+          "\nUsage:  ./hist-alt.out [options]"
           "\n"
           "\n    -c    dramsim config file"
           "\n    -i    24-bit .bmp input file (default=uses 'sample1.bmp' from 'histogram_datafiles' directory)"
@@ -45,7 +43,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "../histogram_datafiles/sample1.bmp";
+  p.inputFile = "../../PIMbench/histogram/histogram_datafiles/sample1.bmp";
   p.shouldVerify = false;
 
   int opt;
@@ -75,56 +73,39 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const std::vector<uint8_t> &greenData, const std::vector<uint8_t> &blueData, 
-               std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
+void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::vector<uint64_t> &redCount, std::vector<uint64_t> &greenCount, std::vector<uint64_t> &blueCount) 
 {
-  PimObjId redObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, PIM_UINT8);
-  assert(redObj != -1);
-  PimObjId greenObj = pimAllocAssociated(redObj, PIM_UINT8);
-  assert(greenObj != -1);
-  PimObjId blueObj = pimAllocAssociated(redObj, PIM_UINT8);
-  assert(blueObj != -1);
-  PimObjId tempObj = pimAllocAssociated(redObj, PIM_UINT8);
+  PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, PIM_UINT8);
+  assert(imgObj != -1);
+  PimObjId tempObj = pimAllocAssociated(imgObj, PIM_UINT8);
   assert(tempObj != -1);
 
-  PimStatus status = pimCopyHostToDevice((void *) redData.data(), redObj);
-  assert(status == PIM_OK);
-  status = pimCopyHostToDevice((void *) blueData.data(), blueObj);
-  assert(status == PIM_OK);
-  status = pimCopyHostToDevice((void *) greenData.data(), greenObj);
+  PimStatus status = pimCopyHostToDevice((void *) imgData.data(), imgObj);
   assert(status == PIM_OK);
 
   uint64_t prevCount; // Needed when image data can't fit in one PIM object, multiple passes are needed
 
   for (int i = 0; i < NUMBINS; ++i) 
   {
-    status = pimEQScalar(blueObj, tempObj, static_cast<uint64_t> (i));
+    status = pimEQScalar(imgObj, tempObj, static_cast<uint64_t> (i));
     assert(status == PIM_OK);
 
     prevCount = blueCount[i];
-    status = pimRedSum(tempObj, static_cast<void*>(&blueCount[i]));
+    status = pimRedSum(tempObj, static_cast<void*>(&blueCount[i]), 0, imgDataBytes / 3);
     assert(status == PIM_OK);
     blueCount[i] += prevCount;
 
-    status = pimEQScalar(greenObj, tempObj, static_cast<uint64_t> (i));
-    assert(status == PIM_OK);
-
     prevCount = greenCount[i];
-    status = pimRedSum(tempObj, static_cast<void*>(&greenCount[i]));
+    status = pimRedSum(tempObj, static_cast<void*>(&greenCount[i]), imgDataBytes / 3, imgDataBytes * 2 / 3);
     assert(status == PIM_OK);
     greenCount[i] += prevCount;
 
-    status = pimEQScalar(redObj, tempObj, static_cast<uint64_t> (i));
-    assert(status == PIM_OK);
-
     prevCount = redCount[i];
-    status = pimRedSum(tempObj, static_cast<void*>(&redCount[i]));
+    status = pimRedSum(tempObj, static_cast<void*>(&redCount[i]), imgDataBytes * 2 / 3, imgDataBytes);
     assert(status == PIM_OK);
     redCount[i] += prevCount;
   }
-  pimFree(redObj);
-  pimFree(greenObj);
-  pimFree(blueObj);
+  pimFree(imgObj);
   pimFree(tempObj);
 }
 
@@ -191,6 +172,14 @@ int main(int argc, char *argv[])
   std::vector<uint64_t> redCount(NUMBINS, 0), greenCount(NUMBINS, 0), blueCount(NUMBINS, 0);
   std::vector<uint8_t> imgData(fdata + *dataPos, fdata + finfo.st_size);
 
+  uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
+           numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
+  uint64_t totalAvailableBits = numCol * numRow * numCore;
+  uint64_t requiredBitsforImage = ((imgDataBytes / NUMCHANNELS * 8) + 8); // Using uint8_t instead of int, only require 8 bits
+  int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
+
+  // Ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
+  uint64_t bytesPerChunk = totalAvailableBits / 8;
   std::vector<uint8_t> redData, greenData, blueData;
 
   for (uint64_t i = 0; i < imgDataBytes; i+=NUMCHANNELS)
@@ -200,34 +189,23 @@ int main(int argc, char *argv[])
     redData.push_back(imgData[i + 2]);
   }
 
-  uint64_t numCol = deviceProp.numColPerSubarray, numRow = deviceProp.numRowPerSubarray, 
-           numCore = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
-  uint64_t totalAvailableBits = numCol * numRow * numCore;
-  uint64_t requiredBitsforImage = ((imgDataBytes / NUMCHANNELS * 8) + 8); // Using uint8_t instead of int, only require 8 bits
-  int numItr = std::ceil(static_cast<double> (requiredBitsforImage) / totalAvailableBits);
-  //std::cout << "Required iterations for image: " << numItr << std::endl;
-
-  if (numItr == 1)
+  for (int itr = 0; itr < numItr; ++itr)
   {
-    histogram(imgDataBytes / NUMCHANNELS, redData, greenData, blueData, redCount, greenCount, blueCount);
-  }
-  else
-  {
-    //TODO: ensure large inputs can be run in multiple histogram() calls if they can't fit in one PIM object
-    uint64_t bytesPerChunk = totalAvailableBits / 8;
+    uint64_t startByte = itr * bytesPerChunk;
+    uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes / NUMCHANNELS);
+    uint64_t chunkSize = endByte - startByte;
 
-    for (int itr = 0; itr < numItr; ++itr)
-    {
-      uint64_t startByte = itr * bytesPerChunk;
-      uint64_t endByte = std::min(startByte + bytesPerChunk, imgDataBytes / NUMCHANNELS);
-      uint64_t chunkSize = endByte - startByte;
+    std::vector<uint8_t> redDataChunk(redData.begin() + startByte, redData.begin() + endByte);
+    std::vector<uint8_t> greenDataChunk(greenData.begin() + startByte, greenData.begin() + endByte);
+    std::vector<uint8_t> blueDataChunk(blueData.begin() + startByte, blueData.begin() + endByte);
 
-      std::vector<uint8_t> redDataChunk(redData.begin() + startByte, redData.begin() + endByte);
-      std::vector<uint8_t> greenDataChunk(greenData.begin() + startByte, greenData.begin() + endByte);
-      std::vector<uint8_t> blueDataChunk(blueData.begin() + startByte, blueData.begin() + endByte);
+    std::vector<uint8_t> orderedImgDataChunk;
+    orderedImgDataChunk.reserve(redDataChunk.size() + greenDataChunk.size() + blueDataChunk.size());
+    orderedImgDataChunk.insert(orderedImgDataChunk.end(), blueDataChunk.begin(), blueDataChunk.end());
+    orderedImgDataChunk.insert(orderedImgDataChunk.end(), greenDataChunk.begin(), greenDataChunk.end());
+    orderedImgDataChunk.insert(orderedImgDataChunk.end(), redDataChunk.begin(), redDataChunk.end());
 
-      histogram(chunkSize, redDataChunk, greenDataChunk, blueDataChunk, redCount, greenCount, blueCount);
-    }
+    histogram(chunkSize * NUMCHANNELS, orderedImgDataChunk, redCount, greenCount, blueCount);
   }
 
   if (params.shouldVerify)
