@@ -238,7 +238,7 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   deviceProperties->numSubarrayPerBank = m_device->getNumSubarrayPerBank();
   deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
-  deviceProperties->hLayoutDevice = m_device->isHLayoutDevice();
+  deviceProperties->isHLayoutDevice = m_device->isHLayoutDevice();
   return true;
 }
 

@@ -33,13 +33,13 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   assert(deviceProp.numRowPerSubarray == numRows);
   switch(deviceType) {
     case PIM_DEVICE_BITSIMD_V:
-      assert(deviceProp.hLayoutDevice == false);
+      assert(deviceProp.isHLayoutDevice == false);
       break;
     case PIM_DEVICE_FULCRUM:
-      assert(deviceProp.hLayoutDevice == true);
+      assert(deviceProp.isHLayoutDevice == true);
       break;
     case PIM_DEVICE_BANK_LEVEL:
-      assert(deviceProp.hLayoutDevice == true);
+      assert(deviceProp.isHLayoutDevice == true);
       break;
     default:
       break;
