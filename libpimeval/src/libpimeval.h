@@ -87,12 +87,16 @@ struct PimDeviceProperties {
   unsigned numSubarrayPerBank = 0;
   unsigned numRowPerSubarray = 0;
   unsigned numColPerSubarray = 0;
+  bool isHLayoutDevice = false;
 };
 
 typedef int PimCoreId;
 typedef int PimObjId;
 
 // PIMeval simulation
+// CPU runtime between start/end timer will be measured for modeling DRAM refresh
+void pimStartTimer();
+void pimEndTimer();
 void pimShowStats();
 void pimResetStats();
 bool pimIsAnalysisMode();

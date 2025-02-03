@@ -170,11 +170,110 @@ pimStatsMgr::resetStats()
   m_bitsCopiedDeviceToDevice = 0;
 }
 
+//! @brief  Record estimated runtime and energy of a PIM command
+void
+pimStatsMgr::recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEnergy)
+{
+  auto& item = m_cmdPerf[cmdName];
+  item.first++;
+  item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
+  m_curApiMsEstRuntime += mPerfEnergy.m_msRuntime;
+  item.second.m_mjEnergy += mPerfEnergy.m_mjEnergy;
+}
+
+//! @brief  Record estimated runtime and energy of data copy
+void
+pimStatsMgr::recordCopyMainToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy)
+{
+  m_bitsCopiedMainToDevice += numBits;
+  m_elapsedTimeCopiedMainToDevice += mPerfEnergy.m_msRuntime;
+  m_curApiMsEstRuntime += mPerfEnergy.m_msRuntime;
+  m_mJCopiedMainToDevice += mPerfEnergy.m_mjEnergy;
+}
+
+//! @brief  Record estimated runtime and energy of data copy
+void
+pimStatsMgr::recordCopyDeviceToMain(uint64_t numBits, pimeval::perfEnergy mPerfEnergy)
+{
+  m_bitsCopiedDeviceToMain += numBits;
+  m_elapsedTimeCopiedDeviceToMain += mPerfEnergy.m_msRuntime;
+  m_curApiMsEstRuntime += mPerfEnergy.m_msRuntime;
+  m_mJCopiedDeviceToMain += mPerfEnergy.m_mjEnergy;
+}
+
+//! @brief  Record estimated runtime and energy of data copy
+void
+pimStatsMgr::recordCopyDeviceToDevice(uint64_t numBits, pimeval::perfEnergy mPerfEnergy)
+{
+  m_bitsCopiedDeviceToDevice += numBits;
+  m_elapsedTimeCopiedDeviceToDevice += mPerfEnergy.m_msRuntime;
+  m_curApiMsEstRuntime += mPerfEnergy.m_msRuntime;
+  m_mJCopiedDeviceToDevice += mPerfEnergy.m_mjEnergy;
+}
+
+//! @brief  Preprocessing at the beginning of a PIM API scope
+void
+pimStatsMgr::pimApiScopeStart()
+{
+  // Restart for current PIM API call
+  m_curApiMsEstRuntime = 0.0;
+}
+
+//! @brief  Postprocessing at the end of a PIM API scope
+void
+pimStatsMgr::pimApiScopeEnd(const std::string& tag, double elapsed)
+{
+  // Record API stats
+  auto& item = m_msElapsed[tag];
+  item.first++;
+  item.second += elapsed;
+
+  // Update kernel stats
+  if (m_isKernelTimerOn) {
+    m_kernelMsElapsedSim += elapsed;
+    m_kernelMsEstRuntime += m_curApiMsEstRuntime;
+  }
+}
+
+//! @brief  Start timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimStatsMgr::startKernelTimer()
+{
+  if (m_isKernelTimerOn) {
+    std::printf("PIM-Warning: Kernel timer has already started\n");
+    return;
+  }
+  std::printf("PIM-Info: Start kernel timer.\n");
+  m_isKernelTimerOn = true;
+  m_kernelStart = std::chrono::high_resolution_clock::now();
+}
+
+//! @brief  End timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimStatsMgr::endKernelTimer()
+{
+  if (!m_isKernelTimerOn) {
+    std::printf("PIM-Warning: Kernel timer has not started\n");
+    return;
+  }
+  auto now = std::chrono::high_resolution_clock::now();
+  double kernelMsElapsedTotal = std::chrono::duration<double, std::milli>(now - m_kernelStart).count();
+  double kernelMsElapsedCpu = kernelMsElapsedTotal - m_kernelMsElapsedSim;
+  std::printf("PIM-Info: End kernel timer. Runtime = %14f ms, CPU = %14f ms, PIM = %14f ms\n",
+      kernelMsElapsedCpu + m_kernelMsEstRuntime, kernelMsElapsedCpu, m_kernelMsEstRuntime);
+  m_kernelStart = std::chrono::high_resolution_clock::time_point(); // reset
+  m_isKernelTimerOn = false;
+}
+
 //! @brief pimPerfMon ctor
 pimPerfMon::pimPerfMon(const std::string& tag)
 {
   m_startTime = std::chrono::high_resolution_clock::now();
   m_tag = tag;
+  // assumption: pimPerfMon is not nested
+  if (pimSim::get()->getStatsMgr()) {
+    pimSim::get()->getStatsMgr()->pimApiScopeStart();
+  }
 }
 
 //! @brief pimPerfMon dtor
@@ -182,6 +281,8 @@ pimPerfMon::~pimPerfMon()
 {
   auto now = std::chrono::high_resolution_clock::now();
   double elapsed = std::chrono::duration<double, std::milli>(now - m_startTime).count();
-  pimSim::get()->getStatsMgr()->recordMsElapsed(m_tag, elapsed);
+  if (pimSim::get()->getStatsMgr()) {
+    pimSim::get()->getStatsMgr()->pimApiScopeEnd(m_tag, elapsed);
+  }
 }
 

@@ -238,6 +238,7 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   deviceProperties->numSubarrayPerBank = m_device->getNumSubarrayPerBank();
   deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
+  deviceProperties->isHLayoutDevice = m_device->isHLayoutDevice();
   return true;
 }
 
@@ -373,6 +374,20 @@ pimSim::getPerfEnergyModel()
     return m_device->getPerfEnergyModel();
   }
   return nullptr;
+}
+
+//! @brief  Start timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimSim::startKernelTimer() const
+{
+  m_statsMgr->startKernelTimer();
+}
+
+//! @brief  End timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimSim::endKernelTimer() const
+{
+  m_statsMgr->endKernelTimer();
 }
 
 //! @brief  Show PIM command stats

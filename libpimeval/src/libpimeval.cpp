@@ -40,6 +40,20 @@ pimDeleteDevice()
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Start timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimStartTimer()
+{
+  pimSim::get()->startKernelTimer();
+}
+
+//! @brief  End timer for a PIM kernel to measure CPU runtime and DRAM refresh
+void
+pimEndTimer()
+{
+  pimSim::get()->endKernelTimer();
+}
+
 //! @brief  Show PIM command stats
 void
 pimShowStats()
