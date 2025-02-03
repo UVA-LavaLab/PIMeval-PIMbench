@@ -76,12 +76,12 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_vertical) {
+void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_horizontal) {
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
   // Two rows used by the haystack and intermediate
-  uint64_t max_needles_per_iteration = is_vertical ? (num_rows>>5) - 2 : num_rows - 2;
+  uint64_t max_needles_per_iteration = is_horizontal ? num_rows - 2 : (num_rows>>5) - 2;
   uint64_t num_iterations;
   if(needles.size() <= max_needles_per_iteration) {
     num_iterations = 1;
@@ -191,27 +191,6 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
   assert (status == PIM_OK);
 }
 
-bool isVertical(PimDeviceProperties& deviceProp) {
-  std::cout << deviceProp.deviceType << std::endl;
-  switch (deviceProp.deviceType) {
-  case PIM_DEVICE_BITSIMD_V: return true;
-  case PIM_DEVICE_BITSIMD_V_NAND: return true;
-  case PIM_DEVICE_BITSIMD_V_MAJ: return true;
-  case PIM_DEVICE_BITSIMD_V_AP: return true;
-  case PIM_DEVICE_DRISA_NOR: return true;
-  case PIM_DEVICE_DRISA_MIXED: return true;
-  case PIM_DEVICE_SIMDRAM: return true;
-  case PIM_DEVICE_BITSIMD_H: return false;
-  case PIM_DEVICE_FULCRUM: return false;
-  case PIM_DEVICE_BANK_LEVEL: return false;
-  case PIM_DEVICE_NONE:
-  case PIM_FUNCTIONAL:
-  default:
-    assert(0);
-  }
-  return false;
-}
-
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
@@ -253,12 +232,10 @@ int main(int argc, char* argv[])
   PimDeviceProperties deviceProp;
   PimStatus status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
-  //TODO: fix
-  bool is_vertical = true;//isVertical(deviceProp);
 
   matches.resize(haystack.size(), 0);
   
-  string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, is_vertical);
+  string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
 
   if (params.shouldVerify) 
   {
