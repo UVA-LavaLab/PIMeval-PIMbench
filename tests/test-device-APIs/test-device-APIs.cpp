@@ -34,15 +34,12 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   switch(deviceType) {
     case PIM_DEVICE_BITSIMD_V:
       assert(deviceProp.hLayoutDevice == false);
-      assert(deviceProp.vLayoutDevice == true);
       break;
     case PIM_DEVICE_FULCRUM:
       assert(deviceProp.hLayoutDevice == true);
-      assert(deviceProp.vLayoutDevice == false);
       break;
     case PIM_DEVICE_BANK_LEVEL:
       assert(deviceProp.hLayoutDevice == true);
-      assert(deviceProp.vLayoutDevice == false);
       break;
     default:
       break;
