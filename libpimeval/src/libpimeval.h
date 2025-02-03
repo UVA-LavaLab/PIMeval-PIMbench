@@ -87,6 +87,7 @@ struct PimDeviceProperties {
   unsigned numSubarrayPerBank = 0;
   unsigned numRowPerSubarray = 0;
   unsigned numColPerSubarray = 0;
+  bool isHLayoutDevice = false;
 };
 
 typedef int PimCoreId;
