@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 
   matches.resize(haystack.size(), 0);
   
-  string_match(needles, haystack, matches, deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
+  string_match(needles, haystack, matches, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
 
   if (params.shouldVerify) 
   {
