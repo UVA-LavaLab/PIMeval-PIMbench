@@ -42,6 +42,8 @@ public:
   unsigned getNumRows() const;
   unsigned getNumCols() const;
 
+  void startKernelTimer() const;
+  void endKernelTimer() const;
   void showStats() const;
   void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr.get(); }
@@ -97,8 +99,9 @@ public:
   bool pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  template <typename T> bool pimRedSum(PimObjId src, T* sum);
-  template <typename T> bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum);
+  bool pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);

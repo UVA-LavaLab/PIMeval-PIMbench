@@ -31,6 +31,19 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   assert(deviceProp.numSubarrayPerBank == numSubarrayPerBank);
   assert(deviceProp.numColPerSubarray == numCols);
   assert(deviceProp.numRowPerSubarray == numRows);
+  switch(deviceType) {
+    case PIM_DEVICE_BITSIMD_V:
+      assert(deviceProp.isHLayoutDevice == false);
+      break;
+    case PIM_DEVICE_FULCRUM:
+      assert(deviceProp.isHLayoutDevice == true);
+      break;
+    case PIM_DEVICE_BANK_LEVEL:
+      assert(deviceProp.isHLayoutDevice == true);
+      break;
+    default:
+      break;
+  }
   
   pimShowStats();
   pimDeleteDevice();

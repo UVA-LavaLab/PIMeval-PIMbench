@@ -76,7 +76,7 @@ int main()
 
   int min_diff = INT_MAX;
   int min_idx = -1;
-  int64_t sum_abs_diff;
+  int64_t sum_abs_diff = 0;
 
   for (int idx = 0; idx < subvectorLength; idx++) {
     status = pimSub(obj1, obj2, obj3);
@@ -92,7 +92,7 @@ int main()
     }
 
     for (int i = idx; i + subvectorLength - 1 < vectorLength; i += subvectorLength) {
-      status = pimRedSumRangedInt(obj3, i, i + subvectorLength, &sum_abs_diff);
+      status = pimRedSum(obj3, static_cast<void*>(&sum_abs_diff), i, i + subvectorLength);
       if (status != PIM_OK) {
         std::cout << "Abort" << std::endl;
         return 1;
