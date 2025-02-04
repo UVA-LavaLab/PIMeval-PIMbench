@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH --job-name=pim_string_match_test
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=cpu
-#SBATCH --cpus-per-task=50
+#SBATCH --cpus-per-task=60
 #SBATCH --mem=100G
 #SBATCH --time=4-00:00:00
 #SBATCH --mail-type=all
