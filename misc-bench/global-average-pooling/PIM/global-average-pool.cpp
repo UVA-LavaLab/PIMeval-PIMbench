@@ -33,9 +33,9 @@ void usage()
           "\n    -r    row (default=224)"
           "\n    -c    column (default=224)"
           "\n    -d    dimension (default=64)"
-          "\n    -v    should verify result with CPU"
-          "\n    -f    input file containing kernel matrices (default=generates matrix with random numbers)"
-          "\n    -i    input image file containing matrices (default=generates matrix with random numbers)"        
+          "\n    -f    dramsim config file"
+          "\n    -i    input image file containing matrices (default=generates matrix with random numbers)" 
+          "\n    -v    should verify result with CPU"       
           "\n");
 }
 
@@ -50,7 +50,7 @@ struct Params getInputParams(int argc, char **argv)
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:r:c:d:v:f:i:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:r:c:d:f:i:v:")) >= 0)
   {
     switch (opt)
     {
