@@ -97,13 +97,14 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  size_t maxPossibleKeys = 0;
+  double maxPossibleKeys = 0;
   for (size_t length = params.minKeyLen; length <= params.maxKeyLen; ++length) {
-      maxPossibleKeys += (size_t) (std::pow(26, length));
+    maxPossibleKeys += std::pow(26, length);
   }
 
-  if(params.numKeys > maxPossibleKeys) {
+  if((double) params.numKeys > maxPossibleKeys) {
     printf("Error: Number of keys greater than max possible keys for the given length range\n");
+    printf("Requested Keys: %lu, max number of unique keys of length [%lu, %lu]: %.0f\n", params.numKeys, params.minKeyLen, params.maxKeyLen, maxPossibleKeys);
     return 1;
   }
 
