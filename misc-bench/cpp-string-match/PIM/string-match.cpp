@@ -77,6 +77,7 @@ struct Params getInputParams(int argc, char **argv)
 }
 
 void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_horizontal) {
+  pimStartTimer();
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
@@ -189,6 +190,7 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
 
   status = pimCopyDeviceToHost(pim_individual_needle_matches[0], (void *)matches.data());
   assert (status == PIM_OK);
+  pimEndTimer();
 }
 
 int main(int argc, char* argv[])
