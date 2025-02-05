@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <iomanip>
 #include <cassert>
+#include <algorithm>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
@@ -74,6 +75,77 @@ struct Params getInputParams(int argc, char **argv)
     }
   }
   return p;
+}
+
+std::vector<std::vector<std::vector<size_t>>> string_match_precompute_table(std::vector<std::string>& needles, uint64_t num_rows, bool is_horizontal) {
+  std::vector<std::vector<std::vector<size_t>>> result_table;
+  
+  uint64_t max_needles_per_iteration = is_horizontal ? num_rows - 2 : (num_rows>>5) - 2;
+  uint64_t num_iterations;
+  if(needles.size() <= max_needles_per_iteration) {
+    num_iterations = 1;
+  } else {
+    uint64_t needles_after_first_iteration = needles.size() - max_needles_per_iteration;
+    // Can do 1 more needle in first iteration than in later iterations
+    // During the first iteration we can use the final result array as an individual result array in the first iteration
+    num_iterations = 1 + ((needles_after_first_iteration + max_needles_per_iteration - 2) / (max_needles_per_iteration - 1));
+  }
+
+  result_table.resize(num_iterations);
+
+  uint64_t needles_done = 0;
+
+  for(uint64_t iter=0; iter<num_iterations; ++iter) {
+    uint64_t needles_this_iteration;
+    if(iter == 0) {
+      needles_this_iteration = min(max_needles_per_iteration, needles.size());
+    } else if(iter+1 == num_iterations) {
+      needles_this_iteration = needles.size() - needles_done;
+    } else {
+      needles_this_iteration = max_needles_per_iteration - 1;
+    }
+
+    // std::cout << "Iteration number: " << iter << ", will do " << needles_this_iteration << " needles this iteration." << std::endl;
+    // Range: [needles_done, needles_done + needles_this_iteration - 1]
+    uint64_t first_needle_this_iteration = needles_done;
+    uint64_t last_needle_this_iteration = first_needle_this_iteration + needles_this_iteration - 1;
+    uint64_t longest_needle_this_iteration = needles[last_needle_this_iteration].size();
+    // As we iterate through character indices for the needles in this iteration, there may be some needles that are shorter than the current character
+    // Skip checking them by keeping track of the shortest needle that is long enough to have the current character
+    uint64_t current_start_needle = first_needle_this_iteration;
+    result_table[iter].resize(longest_needle_this_iteration);
+    for(uint64_t char_ind = 0; char_ind < longest_needle_this_iteration; ++char_ind) {
+      while(needles[current_start_needle].size() <= char_ind) {
+        ++current_start_needle;
+      }
+      std::vector<size_t>& current_table_row = result_table[iter][char_ind];
+      current_table_row.resize(1 + last_needle_this_iteration - current_start_needle);
+      // Sort needles [current_start_needle, last_needle_this_iteration] on char_ind
+      
+      std::iota(current_table_row.begin(), current_table_row.end(), current_start_needle);
+      std::sort(current_table_row.begin(), current_table_row.end(), [&needles, &char_ind](auto& l, auto& r) {
+        return needles[l][char_ind] < needles[r][char_ind];
+      });
+    }
+
+    needles_done += needles_this_iteration;
+  }
+
+  return result_table;
+}
+
+void print_table(std::vector<std::string>& needles, std::vector<std::vector<std::vector<size_t>>>& table) {
+  for(uint64_t iter=0; iter<table.size(); ++iter) {
+    std::cout << "~~~~~~~~~~~~~ Iter: " << iter << " ~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    for(uint64_t char_ind=0; char_ind<table[iter].size(); ++char_ind) {
+      std::cout << "num chars: " << table[iter][char_ind].size() << " - ";
+      for(uint64_t needle_ind=0; needle_ind<table[iter][char_ind].size(); ++needle_ind) {
+        std::cout << needles[table[iter][char_ind][needle_ind]][char_ind] << ", ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+  }
 }
 
 void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_horizontal) {
@@ -236,6 +308,9 @@ int main(int argc, char* argv[])
   assert(status == PIM_OK);
 
   matches.resize(haystack.size(), 0);
+
+  std::vector<std::vector<std::vector<size_t>>> table = string_match_precompute_table(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
+  print_table(needles, table);
   
   string_match(needles, haystack, matches, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
 
