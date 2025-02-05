@@ -148,23 +148,12 @@ void print_table(std::vector<std::string>& needles, std::vector<std::vector<std:
   }
 }
 
-void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches, uint64_t num_rows, bool is_horizontal) {
+void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needles_table, std::vector<int>& matches) {
   pimStartTimer();
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
   // Two rows used by the haystack and intermediate
-  uint64_t max_needles_per_iteration = is_horizontal ? num_rows - 2 : (num_rows>>5) - 2;
-  uint64_t num_iterations;
-  if(needles.size() <= max_needles_per_iteration) {
-    num_iterations = 1;
-  } else {
-    uint64_t needles_after_first_iteration = needles.size() - max_needles_per_iteration;
-    num_iterations = 1 + ((needles_after_first_iteration + max_needles_per_iteration - 2) / (max_needles_per_iteration - 1));
-  }
-  uint64_t needles_done = 0;
-
-  uint64_t num_needles = needles.size();
 
   PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
   assert(haystack_pim != -1);
@@ -180,41 +169,27 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
   }
 
   std::vector<PimObjId> pim_individual_needle_matches;
-  for(uint32_t i=0; i<min(num_needles, max_needles_per_iteration); ++i) {
+  for(uint32_t i=0; i<needles_table[0][0].size(); ++i) {
     pim_individual_needle_matches.push_back(pimAllocAssociated(haystack_pim, PIM_UINT32));
     assert(pim_individual_needle_matches.back() != -1);
   }
 
+  uint64_t needles_done = 0;
+
   PimStatus status;
-  for(uint64_t iter=0; iter<num_iterations; ++iter) {
+  for(uint64_t iter=0; iter<needles_table.size(); ++iter) {
     // TODO: would it be better to save a copy of the haystack on the device then copy it back from the device?
     status = pimCopyHostToDevice((void *)haystack_32bit, haystack_pim);
     assert (status == PIM_OK);
 
-    uint64_t needles_this_iteration;
-    if(iter == 0) {
-      needles_this_iteration = min(max_needles_per_iteration, num_needles);
-    } else if(iter+1 == num_iterations) {
-      needles_this_iteration = num_needles - needles_done;
-    } else {
-      needles_this_iteration = max_needles_per_iteration - 1;
-    }
-
     uint64_t first_avail_pim_needle_result = iter == 0 ? 0 : 1;
 
-    // Algorithm Start
-    uint64_t needles_finished_this_iter = 0;
-
-    for(uint64_t char_idx=0; needles_finished_this_iter < needles_this_iteration; ++char_idx) {
+    for(uint64_t char_idx=0; char_idx < needles_table[iter].size(); ++char_idx) {
       
-      for(uint64_t needle_idx=0; needle_idx < needles_this_iteration; ++needle_idx) {
+      for(uint64_t needle_idx=0; needle_idx < needles_table[iter][char_idx].size(); ++needle_idx) {
         
-        uint64_t current_needle_idx = needle_idx + needles_done;
-        uint64_t needle_idx_pim = needle_idx + first_avail_pim_needle_result;
-
-        if(char_idx >= needles[current_needle_idx].size()) {
-          continue;
-        }
+        uint64_t current_needle_idx = needles_table[iter][char_idx][needle_idx];
+        uint64_t needle_idx_pim = (current_needle_idx - needles_done) + first_avail_pim_needle_result;
 
         if(char_idx == 0) {
           status = pimEQScalar(haystack_pim, pim_individual_needle_matches[needle_idx_pim], (uint64_t) needles[current_needle_idx][char_idx]);
@@ -226,21 +201,17 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
           status = pimAnd(pim_individual_needle_matches[needle_idx_pim], intermediate_pim, pim_individual_needle_matches[needle_idx_pim]);
           assert (status == PIM_OK);
         }
-
-        if(char_idx + 1 == needles[current_needle_idx].size()) {
-          ++needles_finished_this_iter;
-        }
       }
 
-      if(needles_finished_this_iter < needles_this_iteration) {
+      if(char_idx + 1 < needles_table[iter].size()) {
         status = pimShiftElementsLeft(haystack_pim);
         assert (status == PIM_OK);
       }
     }
 
-    for(uint64_t needle_idx = 0; needle_idx < needles_this_iteration; ++needle_idx) {
+    for(uint64_t needle_idx = 0; needle_idx < needles_table[iter][0].size(); ++needle_idx) {
       uint64_t current_needle_idx = needle_idx + needles_done;
-      uint64_t needle_idx_pim = needle_idx + first_avail_pim_needle_result;
+      uint64_t needle_idx_pim = (current_needle_idx - needles_done) + first_avail_pim_needle_result;
 
       status = pimXorScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
       assert (status == PIM_OK);
@@ -252,12 +223,12 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
       assert (status == PIM_OK);
     }
 
-    for(uint64_t needle_idx = 1; needle_idx < needles_this_iteration + first_avail_pim_needle_result; ++needle_idx) {
+    for(uint64_t needle_idx = 1; needle_idx < needles_table[iter][0].size() + first_avail_pim_needle_result; ++needle_idx) {
       status = pimMax(pim_individual_needle_matches[0], pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[0]);
       assert (status == PIM_OK);
     }
 
-    needles_done += needles_this_iteration;
+    needles_done += needles_table[iter][0].size();
   }
 
   status = pimCopyDeviceToHost(pim_individual_needle_matches[0], (void *)matches.data());
@@ -310,9 +281,9 @@ int main(int argc, char* argv[])
   matches.resize(haystack.size(), 0);
 
   std::vector<std::vector<std::vector<size_t>>> table = string_match_precompute_table(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
-  print_table(needles, table);
+  // print_table(needles, table);
   
-  string_match(needles, haystack, matches, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
+  string_match(needles, haystack, table, matches);
 
   if (params.shouldVerify) 
   {
