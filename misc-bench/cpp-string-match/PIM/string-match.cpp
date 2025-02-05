@@ -148,7 +148,7 @@ void print_table(std::vector<std::string>& needles, std::vector<std::vector<std:
   }
 }
 
-void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needles_table, std::vector<int>& matches) {
+void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needles_table, bool is_horizontal, std::vector<int>& matches) {
   pimStartTimer();
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
@@ -220,14 +220,19 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
       uint64_t current_needle_idx = needle_idx + needles_done;
       uint64_t needle_idx_pim = (current_needle_idx - needles_done) + first_avail_pim_needle_result;
 
-      status = pimXorScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
-      assert (status == PIM_OK);
+      if(is_horizontal) {
+        status = pimMulScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1 + current_needle_idx);
+        assert (status == PIM_OK);
+      } else {
+        status = pimXorScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
+        assert (status == PIM_OK);
 
-      status = pimSubScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
-      assert (status == PIM_OK);
+        status = pimSubScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
+        assert (status == PIM_OK);
 
-      status = pimAndScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1 + current_needle_idx);
-      assert (status == PIM_OK);
+        status = pimAndScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1 + current_needle_idx);
+        assert (status == PIM_OK);
+      }
     }
 
     for(uint64_t needle_idx = 1; needle_idx < needles_table[iter][0].size() + first_avail_pim_needle_result; ++needle_idx) {
@@ -290,7 +295,7 @@ int main(int argc, char* argv[])
   std::vector<std::vector<std::vector<size_t>>> table = string_match_precompute_table(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
   // print_table(needles, table);
   
-  string_match(needles, haystack, table, matches);
+  string_match(needles, haystack, table, deviceProp.isHLayoutDevice, matches);
 
   if (params.shouldVerify) 
   {
