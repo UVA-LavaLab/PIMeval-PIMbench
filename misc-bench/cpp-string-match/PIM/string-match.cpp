@@ -185,22 +185,29 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
     uint64_t first_avail_pim_needle_result = iter == 0 ? 0 : 1;
 
     for(uint64_t char_idx=0; char_idx < needles_table[iter].size(); ++char_idx) {
+
+      char prev_char = '\0';
       
       for(uint64_t needle_idx=0; needle_idx < needles_table[iter][char_idx].size(); ++needle_idx) {
         
         uint64_t current_needle_idx = needles_table[iter][char_idx][needle_idx];
         uint64_t needle_idx_pim = (current_needle_idx - needles_done) + first_avail_pim_needle_result;
+        char current_char = needles[current_needle_idx][char_idx];
 
         if(char_idx == 0) {
-          status = pimEQScalar(haystack_pim, pim_individual_needle_matches[needle_idx_pim], (uint64_t) needles[current_needle_idx][char_idx]);
+          status = pimEQScalar(haystack_pim, pim_individual_needle_matches[needle_idx_pim], (uint64_t) current_char);
+          assert (status == PIM_OK);
+        } else if(prev_char == current_char) {
+          status = pimAnd(pim_individual_needle_matches[needle_idx_pim], intermediate_pim, pim_individual_needle_matches[needle_idx_pim]);
           assert (status == PIM_OK);
         } else {
-          status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) needles[current_needle_idx][char_idx]);
+          status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) current_char);
           assert (status == PIM_OK);
 
           status = pimAnd(pim_individual_needle_matches[needle_idx_pim], intermediate_pim, pim_individual_needle_matches[needle_idx_pim]);
           assert (status == PIM_OK);
         }
+        prev_char = current_char;
       }
 
       if(char_idx + 1 < needles_table[iter].size()) {
