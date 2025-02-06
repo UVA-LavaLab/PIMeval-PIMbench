@@ -147,98 +147,55 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
 
 void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputVector, int numRequiredPIMRows, int numRequiredPIMCol, bool moreDebugPrints)
 {
-  std::vector<PimObjId> filterObjects;
+
   std::vector<int> temp;
-  PimObjId obj1 = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
-  if (obj1 == -1)
+  PimObjId filterObject = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
+  if (filterObject == -1)
   {
     std::cout << "Abort: pimAlloc failed for obj1" << std::endl;
     return;
   }
-  filterObjects.push_back(obj1);
-  for (int i = 1; i < numRequiredPIMRows; i++)
+
+  PimStatus status = pimBroadcastInt(filterObject, 0);
+
+  PimObjId matrixObject = pimAllocAssociated(filterObject, PIM_INT32);
+  if (matrixObject == -1)
   {
-    PimObjId obj = pimAllocAssociated(filterObjects[0], PIM_INT32);
-    if (obj == -1)
-    {
-      std::cout << "Abort: pimAllocAssociated failed for obj (filterObjects) at iteration: " << i << std::endl;
-      return;
-    }
-    filterObjects.push_back(obj);
+    std::cout << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: " << matrixObject << std::endl;
+    return;
   }
 
-  int idx = 0;
-  for (uint64_t i = 0; i < filterMatrix.size(); ++i)
-  {
-    for (uint64_t j = 0; j < filterMatrix[i].size(); ++j)
-    {
-      PimStatus status = pimBroadcastInt(filterObjects[idx++], filterMatrix[i][j]);
-      if (status != PIM_OK)
-      {
-        std::cout << "Abort: pimBroadcastInt failed for filterObjects at i=" << i << " and j=" << j << std::endl;
-        return;
-      }
-    }
-  }
-
-  std::vector<PimObjId> matrixObjects;
-  for (int i = 0; i < numRequiredPIMRows; i++)
-  {
-    PimObjId obj = pimAllocAssociated(filterObjects[0], PIM_INT32);
-    if (obj == -1)
-    {
-      std::cout << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: " << i << std::endl;
-      return;
-    }
-    matrixObjects.push_back(obj);
-  }
-
+  int col = filterMatrix[0].size();
+  // std::cout << "Col: " << col << "\n\n\n";
+  // std::cout << "Size of filter object: " << filterObjects.size() << "\tSize of matrix object: " << matrixObjects.size() << "\n\n\n";
   for (uint64_t i = 0; i < inputMatrix.size(); i++)
   {
-    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObjects[i]);
+    PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), matrixObject);
     if (status != PIM_OK)
     {
       std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects at iteration: " << i << std::endl;
       return;
     }
-  
-    status = pimMul(matrixObjects[i], filterObjects[i], filterObjects[i]);
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort: pimMul failed between matrixObjects and filterObjects at iteration: " << i << std::endl;
-      return;
-    }
-  }
 
-  for (int i = 1; i < numRequiredPIMRows; i++)
-  {
-    PimStatus status = pimAdd(filterObjects[0], filterObjects[i], filterObjects[0]);
+    // std::cout << "Row: " << i/col << "Col: " << i%col << "\n";
+    status = pimScaledAdd(matrixObject, filterObject, filterObject, filterMatrix[i/col][i%col]);
     if (status != PIM_OK)
     {
-      std::cout << "Abort: pimAddd failed between filterObjects at itertaion: " << i << std::endl;
+      std::cout << "Abort" << std::endl;
       return;
     }
   }
 
   outputVector.resize(numRequiredPIMCol);
 
-  PimStatus status = pimCopyDeviceToHost(filterObjects[0], outputVector.data());
+  status = pimCopyDeviceToHost(filterObject, outputVector.data());
   if (status != PIM_OK)
   {
     std::cout << "Abort: pimCopyDeviceToHost failed between filterObjects[0] and outputVector" << std::endl;
     return;
   }
-
-  for (auto elem : filterObjects)
-  {
-    pimFree(elem);
-  }
-
-  for (auto elem : matrixObjects)
-  {
-    pimFree(elem);
-  }
-
+  pimFree(filterObject);
+  pimFree(matrixObject);
 }
 
 // Function to perform 3D convolution on CPU and compare the results with PIM results
@@ -424,6 +381,7 @@ int main(int argc, char *argv[])
       }
 
       int hopSize = outMatCol * outMatRow;
+      // std::cout << "Hop Size: " << hopSize << "\n";
       auto start = std::chrono::high_resolution_clock::now();
       if (j == 0)
       {
