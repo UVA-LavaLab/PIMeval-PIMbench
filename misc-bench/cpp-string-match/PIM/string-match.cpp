@@ -149,7 +149,6 @@ void print_table(std::vector<std::string>& needles, std::vector<std::vector<std:
 }
 
 void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needles_table, bool is_horizontal, std::vector<int>& matches) {
-  pimStartTimer();
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
@@ -175,6 +174,8 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
   }
 
   uint64_t needles_done = 0;
+
+  pimStartTimer();
 
   PimStatus status;
   for(uint64_t iter=0; iter<needles_table.size(); ++iter) {
@@ -245,6 +246,7 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
 
   status = pimCopyDeviceToHost(pim_individual_needle_matches[0], (void *)matches.data());
   assert (status == PIM_OK);
+
   pimEndTimer();
 }
 
