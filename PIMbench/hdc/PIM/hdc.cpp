@@ -8,7 +8,7 @@
 #include <chrono>
 #include <cstdlib> 
 #include <getopt.h>
-#include "../../util.h"
+#include "util.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params

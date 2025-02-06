@@ -9,9 +9,11 @@ CXXFLAGS := -std=c++17 -Wall
 # Setup libpimeval library
 PROJ_ROOT ?= .
 LIBPIMEVAL_PATH ?= $(PROJ_ROOT)/libpimeval
+PIMBENCH_PATH ?= $(PROJ_ROOT)/PIMbench
 INC_DIR := $(LIBPIMEVAL_PATH)/include
 LIB_DIR := $(LIBPIMEVAL_PATH)/lib
-CXXFLAGS += -I$(INC_DIR) -L$(LIB_DIR) -lpimeval
+UTIL_DIR := $(PIMBENCH_PATH)/util
+CXXFLAGS += -I$(INC_DIR) -I$(UTIL_DIR) -L$(LIB_DIR) -lpimeval
 DEPS := $(INC_DIR)/libpimeval.h $(LIB_DIR)/libpimeval.a
 
 .PHONY: debug perf dramsim3_integ clean

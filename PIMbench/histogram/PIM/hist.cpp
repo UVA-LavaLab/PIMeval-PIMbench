@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 using namespace std;
