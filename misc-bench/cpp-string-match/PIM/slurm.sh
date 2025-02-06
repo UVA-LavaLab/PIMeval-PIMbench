@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --job-name=pim_string_match_test
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=cpu
