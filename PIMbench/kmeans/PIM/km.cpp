@@ -13,7 +13,7 @@
 #include <omp.h>
 #endif
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
