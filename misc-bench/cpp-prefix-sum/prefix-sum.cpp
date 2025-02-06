@@ -7,7 +7,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
-#include "../util.h"
+#include "util.h"
 #include "libpimeval.h"
 #include <getopt.h>
 #include <stdint.h>

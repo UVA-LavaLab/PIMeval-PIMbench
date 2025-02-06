@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 #define NUMBINS 256 // RGB values at any given pixel can be a value 0 to 255 (inclusive)

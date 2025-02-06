@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 // Params ---------------------------------------------------------------------
