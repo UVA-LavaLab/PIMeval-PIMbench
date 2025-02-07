@@ -77,6 +77,8 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+// Precomputes optimal order to match keys/needles for calculation reuse
+// Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
 std::vector<std::vector<std::vector<size_t>>> string_match_precompute_table(std::vector<std::string>& needles, uint64_t num_rows, bool is_horizontal) {
   std::vector<std::vector<std::vector<size_t>>> result_table;
   
@@ -105,7 +107,6 @@ std::vector<std::vector<std::vector<size_t>>> string_match_precompute_table(std:
       needles_this_iteration = max_needles_per_iteration - 1;
     }
 
-    // std::cout << "Iteration number: " << iter << ", will do " << needles_this_iteration << " needles this iteration." << std::endl;
     // Range: [needles_done, needles_done + needles_this_iteration - 1]
     uint64_t first_needle_this_iteration = needles_done;
     uint64_t last_needle_this_iteration = first_needle_this_iteration + needles_this_iteration - 1;
@@ -132,20 +133,6 @@ std::vector<std::vector<std::vector<size_t>>> string_match_precompute_table(std:
   }
 
   return result_table;
-}
-
-void print_table(std::vector<std::string>& needles, std::vector<std::vector<std::vector<size_t>>>& table) {
-  for(uint64_t iter=0; iter<table.size(); ++iter) {
-    std::cout << "~~~~~~~~~~~~~ Iter: " << iter << " ~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-    for(uint64_t char_ind=0; char_ind<table[iter].size(); ++char_ind) {
-      std::cout << "num chars: " << table[iter][char_ind].size() << " - ";
-      for(uint64_t needle_ind=0; needle_ind<table[iter][char_ind].size(); ++needle_ind) {
-        std::cout << needles[table[iter][char_ind][needle_ind]][char_ind] << ", ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-  }
 }
 
 void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needles_table, bool is_horizontal, std::vector<int>& matches) {
@@ -179,7 +166,6 @@ void string_match(std::vector<std::string>& needles, std::string& haystack, std:
 
   PimStatus status;
   for(uint64_t iter=0; iter<needles_table.size(); ++iter) {
-    // TODO: would it be better to save a copy of the haystack on the device then copy it back from the device?
     status = pimCopyHostToDevice((void *)haystack_32bit, haystack_pim);
     assert (status == PIM_OK);
 
@@ -295,7 +281,6 @@ int main(int argc, char* argv[])
   matches.resize(haystack.size(), 0);
 
   std::vector<std::vector<std::vector<size_t>>> table = string_match_precompute_table(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
-  // print_table(needles, table);
   
   string_match(needles, haystack, table, deviceProp.isHLayoutDevice, matches);
 
