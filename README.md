@@ -150,7 +150,7 @@ PIMeval-PIMbench/
 <!--
 ### How To Build
 * Run `make` at root directory or subdirectories
-  * `make perf`: Build with `-Ofast` for performance measurement (default)
+  * `make perf`: Build with `-O3` for performance measurement (default)
   * `make debug`: Build with `-g` and `-DDEBUG` for debugging and printing verbose messages
 * Multi-threaded building
   * `make -j<n_proc>`
@@ -187,7 +187,21 @@ This repository is the result of a collaborative effort by many individuals, inc
 
 Special thanks go to Deyuan Guo for initially architecting the PIMeval simulator framework and bit-serial evaluation, and to Farzana Ahmed Siddique for her contributions to both the simulator and the PIMbench suite.
 
-\<citation recommendation to be updated\>
+### Citation
+
+If you use this work, please cite our paper: **[Architectural Modeling and Benchmarking for Digital DRAM PIM](https://ieeexplore.ieee.org/abstract/document/10763591)**   
+
+```
+@inproceedings{siddique2024architectural,
+  title={Architectural Modeling and Benchmarking for Digital DRAM PIM},
+  author={Siddique, Farzana Ahmed and Guo, Deyuan and Fan, Zhenxing and Gholamrezaei, Mohammadhosein and Baradaran, Morteza and Ahmed, Alif and Abbot, Hugo and Durrer, Kyle and Nandagopal, Kumaresh and Ermovick, Ethan and others},
+  booktitle={2024 IEEE International Symposium on Workload Characterization (IISWC)},
+  pages={247--261},
+  year={2024},
+  organization={IEEE}
+}
+```
+
 ### Contact
 
 * Deyuan Guo - dg7vp AT virginia DOT edu

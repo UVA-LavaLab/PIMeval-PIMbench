@@ -11,14 +11,13 @@
 #include <cassert>
 #include <random>
 #include <cstdint>
+#include <cinttypes>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
-
-using namespace std;
 
 // Static definition, should be made dynamic in future work
 #define numBitmapIndices 8
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("Performing bitmap with %llu data points and 8 unique bitmap indices\n", numDatabaseEntries);
+  std::printf("Performing bitmap with %" PRIu64 "data points and 8 unique bitmap indices\n", numDatabaseEntries);
 
   if (!createDevice(params.configFile))
   {

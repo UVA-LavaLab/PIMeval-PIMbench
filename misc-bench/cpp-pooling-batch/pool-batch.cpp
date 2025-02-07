@@ -8,7 +8,7 @@
 #include <vector>
 #include <getopt.h>
 #include <cmath>
-#include "../util.h"
+#include "util.h"
 
 using namespace std;
 
@@ -161,7 +161,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     pimObjectList[i] = obj;
   }
 
-  for (int i = 0; i < pimObjectList.size(); i++)
+  for (uint64_t i = 0; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i].data(), pimObjectList[i]);
     if (status != PIM_OK)
@@ -171,7 +171,7 @@ void maxPool(const std::vector<std::vector<int>> &inputMatrix, std::vector<int> 
     }
   }
 
-  for (int i = 1; i < pimObjectList.size(); i++)
+  for (uint64_t i = 1; i < pimObjectList.size(); i++)
   {
     PimStatus status = pimMax(pimObjectList[0], pimObjectList[i], pimObjectList[0]);
     if (status != PIM_OK)
@@ -282,7 +282,6 @@ int main(int argc, char *argv[])
   }
   // Get the device parameters
   uint64_t numCols = deviceProp.numColPerSubarray;
-  uint64_t numRows = deviceProp.numRowPerSubarray;
   uint64_t numOfBits = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
 
   // Flatten the batch matrices into a 2D matrix by concatenating columns
@@ -332,7 +331,7 @@ int main(int argc, char *argv[])
       std::cout << "Decomposed Matrix at iterations, j: " << " " << j << std::endl;
       printMatrix(tempMat);
     }
-    for (int idx = 0; idx < mergedMat.size(); idx++) {
+    for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
       mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
       mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
     }

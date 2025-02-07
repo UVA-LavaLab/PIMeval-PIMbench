@@ -1,0 +1,11 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%post
+    apt-get -y update 
+    apt-get install -y sudo 
+    apt-get -y upgrade 
+    apt -y install python3 python3-pip python-is-python3 
+    pip install tqdm torch numpy
+    pip install torch-hd torchvision gdown
+

@@ -13,7 +13,7 @@
 #include <omp.h>
 #endif
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -136,7 +136,6 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
 
 void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector<std::vector<uint8_t>> &dst_host)
 {
-  unsigned bitsPerElement = 8;
 
   size_t width = src_host[0].size();
   size_t height = src_host.size();
@@ -250,8 +249,8 @@ int main(int argc, char* argv[])
   {
     bool is_correct = true;
 #pragma omp parallel for
-    for(int i=0; i<y.size(); ++i) {
-      for(int j=0; j<y[0].size(); ++j) {
+    for(uint64_t i=0; i<y.size(); ++i) {
+      for(uint64_t j=0; j<y[0].size(); ++j) {
         uint8_t sum_cpu = get_with_default(i-1, j-1, x);
         sum_cpu += get_with_default(i-1, j, x);
         sum_cpu += get_with_default(i-1, j+1, x);

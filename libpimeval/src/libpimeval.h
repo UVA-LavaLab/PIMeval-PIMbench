@@ -76,6 +76,9 @@ enum PimDataType {
   PIM_UINT32,
   PIM_UINT64,
   PIM_FP32,
+  PIM_FP16,
+  PIM_BF16,
+  PIM_FP8,
 };
 
 //! @brief  PIM device properties
@@ -86,18 +89,25 @@ struct PimDeviceProperties {
   unsigned numSubarrayPerBank = 0;
   unsigned numRowPerSubarray = 0;
   unsigned numColPerSubarray = 0;
+  bool isHLayoutDevice = false;
 };
 
 typedef int PimCoreId;
 typedef int PimObjId;
+
+// PIMeval simulation
+// CPU runtime between start/end timer will be measured for modeling DRAM refresh
+void pimStartTimer();
+void pimEndTimer();
+void pimShowStats();
+void pimResetStats();
+bool pimIsAnalysisMode();
 
 // Device creation and deletion
 PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
 PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
 PimStatus pimGetDeviceProperties(PimDeviceProperties* deviceProperties);
 PimStatus pimDeleteDevice();
-void pimShowStats();
-void pimResetStats();
 
 // Resource allocation and deletion
 PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
@@ -146,14 +156,16 @@ PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
-PimStatus pimRedSumInt(PimObjId src, int64_t* sum);
-PimStatus pimRedSumUInt(PimObjId src, uint64_t* sum);
+PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+// Min/Max Reduction APIs
+PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
-PimStatus pimRedSumRangedInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, int64_t* sum);
-PimStatus pimRedSumRangedUInt(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, uint64_t* sum);
+
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
-PimStatus pimBroadcastFP32(PimObjId dest, float value);
+PimStatus pimBroadcastFP(PimObjId dest, float value);
 PimStatus pimRotateElementsRight(PimObjId src);
 PimStatus pimRotateElementsLeft(PimObjId src);
 PimStatus pimShiftElementsRight(PimObjId src);

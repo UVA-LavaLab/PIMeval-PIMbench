@@ -24,13 +24,13 @@ public:
 
   virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
   virtual pimeval::perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
-  virtual pimeval::perfEnergy getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const override;
+  virtual pimeval::perfEnergy getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const override;
   virtual pimeval::perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
 
 protected:
   double m_fulcrumAluLatency = 0.00000609; // 6.09ns
-  unsigned m_flucrumAluBitWidth = 32;
+  unsigned m_fulcrumAluBitWidth = 32;
   // Following values are taken from fulcrum paper.
   double m_fulcrumALUArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_fulcrumALULogicalEnergy = 0.0000000001467846411; // mJ

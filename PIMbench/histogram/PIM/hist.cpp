@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -102,7 +102,7 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const
     assert(status == PIM_OK);
 
     prevCount = blueCount[i];
-    status = pimRedSumUInt(tempObj, &blueCount[i]);
+    status = pimRedSum(tempObj, static_cast<void*>(&blueCount[i]));
     assert(status == PIM_OK);
     blueCount[i] += prevCount;
 
@@ -110,7 +110,7 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const
     assert(status == PIM_OK);
 
     prevCount = greenCount[i];
-    status = pimRedSumUInt(tempObj, &greenCount[i]);
+    status = pimRedSum(tempObj, static_cast<void*>(&greenCount[i]));
     assert(status == PIM_OK);
     greenCount[i] += prevCount;
 
@@ -118,7 +118,7 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &redData, const
     assert(status == PIM_OK);
 
     prevCount = redCount[i];
-    status = pimRedSumUInt(tempObj, &redCount[i]);
+    status = pimRedSum(tempObj, static_cast<void*>(&redCount[i]));
     assert(status == PIM_OK);
     redCount[i] += prevCount;
   }
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
   }
   // End data parsing
 
-  printf("This file has %llu bytes of image data, %llu pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
+  printf("This file has %lu bytes of image data, %lu pixels\n", imgDataBytes, imgDataBytes / NUMCHANNELS);
 
   if (!createDevice(params.configFile))
   {

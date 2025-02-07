@@ -13,14 +13,13 @@
 #include <unistd.h>
 #include <cstring>
 #include <cassert>
+#include <cinttypes>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
-
-using namespace std;
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -127,7 +126,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  printf("Performing XOR with %llu data points\n", vectorLength);
+  std::printf("Performing XOR with %" PRIu64 "data points\n", vectorLength);
 
   if (!createDevice(params.configFile))
   {

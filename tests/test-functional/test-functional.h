@@ -9,6 +9,7 @@
 #include "libpimeval.h"
 #include <random>
 #include <cassert>
+#include <limits>
 #include <type_traits>
 
 
@@ -86,6 +87,16 @@ testFunctional::safeAbs(T value)
     assert(0);
   }
   return val;
+}
+
+//! @brief  Check if two FP values are fuzzy equal within a percentage tolerance
+template <typename T>
+bool fuzzyEqualPercent(T a, T b, T tolerancePercent = 1e-3) {
+  if (a == 0 || b == 0) {
+    return std::abs(a - b) <= tolerancePercent / 100.0;
+  }
+  T percentDiff = (std::abs(a - b) / std::max(std::abs(a), std::abs(b))) * 100;
+  return percentDiff <= tolerancePercent;
 }
 
 #endif

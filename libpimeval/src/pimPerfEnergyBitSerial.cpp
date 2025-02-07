@@ -10,6 +10,7 @@
 #ifdef PRINT_HALIDE
 #include <iostream>
 #endif
+#include <cmath> // For log2()
 
 
 //! @brief  Get performance and energy for bit-serial PIM
@@ -135,7 +136,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bit-serial PIM for reduction sum
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -151,20 +152,73 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
     case PIM_DEVICE_BITSIMD_V_AP:
     {
       if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
-        // Assume row-wide popcount capability for integer reduction, with a 64-bit popcount logic unit per PIM core
-        // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
-        // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
-        double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
-        int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
-        msRuntime = m_tR + (m_pclNsDelay * 1e-6) * numPclPerCore;
-        msRuntime *= bitsPerElement * numPass;
-        mjEnergy = m_eAP * numCore + mjEnergyPerPcl * numPclPerCore * numCore; // energy of one row read and row-wide popcount
-        mjEnergy *= bitsPerElement * numPass;
-        // reduction for all regions
-        double aggregateMs = static_cast<double>(numCore) / 3200000;
-        msRuntime += aggregateMs;
-        mjEnergy += aggregateMs * cpuTDP;
-        mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+        switch (cmdType)
+        {
+        case PimCmdEnum::REDSUM:
+        case PimCmdEnum::REDSUM_RANGE:
+        {
+          // Assume row-wide popcount capability for integer reduction, with a 64-bit popcount logic unit per PIM core
+          // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
+          // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
+          double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
+          int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
+          msRuntime = m_tR + (m_pclNsDelay * 1e-6) * numPclPerCore;
+          msRuntime *= bitsPerElement * numPass;
+          mjEnergy = m_eAP * numCore + mjEnergyPerPcl * numPclPerCore * numCore; // energy of one row read and row-wide popcount
+          mjEnergy *= bitsPerElement * numPass;
+          // reduction for all regions
+          double aggregateMs = static_cast<double>(numCore) / 3200000;
+          msRuntime += aggregateMs;
+          mjEnergy += aggregateMs * cpuTDP;
+          mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+          break;
+        }
+        case PimCmdEnum::REDMIN:
+        case PimCmdEnum::REDMIN_RANGE:
+        {
+          // Reduction tree approach.
+          // `numpass` for one reduction min is halved because of the reduction tree based approach.
+          // The following does not consider the cost for data rearrangement. Ideally that should be considered.
+          // TODO: for ranged reduction, `numElements` should be the #elements in the range
+          unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
+          msRuntime = perfEnergyBS.m_msRuntime * levels;
+          mjEnergy = perfEnergyBS.m_mjEnergy * levels;
+          break;
+        }
+        case PimCmdEnum::REDMAX:
+        case PimCmdEnum::REDMAX_RANGE:
+        {
+          // Reduction tree approach.
+          // `numpass` for one reduction min is halved because of the reduction tree based approach.
+          // The following does not consider the cost for data rearrangement. Ideally that should be considered.
+          // TODO: for ranged reduction, `numElements` should be the #elements in the range
+          unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
+          msRuntime = perfEnergyBS.m_msRuntime * levels;
+          mjEnergy = perfEnergyBS.m_mjEnergy * levels;
+          break;
+        }
+        default:
+        {
+
+#ifdef PRINT_HALIDE
+          std::cout << "PIM-Warning: Unsupported reduction command for bit-serial PIM: "
+                    << pimCmd::getName(cmdType, "") << std::endl;
+#endif
+          break;
+        }
+        }
+      }
+      else if (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8)
+      {
+
+#ifdef PRINT_HALIDE
+            std::cout << "PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet." << std::endl;
+#endif
+
+            msRuntime = 999999999.9; // todo
+            mjEnergy = 999999999.9;  // todo
       } else {
         assert(0);
       }
@@ -185,7 +239,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjI
     default:
       assert(0);
   }
-
+  
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
@@ -244,8 +298,8 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
-  // boundary handling
-  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  // boundary handling - assume two times copying between device and host for boundary elements
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:

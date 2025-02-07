@@ -26,14 +26,26 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
   assert(deviceProp.deviceType == deviceType);
-  assert(deviceProp.numRanks = numRanks);
-  assert(deviceProp.numBankPerRank = numBankPerRank);
-  assert(deviceProp.numSubarrayPerBank = numSubarrayPerBank);
-  assert(deviceProp.numColPerSubarray = numCols);
-  assert(deviceProp.numRowPerSubarray = numRows);
-
+  assert(deviceProp.numRanks == numRanks);
+  assert(deviceProp.numBankPerRank == numBankPerRank);
+  assert(deviceProp.numSubarrayPerBank == numSubarrayPerBank);
+  assert(deviceProp.numColPerSubarray == numCols);
+  assert(deviceProp.numRowPerSubarray == numRows);
+  switch(deviceType) {
+    case PIM_DEVICE_BITSIMD_V:
+      assert(deviceProp.isHLayoutDevice == false);
+      break;
+    case PIM_DEVICE_FULCRUM:
+      assert(deviceProp.isHLayoutDevice == true);
+      break;
+    case PIM_DEVICE_BANK_LEVEL:
+      assert(deviceProp.isHLayoutDevice == true);
+      break;
+    default:
+      break;
+  }
+  
   pimShowStats();
-  pimResetStats();
   pimDeleteDevice();
 }
 
