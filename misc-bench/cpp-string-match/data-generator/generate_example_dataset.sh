@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 text_lens=("1000000" "10000000" "100000000" "1000000000")
 text_lens_names=("1mil" "10mil" "100mil" "1bil")
 num_keys=("1" "10" "100" "1000")

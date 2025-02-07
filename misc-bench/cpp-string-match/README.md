@@ -22,6 +22,8 @@ cpp-string-match/
 ├── PIM/
 │   ├── Makefile
 │   ├── string-match.cpp
+│   ├── run_slurm.sh
+│   ├── slurm.sh
 ├── baselines/
 │   ├── CPU/
 │   │   ├── CMakeLists.txt
@@ -38,6 +40,7 @@ cpp-string-match/
 ├── data-generator/
 │   ├── Makefile
 │   ├── data-generator.cpp
+│   ├── generate_example_dataset.sh
 ├── dataset/
 │   ├── .gitkeep
 ├── README.md
