@@ -39,7 +39,7 @@ void usage()
           "\n");
 }
 
-struct Params input_params(int argc, char **argv)
+struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.keysInputFile = nullptr;
@@ -73,7 +73,7 @@ struct Params input_params(int argc, char **argv)
   return p;
 }
 
-static int match_callback(unsigned int id, unsigned long long from,
+static int matchCallback(unsigned int id, unsigned long long from,
                         unsigned long long to, unsigned int flags, void *matches) {
     (*(std::vector<int>*)matches)[from] = max(
       (*(std::vector<int>*)matches)[from]
@@ -86,7 +86,7 @@ static int match_callback(unsigned int id, unsigned long long from,
  */
 int main(int argc, char **argv)
 {
-  struct Params params = input_params(argc, argv);
+  struct Params params = getInputParams(argc, argv);
 
   if(params.keysInputFile == nullptr) {
     std::cout << "Please provide a keys input file" << std::endl;
@@ -104,13 +104,13 @@ int main(int argc, char **argv)
 
   const std::string DATASET_FOLDER_PREFIX = "./../../../dataset/";
 
-  haystack = get_text_from_file(DATASET_FOLDER_PREFIX, params.textInputFile);
+  haystack = getTextFromFile(DATASET_FOLDER_PREFIX, params.textInputFile);
   if(haystack.size() == 0) {
     std::cout << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  needles = get_needles_from_file(DATASET_FOLDER_PREFIX, params.keysInputFile);
+  needles = getNeedlesFromFile(DATASET_FOLDER_PREFIX, params.keysInputFile);
   if(needles.size() == 0) {
     std::cout << "There was an error opening the keys file" << std::endl;
     return 1;
@@ -118,34 +118,34 @@ int main(int argc, char **argv)
 
   matches.resize(haystack.size());
 
-  char** needles_arr = (char**) malloc(sizeof(char*) * needles.size());
-  unsigned* flags_arr = (unsigned*) malloc(sizeof(unsigned) * needles.size());
-  unsigned* ids_arr = (unsigned*) malloc(sizeof(unsigned) * needles.size());
-  size_t* lens_arr = (size_t*) malloc(sizeof(size_t) * needles.size());
-  unsigned num_elements = needles.size();
+  char** needlesArr = (char**) malloc(sizeof(char*) * needles.size());
+  unsigned* flagsArr = (unsigned*) malloc(sizeof(unsigned) * needles.size());
+  unsigned* idsArr = (unsigned*) malloc(sizeof(unsigned) * needles.size());
+  size_t* lensArr = (size_t*) malloc(sizeof(size_t) * needles.size());
+  unsigned numElements = needles.size();
   unsigned mode = HS_MODE_BLOCK;
   hs_platform_info_t* platform = NULL;
   hs_database_t* db;
-  hs_compile_error_t* compile_err;
+  hs_compile_error_t* compileErr;
 
-  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
-    needles_arr[needle_idx] = (char*) needles[needle_idx].c_str();
-    flags_arr[needle_idx] = HS_FLAG_SOM_LEFTMOST;
-    ids_arr[needle_idx] = 1 + needle_idx;
-    lens_arr[needle_idx] = needles[needle_idx].size();
+  for(uint64_t needleIdx = 0; needleIdx < needles.size(); ++needleIdx) {
+    needlesArr[needleIdx] = (char*) needles[needleIdx].c_str();
+    flagsArr[needleIdx] = HS_FLAG_SOM_LEFTMOST;
+    idsArr[needleIdx] = 1 + needleIdx;
+    lensArr[needleIdx] = needles[needleIdx].size();
   }
 
-  hs_error_t hs_err = hs_compile_lit_multi(needles_arr, flags_arr,
-                      ids_arr, lens_arr, num_elements, mode, platform,
-                      &db, &compile_err);
+  hs_error_t hsErr = hs_compile_lit_multi(needlesArr, flagsArr,
+                      idsArr, lensArr, numElements, mode, platform,
+                      &db, &compileErr);
 
-  if(hs_err != HS_SUCCESS) {
-    fprintf(stderr, "Hyperscan couldn't compile pattern, ending program!\nError expression number: %d\nError text: \"%s\"", compile_err->expression, compile_err->message);
-    hs_free_compile_error(compile_err);
+  if(hsErr != HS_SUCCESS) {
+    fprintf(stderr, "Hyperscan couldn't compile pattern, ending program!\nError expression number: %d\nError text: \"%s\"", compileErr->expression, compileErr->message);
+    hs_free_compile_error(compileErr);
     return -1;
   }
 
-  hs_free_compile_error(compile_err);
+  hs_free_compile_error(compileErr);
 
   hs_scratch_t *scratch = NULL;
   if (hs_alloc_scratch(db, &scratch) != HS_SUCCESS) {
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
   for (int32_t i = 0; i < WARMUP; i++)
   {
-    if(hs_scan(db, haystack.c_str(), haystack.size(), 0, scratch, match_callback, (void*) &matches) != HS_SUCCESS) {
+    if(hs_scan(db, haystack.c_str(), haystack.size(), 0, scratch, matchCallback, (void*) &matches) != HS_SUCCESS) {
       fprintf(stderr, "Hyperscan couldn't scan the haystack, exiting\n");
       hs_free_scratch(scratch);
       hs_free_database(db);
@@ -176,24 +176,24 @@ int main(int argc, char **argv)
 
   if (params.shouldVerify) 
   {
-    std::vector<int> matches_cpu;
+    std::vector<int> matchesCpu;
     
-    matches_cpu.resize(haystack.size(), 0);
+    matchesCpu.resize(haystack.size(), 0);
 
-    string_match_cpu(needles, haystack, matches_cpu);
+    stringMatchCpu(needles, haystack, matchesCpu);
 
     // verify result
-    bool is_correct = true;
+    bool ok = true;
     #pragma omp parallel for
     for (unsigned i = 0; i < matches.size(); ++i)
     {
-      if (matches[i] != matches_cpu[i])
+      if (matches[i] != matchesCpu[i])
       {
-        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), for position " << i << std::endl;
-        is_correct = false;
+        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
+        ok = false;
       }
     }
-    if(is_correct) {
+    if(ok) {
       std::cout << "Correct for string match!" << std::endl;
     }
   }

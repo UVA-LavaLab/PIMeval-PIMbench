@@ -6,42 +6,42 @@
 #include <fstream>
 #include <sstream>
 
-std::vector<std::string> get_needles_from_file(const std::string& dataset_prefix, const std::string& keys_filename) {
-  std::string keys_input_file = dataset_prefix + keys_filename;
-  std::ifstream keys_file(keys_input_file);
-  if (!keys_file) {
+std::vector<std::string> getNeedlesFromFile(const std::string& datasetPrefix, const std::string& keysFilename) {
+  std::string keysInputFile = datasetPrefix + keysFilename;
+  std::ifstream keysFile(keysInputFile);
+  if (!keysFile) {
     return {};
   }
   
   std::vector<std::string> needles;
   std::string line;
-  while (std::getline(keys_file, line)) {
+  while (std::getline(keysFile, line)) {
       needles.push_back(line);
   }
   
   return needles;
 }
 
-std::string get_text_from_file(const std::string& dataset_prefix, const std::string& text_filename) {
-  std::string text_input_file = dataset_prefix + text_filename;
+std::string getTextFromFile(const std::string& datasetPrefix, const std::string& textFilename) {
+  std::string textInputFile = datasetPrefix + textFilename;
   
-  std::ifstream text_file(text_input_file);
-  if (!text_file) {
+  std::ifstream textFile(textInputFile);
+  if (!textFile) {
     return "";
   }
 
-  std::ostringstream text_file_oss;
-  text_file_oss << text_file.rdbuf();
-  return text_file_oss.str();
+  std::ostringstream textFileOss;
+  textFileOss << textFile.rdbuf();
+  return textFileOss.str();
 }
 
-void string_match_cpu(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches) {
-  for(uint64_t needle_idx = 0; needle_idx < needles.size(); ++needle_idx) {
-    size_t pos = haystack.find(needles[needle_idx], 0);
+void stringMatchCpu(std::vector<std::string>& needles, std::string& haystack, std::vector<int>& matches) {
+  for(uint64_t needleIdx = 0; needleIdx < needles.size(); ++needleIdx) {
+    size_t pos = haystack.find(needles[needleIdx], 0);
 
     while (pos != std::string::npos) {
-        matches[pos] = std::max((unsigned long) matches[pos], needle_idx + 1);
-        pos = haystack.find(needles[needle_idx], pos + 1);
+        matches[pos] = std::max((unsigned long) matches[pos], needleIdx + 1);
+        pos = haystack.find(needles[needleIdx], pos + 1);
     }
   }
 }

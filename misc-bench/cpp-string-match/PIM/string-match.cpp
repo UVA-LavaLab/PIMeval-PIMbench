@@ -79,158 +79,158 @@ struct Params getInputParams(int argc, char **argv)
 
 // Precomputes optimal order to match keys/needles for calculation reuse
 // Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
-std::vector<std::vector<std::vector<size_t>>> string_match_precompute_table(std::vector<std::string>& needles, uint64_t num_rows, bool is_horizontal) {
-  std::vector<std::vector<std::vector<size_t>>> result_table;
+std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::vector<std::string>& needles, uint64_t numRows, bool isHorizontal) {
+  std::vector<std::vector<std::vector<size_t>>> resultTable;
   
-  uint64_t max_needles_per_iteration = is_horizontal ? num_rows - 2 : (num_rows>>5) - 2;
-  uint64_t num_iterations;
-  if(needles.size() <= max_needles_per_iteration) {
-    num_iterations = 1;
+  uint64_t maxNeedlesPerIteration = isHorizontal ? numRows - 2 : (numRows>>5) - 2;
+  uint64_t numIterations;
+  if(needles.size() <= maxNeedlesPerIteration) {
+    numIterations = 1;
   } else {
-    uint64_t needles_after_first_iteration = needles.size() - max_needles_per_iteration;
+    uint64_t needlesAfterFirstIteration = needles.size() - maxNeedlesPerIteration;
     // Can do 1 more needle in first iteration than in later iterations
     // During the first iteration we can use the final result array as an individual result array in the first iteration
-    num_iterations = 1 + ((needles_after_first_iteration + max_needles_per_iteration - 2) / (max_needles_per_iteration - 1));
+    numIterations = 1 + ((needlesAfterFirstIteration + maxNeedlesPerIteration - 2) / (maxNeedlesPerIteration - 1));
   }
 
-  result_table.resize(num_iterations);
+  resultTable.resize(numIterations);
 
-  uint64_t needles_done = 0;
+  uint64_t needlesDone = 0;
 
-  for(uint64_t iter=0; iter<num_iterations; ++iter) {
-    uint64_t needles_this_iteration;
+  for(uint64_t iter=0; iter<numIterations; ++iter) {
+    uint64_t needlesThisIteration;
     if(iter == 0) {
-      needles_this_iteration = min(max_needles_per_iteration, needles.size());
-    } else if(iter+1 == num_iterations) {
-      needles_this_iteration = needles.size() - needles_done;
+      needlesThisIteration = min(maxNeedlesPerIteration, needles.size());
+    } else if(iter+1 == numIterations) {
+      needlesThisIteration = needles.size() - needlesDone;
     } else {
-      needles_this_iteration = max_needles_per_iteration - 1;
+      needlesThisIteration = maxNeedlesPerIteration - 1;
     }
 
-    // Range: [needles_done, needles_done + needles_this_iteration - 1]
-    uint64_t first_needle_this_iteration = needles_done;
-    uint64_t last_needle_this_iteration = first_needle_this_iteration + needles_this_iteration - 1;
-    uint64_t longest_needle_this_iteration = needles[last_needle_this_iteration].size();
+    // Range: [needlesDone, needlesDone + needlesThisIteration - 1]
+    uint64_t firstNeedleThisIteration = needlesDone;
+    uint64_t lastNeedleThisIteration = firstNeedleThisIteration + needlesThisIteration - 1;
+    uint64_t longestNeedleThisIteration = needles[lastNeedleThisIteration].size();
     // As we iterate through character indices for the needles in this iteration, there may be some needles that are shorter than the current character
     // Skip checking them by keeping track of the shortest needle that is long enough to have the current character
-    uint64_t current_start_needle = first_needle_this_iteration;
-    result_table[iter].resize(longest_needle_this_iteration);
-    for(uint64_t char_ind = 0; char_ind < longest_needle_this_iteration; ++char_ind) {
-      while(needles[current_start_needle].size() <= char_ind) {
-        ++current_start_needle;
+    uint64_t currentStartNeedle = firstNeedleThisIteration;
+    resultTable[iter].resize(longestNeedleThisIteration);
+    for(uint64_t charInd = 0; charInd < longestNeedleThisIteration; ++charInd) {
+      while(needles[currentStartNeedle].size() <= charInd) {
+        ++currentStartNeedle;
       }
-      std::vector<size_t>& current_table_row = result_table[iter][char_ind];
-      current_table_row.resize(1 + last_needle_this_iteration - current_start_needle);
-      // Sort needles [current_start_needle, last_needle_this_iteration] on char_ind
+      std::vector<size_t>& currentTableRow = resultTable[iter][charInd];
+      currentTableRow.resize(1 + lastNeedleThisIteration - currentStartNeedle);
+      // Sort needles [currentStartNeedle, lastNeedleThisIteration] on charInd
       
-      std::iota(current_table_row.begin(), current_table_row.end(), current_start_needle);
-      std::sort(current_table_row.begin(), current_table_row.end(), [&needles, &char_ind](auto& l, auto& r) {
-        return needles[l][char_ind] < needles[r][char_ind];
+      std::iota(currentTableRow.begin(), currentTableRow.end(), currentStartNeedle);
+      std::sort(currentTableRow.begin(), currentTableRow.end(), [&needles, &charInd](auto& l, auto& r) {
+        return needles[l][charInd] < needles[r][charInd];
       });
     }
 
-    needles_done += needles_this_iteration;
+    needlesDone += needlesThisIteration;
   }
 
-  return result_table;
+  return resultTable;
 }
 
-void string_match(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needles_table, bool is_horizontal, std::vector<int>& matches) {
+void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needlesTable, bool isHorizontal, std::vector<int>& matches) {
   // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
 
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
   // Two rows used by the haystack and intermediate
 
-  PimObjId haystack_pim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
-  assert(haystack_pim != -1);
+  PimObjId haystackPim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
+  assert(haystackPim != -1);
   
-  PimObjId intermediate_pim = pimAllocAssociated(haystack_pim, PIM_UINT32);
-  assert(intermediate_pim != -1);
+  PimObjId intermediatePim = pimAllocAssociated(haystackPim, PIM_UINT32);
+  assert(intermediatePim != -1);
 
   // TODO remove when pim conversion becomes possible
-  uint32_t *haystack_32bit = (uint32_t*) malloc(sizeof(uint32_t) * haystack.size());
+  uint32_t *haystack32Bit = (uint32_t*) malloc(sizeof(uint32_t) * haystack.size());
   #pragma omp parallel for
   for(uint32_t i=0; i<haystack.size(); ++i) {
-    haystack_32bit[i] = (uint32_t) haystack[i];
+    haystack32Bit[i] = (uint32_t) haystack[i];
   }
 
-  std::vector<PimObjId> pim_individual_needle_matches;
-  for(uint32_t i=0; i<needles_table[0][0].size(); ++i) {
-    pim_individual_needle_matches.push_back(pimAllocAssociated(haystack_pim, PIM_UINT32));
-    assert(pim_individual_needle_matches.back() != -1);
+  std::vector<PimObjId> pimIndividualNeedleMatches;
+  for(uint32_t i=0; i<needlesTable[0][0].size(); ++i) {
+    pimIndividualNeedleMatches.push_back(pimAllocAssociated(haystackPim, PIM_UINT32));
+    assert(pimIndividualNeedleMatches.back() != -1);
   }
 
-  uint64_t needles_done = 0;
+  uint64_t needlesDone = 0;
 
   pimStartTimer();
 
   PimStatus status;
-  for(uint64_t iter=0; iter<needles_table.size(); ++iter) {
-    status = pimCopyHostToDevice((void *)haystack_32bit, haystack_pim);
+  for(uint64_t iter=0; iter<needlesTable.size(); ++iter) {
+    status = pimCopyHostToDevice((void *)haystack32Bit, haystackPim);
     assert (status == PIM_OK);
 
-    uint64_t first_avail_pim_needle_result = iter == 0 ? 0 : 1;
+    uint64_t firstAvailPimNeedleResult = iter == 0 ? 0 : 1;
 
-    for(uint64_t char_idx=0; char_idx < needles_table[iter].size(); ++char_idx) {
+    for(uint64_t charIdx=0; charIdx < needlesTable[iter].size(); ++charIdx) {
 
-      char prev_char = '\0';
+      char prevChar = '\0';
       
-      for(uint64_t needle_idx=0; needle_idx < needles_table[iter][char_idx].size(); ++needle_idx) {
+      for(uint64_t needleIdx=0; needleIdx < needlesTable[iter][charIdx].size(); ++needleIdx) {
         
-        uint64_t current_needle_idx = needles_table[iter][char_idx][needle_idx];
-        uint64_t needle_idx_pim = (current_needle_idx - needles_done) + first_avail_pim_needle_result;
-        char current_char = needles[current_needle_idx][char_idx];
+        uint64_t currentNeedleIdx = needlesTable[iter][charIdx][needleIdx];
+        uint64_t needleIdxPim = (currentNeedleIdx - needlesDone) + firstAvailPimNeedleResult;
+        char currentChar = needles[currentNeedleIdx][charIdx];
 
-        if(char_idx == 0) {
-          status = pimEQScalar(haystack_pim, pim_individual_needle_matches[needle_idx_pim], (uint64_t) current_char);
+        if(charIdx == 0) {
+          status = pimEQScalar(haystackPim, pimIndividualNeedleMatches[needleIdxPim], (uint64_t) currentChar);
           assert (status == PIM_OK);
-        } else if(prev_char == current_char) {
-          status = pimAnd(pim_individual_needle_matches[needle_idx_pim], intermediate_pim, pim_individual_needle_matches[needle_idx_pim]);
+        } else if(prevChar == currentChar) {
+          status = pimAnd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
           assert (status == PIM_OK);
         } else {
-          status = pimEQScalar(haystack_pim, intermediate_pim, (uint64_t) current_char);
+          status = pimEQScalar(haystackPim, intermediatePim, (uint64_t) currentChar);
           assert (status == PIM_OK);
 
-          status = pimAnd(pim_individual_needle_matches[needle_idx_pim], intermediate_pim, pim_individual_needle_matches[needle_idx_pim]);
+          status = pimAnd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
           assert (status == PIM_OK);
         }
-        prev_char = current_char;
+        prevChar = currentChar;
       }
 
-      if(char_idx + 1 < needles_table[iter].size()) {
-        status = pimShiftElementsLeft(haystack_pim);
+      if(charIdx + 1 < needlesTable[iter].size()) {
+        status = pimShiftElementsLeft(haystackPim);
         assert (status == PIM_OK);
       }
     }
 
-    for(uint64_t needle_idx = 0; needle_idx < needles_table[iter][0].size(); ++needle_idx) {
-      uint64_t current_needle_idx = needle_idx + needles_done;
-      uint64_t needle_idx_pim = (current_needle_idx - needles_done) + first_avail_pim_needle_result;
+    for(uint64_t needleIdx = 0; needleIdx < needlesTable[iter][0].size(); ++needleIdx) {
+      uint64_t currentNeedleIdx = needleIdx + needlesDone;
+      uint64_t needleIdxPim = (currentNeedleIdx - needlesDone) + firstAvailPimNeedleResult;
 
-      if(is_horizontal) {
-        status = pimMulScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1 + current_needle_idx);
+      if(isHorizontal) {
+        status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + currentNeedleIdx);
         assert (status == PIM_OK);
       } else {
-        status = pimXorScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
+        status = pimXorScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
         assert (status == PIM_OK);
 
-        status = pimSubScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1);
+        status = pimSubScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
         assert (status == PIM_OK);
 
-        status = pimAndScalar(pim_individual_needle_matches[needle_idx_pim], pim_individual_needle_matches[needle_idx_pim], 1 + current_needle_idx);
+        status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + currentNeedleIdx);
         assert (status == PIM_OK);
       }
     }
 
-    for(uint64_t needle_idx = 1; needle_idx < needles_table[iter][0].size() + first_avail_pim_needle_result; ++needle_idx) {
-      status = pimMax(pim_individual_needle_matches[0], pim_individual_needle_matches[needle_idx], pim_individual_needle_matches[0]);
+    for(uint64_t needleIdx = 1; needleIdx < needlesTable[iter][0].size() + firstAvailPimNeedleResult; ++needleIdx) {
+      status = pimMax(pimIndividualNeedleMatches[0], pimIndividualNeedleMatches[needleIdx], pimIndividualNeedleMatches[0]);
       assert (status == PIM_OK);
     }
 
-    needles_done += needles_table[iter][0].size();
+    needlesDone += needlesTable[iter][0].size();
   }
 
-  status = pimCopyDeviceToHost(pim_individual_needle_matches[0], (void *)matches.data());
+  status = pimCopyDeviceToHost(pimIndividualNeedleMatches[0], (void *)matches.data());
   assert (status == PIM_OK);
 
   pimEndTimer();
@@ -257,13 +257,13 @@ int main(int argc, char* argv[])
 
   const std::string DATASET_FOLDER_PREFIX = "./../dataset/";
 
-  haystack = get_text_from_file(DATASET_FOLDER_PREFIX, params.textInputFile);
+  haystack = getTextFromFile(DATASET_FOLDER_PREFIX, params.textInputFile);
   if(haystack.size() == 0) {
     std::cout << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  needles = get_needles_from_file(DATASET_FOLDER_PREFIX, params.keysInputFile);
+  needles = getNeedlesFromFile(DATASET_FOLDER_PREFIX, params.keysInputFile);
   if(needles.size() == 0) {
     std::cout << "There was an error opening the keys file" << std::endl;
     return 1;
@@ -280,30 +280,30 @@ int main(int argc, char* argv[])
 
   matches.resize(haystack.size(), 0);
 
-  std::vector<std::vector<std::vector<size_t>>> table = string_match_precompute_table(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
+  std::vector<std::vector<std::vector<size_t>>> table = stringMatchPrecomputeTable(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
   
-  string_match(needles, haystack, table, deviceProp.isHLayoutDevice, matches);
+  stringMatch(needles, haystack, table, deviceProp.isHLayoutDevice, matches);
 
   if (params.shouldVerify) 
   {
-    std::vector<int> matches_cpu;
+    std::vector<int> matchesCpu;
     
-    matches_cpu.resize(haystack.size());
+    matchesCpu.resize(haystack.size());
 
-    string_match_cpu(needles, haystack, matches_cpu);
+    stringMatchCpu(needles, haystack, matchesCpu);
 
     // verify result
-    bool is_correct = true;
+    bool ok = true;
     #pragma omp parallel for
     for (unsigned i = 0; i < matches.size(); ++i)
     {
-      if (matches[i] != matches_cpu[i])
+      if (matches[i] != matchesCpu[i])
       {
-        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), for position " << i << std::endl;
-        is_correct = false;
+        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
+        ok = false;
       }
     }
-    if(is_correct) {
+    if(ok) {
       std::cout << "Correct for string match!" << std::endl;
     }
   }

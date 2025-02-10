@@ -108,25 +108,25 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  std::unordered_set<std::string> keys_set;
-  keys_set.reserve(params.numKeys);
+  std::unordered_set<std::string> keysSet;
+  keysSet.reserve(params.numKeys);
 
   // Create params.numKeys randomly generated keys of random sizes in range [params.minKeyLen, params.maxKeyLen]
   // All keys are unique
-  while(keys_set.size() < params.numKeys) {
-    size_t curr_key_len = rand()%(params.maxKeyLen-params.minKeyLen + 1) + params.minKeyLen;
-    std::string next_key(curr_key_len, 0);
-    for(size_t j=0; j<curr_key_len; ++j) {
-        next_key[j] = (rand() % 26) + 'a';
+  while(keysSet.size() < params.numKeys) {
+    size_t currKeyLen = rand()%(params.maxKeyLen-params.minKeyLen + 1) + params.minKeyLen;
+    std::string nextKey(currKeyLen, 0);
+    for(size_t j=0; j<currKeyLen; ++j) {
+        nextKey[j] = (rand() % 26) + 'a';
     }
-    if(!keys_set.count(next_key)) {
-      keys_set.insert(next_key);
+    if(!keysSet.count(nextKey)) {
+      keysSet.insert(nextKey);
     }
   }
 
   std::vector<std::string> keys(
-        std::make_move_iterator(keys_set.begin()),
-        std::make_move_iterator(keys_set.end())
+        std::make_move_iterator(keysSet.begin()),
+        std::make_move_iterator(keysSet.end())
     );
 
   std::sort(keys.begin(), keys.end(), [](auto& l, auto& r){
@@ -134,30 +134,30 @@ int main(int argc, char* argv[])
   });
 
   // Stores indices of all keys to be put into the text
-  std::vector<size_t> text_vec_of_keys;
+  std::vector<size_t> textVecOfKeys;
   
-  size_t text_chars_replaced_with_keys = 0;
-  size_t target_text_chars_replaced_with_keys = ((double) params.keyFrequency / (double) 100.0) * params.textLen;
-  size_t last_viable_key = keys.size();
+  size_t textCharsReplacedWithKeys = 0;
+  size_t targetTextCharsReplacedWithKeys = ((double) params.keyFrequency / (double) 100.0) * params.textLen;
+  size_t lastViableKey = keys.size();
 
   // Replace some of text with keys to generate matches
-  while(text_chars_replaced_with_keys < target_text_chars_replaced_with_keys && last_viable_key > 0) {
-    size_t next_key_ind = rand()%last_viable_key;
-    std::string& next_key = keys[next_key_ind];
-    if(next_key.size() + text_chars_replaced_with_keys > target_text_chars_replaced_with_keys) {
-      last_viable_key = next_key_ind;
+  while(textCharsReplacedWithKeys < targetTextCharsReplacedWithKeys && lastViableKey > 0) {
+    size_t nextKeyInd = rand()%lastViableKey;
+    std::string& nextKey = keys[nextKeyInd];
+    if(nextKey.size() + textCharsReplacedWithKeys > targetTextCharsReplacedWithKeys) {
+      lastViableKey = nextKeyInd;
     }
-    text_vec_of_keys.push_back(next_key_ind);
-    text_chars_replaced_with_keys += next_key.size();
+    textVecOfKeys.push_back(nextKeyInd);
+    textCharsReplacedWithKeys += nextKey.size();
   }
 
   // Ensure that there is at least one key if the key frequency is non-zero
   // Covers edge case where all keys are too long to fit without going over desired frequency,
   // otherwise causing zero matches at low key frequencies
-  if((text_chars_replaced_with_keys == 0 && target_text_chars_replaced_with_keys > 0)
+  if((textCharsReplacedWithKeys == 0 && targetTextCharsReplacedWithKeys > 0)
   && (keys[0].size() < params.textLen)) {
-    text_vec_of_keys.push_back(0);
-    text_chars_replaced_with_keys = keys[0].size();
+    textVecOfKeys.push_back(0);
+    textCharsReplacedWithKeys = keys[0].size();
   }
 
   // Generate random string of text of length params.textLen, all of uppercase letters so that there aren't extra matches
@@ -176,22 +176,22 @@ int main(int argc, char* argv[])
   }
 
   // Replace text with keys, approximately evenly spaced
-  if(text_vec_of_keys.size() == 1) {
+  if(textVecOfKeys.size() == 1) {
     text.replace(0, keys[0].size(), keys[0]);
-  } else if(text_vec_of_keys.size() > 1) {
-    size_t non_key_chars_in_text = params.textLen - text_chars_replaced_with_keys;
-    size_t min_space = non_key_chars_in_text / (text_vec_of_keys.size() - 1);
-    size_t extra_spaces = non_key_chars_in_text % (text_vec_of_keys.size() - 1);
+  } else if(textVecOfKeys.size() > 1) {
+    size_t nonKeyCharsInText = params.textLen - textCharsReplacedWithKeys;
+    size_t minSpace = nonKeyCharsInText / (textVecOfKeys.size() - 1);
+    size_t extraSpaces = nonKeyCharsInText % (textVecOfKeys.size() - 1);
 
-    size_t text_ind = 0;
-    for(size_t i=0; i < text_vec_of_keys.size() - 1; ++i) {
-      std::string& current_key = keys[text_vec_of_keys[i]];
-      text.replace(text_ind, current_key.size(), current_key);
-      text_ind += current_key.size();
-      text_ind += min_space;
-      if(extra_spaces > 0) {
-        ++text_ind;
-        -- extra_spaces;
+    size_t textInd = 0;
+    for(size_t i=0; i < textVecOfKeys.size() - 1; ++i) {
+      std::string& currentKey = keys[textVecOfKeys[i]];
+      text.replace(textInd, currentKey.size(), currentKey);
+      textInd += currentKey.size();
+      textInd += minSpace;
+      if(extraSpaces > 0) {
+        ++textInd;
+        -- extraSpaces;
       }
     }
   }
@@ -206,37 +206,37 @@ int main(int argc, char* argv[])
       return 1;
   }
 
-  FILE* text_file = fopen(textOutputFile.c_str(), "w");
-  if (text_file == nullptr) {
+  FILE* textFile = fopen(textOutputFile.c_str(), "w");
+  if (textFile == nullptr) {
       printf("Error opening text file\n");
       return 1;
   }
 
-  size_t text_written = fwrite(text.c_str(), sizeof(char), text.size(), text_file);
-  if (text_written != text.size()) {
+  size_t textWritten = fwrite(text.c_str(), sizeof(char), text.size(), textFile);
+  if (textWritten != text.size()) {
       printf("Error writing to text file\n");
       return 1;
   }
 
-  fclose(text_file);
+  fclose(textFile);
 
-  FILE* keys_file = fopen(keyOutputFile.c_str(), "w");
-  if (text_file == nullptr) {
+  FILE* keysFile = fopen(keyOutputFile.c_str(), "w");
+  if (keysFile == nullptr) {
       printf("Error opening keys file\n");
       return 1;
   }
 
-  std::string newline_char = "\n";
+  std::string newlineChar = "\n";
   for(size_t i=0; i<keys.size(); ++i) {
-    size_t key_written = fwrite(keys[i].c_str(), sizeof(char), keys[i].size(), keys_file);
-    if (key_written != keys[i].size()) {
+    size_t keyWritten = fwrite(keys[i].c_str(), sizeof(char), keys[i].size(), keysFile);
+    if (keyWritten != keys[i].size()) {
         printf("Error writing to keys file\n");
         return 1;
     }
-    fwrite(newline_char.c_str(), sizeof(char), newline_char.size(), keys_file);
+    fwrite(newlineChar.c_str(), sizeof(char), newlineChar.size(), keysFile);
   }
 
-  fclose(keys_file);
+  fclose(keysFile);
 
   printf("Successfully wrote to dataset/%s/keys.txt and dataset/%s/text.txt\n", params.outputFile, params.outputFile);
 

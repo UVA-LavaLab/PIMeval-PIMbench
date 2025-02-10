@@ -69,80 +69,80 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-float string_match_gpu(std::string& needle_filename, std::string& haystack, std::vector<int>& matches) {
-  PFAC_handle_t pfac_handle;
-  PFAC_status_t pfac_error;
-  cudaError_t cuda_error;
+float stringMatchGpu(std::string& needleFilename, std::string& haystack, std::vector<int>& matches) {
+  PFAC_handle_t pfacHandle;
+  PFAC_status_t pfacError;
+  cudaError_t cudaError;
 
-  pfac_error = PFAC_create(&pfac_handle);
-  if ( PFAC_STATUS_SUCCESS != pfac_error ){
-      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
+  pfacError = PFAC_create(&pfacHandle);
+  if ( PFAC_STATUS_SUCCESS != pfacError ){
+      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfacError) << std::endl;
       exit(1);
   }
 
-  pfac_error = PFAC_setPlatform(pfac_handle, PFAC_PLATFORM_GPU);
-  if ( PFAC_STATUS_SUCCESS != pfac_error ){
-      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
+  pfacError = PFAC_setPlatform(pfacHandle, PFAC_PLATFORM_GPU);
+  if ( PFAC_STATUS_SUCCESS != pfacError ){
+      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfacError) << std::endl;
       exit(1);
   }
 
-  pfac_error = PFAC_readPatternFromFile(pfac_handle, needle_filename.data());
-  if (PFAC_STATUS_SUCCESS != pfac_error){
-    std::cerr << "Cuda Error: " << PFAC_getErrorString(pfac_error) << std::endl;
+  pfacError = PFAC_readPatternFromFile(pfacHandle, needleFilename.data());
+  if (PFAC_STATUS_SUCCESS != pfacError){
+    std::cerr << "Cuda Error: " << PFAC_getErrorString(pfacError) << std::endl;
     exit(1);
   }
 
-  pfac_error = PFAC_setTextureMode(pfac_handle, PFAC_TEXTURE_ON);
-  if ( PFAC_STATUS_SUCCESS != pfac_error ){
-      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
+  pfacError = PFAC_setTextureMode(pfacHandle, PFAC_TEXTURE_ON);
+  if ( PFAC_STATUS_SUCCESS != pfacError ){
+      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfacError) << std::endl;
       exit(1);
   }
 
-  char *gpu_text;
-  int *gpu_matches;
+  char *gpuText;
+  int *gpuMatches;
 
-  size_t cuda_to_alloc = (haystack.size() + sizeof(int)-1)/sizeof(int);
-  cuda_error = cudaMalloc((void **) &gpu_text, cuda_to_alloc*sizeof(int));
-  if(cuda_error != cudaSuccess) {
-    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << std::endl;
-    exit(1);
-  }
-  
-  cuda_error = cudaMalloc((void **) &gpu_matches, haystack.size()*sizeof(int));
-  if(cuda_error != cudaSuccess) {
-    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << std::endl;
+  size_t cudaToAlloc = (haystack.size() + sizeof(int)-1)/sizeof(int);
+  cudaError = cudaMalloc((void **) &gpuText, cudaToAlloc*sizeof(int));
+  if(cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
     exit(1);
   }
   
-  cuda_error = cudaMemcpy(gpu_text, haystack.c_str(), haystack.size(), cudaMemcpyHostToDevice);
-  if(cuda_error != cudaSuccess) {
-    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << std::endl;
+  cudaError = cudaMalloc((void **) &gpuMatches, haystack.size()*sizeof(int));
+  if(cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
+    exit(1);
+  }
+  
+  cudaError = cudaMemcpy(gpuText, haystack.c_str(), haystack.size(), cudaMemcpyHostToDevice);
+  if(cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
     exit(1);
   }
 
   float timeElapsed = 0;
 
-  pfac_error = PFAC_matchFromDevice( pfac_handle, gpu_text, haystack.size(), gpu_matches, &timeElapsed);
-  if ( PFAC_STATUS_SUCCESS != pfac_error ){
-      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
+  pfacError = PFAC_matchFromDevice(pfacHandle, gpuText, haystack.size(), gpuMatches, &timeElapsed);
+  if (PFAC_STATUS_SUCCESS != pfacError){
+      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfacError) << std::endl;
       exit(1);
   }
 
-  cuda_error = cudaGetLastError();
-  if (cuda_error != cudaSuccess) {
-    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << std::endl;
+  cudaError = cudaGetLastError();
+  if (cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
     exit(1);
   }
 
-  pfac_error = PFAC_destroy(pfac_handle);
-  if ( PFAC_STATUS_SUCCESS != pfac_error ){
-      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfac_error) << std::endl;
+  pfacError = PFAC_destroy(pfacHandle);
+  if ( PFAC_STATUS_SUCCESS != pfacError ){
+      std::cerr << "Pfac Error: " << PFAC_getErrorString(pfacError) << std::endl;
       exit(1);
   }
 
-  cuda_error = cudaMemcpy(matches.data(), gpu_matches, haystack.size() * sizeof(int), cudaMemcpyDeviceToHost);
-  if(cuda_error != cudaSuccess) {
-    std::cerr << "Cuda Error: " << cudaGetErrorString(cuda_error) << std::endl;
+  cudaError = cudaMemcpy(matches.data(), gpuMatches, haystack.size() * sizeof(int), cudaMemcpyDeviceToHost);
+  if(cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
     exit(1);
   }
 
@@ -170,43 +170,43 @@ int main(int argc, char* argv[])
 
   const std::string DATASET_FOLDER_PREFIX = "./../../dataset/";
 
-  haystack = get_text_from_file(DATASET_FOLDER_PREFIX, params.textInputFile);
+  haystack = getTextFromFile(DATASET_FOLDER_PREFIX, params.textInputFile);
   if(haystack.size() == 0) {
     std::cout << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  needles = get_needles_from_file(DATASET_FOLDER_PREFIX, params.keysInputFile);
+  needles = getNeedlesFromFile(DATASET_FOLDER_PREFIX, params.keysInputFile);
   if(needles.size() == 0) {
     std::cout << "There was an error opening the keys file" << std::endl;
     return 1;
   }
 
   matches.resize(haystack.size());
-  std::string keys_filename = DATASET_FOLDER_PREFIX + params.keysInputFile;
-  float timeElapsed = string_match_gpu(keys_filename, haystack, matches);
+  std::string keysFilename = DATASET_FOLDER_PREFIX + params.keysInputFile;
+  float timeElapsed = stringMatchGpu(keysFilename, haystack, matches);
   printf("Execution time of string match = %f ms\n", timeElapsed);
 
   if (params.shouldVerify) 
   {
-    std::vector<int> matches_cpu;
+    std::vector<int> matchesCpu;
     
-    matches_cpu.resize(haystack.size(), 0);
+    matchesCpu.resize(haystack.size(), 0);
 
-    string_match_cpu(needles, haystack, matches_cpu);
+    stringMatchCpu(needles, haystack, matchesCpu);
 
     // verify result
-    bool is_correct = true;
+    bool ok = true;
     #pragma omp parallel for
     for (unsigned i = 0; i < matches.size(); ++i)
     {
-      if (matches[i] != matches_cpu[i])
+      if (matches[i] != matchesCpu[i])
       {
-        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matches_cpu[i]) << "), for position " << i << std::endl;
-        is_correct = false;
+        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
+        ok = false;
       }
     }
-    if(is_correct) {
+    if(ok) {
       std::cout << "Correct for string match!" << std::endl;
     }
   }
