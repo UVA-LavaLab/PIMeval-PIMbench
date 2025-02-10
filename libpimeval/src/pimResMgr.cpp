@@ -68,6 +68,7 @@ pimObjInfo::finalize()
     }
   }
   m_numCoresUsed = coreIdCnt.size();
+  m_numCoreAvailable = m_device->getNumCores();
 
   const pimRegion& region = m_regions[0];
   m_maxElementsPerRegion = (uint64_t)region.getNumAllocRows() * region.getNumAllocCols() / m_bitsPerElement;

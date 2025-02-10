@@ -6,6 +6,7 @@
 
 #include "pimPerfEnergyFulcrum.h"
 #include "pimCmd.h"
+#include <cmath>
 #include <iostream>
 
 
@@ -27,12 +28,15 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
   switch (cmdType)
   {
     case PimCmdEnum::POPCOUNT:
     {
       numberOfALUOperationPerElement *= 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement) * (numPass - 1);
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
       double energyArithmetic = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * 4);
       double energyLogical = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * 8);
       mjEnergy = ((energyArithmetic + energyLogical) + m_eAP) * numCores * numPass;
@@ -45,7 +49,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::ABS:
     {
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * (numPass - 1));
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
       mjEnergy = numPass * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -62,7 +68,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     {
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * (numPass - 1));
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
       mjEnergy = numPass * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -84,8 +92,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCoresUsed = obj.getNumCoresUsed();
-
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   switch (cmdType)
   {
@@ -94,8 +102,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MUL:
     case PimCmdEnum::DIV:
     {
-      msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
-      msRuntime *= numPass;
+      msRuntime = (2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency) * (numPass - 1);
+      msRuntime += 2 * m_tR + m_tW + minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       mjEnergy = numCoresUsed * numPass * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -117,7 +125,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
        *
        * As a result, only one read operation and one write operation is necessary for the entire pass.
       */
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * numPass;
+      msRuntime = (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * (numPass - 1);
+      msRuntime += (minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2);
+      msRuntime += m_tR + m_tW;
       mjEnergy = numCoresUsed * numPass * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -132,8 +142,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {
-      msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
-      msRuntime *= numPass;
+      msRuntime = (2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency) * (numPass - 1);
+      msRuntime += (2 * m_tR + m_tW + minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency);
       mjEnergy = numCoresUsed * numPass * (((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_eAP * 3 * m_numChipsPerRank * m_numRanks;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
