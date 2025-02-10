@@ -6,8 +6,7 @@
 #include <fstream>
 #include <sstream>
 
-std::vector<std::string> getNeedlesFromFile(const std::string& datasetPrefix, const std::string& keysFilename) {
-  std::string keysInputFile = datasetPrefix + keysFilename;
+std::vector<std::string> getNeedlesFromFile(const std::string& keysInputFile) {
   std::ifstream keysFile(keysInputFile);
   if (!keysFile) {
     return {};
@@ -22,9 +21,7 @@ std::vector<std::string> getNeedlesFromFile(const std::string& datasetPrefix, co
   return needles;
 }
 
-std::string getTextFromFile(const std::string& datasetPrefix, const std::string& textFilename) {
-  std::string textInputFile = datasetPrefix + textFilename;
-  
+std::string getTextFromFile(const std::string& textInputFile) {
   std::ifstream textFile(textInputFile);
   if (!textFile) {
     return "";

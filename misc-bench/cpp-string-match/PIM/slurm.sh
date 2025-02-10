@@ -19,7 +19,7 @@ for test_dir in "${test_dirs[@]}"; do
         echo "${test_dir}"
         echo "${config_file}"
         echo "_____________________________________"
-        ./string-match.out -k ${test_dir}/keys.txt -t ${test_dir}/text.txt -v t -c ${pim_arch_config_prefix}/${config_file}
+        ./string-match.out -k ./../dataset/${test_dir}/keys.txt -t ./../dataset/${test_dir}/text.txt -v t -c ${pim_arch_config_prefix}/${config_file}
         echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     done
 done

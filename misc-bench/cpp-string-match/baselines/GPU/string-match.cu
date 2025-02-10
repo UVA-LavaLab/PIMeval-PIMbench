@@ -29,8 +29,8 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./string-match.out [options]"
           "\n"
-          "\n    -k    keys input file, with each key on a seperate line (required, searches in cpp-string-match/dataset directory, note that keys are expected to be sorted by length, with smaller keys first)"
-          "\n    -t    text input file to search for keys from (required, searches in cpp-string-match/dataset directory)"
+          "\n    -k    keys input file, each key on new line (default=dataset/10mil_l-10_nk-10_kl/keys.txt) must be sorted by increasing length, must have a blank line at end of file"
+          "\n    -t    text input file to search for keys from (default=dataset/10mil_l-10_nk-10_kl/text.txt)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
@@ -153,38 +153,45 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   
-  if(params.keysInputFile == nullptr) {
-    std::cout << "Please provide a keys input file" << std::endl;
-    return 1;
-  }
+  const std::string defaultTextFileName = "./../../dataset/10mil_l-10_nk-10_kl/text.txt";
+
+  std::string textFilename;
   if(params.textInputFile == nullptr) {
-    std::cout << "Please provide a text input file" << std::endl;
-    return 1;
+    textFilename = defaultTextFileName;
+  } else {
+    textFilename = params.textInputFile;
+  }
+
+  const std::string defaultNeedlesFileName = "./../../dataset/10mil_l-10_nk-10_kl/keys.txt";
+
+  std::string needlesFilename;
+  if(params.keysInputFile == nullptr) {
+    needlesFilename = defaultNeedlesFileName;
+  } else {
+    needlesFilename = params.keysInputFile;
   }
   
-  std::cout << "Running GPU string match for \"" << params.keysInputFile << "\" as the keys file, and \"" << params.textInputFile << "\" as the text input file\n";
+  std::cout << "Running GPU string match for \"" << needlesFilename << "\" as the keys file, and \"" << textFilename << "\" as the text input file\n";
   
   std::string haystack;
   std::vector<std::string> needles;
   std::vector<int> matches;
 
-  const std::string DATASET_FOLDER_PREFIX = "./../../dataset/";
-
-  haystack = getTextFromFile(DATASET_FOLDER_PREFIX, params.textInputFile);
+  haystack = getTextFromFile(textFilename);
   if(haystack.size() == 0) {
     std::cout << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  needles = getNeedlesFromFile(DATASET_FOLDER_PREFIX, params.keysInputFile);
+  needles = getNeedlesFromFile(needlesFilename);
   if(needles.size() == 0) {
     std::cout << "There was an error opening the keys file" << std::endl;
     return 1;
   }
 
   matches.resize(haystack.size());
-  std::string keysFilename = DATASET_FOLDER_PREFIX + params.keysInputFile;
-  float timeElapsed = stringMatchGpu(keysFilename, haystack, matches);
+
+  float timeElapsed = stringMatchGpu(needlesFilename, haystack, matches);
   printf("Execution time of string match = %f ms\n", timeElapsed);
 
   if (params.shouldVerify) 

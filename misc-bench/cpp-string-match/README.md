@@ -75,7 +75,7 @@ The PIM variant is implemented using C++ with some simlation speedup from OpenMP
 
 ### Data Format
 
-Running the string match algorithm requires both a text file and a keys file. Both files are read from the `dataset/` directory. The text file should consist of a string to be matched against. The keys file should contain the keys to be matched, with each key on a newline, as well as a blank line at the end of the file. Also note that keys are expected to be sorted in order of increasing length, and that duplicate keys will cause errors.
+Running the string match algorithm requires both a text file and a keys file. The text file should consist of a string to be matched against. The keys file should contain the keys to be matched, with each key on a newline, as well as a blank line at the end of the file. Also note that keys are expected to be sorted in order of increasing length, and that duplicate keys will cause errors.
 
 ### Data Generator Instructions
 
@@ -159,7 +159,7 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command (Must be run in the build directory for the CPU baseline). Note that for the GPU baseline, the LD_LIBRARY_PATH enviornment variable (DYLD_LIBRARY_PATH on Mac) must include the PFAC lib directory, as set in the compilation instructions for the GPU varient. Both the -k and -t parameters are required, and specify the keys and the text to match, reading from `dataset/<keys file>` and `dataset/<text file>`:
+After compiling, run the each executable with the following command (Must be run in the build directory for the CPU baseline). Note that for the GPU baseline, the LD_LIBRARY_PATH enviornment variable (DYLD_LIBRARY_PATH on Mac) must include the PFAC lib directory, as set in the compilation instructions for the GPU varient. The default keys file is `dataset/10mil_l-10_nk-10_kl/keys.txt` and the default text file is `dataset/10mil_l-10_nk-10_kl/text.txt`, but can be changed using `-k` and `-t`, respectively.
 
 ```bash
 ./string-match.out -k <keys file> -t <text file>
