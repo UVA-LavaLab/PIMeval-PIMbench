@@ -146,6 +146,18 @@ float stringMatchGpu(std::string& needleFilename, std::string& haystack, std::ve
     exit(1);
   }
 
+  cudaError = cudaFree(gpuText);
+  if(cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
+    exit(1);
+  }
+
+  cudaError = cudaFree(gpuMatches);
+  if(cudaError != cudaSuccess) {
+    std::cerr << "Cuda Error: " << cudaGetErrorString(cudaError) << std::endl;
+    exit(1);
+  }
+
   return timeElapsed;
 }
 

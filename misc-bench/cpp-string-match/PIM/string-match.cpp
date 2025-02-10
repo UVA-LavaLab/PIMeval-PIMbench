@@ -234,6 +234,19 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   assert (status == PIM_OK);
 
   pimEndTimer();
+
+  free(haystack32Bit);
+
+  status = pimFree(haystackPim);
+  assert (status == PIM_OK);
+
+  status = pimFree(intermediatePim);
+  assert (status == PIM_OK);
+
+  for(PimObjId individualNeedleMatch : pimIndividualNeedleMatches) {
+    status = pimFree(individualNeedleMatch);
+    assert (status == PIM_OK);
+  }
 }
 
 int main(int argc, char* argv[])

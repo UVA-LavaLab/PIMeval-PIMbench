@@ -181,6 +181,11 @@ int main(int argc, char **argv)
   hs_free_database(db);
   hs_free_scratch(scratch);
 
+  free(needlesArr);
+  free(flagsArr);
+  free(idsArr);
+  free(lensArr);
+
   if (params.shouldVerify) 
   {
     std::vector<int> matchesCpu;
