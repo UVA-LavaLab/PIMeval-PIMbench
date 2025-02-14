@@ -162,6 +162,13 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   }
 
   // Matches are calculated for a group of needles at a time, this vector stores the matches for each needle
+  // needlesTable[0][0].size() is the number of needles in the first iteration, which will have the most needles out of all iterations
+
+  if(needlesTable.size() == 0 || needlesTable[0].size() == 0) {
+    std::cerr << "Error: The needles table is empty" << std::endl;
+    exit(1);
+  }
+
   std::vector<PimObjId> pimIndividualNeedleMatches;
   for(uint32_t i=0; i<needlesTable[0][0].size(); ++i) {
     pimIndividualNeedleMatches.push_back(pimAllocAssociated(haystackPim, PIM_UINT32));
@@ -338,13 +345,13 @@ int main(int argc, char* argv[])
 
   haystack = getTextFromFile(textFilename);
   if(haystack.size() == 0) {
-    std::cout << "There was an error opening the text file" << std::endl;
+    std::cerr << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
   needles = getNeedlesFromFile(needlesFilename);
   if(needles.size() == 0) {
-    std::cout << "There was an error opening the keys file" << std::endl;
+    std::cerr << "There was an error opening the keys file" << std::endl;
     return 1;
   }
   
@@ -378,7 +385,7 @@ int main(int argc, char* argv[])
     {
       if (matches[i] != matchesCpu[i])
       {
-        std::cout << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
+        std::cerr << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
         ok = false;
       }
     }
