@@ -45,7 +45,7 @@ pimPerfEnergyBase::pimPerfEnergyBase(const pimPerfEnergyModelParams& params)
   m_tR = m_paramsDram.getNsRowRead() / m_nano_to_milli;
   m_tW = m_paramsDram.getNsRowWrite() / m_nano_to_milli;
   m_tL = m_paramsDram.getNsTCCD_S() / m_nano_to_milli;
-  m_tGDL = m_paramsDram.getNsTCAS() / m_nano_to_milli;
+  m_tGDL = m_paramsDram.getNsTCCD_L() / m_nano_to_milli;
   m_eAP = m_paramsDram.getPjRowRead() / m_pico_to_milli; // Convert pJ to mJ
   m_eL = m_paramsDram.getPjLogic() / m_pico_to_milli; // Convert pJ to mJ
   m_eR = m_paramsDram.getMwRead() / 1000.0;
