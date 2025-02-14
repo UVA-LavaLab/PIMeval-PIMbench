@@ -23,6 +23,16 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
   switch (cmdType)
   {
+    case PimCmdEnum::COPY_O2O:
+    {
+      // How many iteration require to read / write max elements per region
+      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
+      msRuntime = (m_tR + m_tW + totalGDLOverhead) * numPass;
+      mjEnergy = numPass * numCores * ((m_eAP * 2) + (m_eGDL * 2));
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::ADD_SCALAR:

@@ -153,6 +153,12 @@ pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t i
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCopyObjectToObject(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Load vector with a signed int value
 PimStatus
 pimBroadcastInt(PimObjId dest, int64_t value)

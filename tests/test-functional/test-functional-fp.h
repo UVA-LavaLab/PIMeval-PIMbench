@@ -119,6 +119,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       { 40, "pimRedMaxRanged"        },
       //{ 39, "pimShiftBitsRight"      }, // not supported
       //{ 40, "pimShiftBitsLeft"       }, // not supported
+      { 41, "pimCopyObjectToObject"  },
   };
 
   // Running tests
@@ -185,6 +186,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       case 40: status = pimRedMax(objSrc1, static_cast<void*>(&max), idxBegin, idxEnd); break;
       // case 39: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
       // case 40: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
+      case 41: status = pimCopyObjectToObject   (objSrc1, objDest);                     break;
       default: assert(0);
     }
     assert(status == PIM_OK);
@@ -285,6 +287,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 36: expected = (i == numElements - 1 ? 0 : vecSrc1[i + 1]);               break; // pimShiftElementsLeft
           //case 39: expected = vecSrc1[i] >> shiftAmount; break; // pimShiftBitsRight
           //case 40: expected = vecSrc1[i] << shiftAmount; break; // pimShiftBitsLeft
+          case 41: expected = vecSrc1[i];                break; // pimCopyObjectToObject 
           default: assert(0);
         }
         if (vecDest[i] != expected) {
