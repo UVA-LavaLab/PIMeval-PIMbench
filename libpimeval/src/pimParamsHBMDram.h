@@ -1,24 +1,24 @@
-// File: pimParamsLPDDRDram.h
-// PIMeval Simulator - LPDDR DRAM parameters
+// File: pimParamsHBMDram.h
+// PIMeval Simulator - HBM DRAM parameters
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#ifndef LAVA_PIM_PARAMS_LPDDR_DRAM_H
-#define LAVA_PIM_PARAMS_LPDDR_DRAM_H
+#ifndef LAVA_PIM_PARAMS_HBM_DRAM_H
+#define LAVA_PIM_PARAMS_HBM_DRAM_H
 
 #include <string>
 #include <unordered_map>
 #include "pimParamsDram.h"
 
-//! @class  pimParamsLPDDRDram
+//! @class  pimParamsDDRDram
 //! @brief  DRAM parameters (DRAMsim3 compatible)
-class pimParamsLPDDRDram : public pimParamsDram
+class pimParamsHBMDram : public pimParamsDram
 {
 public:
-  pimParamsLPDDRDram();
-  pimParamsLPDDRDram(std::unordered_map<std::string, std::string> params);
-  ~pimParamsLPDDRDram() override = default;
+  pimParamsHBMDram();
+  pimParamsHBMDram(std::unordered_map<std::string, std::string> params);
+  ~pimParamsHBMDram() override = default;
 
   int getDeviceWidth() const override { return m_deviceWidth;}
   int getBurstLength() const override { return m_BL;}
@@ -46,19 +46,19 @@ private:
   int m_columns = 0;
   int m_deviceWidth = 0;
   int m_BL = 0;
+  int m_numDies = 0;
 
   // [timing]
-  double m_tCK = 0.0;
-  int m_AL = 0;
+  float m_tCK = 0.0;
   int m_CL = 0;
   int m_CWL = 0;
-  int m_tRCD = 0;
+  int m_tRCDRD = 0;
+  int m_tRCDWR = 0;
   int m_tRP = 0;
   int m_tRAS = 0;
   int m_tRFC = 0;
-  int m_tRFC2 = 0;
-  int m_tRFC4 = 0;
   int m_tREFI = 0;
+  int m_tREFIb = 0;
   int m_tRPRE = 0;
   int m_tWPRE = 0;
   int m_tRRD_S = 0;
@@ -67,21 +67,18 @@ private:
   int m_tWTR_L = 0;
   int m_tFAW = 0;
   int m_tWR = 0;
-  int m_tWR2 = 0;
-  int m_tRTP = 0;
   int m_tCCD_S = 0;
   int m_tCCD_L = 0;
-  int m_tCKE = 0;
-  int m_tCKESR = 0;
   int m_tXS = 0;
+  int m_tCKE = 0;
+  int m_tCKSRE = 0;
   int m_tXP = 0;
-  int m_tRTRS = 0;
-  int m_tPPD = 0;
+  int m_tRTP_L = 0;
+  int m_tRTP_S = 0;
 
   // [power]
-  double m_VDD = 0.0;
+  float m_VDD = 0.0;
   int m_IDD0 = 0;
-  double m_IPP0 = 0;
   int m_IDD2P = 0;
   int m_IDD2N = 0;
   int m_IDD3P = 0;
@@ -97,10 +94,10 @@ private:
   int m_busWidth = 0;
   std::string m_addressMapping;
   std::string m_queueStructure;
-  std::string m_refreshPolicy;
   std::string m_rowBufPolicy;
   int m_cmdQueueSize = 0;
   int m_transQueueSize = 0;
+  bool m_unifiedQueue = false;
 
   // [other]
   int m_epochPeriod = 0;

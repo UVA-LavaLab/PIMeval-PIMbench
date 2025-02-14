@@ -30,6 +30,7 @@ enum PimDeviceEnum {
   PIM_DEVICE_BITSIMD_H,
   PIM_DEVICE_FULCRUM,
   PIM_DEVICE_BANK_LEVEL,
+  PIM_DEVICE_AQUABOLT,
 };
 
 /**
@@ -42,10 +43,13 @@ enum PimDeviceEnum {
  * @var PIM_DEVICE_PROTOCOL_LPDDR
  * Low Power DDR (LPDDR) protocol.
  *
+ * @var PIM_DEVICE_PROTOCOL_HBM
+ * High Bandwidth Memory (HBM) protocol.
 */
 enum PimDeviceProtocolEnum {
   PIM_DEVICE_PROTOCOL_DDR = 0,
   PIM_DEVICE_PROTOCOL_LPDDR,
+  PIM_DEVICE_PROTOCOL_HBM,
 };
 
 //! @brief  PIM allocation types

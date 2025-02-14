@@ -26,6 +26,7 @@ public:
   double getNsRowRead() const override { return m_tCK * (m_tRAS + m_tRP); }
   double getNsRowWrite() const override { return m_tCK * (m_tRAS + m_tRP); }
   double getNsTCCD_S() const override { return m_tCK * m_tCCD_S; }
+  double getNsTCCD_L() const override { return m_tCK * m_tCCD_L; }
   double getNsTCAS() const override { return m_tCK * m_CL; }
   double getNsAAP() const override { return m_tCK * (m_tRAS + m_tRP); }
   double getTypicalRankBW() const override { return m_typicalRankBW; }
