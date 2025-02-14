@@ -168,12 +168,11 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
 
   // Matches are calculated for a group of needles at a time, this vector stores the matches for each needle
   // needlesTable[0][0].size() is the number of needles in the first iteration, which will have the most needles out of all iterations
-  // As the output is formatted as the 32 bit index of the needle for matches, there cannot be more than INT_MAX needles
-  // Therefore, we can enumerate through the needles using a uint32_t variable
-  std::vector<PimObjId> pimIndividualNeedleMatches;
-  for(uint32_t i=0; i<needlesTable[0][0].size(); ++i) {
-    pimIndividualNeedleMatches.push_back(pimAllocAssociated(haystackPim, PIM_UINT32));
-    assert(pimIndividualNeedleMatches.back() != -1);
+  size_t maxNeedlesInOneIteration = needlesTable[0][0].size();
+  std::vector<PimObjId> pimIndividualNeedleMatches(maxNeedlesInOneIteration);
+  for(size_t i=0; i<maxNeedlesInOneIteration; ++i) {
+    pimIndividualNeedleMatches[i] = pimAllocAssociated(haystackPim, PIM_UINT32);
+    assert(pimIndividualNeedleMatches[i] != -1);
   }
 
   uint64_t needlesDone = 0;
