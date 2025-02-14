@@ -15,7 +15,13 @@ std::vector<std::string> getNeedlesFromFile(const std::string& keysInputFile) {
   std::vector<std::string> needles;
   std::string line;
   while (std::getline(keysFile, line)) {
-      needles.push_back(line);
+    // As the output is formatted as the 32 bit index of the needle for matches, there cannot be more than INT_MAX needles
+    if(needles.size() == std::numeric_limits<int>::max()) {
+      std::cerr << "Error: Too many needles/keys, can only process up to " << std::numeric_limits<int>::max() << " needles/keys" << std::endl;
+      exit(1);
+    }
+
+    needles.push_back(line);
   }
   
   return needles;
@@ -37,8 +43,8 @@ void stringMatchCpu(std::vector<std::string>& needles, std::string& haystack, st
     size_t pos = haystack.find(needles[needleIdx], 0);
 
     while (pos != std::string::npos) {
-        matches[pos] = std::max((unsigned long) matches[pos], needleIdx + 1);
-        pos = haystack.find(needles[needleIdx], pos + 1);
+      matches[pos] = std::max((unsigned long) matches[pos], needleIdx + 1);
+      pos = haystack.find(needles[needleIdx], pos + 1);
     }
   }
 }
