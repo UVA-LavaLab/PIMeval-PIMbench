@@ -78,10 +78,13 @@ struct Params getInputParams(int argc, char **argv)
 }
 
 // Precomputes optimal order to match keys/needles for calculation reuse
+// Instead of calling pimEQScalar multiple times for the same character, call only once per character and reuse result
 // Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
 std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::vector<std::string>& needles, uint64_t numRows, bool isHorizontal) {
   std::vector<std::vector<std::vector<size_t>>> resultTable;
   
+  // If vertical, each pim object takes 32 rows, 1 row if horizontal
+  // Two rows used by the haystack and intermediate
   uint64_t maxNeedlesPerIteration = isHorizontal ? numRows - 2 : (numRows>>5) - 2;
   uint64_t numIterations;
   if(needles.size() <= maxNeedlesPerIteration) {
@@ -124,6 +127,8 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
       // Sort needles [currentStartNeedle, lastNeedleThisIteration] on charInd
       
       std::iota(currentTableRow.begin(), currentTableRow.end(), currentStartNeedle);
+
+      // Sorting places identical characters next to each other, so their equality results can be reused
       std::sort(currentTableRow.begin(), currentTableRow.end(), [&needles, &charInd](auto& l, auto& r) {
         return needles[l][charInd] < needles[r][charInd];
       });
@@ -136,24 +141,27 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
 }
 
 void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needlesTable, bool isHorizontal, std::vector<int>& matches) {
-  // TODO update types when pim type conversion operation is available, currently everything uses PIM_UINT32, however this is unecessary
-
-  // If vertical, each pim object takes 32 rows, 1 row if horizontal
-  // Two rows used by the haystack and intermediate
-
+  
+  // Stores the text that is being checked for the needles
   PimObjId haystackPim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
   assert(haystackPim != -1);
   
+  // Used for intermediate calculations
   PimObjId intermediatePim = pimAllocAssociated(haystackPim, PIM_UINT32);
   assert(intermediatePim != -1);
 
-  // TODO remove when pim conversion becomes possible
+  // PIM simulator currently only supports operations between objects of the same size
+  // We define the output as an array of 32 bit ints to represent the index of the keys
+  // Therefore, all calculations must be done in 32 bits, so we cast everything to 32 bits
+  // This can be removed when the simulator supports mixed width operands
+  // TODO: remove when pim conversion becomes possible
   uint32_t *haystack32Bit = (uint32_t*) malloc(sizeof(uint32_t) * haystack.size());
   #pragma omp parallel for
   for(uint32_t i=0; i<haystack.size(); ++i) {
     haystack32Bit[i] = (uint32_t) haystack[i];
   }
 
+  // Matches are calculated for a group of needles at a time, this vector stores the matches for each needle
   std::vector<PimObjId> pimIndividualNeedleMatches;
   for(uint32_t i=0; i<needlesTable[0][0].size(); ++i) {
     pimIndividualNeedleMatches.push_back(pimAllocAssociated(haystackPim, PIM_UINT32));
@@ -165,38 +173,67 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   pimStartTimer();
 
   PimStatus status;
+  // Number of needles at a time is limited by how many PIM objects can be alloc associated with each other in a subarray
+  // Iterates multiple times if there are enough needles
   for(uint64_t iter=0; iter<needlesTable.size(); ++iter) {
+    // Haystack is shifted throughout each iteration, this resets it in between iterations
+    // Could be replaced with a copy object to object once available
     status = pimCopyHostToDevice((void *)haystack32Bit, haystackPim);
     assert (status == PIM_OK);
 
+    // Instead of creating a seperate result variable, we reuse one of the objects in pimIndividualNeedleMatches
+    // Can be used as a needle match array for only the first iteration, and a result array for the rest
+    // Slight optimization allows one extra needle in the first iteration
     uint64_t firstAvailPimNeedleResult = iter == 0 ? 0 : 1;
 
+    // Iterate through each character index, as determined in the precomputing step
+    // e.g.: needles = ["abc", "def"]
+    // first iteration will process 'a' and 'd'
+    // this allows amortization of the pimShiftElementsLeft calls
     for(uint64_t charIdx=0; charIdx < needlesTable[iter].size(); ++charIdx) {
 
+      // Stores the last character checked using pimEQScalar
       char prevChar = '\0';
       
+      // Iterates through the needles, checking the characters at the index charIdx
+      // Processes in an order for optimal reuse
+      // e.g.: needles = ["abc", "dec", "aab"]
+      // will be processed in the following order:
+      // charIdx==0: 'a', 'a', 'd' -> can reuse pimEQScalar call for the two 'a's
+      // charIdx==1: 'a', 'b', 'e'
+      // charIdx==2: 'b', 'c', 'c' -> can reuse pimEQScalar call for the two 'c's
+      // This optimization is helpful whenver there are multiple of the same character in multiple needles at the same index
+      // This is more likely to happen when there are a lot of needles/keys
+
       for(uint64_t needleIdx=0; needleIdx < needlesTable[iter][charIdx].size(); ++needleIdx) {
         
-        uint64_t currentNeedleIdx = needlesTable[iter][charIdx][needleIdx];
-        uint64_t needleIdxPim = (currentNeedleIdx - needlesDone) + firstAvailPimNeedleResult;
-        char currentChar = needles[currentNeedleIdx][charIdx];
+        uint64_t needleIdxHost = needlesTable[iter][charIdx][needleIdx]; // Can be used to index into needles
+        uint64_t needleIdxPim = (needleIdxHost - needlesDone) + firstAvailPimNeedleResult; // Can be used to index into pimIndividualNeedleMatches
+        char currentChar = needles[needleIdxHost][charIdx];
 
         if(charIdx == 0) {
+          // If on the first character index, there is no need to pimAnd with the current possible matches
+          // Instead, place the equality result directly into the match array
           status = pimEQScalar(haystackPim, pimIndividualNeedleMatches[needleIdxPim], (uint64_t) currentChar);
           assert (status == PIM_OK);
         } else if(prevChar == currentChar) {
+          // Reuse the previously calculated equality result in intermediatePim and pimAnd with the current matches
           status = pimAnd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
           assert (status == PIM_OK);
         } else {
+          // Check the entirety of the text if it is equal with the current character
           status = pimEQScalar(haystackPim, intermediatePim, (uint64_t) currentChar);
           assert (status == PIM_OK);
 
+          // Update the potential match array
           status = pimAnd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
           assert (status == PIM_OK);
         }
         prevChar = currentChar;
       }
 
+      // Shift the haystack to the left to check the next character in it
+      // Only shift if there will be another round of character checks in this iteration
       if(charIdx + 1 < needlesTable[iter].size()) {
         status = pimShiftElementsLeft(haystackPim);
         assert (status == PIM_OK);
@@ -204,11 +241,29 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
     }
 
     for(uint64_t needleIdx = 0; needleIdx < needlesTable[iter][0].size(); ++needleIdx) {
-      uint64_t currentNeedleIdx = needleIdx + needlesDone;
-      uint64_t needleIdxPim = (currentNeedleIdx - needlesDone) + firstAvailPimNeedleResult;
+      uint64_t needleIdxHost = needleIdx + needlesDone; // Can be used to index into needles
+      uint64_t needleIdxPim = needleIdx + firstAvailPimNeedleResult; // Can be used to index into pimIndividualNeedleMatches
 
+      // pimIndividualNeedleMatches[needleIdxPim] is a binary PIM object containing only 0s and 1s
+      // 0 in pimIndividualNeedleMatches[needleIdxPim] represents no match at the location, while a 1 is a match
+      // To get the output, we want a 0 if there is a no match, or the 1-based index of the needle if there is a match
+      // First, we replace all 1s in each pimIndividualNeedleMatches[needleIdxPim] with 1 + needleIdxHost, and leave all 0s
+      // This can be done in two ways:
+      //      - Multiply by 1 + needleIdxHost (1 * (1 + needleIdxHost) = 1 + needleIdxHost, 0 * (1 + needleIdxHost) = 0)
+      //      - Binary Manipulation:
+      //          - Invert 0s and 1s (pimXorScalar)
+      //          - Subtract 1 (1->0, 0->-1==all ones - uses unsigned integer overflow)
+      //          - And with 1 + needleIdxHost
+      //
+      // Both of these methods have the same output, however the multiplication will be faster on bit parallel architectures
+      // The binary manipulation method is faster on bit serial architectures
+      // On the bit parallel architectures tested, each of the operations above took the same time (multiplication, xor, etc.)
+      // Therefore, on the bit parallel architectures, it is faster to do the single operation (multiplication)
+      // However, on the bit serial architecture tested, multiplication is significantly slower because it is O(n^2) where n is the number of bits
+      // Thus the second method is faster on the bit serial architecture tested
+      // The isHorizonatal parameter serves as a simple check for which we are on
       if(isHorizontal) {
-        status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + currentNeedleIdx);
+        status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
         assert (status == PIM_OK);
       } else {
         status = pimXorScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
@@ -217,11 +272,15 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
         status = pimSubScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
         assert (status == PIM_OK);
 
-        status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + currentNeedleIdx);
+        status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
         assert (status == PIM_OK);
       }
     }
 
+    // Update the final result array with the matches from this iteration
+    // In the problem statement, we specify that the longest needle should be given as a result if multiple match at the same position
+    // needleIdxHost will be larger if the needle is longer, because we specify that needles should be sorted ahead of time
+    // Therefore, to get the longest needle at each position, we do a max reduction on the pimIndividualNeedleMatches[needleIdx] objects
     for(uint64_t needleIdx = 1; needleIdx < needlesTable[iter][0].size() + firstAvailPimNeedleResult; ++needleIdx) {
       status = pimMax(pimIndividualNeedleMatches[0], pimIndividualNeedleMatches[needleIdx], pimIndividualNeedleMatches[0]);
       assert (status == PIM_OK);
