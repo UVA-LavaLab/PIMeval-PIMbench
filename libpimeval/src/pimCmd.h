@@ -26,6 +26,7 @@ enum class PimCmdEnum {
   COPY_H2D,
   COPY_D2H,
   COPY_D2D,
+  COPY_O2O, // This copies data between two associated memory objects. Hence, will be treated as PIM command not data copy
   // Functional 1-operand
   ABS,
   POPCOUNT,
@@ -209,6 +210,7 @@ private:
   inline bool computeResult(T operand, PimCmdEnum cmdType, T scalarValue, T& result, int bitsPerElementSrc) {
     result = operand;
     switch (cmdType) {
+    case PimCmdEnum::COPY_O2O: result = operand; break;
     case PimCmdEnum::ADD_SCALAR: result += scalarValue; break;
     case PimCmdEnum::SUB_SCALAR: result -= scalarValue; break;
     case PimCmdEnum::MUL_SCALAR: result *= scalarValue; break;
@@ -261,6 +263,7 @@ private:
   inline bool computeResultFP(T operand, PimCmdEnum cmdType, T scalerValue, T& result) {
     result = operand;
     switch (cmdType) {
+    case PimCmdEnum::COPY_O2O: result = operand; break;
     case PimCmdEnum::ADD_SCALAR: result += scalerValue; break;
     case PimCmdEnum::SUB_SCALAR: result -= scalerValue; break;
     case PimCmdEnum::MUL_SCALAR: result *= scalerValue; break;

@@ -34,6 +34,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::COPY_H2D, "copy_h2d" },
     { PimCmdEnum::COPY_D2H, "copy_d2h" },
     { PimCmdEnum::COPY_D2D, "copy_d2d" },
+    { PimCmdEnum::COPY_O2O, "copy_o2o" },
     { PimCmdEnum::ABS, "abs" },
     { PimCmdEnum::POPCOUNT, "popcount" },
     { PimCmdEnum::SHIFT_BITS_R, "shift_bits_r" },

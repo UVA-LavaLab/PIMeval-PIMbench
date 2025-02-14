@@ -494,6 +494,14 @@ pimSim::pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin, ui
   return m_device->pimCopyDeviceToDevice(src, dest, idxBegin, idxEnd);
 }
 
+bool pimSim::pimCopyObjectToObject(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCopyObjectToObject");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::COPY_O2O, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 // @brief  Load vector with a scalar value
 template <typename T> bool
 pimSim::pimBroadcast(PimObjId dest, T value)

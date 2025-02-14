@@ -68,6 +68,7 @@ public:
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyObjectToObject(PimObjId src, PimObjId dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
