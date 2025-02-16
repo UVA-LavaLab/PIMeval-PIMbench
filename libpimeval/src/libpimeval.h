@@ -126,6 +126,7 @@ PimStatus pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin = 0, u
 PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 
 // Logic and Arithmetic Operation
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);

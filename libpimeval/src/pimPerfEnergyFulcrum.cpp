@@ -31,6 +31,13 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
   switch (cmdType)
   {
+    case PimCmdEnum::COPY_O2O:
+    {
+      msRuntime = (m_tR + m_tW) * numPass;
+      mjEnergy = numPass * numCores * m_eAP * 2;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
     case PimCmdEnum::POPCOUNT:
     {
       numberOfALUOperationPerElement *= 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
