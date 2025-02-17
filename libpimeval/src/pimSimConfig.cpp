@@ -6,10 +6,13 @@
 
 #include "pimSimConfig.h"
 #include "pimUtils.h"
-#include <sstream>
-#include <unordered_map>
-#include <iostream>
-#include <filesystem>
+#include <algorithm>                   // for min
+#include <filesystem>                  // for filesystem
+#include <iomanip>                     // for hex, dec
+#include <iostream>                    // for cout, endl
+#include <string>                      // for string
+#include <thread>                      // for thread
+#include <unordered_map>               // for unordered_map
 
 
 //! @brief  Init PIMeval simulation configuration parameters at device creation
@@ -411,7 +414,7 @@ pimSimConfig::deriveMiscEnvVars()
     m_analysisMode = (valStr == "1");
   }
   if (m_analysisMode) {
-    std::printf("PIM-Info: Running analysis only mode. Ignoring computation for fast performance and energy analysis.\n");
+    std::cout << "PIM-Info: Running analysis only mode. Ignoring computation for fast performance and energy analysis." << std::endl;
   }
 
   return true;

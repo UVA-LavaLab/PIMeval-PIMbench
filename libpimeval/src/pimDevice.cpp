@@ -9,18 +9,12 @@
 #include "pimSim.h"
 #include "libpimeval.h"
 #include "pimUtils.h"
-#include <cstdio>
-#include <deque>
-#include <memory>
-#include <cassert>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <stdexcept>
-#include <filesystem>
+#include <cstdio>                      // for printf
+#include <memory>                      // for make_unique, unique_ptr
+#include <cassert>                     // for assert
+#include <string>                      // for string
+#include <utility>                     // for move
+
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice()

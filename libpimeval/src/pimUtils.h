@@ -8,20 +8,17 @@
 #define LAVA_PIM_UTILS_H
 
 #include "libpimeval.h"
-#include <string>
-#include <queue>
-#include <vector>
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <condition_variable>
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <unordered_map>
-#include <type_traits>
-#include <cstring>
-#include <cstdint>
+#include <string>                      // for string
+#include <queue>                       // for queue
+#include <vector>                      // for vector
+#include <thread>                      // for thread
+#include <atomic>                      // for atomic
+#include <mutex>                       // for mutex
+#include <condition_variable>          // for condition_variable
+#include <unordered_map>               // for unordered_map
+#include <type_traits>                 // for is_integral, is_signed
+#include <cstring>                     // for memcpy
+#include <cstdint>                     // for uint64_t
 
 namespace pimUtils
 {
@@ -115,11 +112,6 @@ namespace pimUtils
       {"PIM_DEVICE_BANK_LEVEL", PIM_DEVICE_BANK_LEVEL},
       {"PIM_DEVICE_AQUABOLT", PIM_DEVICE_AQUABOLT}
   };
-
-  static constexpr const char* envVarPimEvalTarget = "PIMEVAL_TARGET";
-  static constexpr const char* envVarPimEvalConfigPath = "PIMEVAL_CONFIG_PATH";
-  static constexpr const char* envVarPimEvalConfigSim = "PIMEVAL_CONFIG_SIM";
-  static constexpr const char* envVarPimEvalAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
 
   //! @class  threadWorker
   //! @brief  Thread worker base class

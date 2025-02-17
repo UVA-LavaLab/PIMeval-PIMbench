@@ -7,9 +7,10 @@
 #ifndef LAVA_PIM_PARAMS_DRAM_H
 #define LAVA_PIM_PARAMS_DRAM_H
 
-#include <string>
-#include <memory>
 #include "libpimeval.h"
+#include <memory>                      // for unique_ptr
+#include <string>                      // for string
+
 
 //! @class  pimParamsDram
 //! @brief  DRAM parameters (DRAMsim3 compatible)
