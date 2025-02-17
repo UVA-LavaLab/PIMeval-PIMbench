@@ -7,9 +7,10 @@
 #ifndef LAVA_PIM_PARAMS_DRAM_H
 #define LAVA_PIM_PARAMS_DRAM_H
 
-#include <string>
-#include <memory>
 #include "libpimeval.h"
+#include <memory>                      // for unique_ptr
+#include <string>                      // for string
+
 
 //! @class  pimParamsDram
 //! @brief  DRAM parameters (DRAMsim3 compatible)
@@ -23,7 +24,7 @@ public:
   static std::unique_ptr<pimParamsDram> create(PimDeviceProtocolEnum deviceProtocol);
 
   // Static factory method to create appropriate subclass based on config file
-  static std::unique_ptr<pimParamsDram> createFromConfig(const std::string& config);
+  static std::unique_ptr<pimParamsDram> createFromConfig(const std::string& memConfigFilePath);
 
   // Virtual functions for protocol-specific implementation
   virtual int getDeviceWidth() const = 0;

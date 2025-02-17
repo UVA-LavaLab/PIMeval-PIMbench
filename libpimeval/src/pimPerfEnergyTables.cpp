@@ -6,8 +6,8 @@
 
 #include "pimPerfEnergyTables.h"
 #include "pimCmd.h"
-#include <unordered_map>
-#include <tuple>
+#include <unordered_map>               // for unordered_map
+#include <tuple>                       // for tuple
 
 
 //! @brief  BitSIMD performance table (Tuple: #R, #W, #L)

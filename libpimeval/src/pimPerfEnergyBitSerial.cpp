@@ -7,8 +7,8 @@
 #include "pimPerfEnergyBitSerial.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
-#include <iostream>
-#include <cmath> // For log2()
+#include <iostream>                    // for cout, endl
+#include <cmath>                       // for ceil, log2
 
 
 //! @brief  Get performance and energy for bit-serial PIM

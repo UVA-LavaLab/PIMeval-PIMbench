@@ -8,11 +8,11 @@
 #define LAVA_PIM_CORE_H
 
 #include "libpimeval.h"
-#include <vector>
-#include <string>
-#include <map>
-#include <cassert>
-#include <cstdint>
+#include <vector>                      // for vector
+#include <string>                      // for string
+#include <map>                         // for map
+#include <cassert>                     // for assert
+#include <cstdint>                     // for uint64_t
 
 
 //! @class  pimCore

@@ -6,7 +6,7 @@
 
 #include "pimPerfEnergyBankLevel.h"
 #include "pimCmd.h"
-#include <iostream>
+#include <iostream>                    // for cout, endl
 
 
 //! @brief  Perf energy model of bank-level PIM for func1

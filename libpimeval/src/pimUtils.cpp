@@ -6,14 +6,22 @@
 
 #include "pimUtils.h"
 #include "libpimeval.h"
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <unordered_map>
-#include <string>
-#include <filesystem>
-#include <cstdlib>
-#include <cassert>
+#include <fstream>                     // for ifstream
+#include <iostream>                    // for cerr, endl
+#include <sstream>                     // for stringstream, istringstream
+#include <unordered_map>               // for unordered_map
+#include <string>                      // for string, getline
+#include <filesystem>                  // for filesystem
+#include <cstdlib>                     // for printf, getenv
+#include <cassert>                     // for assert
+#include <cctype>                      // for isspace
+#include <algorithm>                   // for find_if
+#include <memory>                      // for unique_lock
+#include <mutex>                       // for mutex
+#include <exception>                   // for exception
+#include <stdexcept>                   // for out_of_range, invalid_argument
+#include <limits>                      // for numeric_limits
+
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -116,43 +124,16 @@ pimUtils::getNumBitsOfDataType(PimDataType dataType)
   return 0;
 }
 
-//! @brief  Read bits from host
-std::vector<bool>
-pimUtils::readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement)
+//! @brief  Convert PimDeviceProtocolEnum to string
+std::string
+pimUtils::pimProtocolEnumToStr(PimDeviceProtocolEnum protocol)
 {
-  std::vector<bool> bits;
-  unsigned char* bytePtr = static_cast<unsigned char*>(src);
-
-  for (uint64_t i = 0; i < numElements * bitsPerElement; i += 8) {
-    uint64_t byteIdx = i / 8;
-    unsigned char byteVal = *(bytePtr + byteIdx);
-    for (int j = 0; j < 8; ++j) {
-      bits.push_back(byteVal & 1);
-      byteVal = byteVal >> 1;
-    }
+  switch (protocol) {
+  case PIM_DEVICE_PROTOCOL_DDR: return "DDR";
+  case PIM_DEVICE_PROTOCOL_LPDDR: return "LPDDR";
+  case PIM_DEVICE_PROTOCOL_HBM: return "HBM";
   }
-
-  return bits;
-}
-
-//! @brief  Write bits to host
-bool
-pimUtils::writeBitsToHost(void* dest, const std::vector<bool>& bits)
-{
-  unsigned char* bytePtr = static_cast<unsigned char*>(dest);
-  uint64_t byteIdx = 0;
-
-  for (uint64_t i = 0; i < bits.size(); i += 8) {
-    unsigned char byteVal = 0;
-    for (int j = 7; j >= 0; --j) {
-      byteVal = byteVal << 1;
-      byteVal |= bits[i + j];
-    }
-    *(bytePtr + byteIdx) = byteVal;
-    byteIdx++;
-  }
-
-  return true;
+  return "Unknown";
 }
 
 //! @brief  Thread pool ctor
@@ -315,3 +296,68 @@ pimUtils::getDirectoryPath(const std::string& filePath) {
     std::filesystem::path path(filePath);
     return path.parent_path().string() + "/";
 }
+
+//! @brief Convert a string to unsigned int. Return false and 0 if invalid
+bool
+pimUtils::convertStringToUnsigned(const std::string& str, unsigned& retVal)
+{
+  try {
+    unsigned long val = std::stoul(str);
+    if (val > std::numeric_limits<unsigned int>::max()) { // out of range
+      throw std::out_of_range("Value exceeds unsigned int range");
+    }
+    retVal = static_cast<unsigned int>(val);
+  } catch (const std::exception &e) {
+    retVal = 0;
+    return false;
+  }
+  return true;
+}
+
+//! @brief Read config file parameters, given a config file path
+std::unordered_map<std::string, std::string>
+pimUtils::readParamsFromConfigFile(const std::string& configFilePath)
+{
+  std::unordered_map<std::string, std::string> params;
+  if (configFilePath.empty()) {
+    return params;
+  }
+  std::string contents;
+  bool success = pimUtils::readFileContent(configFilePath.c_str(), contents);
+  if (!success) {
+    return params;
+  }
+  std::istringstream iss(contents);
+  std::string line;
+  while (std::getline(iss, line)) {
+    line = pimUtils::removeAfterSemicolon(line);
+    if (line.empty() || line[0] == '[') {
+      continue;
+    }
+    size_t equalPos = line.find('=');
+    if (equalPos != std::string::npos) {
+      std::string key = line.substr(0, equalPos);
+      std::string value = line.substr(equalPos + 1);
+      params[pimUtils::trim(key)] = pimUtils::trim(value);
+    }
+  }
+  return params;
+}
+
+//! @brief Read environment variables, given a list of env var names
+std::unordered_map<std::string, std::string>
+pimUtils::readParamsFromEnvVars(const std::vector<std::string>& envVarNames)
+{
+  std::unordered_map<std::string, std::string> params;
+  for (const auto& envVar : envVarNames) {
+    std::string val;
+    bool hasEnv = pimUtils::getEnvVar(envVar, val);
+    val = pimUtils::trim(val);
+    if (hasEnv && !val.empty()) {
+      params[envVar] = val;
+    }
+  }
+  return params;
+}
+
+

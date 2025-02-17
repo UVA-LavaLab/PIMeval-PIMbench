@@ -9,8 +9,8 @@
 
 #include "libpimeval.h"
 #include "pimCmd.h"
-#include <unordered_map>
-#include <tuple>
+#include <unordered_map>               // for unordered_map
+#include <tuple>                       // for tuple
 
 
 namespace pimPerfEnergyTables

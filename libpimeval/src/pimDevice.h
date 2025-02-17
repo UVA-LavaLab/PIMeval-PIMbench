@@ -8,15 +8,15 @@
 #define LAVA_PIM_DEVICE_H
 
 #include "libpimeval.h"
+#include "pimSimConfig.h"
 #include "pimCore.h"
 #include "pimCmd.h"
 #include "pimPerfEnergyBase.h"
 #ifdef DRAMSIM3_INTEG
 #include "cpu.h"
 #endif
-#include <memory>
-#include <filesystem>
-#include <string>
+#include <memory>                      // for unique_ptr
+#include <vector>                      // for vector
 
 class pimResMgr;
 
@@ -29,6 +29,7 @@ public:
   pimDevice();
   ~pimDevice();
 
+  bool init(const pimSimConfig& config);
   bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool init(PimDeviceEnum deviceType, const char* configFileName);
 
@@ -67,8 +68,6 @@ public:
 
 private:
   bool adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
-  void configSimTarget(PimDeviceEnum deviceType = PIM_FUNCTIONAL);
-  bool parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
 
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
   PimDeviceEnum m_simTarget = PIM_DEVICE_NONE;

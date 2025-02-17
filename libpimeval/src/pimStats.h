@@ -10,10 +10,10 @@
 #include "pimParamsDram.h"
 #include "pimPerfEnergyBase.h"
 #include "libpimeval.h"
-#include <cstdint>
-#include <string>
-#include <map>
-#include <chrono>
+#include <cstdint>                     // for uint64_t
+#include <string>                      // for string
+#include <map>                         // for map
+#include <chrono>                      // for chrono
 
 //! @class  pimPerfMon
 //! @brief  PIM performance monitor

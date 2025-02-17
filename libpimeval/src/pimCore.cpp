@@ -5,10 +5,13 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "pimCore.h"
-#include <random>
-#include <cstdio>
-#include <iomanip>
-#include <sstream>
+#include <random>                      // for random_device, mt19937, uniform_int_distribution
+#include <cstdio>                      // for printf
+#include <iomanip>                     // for setw
+#include <iostream>                    // for endl
+#include <sstream>                     // for ostringstream
+#include <utility>                     // for pair
+#include <vector>                      // for vector
 
 
 //! @brief  pimCore ctor

@@ -9,12 +9,11 @@
 #include "pimParamsDDRDram.h"
 #include "pimParamsLPDDRDram.h"
 #include "pimParamsHBMDram.h"
-#include <sstream>
-#include <string>
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <stdexcept>
+#include <string>                      // for string
+#include <memory>                      // for make_unique, unique_ptr
+#include <unordered_map>               // for unordered_map
+#include <stdexcept>                   // for invalid_argument
+
 
 // Static factory method to create appropriate subclass based on protocol enum
 std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum deviceProtocol)
@@ -39,29 +38,9 @@ std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum devic
 }
 
 // Static factory method to create appropriate subclass based on config file
-std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string& config)
+std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string& memConfigFilePath)
 {
-  std::istringstream configStream(config);
-  std::string line;
-  std::unordered_map<std::string, std::string> params;
-
-  while (std::getline(configStream, line))
-  {
-    line = pimUtils::removeAfterSemicolon(line);
-    if (line.empty() || line[0] == '[')
-    {
-      continue; // Skip section headers and empty lines
-    }
-
-    // Parse key-value pairs
-    size_t equalPos = line.find('=');
-    if (equalPos != std::string::npos)
-    {
-      std::string key = line.substr(0, equalPos);
-      std::string value = line.substr(equalPos + 1);
-      params[pimUtils::trim(key)] = pimUtils::trim(value); // Store in params map
-    }
-  }
+  std::unordered_map<std::string, std::string> params = pimUtils::readParamsFromConfigFile(memConfigFilePath);
 
   // Check if the "protocol" key exists
   if (params.find("protocol") == params.end())
