@@ -116,6 +116,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       { 40, "pimShiftElementsLeft"   },
       { 41, "pimShiftBitsRight"      },
       { 42, "pimShiftBitsLeft"       },
+      { 43, "pimCopyObjectToObject"  },
   };
 
   // Running tests
@@ -181,6 +182,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       case 40: status = pimShiftElementsLeft    (objDest);                              break;
       case 41: status = pimShiftBitsRight       (objSrc1, objDest, shiftAmount);        break;
       case 42: status = pimShiftBitsLeft        (objSrc1, objDest, shiftAmount);        break;
+      case 43: status = pimCopyObjectToObject   (objSrc1, objDest);                     break;
       default: assert(0);
     }
     assert(status == PIM_OK);
@@ -273,6 +275,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
           case 40: expected = (i == numElements - 1 ? 0 : vecSrc1[i + 1]);               break; // pimShiftElementsLeft
           case 41: expected = vecSrc1[i] >> shiftAmount; break; // pimShiftBitsRight
           case 42: expected = vecSrc1[i] << shiftAmount; break; // pimShiftBitsLeft
+          case 43: expected = vecSrc1[i];                break; // pimCopyObjectToObject 
           default: assert(0);
         }
         if (vecDest[i] != expected) {

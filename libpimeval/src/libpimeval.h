@@ -30,6 +30,7 @@ enum PimDeviceEnum {
   PIM_DEVICE_BITSIMD_H,
   PIM_DEVICE_FULCRUM,
   PIM_DEVICE_BANK_LEVEL,
+  PIM_DEVICE_AQUABOLT,
 };
 
 /**
@@ -42,10 +43,13 @@ enum PimDeviceEnum {
  * @var PIM_DEVICE_PROTOCOL_LPDDR
  * Low Power DDR (LPDDR) protocol.
  *
+ * @var PIM_DEVICE_PROTOCOL_HBM
+ * High Bandwidth Memory (HBM) protocol.
 */
 enum PimDeviceProtocolEnum {
   PIM_DEVICE_PROTOCOL_DDR = 0,
   PIM_DEVICE_PROTOCOL_LPDDR,
+  PIM_DEVICE_PROTOCOL_HBM,
 };
 
 //! @brief  PIM allocation types
@@ -122,6 +126,7 @@ PimStatus pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin = 0, u
 PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 
 // Logic and Arithmetic Operation
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);

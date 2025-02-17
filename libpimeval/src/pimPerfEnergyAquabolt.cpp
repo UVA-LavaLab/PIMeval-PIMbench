@@ -1,17 +1,17 @@
-// File: pimPerfEnergyBankLevel.cc
+// File: pimPerfEnergyAquabolt.cc
 // PIMeval Simulator - Performance Energy Models
 // Copyright (c) 2024 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#include "pimPerfEnergyBankLevel.h"
+#include "pimPerfEnergyAquabolt.h"
 #include "pimCmd.h"
 #include <iostream>
 
 
-//! @brief  Perf energy model of bank-level PIM for func1
+//! @brief  Perf energy model of aquabolt PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -23,16 +23,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
   switch (cmdType)
   {
-    case PimCmdEnum::COPY_O2O:
-    {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      msRuntime = (m_tR + m_tW + totalGDLOverhead) * numPass;
-      mjEnergy = numPass * numCores * ((m_eAP * 2) + (m_eGDL * 2));
-      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      break;
-    }
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
     case PimCmdEnum::ADD_SCALAR:
@@ -78,9 +68,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Perf energy model of bank-level PIM for func2
+//! @brief  Perf energy model of aquabolt PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -157,9 +147,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Perf energy model of bank-level PIM for reduction sum
+//! @brief  Perf energy model of aquabolt PIM for reduction sum
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -190,7 +180,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           break;
         }
         default:
-          std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
+          std::cout << "PIM-Warning: Unsupported reduction command for aquabolt PIM: " 
                     << pimCmd::getName(cmdType, "") << std::endl;
           break;
     }
@@ -198,9 +188,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Perf energy model of bank-level PIM for broadcast
+//! @brief  Perf energy model of aquabolt PIM for broadcast
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -220,9 +210,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
-//! @brief  Perf energy model of bank-level PIM for rotate
+//! @brief  Perf energy model of aquabolt PIM for rotate
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -244,4 +234,3 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
-
