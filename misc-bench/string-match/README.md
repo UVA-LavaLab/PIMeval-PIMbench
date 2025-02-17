@@ -16,7 +16,7 @@ For example:
 ## Directory Structure
 
 ```
-cpp-string-match/
+string-match/
 ├── include/
 │   ├── string-match-utils.h
 ├── PIM/
