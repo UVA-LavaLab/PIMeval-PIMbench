@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%post
+    apt update && apt upgrade -y
+
+    apt install -y \
+        bash \
+        vim \
+        curl \
+        ragel \
+        cmake \
+        python2.7 \
+        python-pip \
+        libboost-all-dev
+
+    apt clean
+
+%environment
+    export PATH=/usr/local/bin:$PATH
+
+%help
+    Container for running hyperscan
+
+%runscript
+    exec /bin/bash --norc "$@"
