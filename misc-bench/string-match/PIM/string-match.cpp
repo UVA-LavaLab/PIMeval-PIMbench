@@ -84,10 +84,12 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
   std::vector<std::vector<std::vector<size_t>>> resultTable;
   
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
-  // Two rows used by the haystack and intermediate
-  uint64_t maxNeedlesPerIteration = isHorizontal ? numRows - 2 : (numRows>>5) - 2;
+  // Three objects used by haystack, intermediate, and haystack copy
+  // Haystack copy only needed if more than one iteration
+  uint64_t maxNeedlesPerIteration = (isHorizontal ? numRows : (numRows>>5)) - 3;
+  uint64_t maxNeedlesPerIterationOneIteration = maxNeedlesPerIteration + 1;
   uint64_t numIterations;
-  if(needles.size() <= maxNeedlesPerIteration) {
+  if(needles.size() <= maxNeedlesPerIterationOneIteration) {
     numIterations = 1;
   } else {
     uint64_t needlesAfterFirstIteration = needles.size() - maxNeedlesPerIteration;
@@ -102,8 +104,10 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
 
   for(uint64_t iter=0; iter<numIterations; ++iter) {
     uint64_t needlesThisIteration;
-    if(iter == 0) {
-      needlesThisIteration = std::min(maxNeedlesPerIteration, needles.size());
+    if(numIterations == 1) {
+      needlesThisIteration = needles.size();
+    } else if(iter == 0) {
+      needlesThisIteration = maxNeedlesPerIteration;
     } else if(iter+1 == numIterations) {
       needlesThisIteration = needles.size() - needlesDone;
     } else {
@@ -141,7 +145,8 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
 }
 
 void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::vector<std::vector<std::vector<size_t>>>& needlesTable, bool isHorizontal, std::vector<int>& matches) {
-  
+  PimStatus status;
+
   // Stores the text that is being checked for the needles
   PimObjId haystackPim = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
   assert(haystackPim != -1);
@@ -161,6 +166,19 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
     haystack32Bit[i] = (uint32_t) haystack[i];
   }
 
+  status = pimCopyHostToDevice((void *)haystack32Bit, haystackPim);
+  assert (status == PIM_OK);
+
+  PimObjId haystackCopyPim = -1;
+  if(needlesTable.size() > 1) {
+    haystackCopyPim = pimAllocAssociated(haystackPim, PIM_UINT32);
+    assert(intermediatePim != -1);
+
+    status = pimCopyObjectToObject(haystackPim, haystackCopyPim);
+    assert (status == PIM_OK);
+  }
+  
+
   if(needlesTable.empty() || needlesTable[0].empty()) {
     std::cerr << "Error: The needles table is empty" << std::endl;
     exit(1);
@@ -179,15 +197,9 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
 
   pimStartTimer();
 
-  PimStatus status;
   // Number of needles at a time is limited by how many PIM objects can be alloc associated with each other in a subarray
   // Iterates multiple times if there are enough needles
   for(uint64_t iter=0; iter<needlesTable.size(); ++iter) {
-    // Haystack is shifted throughout each iteration, this resets it in between iterations
-    // Could be replaced with a copy object to object once available
-    status = pimCopyHostToDevice((void *)haystack32Bit, haystackPim);
-    assert (status == PIM_OK);
-
     // Instead of creating a seperate result variable, we reuse one of the objects in pimIndividualNeedleMatches
     // Can be used as a needle match array for only the first iteration, and a result array for the rest
     // Slight optimization allows one extra needle in the first iteration
@@ -294,6 +306,11 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
     }
 
     needlesDone += needlesTable[iter][0].size();
+
+    if(iter + 1 < needlesTable.size()) {
+      status = pimCopyObjectToObject(haystackCopyPim, haystackPim);
+      assert (status == PIM_OK);
+    }
   }
 
   status = pimCopyDeviceToHost(pimIndividualNeedleMatches[0], (void *)matches.data());
