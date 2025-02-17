@@ -147,6 +147,8 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
 
 void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputVector, uint64_t numRequiredPIMRows, int numRequiredPIMCol, bool moreDebugPrints)
 {
+
+  if (filterMatrix.empty() || inputMatrix.empty()) return;
   
   PimObjId filterObject = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
   if (filterObject == -1)
