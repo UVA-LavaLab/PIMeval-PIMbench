@@ -69,6 +69,7 @@ namespace pimUtils
     return signExtBits;
   }
 
+  // Service APIs for file system, config files, env vars
   std::string& ltrim(std::string& s);
   std::string& rtrim(std::string& s);
   std::string& trim(std::string& s);
@@ -76,11 +77,11 @@ namespace pimUtils
   std::string getParam(const std::unordered_map<std::string, std::string>& params, const std::string& key);
   std::string getOptionalParam(const std::unordered_map<std::string, std::string>& params, const std::string& key, bool& returnStatus);
   std::string removeAfterSemicolon(const std::string &input);
-
-  std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
-  bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
+  bool convertStringToUnsigned(const std::string& str, unsigned& retVal);
+  std::unordered_map<std::string, std::string> readParamsFromConfigFile(const std::string& configFilePath);
+  std::unordered_map<std::string, std::string> readParamsFromEnvVars(const std::vector<std::string>& envVarNames);
 
   const std::unordered_map<PimDeviceEnum, std::string> enumToStrMap = {
       {PIM_DEVICE_NONE, "PIM_DEVICE_NONE"},
