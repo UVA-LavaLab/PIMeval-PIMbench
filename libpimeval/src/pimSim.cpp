@@ -53,84 +53,14 @@ pimSim::~pimSim()
   uninit();
 }
 
-//! @brief  Initialize pimSim member classes from the config file
-bool
-pimSim::init(const std::string& simConfigFileConetnt)
-{
-  if (!m_initCalled) {
-    if (!simConfigFileConetnt.empty()) {
-      bool success = parseConfigFromFile(simConfigFileConetnt);
-      if (!success) {
-        return false;
-      }
-
-      if (!m_memConfigFileName.empty()) {
-        std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
-        std::string fileContent;
-        success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
-        if (!success) {
-          return false;
-        }
-        m_paramsDram = pimParamsDram::createFromConfig(fileContent);
-      } else {
-        m_paramsDram = pimParamsDram::create(PIM_DEVICE_PROTOCOL_DDR);
-      }
-
-      m_statsMgr = std::make_unique<pimStatsMgr>();
-      m_initCalled = true;
-    } else {
-      m_paramsDram = pimParamsDram::create(PIM_DEVICE_PROTOCOL_DDR);
-      m_statsMgr = std::make_unique<pimStatsMgr>();
-      m_initCalled = true;
-    }
-
-    // Common PIMeval simulator settings
-    // ENV-VAR: PIMEVAL_ANALYSIS_MODE = [0|1] - Set to 1 for fast perf and energy analysis
-    // Warning: In this mode, PIM computation will be skipped. Do not use this for result-dependent PIM algorithms.
-    std::string analysisMode;
-    bool hasEnvVar = pimUtils::getEnvVar(pimUtils::envVarPimEvalAnalysisMode, analysisMode);
-    if (hasEnvVar) {
-      std::printf("PIM-Info: Environment variable %s = %s\n", pimUtils::envVarPimEvalAnalysisMode, analysisMode.c_str());
-      if (analysisMode == "1") {
-        std::printf("PIM-Info: Enabled analysis only mode. Ignoring computation during performance and energy analysis.\n");
-        m_analysisMode = true;
-      } else {
-        std::printf("PIM-Info: Disabled analysis only mode.\n");
-        m_analysisMode = false;
-      }
-    }
-  }
-  return true;
-}
-
-//! @brief  Uninitialize pimSim member claasses
+//! @brief  Uninitialize pimSim member classes
 void
 pimSim::uninit()
 {
+  m_device.reset();
   m_threadPool.reset();
   m_statsMgr.reset();
   m_paramsDram.reset();
-  m_initCalled = false;
-  m_analysisMode = false;
-}
-
-//! @brief  Determine num threads and init thread pool
-void
-pimSim::initThreadPool(unsigned maxNumThreads)
-{
-  m_threadPool.reset();
-  unsigned hwThreads = std::thread::hardware_concurrency();
-  if (maxNumThreads == 0) {
-    m_numThreads = hwThreads;
-  } else {
-    m_numThreads = std::min(maxNumThreads, hwThreads);
-  }
-  if (m_numThreads < 1) {
-    m_numThreads = 1;
-  }
-  if (m_numThreads > 1) {
-    m_threadPool = std::make_unique<pimUtils::threadPool>(m_numThreads);
-  }
 }
 
 //! @brief  Create a PIM device
@@ -138,93 +68,63 @@ bool
 pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
-  if (m_device) {
-    std::printf("PIM-Error: PIM device is already created\n");
-    return false;
-  }
-  bool success = init();
+  uninit();
+  bool success = m_config.init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   if (!success) {
-    std::printf("PIM-Error: Init failed\n");
     return false;
   }
-  m_device = std::make_unique<pimDevice>();
-  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
-  if (!m_device->isValid()) {
-    m_device.reset();
-    uninit();
-    std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
-    return false;
-  }
-  unsigned maxNumThreads = 0; // use max hardware parallelism by default
-  initThreadPool(maxNumThreads);
-  return true;
+  return createDeviceCommon();
 }
 
 //! @brief  Create a PIM device from a config file
 bool
-pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName)
+pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFilePath)
 {
   pimPerfMon perfMon("createDeviceFromConfig");
-  bool success = false;
-  std::string correctConfigFileName;
-  if (!configFileName) {
-    std::printf("PIM-Info: Null PIM device config file name. Read the config file name from environment variables %s and %s\n", pimUtils::envVarPimEvalConfigPath, pimUtils::envVarPimEvalConfigSim);
-
-    // Read environment variable for the config file path
-    std::string pimEvalConfigPath;
-    if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalConfigPath, pimEvalConfigPath)) {
-      std::printf("PIM-Error: Could not read environment variable %s", pimUtils::envVarPimEvalConfigPath);
-      return false;
-    }
-
-    // Read environment variable for the simulation config file name
-    std::string pimEvalConfigSim;
-    if (!pimUtils::getEnvVar(pimUtils::envVarPimEvalConfigSim, pimEvalConfigSim)) {
-      std::printf("PIM-Error: Could not read environment variable %s", pimUtils::envVarPimEvalConfigSim);
-      return false;
-    }
-    correctConfigFileName = pimEvalConfigPath + "/" + pimEvalConfigSim;
-    std::printf("PIM-Info: Read config file from the environment variables is \"%s\".\n", correctConfigFileName.c_str());
-  } else {
-    correctConfigFileName = configFileName;
-  }
-  if (!std::filesystem::exists(correctConfigFileName)) {
-    std::printf("PIM-Error: Config file not found.\n");
-    return false;
-  }
-
-  std::string fileContent;
-  success = pimUtils::readFileContent(correctConfigFileName.c_str(), fileContent);
+  uninit();
+  bool success = m_config.init(deviceType, configFilePath);
   if (!success) {
-    std::printf("PIM-Error: Failed to read config file %s\n", correctConfigFileName.c_str());
     return false;
   }
+  return createDeviceCommon();
+}
 
-  m_configFilesPath = pimUtils::getDirectoryPath(correctConfigFileName);
+//! @brief  Common code to create a PIM device
+bool
+pimSim::createDeviceCommon()
+{
+  // Create memory params, which is needed before creating pimDevice
+  m_paramsDram = pimParamsDram::create(m_config.getMemoryProtocol());
 
-  success = init(fileContent);
-  if (!success) {
-    std::printf("PIM-Error: Init failed\n");
-    return false;
-  }
-  if (m_device) {
-    std::printf("PIM-Error: PIM Device is already created\n");
-    return false;
-  }
-
+  // Create PIM device
   m_device = std::make_unique<pimDevice>();
-  m_device->init(deviceType, correctConfigFileName.c_str());
+  m_device->init(m_config);
+
   if (!m_device->isValid()) {
-    m_device.reset();
     uninit();
-    std::printf("PIM-Error: Failed to create PIM device of type %d\n", static_cast<int>(deviceType));
+    std::printf("PIM-Error: Failed to create PIM device of type %s\n", pimUtils::pimDeviceEnumToStr(m_config.getDeviceType()).c_str());
     return false;
   }
-  unsigned maxNumThreads = m_numThreads;
-  initThreadPool(maxNumThreads);
+
+  // Create stats mgr
+  m_statsMgr = std::make_unique<pimStatsMgr>();
+
+  // Create thread pool
+  if (getNumThreads() > 1) {
+    m_threadPool = std::make_unique<pimUtils::threadPool>(getNumThreads());
+  }
   return true;
 }
 
+//! @brief  Delete PIM device
+bool
+pimSim::deleteDevice()
+{
+  uninit();
+  return true;
+}
+
+//! @brief  Get device properties
 bool
 pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   pimPerfMon perfMon("getDeviceProperties");
@@ -242,19 +142,6 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   return true;
 }
 
-//! @brief  Delete PIM device
-bool
-pimSim::deleteDevice()
-{
-  if (!m_device) {
-    std::printf("PIM-Error: No PIM device to delete\n");
-    return false;
-  }
-  m_device.reset();
-  uninit();
-  return true;
-}
-
 //! @brief  Check if device is valid
 bool
 pimSim::isValidDevice(bool showMsg) const
@@ -264,76 +151,6 @@ pimSim::isValidDevice(bool showMsg) const
     std::printf("PIM-Error: Invalid PIM device\n");
   }
   return isValid;
-}
-
-//! @brief  Get device type
-PimDeviceEnum
-pimSim::getDeviceType() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getDeviceType();
-  }
-  return PIM_DEVICE_NONE;
-}
-
-//! @brief  Get simulation target device
-PimDeviceEnum
-pimSim::getSimTarget() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getSimTarget();
-  }
-  return PIM_DEVICE_NONE;
-}
-
-//! @brief  Get number of ranks
-unsigned
-pimSim::getNumRanks() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getNumRanks();
-  }
-  return 0;
-}
-
-//! @brief  Get number of banks per rank
-unsigned
-pimSim::getNumBankPerRank() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getNumBankPerRank();
-  }
-  return 0;
-}
-
-//! @brief  Get number of subarrays per bank
-unsigned
-pimSim::getNumSubarrayPerBank() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getNumSubarrayPerBank();
-  }
-  return 0;
-}
-
-//! @brief  Get number of rows per subarray
-unsigned
-pimSim::getNumRowPerSubarray() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getNumRowPerSubarray();
-  }
-  return 0;
-}
-
-//! @brief  Get number of cols per subarray
-unsigned
-pimSim::getNumColPerSubarray() const
-{
-  if (m_device && m_device->isValid()) {
-    return m_device->getNumColPerSubarray();
-  }
-  return 0;
 }
 
 //! @brief  Get number of PIM cores
@@ -1143,53 +960,6 @@ pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
 
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAnalogAAP>(PimCmdEnum::ROW_AAP, srcRows, destRows);
   return m_device->executeCmd(std::move(cmd));
-}
-
-//! @breif parse config file to get memory config file path and maximum number of threads
-bool
-pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
-  std::istringstream configStream(simConfigFileConetnt);
-  std::string line;
-  std::unordered_map<std::string, std::string> params;
-
-  while (std::getline(configStream, line)) {
-    line = pimUtils::removeAfterSemicolon(line);
-    if (line.empty() || line[0] == '[') {
-      continue;
-    }
-    size_t equalPos = line.find('=');
-    if (equalPos != std::string::npos) {
-      std::string key = line.substr(0, equalPos);
-      std::string value = line.substr(equalPos + 1);
-      params[pimUtils::trim(key)] = pimUtils::trim(value);
-    }
-  }
-  try {
-    bool success = false;
-    std::string temp;
-    temp = pimUtils::getOptionalParam(params, "max_num_threads", success);
-    if (!success) {
-      std::printf("PIM-Info: Maximum number of threads could not be located in PIMeval config file. Using maximum number of available threads\n");
-      m_numThreads = std::thread::hardware_concurrency();
-    } else {
-      m_numThreads = std::stoi(temp);
-    }
-
-    temp = pimUtils::getOptionalParam(params, "memory_config_file", success);
-    if (!success) {
-      std::printf("PIM-Info: PIM device params config file name could not be located in PIMeval config file. Using default values for memory config\n");
-    } else {
-      m_memConfigFileName = temp;
-    }
-  } catch (const std::invalid_argument& e) {
-    std::string missing = e.what();
-    std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
-    errorMessage += missing;
-    errorMessage += "\n";
-    std::printf("%s", errorMessage.c_str());
-    return false;
-  }
-  return true;
 }
 
 // Explicit template instantiations

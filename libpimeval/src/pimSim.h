@@ -8,6 +8,7 @@
 #define LAVA_PIM_SIM_H
 
 #include "libpimeval.h"
+#include "pimSimConfig.h"
 #include "pimDevice.h"
 #include "pimParamsDram.h"
 #include "pimPerfEnergyBase.h"
@@ -31,13 +32,18 @@ public:
   bool deleteDevice();
   bool isValidDevice(bool showMsg = true) const;
 
-  PimDeviceEnum getDeviceType() const;
-  PimDeviceEnum getSimTarget() const;
-  unsigned getNumRanks() const;
-  unsigned getNumBankPerRank() const;
-  unsigned getNumSubarrayPerBank() const;
-  unsigned getNumRowPerSubarray() const;
-  unsigned getNumColPerSubarray() const;
+  // From pimSimConfig
+  const pimSimConfig& getConfig() const { return m_config; }
+  bool isAnalysisMode() const { return m_config.getAnalysisMode(); }
+  unsigned getNumThreads() const { return m_config.getNumThreads(); }
+  PimDeviceEnum getDeviceType() const { return m_config.getDeviceType(); }
+  PimDeviceEnum getSimTarget() const { return m_config.getSimTarget(); }
+  unsigned getNumRanks() const { return m_config.getNumRanks(); }
+  unsigned getNumBankPerRank() const { return m_config.getNumBankPerRank(); }
+  unsigned getNumSubarrayPerBank() const { return m_config.getNumSubarrayPerBank(); }
+  unsigned getNumRowPerSubarray() const { return m_config.getNumRowPerSubarray(); }
+  unsigned getNumColPerSubarray() const { return m_config.getNumColPerSubarray(); }
+
   unsigned getNumCores() const;
   unsigned getNumRows() const;
   unsigned getNumCols() const;
@@ -49,11 +55,8 @@ public:
   pimStatsMgr* getStatsMgr() { return m_statsMgr.get(); }
   const pimParamsDram& getParamsDram() const { assert(m_paramsDram); return *m_paramsDram; }
   pimPerfEnergyBase* getPerfEnergyModel();
-  bool isAnalysisMode() const { return m_analysisMode; }
 
-  void initThreadPool(unsigned maxNumThreads);
   pimUtils::threadPool* getThreadPool() { return m_threadPool.get(); }
-  unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
   PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
@@ -138,22 +141,17 @@ private:
   ~pimSim();
   pimSim(const pimSim&) = delete;
   pimSim operator=(const pimSim&) = delete;
-  bool init(const std::string& simConfigFileContent = "");
+  bool createDeviceCommon();
   void uninit();
-  bool parseConfigFromFile(const std::string& simConfigFileContent);
 
   static pimSim* s_instance;
+  pimSimConfig m_config;
 
   // support one device for now
   std::unique_ptr<pimDevice> m_device;
   std::unique_ptr<pimParamsDram> m_paramsDram;
   std::unique_ptr<pimStatsMgr> m_statsMgr;
   std::unique_ptr<pimUtils::threadPool> m_threadPool;
-  unsigned m_numThreads = 0;
-  bool m_analysisMode = false;
-  std::string m_memConfigFileName;
-  std::string m_configFilesPath;
-  bool m_initCalled = false;
 
 };
 

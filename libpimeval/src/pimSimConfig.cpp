@@ -12,9 +12,9 @@
 #include <filesystem>
 
 
-//! @brief  Update PIMeval simulation configuration parameters at device creation
+//! @brief  Init PIMeval simulation configuration parameters at device creation
 bool
-pimSimConfig::updateConfig(PimDeviceEnum deviceType,
+pimSimConfig::init(PimDeviceEnum deviceType,
     unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank,
     unsigned numRowPerSubarray, unsigned numColPerSubarray)
 {
@@ -23,9 +23,9 @@ pimSimConfig::updateConfig(PimDeviceEnum deviceType,
                       numRowPerSubarray, numColPerSubarray);
 }
 
-//! @brief  Update PIMeval simulation configuration parameters at device creation
+//! @brief  Init PIMeval simulation configuration parameters at device creation
 bool
-pimSimConfig::updateConfig(PimDeviceEnum deviceType, const std::string& configFilePath)
+pimSimConfig::init(PimDeviceEnum deviceType, const std::string& configFilePath)
 {
   return deriveConfig(deviceType, configFilePath);
 }
@@ -52,12 +52,11 @@ pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
   m_cfgParams = readSimConfigFileParams();
 
   // Derive other configuration parameters in order
-  ok = ok & deriveDebug();
   ok = ok & deriveDeviceType(deviceType);
   ok = ok & deriveSimTarget();
   ok = ok & deriveMemConfigFile();
   ok = ok & deriveDimensions(numRanks, numBankPerRank, numSubarrayPerBank, numRowPerSubarray, numColPerSubarray);
-  ok = ok & deriveMaxNumThreads();
+  ok = ok & deriveNumThreads();
 
   return ok;
 }
@@ -77,7 +76,7 @@ pimSimConfig::deriveDebug()
     }
   }
   if (m_debug > 0) {
-    std::cout << "PIM-Debug: Debug flags = 0x" << std::hex << m_debug << std::endl;
+    std::cout << "PIM-Debug: Debug flags = 0x" << std::hex << m_debug << std::dec << std::endl;
   }
   return true;
 }
@@ -220,6 +219,7 @@ bool
 pimSimConfig::deriveMemConfigFile()
 {
   m_memConfigFile.clear();
+  // Read config file and env
   if (m_cfgParams.find(m_cfgVarMemConfig) != m_cfgParams.end()) {
     m_memConfigFile = m_cfgParams.at(m_cfgVarMemConfig);
   } else if (m_envParams.find(m_envVarMemConfig) != m_envParams.end()) {
@@ -227,11 +227,38 @@ pimSimConfig::deriveMemConfigFile()
   }
   if (!m_memConfigFile.empty()) {
     if (!std::filesystem::exists(m_memConfigFile)) {
-      std::cout << "PIM-Error: Cannot find memory config file: " << m_memConfigFile << std::endl;
+      // Try to find it in the directory of sim config file
+      std::string configFilePath = pimUtils::getDirectoryPath(m_simConfigFile);
+      if (std::filesystem::exists(configFilePath + "/" + m_memConfigFile)) {
+        m_memConfigFile = configFilePath + "/" + m_memConfigFile;
+      } else {
+        std::cout << "PIM-Error: Cannot find memory config file: " << m_memConfigFile << std::endl;
+        return false;
+      }
+    }
+
+    // Determine memory protocol from memory config file. This is not sim config file.
+    std::unordered_map<std::string, std::string> memParams = pimUtils::readParamsFromConfigFile(m_memConfigFile);
+    if (memParams.find("protocol") != memParams.end()) {
+      std::string protocol = memParams.at("protocol");
+      if (protocol == "DDR3" || protocol == "DDR4" || protocol == "DDR5") {
+        m_memoryProtocol = PIM_DEVICE_PROTOCOL_DDR;
+      } else if (protocol == "LPDDR3" || protocol == "LPDDR4") {
+        m_memoryProtocol = PIM_DEVICE_PROTOCOL_LPDDR;
+      } else if (protocol == "HBM" || protocol == "HBM2") {
+        m_memoryProtocol = PIM_DEVICE_PROTOCOL_HBM;
+      } else {
+        std::cout << "PIM-Error: Unknown protocol " << protocol << " in memory config file: " << m_memConfigFile << std::endl;
+        return false;
+      }
+    } else {
+      std::cout << "PIM-Error: Missing protocol parameter in memory config file: " << m_memConfigFile << std::endl;
       return false;
     }
+
     if (m_debug & pimSimConfig::DEBUG_PARAMS) {
       std::cout << "PIM-Debug: Memory config file: " << m_memConfigFile << std::endl;
+      std::cout << "PIM-Debug: Memory protocol: " << pimUtils::pimProtocolEnumToStr(m_memoryProtocol) << std::endl;
     }
   }
   return true;
@@ -311,15 +338,15 @@ pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsig
 
 //! @brief  Derive Params: Max number of threads
 bool
-pimSimConfig::deriveMaxNumThreads()
+pimSimConfig::deriveNumThreads()
 {
-  m_maxNumThreads = 0;
+  m_numThreads = 0;
 
   bool hasVal = false;
   std::string valStr;
 
   // Check config file
-  if (m_maxNumThreads == 0) {
+  if (m_numThreads == 0) {
     valStr = pimUtils::getOptionalParam(m_cfgParams, m_cfgVarMaxNumThreads, hasVal);
     if (hasVal) {
       unsigned val = 0;
@@ -329,13 +356,13 @@ pimSimConfig::deriveMaxNumThreads()
         return false;
       }
       if (val > 0) {
-        m_maxNumThreads = val;
+        m_numThreads = val;
       }
     }
   }
 
   // Check env var. Zero will be ignored
-  if (m_maxNumThreads == 0) {
+  if (m_numThreads == 0) {
     valStr = pimUtils::getOptionalParam(m_envParams, m_envVarMaxNumThreads, hasVal);
     if (hasVal) {
       unsigned val = 0;
@@ -345,24 +372,24 @@ pimSimConfig::deriveMaxNumThreads()
         return false;
       }
       if (val > 0) {
-        m_maxNumThreads = val;
+        m_numThreads = val;
       }
     }
   }
 
   // Check hardware concurrency
   unsigned hwThreads = std::thread::hardware_concurrency();
-  if (m_maxNumThreads == 0) {
-    m_maxNumThreads = hwThreads;
+  if (m_numThreads == 0) {
+    m_numThreads = hwThreads;
   } else {
-    m_maxNumThreads = std::min(m_maxNumThreads, hwThreads);
+    m_numThreads = std::min(m_numThreads, hwThreads);
   }
   // Safety check
-  if (m_maxNumThreads < 1) {
-    m_maxNumThreads = 1;
+  if (m_numThreads < 1) {
+    m_numThreads = 1;
   }
   if (m_debug & pimSimConfig::DEBUG_PARAMS) {
-    std::cout << "PIM-Debug: Max number of threads = " << m_maxNumThreads << ", hardware concurrency = " << hwThreads << std::endl;
+    std::cout << "PIM-Debug: Number of threads = " << m_numThreads << ", hardware concurrency = " << hwThreads << std::endl;
   }
   return true;
 }
@@ -382,6 +409,9 @@ pimSimConfig::deriveMiscEnvVars()
       return false;
     }
     m_analysisMode = (valStr == "1");
+  }
+  if (m_analysisMode) {
+    std::printf("PIM-Info: Running analysis only mode. Ignoring computation for fast performance and energy analysis.\n");
   }
 
   return true;

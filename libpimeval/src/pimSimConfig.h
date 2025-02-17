@@ -27,12 +27,14 @@
 //! PIMEVAL_SIM_CONFIG <full-path-to-simulator-config-file>
 //! - Description: Specify a simulator config file
 //! - Example:
-//!     export PIMEVAL_CONFIG_SIM="<path-to-this-repo>/configs/PIMeval_BitSimdV.cfg"
+//!     export PIMEVAL_SIM_CONFIG="<path-to-this-repo>/configs/PIMeval_BitSimdV.cfg"
 //!
-//! PIMEVAL_MEM_CONFIG <full-path-to-memory-config-file>
+//! PIMEVAL_MEM_CONFIG <full-path-to-memory-config-ini-file>
 //! - Description: Specify memory technology config file
+//!   For backward compatility, the path can be relative path to PIMEVAL_SIM_CONFIG.
 //! - Example:
 //!     export PIMEVAL_MEM_CONFIG="<path-to-this-repo>/configs/DDR4_8Gb_x16_3200.ini"
+//!     export PIMEVAL_MEM_CONFIG="DDR4_8Gb_x16_3200.ini"
 //! - Equivalent config file parameter:
 //!     memory_config_file = <ini-file>
 //!
@@ -84,22 +86,23 @@ public:
   ~pimSimConfig() {}
 
   // Update PIMeval simulation configuration parameters at device creation
-  bool updateConfig(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank,
+  bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank,
       unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
-  bool updateConfig(PimDeviceEnum deviceType, const std::string& configFilePath);
+  bool init(PimDeviceEnum deviceType, const std::string& configFilePath);
 
   // Getters
   const std::string& getSimConfigFile() const { return m_simConfigFile; }
   const std::string& getMemConfigFile() const { return m_memConfigFile; }
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
   PimDeviceEnum getSimTarget() const { return m_simTarget; }
+  PimDeviceProtocolEnum getMemoryProtocol() const { return m_memoryProtocol; }
   unsigned getNumRanks() const { return m_numRanks; }
   unsigned getNumBankPerRank() const { return m_numBankPerRank; }
   unsigned getNumSubarrayPerBank() const { return m_numSubarrayPerBank; }
   unsigned getNumRowPerSubarray() const { return m_numRowPerSubarray; }
   unsigned getNumColPerSubarray() const { return m_numColPerSubarray; }
-  unsigned getMaxNumThreads() const { return m_maxNumThreads; }
-  bool isAnalysisMode() const { return m_analysisMode; }
+  unsigned getNumThreads() const { return m_numThreads; }
+  bool getAnalysisMode() const { return m_analysisMode; }
   unsigned getDebug() const { return m_debug; }
 
   enum pimDebugFlags
@@ -128,7 +131,7 @@ private:
   bool deriveMemConfigFile();
   bool deriveDimension(const std::string& envVar, const std::string& cfgVar, const unsigned apiVal, const unsigned defVal, unsigned& retVal);
   bool deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
-  bool deriveMaxNumThreads();
+  bool deriveNumThreads();
   bool deriveMiscEnvVars();
 
   bool parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
@@ -169,12 +172,13 @@ private:
   std::string m_memConfigFile;
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
   PimDeviceEnum m_simTarget = PIM_DEVICE_NONE;
+  PimDeviceProtocolEnum m_memoryProtocol = PIM_DEVICE_PROTOCOL_DDR;
   unsigned m_numRanks = 0;
   unsigned m_numBankPerRank = 0;
   unsigned m_numSubarrayPerBank = 0;
   unsigned m_numRowPerSubarray = 0;
   unsigned m_numColPerSubarray = 0;
-  unsigned m_maxNumThreads = 0;
+  unsigned m_numThreads = 0;
   bool m_analysisMode = false;
   unsigned m_debug = 0;
 

@@ -23,7 +23,7 @@ public:
   static std::unique_ptr<pimParamsDram> create(PimDeviceProtocolEnum deviceProtocol);
 
   // Static factory method to create appropriate subclass based on config file
-  static std::unique_ptr<pimParamsDram> createFromConfig(const std::string& config);
+  static std::unique_ptr<pimParamsDram> createFromConfig(const std::string& memConfigFilePath);
 
   // Virtual functions for protocol-specific implementation
   virtual int getDeviceWidth() const = 0;

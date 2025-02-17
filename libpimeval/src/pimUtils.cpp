@@ -116,6 +116,18 @@ pimUtils::getNumBitsOfDataType(PimDataType dataType)
   return 0;
 }
 
+//! @brief  Convert PimDeviceProtocolEnum to string
+std::string
+pimUtils::pimProtocolEnumToStr(PimDeviceProtocolEnum protocol)
+{
+  switch (protocol) {
+  case PIM_DEVICE_PROTOCOL_DDR: return "DDR";
+  case PIM_DEVICE_PROTOCOL_LPDDR: return "LPDDR";
+  case PIM_DEVICE_PROTOCOL_HBM: return "HBM";
+  }
+  return "Unknown";
+}
+
 //! @brief  Thread pool ctor
 pimUtils::threadPool::threadPool(size_t numThreads)
   : m_terminate(false),

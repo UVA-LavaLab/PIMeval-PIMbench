@@ -77,24 +77,6 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
   return true;
 }
 
-//! @brief  Config the simulation target
-void
-pimDevice::configSimTarget(PimDeviceEnum deviceType)
-{
-  m_simTarget = deviceType;
-  // from 'make PIM_SIM_TARGET=...'
-  #if defined(PIM_SIM_TARGET)
-  if (deviceType == PIM_FUNCTIONAL) {
-    m_simTarget = PIM_SIM_TARGET;
-  }
-  #endif
-
-  // Default simulation target
-  if (m_simTarget == PIM_FUNCTIONAL || m_simTarget == PIM_DEVICE_NONE) {
-    m_simTarget = PIM_DEVICE_BITSIMD_V;
-  }
-}
-
 //! @brief  If a PIM device uses vertical data layout
 bool
 pimDevice::isVLayoutDevice() const
@@ -150,155 +132,48 @@ pimDevice::isHybridLayoutDevice() const
   return false;
 }
 
-//! @brief  Init pim device, with input arguments
+//! @brief  Init PIM device
 bool
-pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimDevice::init(const pimSimConfig& config)
 {
   assert(!m_isInit);
 
-  // Determine simulation target
-  m_deviceType = deviceType;
-  m_simTarget = deviceType;
-  if (deviceType == PIM_FUNCTIONAL) {
-    // Read environment variable for the simulation target
-    bool readSimTargetFromMakeArgument = false;
-    std::printf("PIM-Info: Trying to read simulation target from environment variable %s\n", pimUtils::envVarPimEvalTarget);
-    std::string pimEvalTarget;
-    bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
-    if (!readEnvVarStatus) {
-      std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
-      readSimTargetFromMakeArgument = true;
-    }
-    m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
-    if (m_simTarget == PIM_DEVICE_NONE) {
-      std::printf("PIM-Warning: Invalid value %s for environment varialbe %s\n", pimEvalTarget.c_str(), pimUtils::envVarPimEvalTarget);
-      readSimTargetFromMakeArgument = true;
-    }
-    if (readSimTargetFromMakeArgument){
-      configSimTarget(m_deviceType);
-    }
-  }
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
-
-  // input params
-  m_numRanks = numRanks;
-  m_numBankPerRank = numBankPerRank;
-  m_numSubarrayPerBank = numSubarrayPerBank;
-  m_numRowPerSubarray = numRows;
-  m_numColPerSubarray = numCols;
-
-  if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
-    m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
-    m_numRows = numRows;
-    m_numCols = numCols;
-  } else {
-    return false;
-  }
-
-  m_isValid = (m_numRanks > 0 && m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
-  assert(m_numCols % 8 == 0);
-
-  if (!m_isValid) {
-    std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
-    return false;
-  }
-
-  m_resMgr = std::make_unique<pimResMgr>(this);
-  const pimParamsDram& paramsDram = pimSim::get()->getParamsDram(); // created before pimDevice ctor
-  pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
-  m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
-
-  // Disable simulated memory creation for functional simulation
-  if (m_deviceType != PIM_FUNCTIONAL) {
-    m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
-  }
-
-  std::printf("PIM-Info: Created PIM device with %u cores, each with %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);
-
-  m_isInit = true;
-  return m_isValid;
-}
-
-//! @brief  Init pim device, with config file
-bool
-pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
-{
-  bool success = false;
-  assert(!m_isInit);
-
-  if (!configFileName) {
-    std::printf("PIM-Error: Null PIM device config file name\n");
-    return false;
-  }
-  if (!std::filesystem::exists(configFileName)) {
-    std::printf("PIM-Error: Config file not found.\n");
-    return false;
-  }
-
-  // Assign simulation target based on the input argument
-  m_deviceType = deviceType;
-  m_simTarget = deviceType;
-
-  // Read file content
-  unsigned numRanks;
-  unsigned numBankPerRank;
-  unsigned numSubarrayPerBank;
-  unsigned numRows;
-  unsigned numCols;
-
-  std::string fileContent;
-  success = pimUtils::readFileContent(configFileName, fileContent);
-  if (!success) {
-    std::printf("PIM-Error: Failed to read config file %s\n", configFileName);
-    return false;
-  }
-
-  // input params
-  success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
-  if (!success) {
-    std::printf("PIM-Error: Failed to parse config file %s\n", configFileName);
-    return false;
-  }
+  m_deviceType = config.getDeviceType();
+  m_simTarget = config.getSimTarget();
 
   std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
               pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
               pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
 
-  m_numRanks = numRanks;
-  m_numBankPerRank = numBankPerRank;
-  m_numSubarrayPerBank = numSubarrayPerBank;
-  m_numRowPerSubarray = numRows;
-  m_numColPerSubarray = numCols;
+  m_numRanks = config.getNumRanks();
+  m_numBankPerRank = config.getNumBankPerRank();
+  m_numSubarrayPerBank = config.getNumSubarrayPerBank();
+  m_numRowPerSubarray = config.getNumRowPerSubarray();
+  m_numColPerSubarray = config.getNumColPerSubarray();
 
-  if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
-    m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
-    m_numRows = numRows;
-    m_numCols = numCols;
+  m_numRows = m_numRowPerSubarray;
+  m_numCols = m_numColPerSubarray;
+  if (adjustConfigForSimTarget(m_numRanks, m_numBankPerRank, m_numSubarrayPerBank, m_numRows, m_numCols)) {
+    m_numCores = m_numRanks * m_numBankPerRank * m_numSubarrayPerBank;
   } else {
     return false;
   }
 
 #ifdef DRAMSIM3_INTEG
-  std::string configFile(configFileName);
+  std::string configFile = config.getSimConfigFile();
   //TODO: DRAMSim3 requires an output directory but for our purpose we do not need it so sending empty string
   m_deviceMemory = new dramsim3::PIMCPU(configFile, "");
   m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
   u_int64_t rowsPerBank = m_deviceMemoryConfig->rows, columnPerRow = m_deviceMemoryConfig->columns * m_deviceMemoryConfig->device_width;
-
-  // todo: adjust for sim target
-  m_numRanks = 1;
-  m_numCores = 16;
-  m_numRows = rowsPerBank/m_numCores;
-  m_numCols = columnPerRow;
 #endif
 
   m_isValid = (m_numRanks > 0 && m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
-  assert(m_numCols % 8 == 0);
-
   if (!m_isValid) {
     std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
+    return false;
+  }
+  if (m_numCols % 8 != 0) {
+    std::printf("PIM-Error: Number of columns %u is not a multiple of 8\n", m_numCols);
     return false;
   }
 
@@ -316,70 +191,6 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
   m_isInit = true;
   return m_isValid;
-}
-
-//! @brief Initilize the device config parameters by parsing the config file
-bool
-pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
-{
-  std::istringstream configStream(config);
-  std::string line;
-  std::unordered_map<std::string, std::string> params;
-
-  while (std::getline(configStream, line)) {
-    line = pimUtils::removeAfterSemicolon(line);
-    if (line.empty() || line[0] == '[') {
-      continue;
-    }
-    size_t equalPos = line.find('=');
-    if (equalPos != std::string::npos) {
-      std::string key = line.substr(0, equalPos);
-      std::string value = line.substr(equalPos + 1);
-      params[pimUtils::trim(key)] = pimUtils::trim(value);
-    }
-  }
-  try {
-    numRanks = std::stoi(pimUtils::getParam(params, "num_ranks"));
-    numBankPerRank = std::stoi(pimUtils::getParam(params, "num_bank_per_rank"));
-    numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
-    numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
-    numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
-    if (m_deviceType == PIM_FUNCTIONAL) {
-      m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
-      if (m_simTarget == PIM_DEVICE_NONE) {
-        std::printf("PIM-Error: Invalid simulation target in config file\n");
-        return false;
-      }
-    }
-  } catch (const std::invalid_argument& e) {
-    std::string missing = e.what();
-    if (missing == "simulation_target") {
-      // Read environment variable for the simulation target
-      bool readSimTargetFromMakeArgument = false;
-      std::printf("PIM-Info: Trying to read simulation target from environment variable %s\n", pimUtils::envVarPimEvalTarget);
-      std::string pimEvalTarget;
-      bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
-      if (!readEnvVarStatus) {
-        std::printf("PIM-Info: Could not read environment variable %s\n", pimUtils::envVarPimEvalTarget);
-        readSimTargetFromMakeArgument = true;
-      }
-      m_simTarget = pimUtils::strToPimDeviceEnum(pimEvalTarget);
-      if (m_simTarget == PIM_DEVICE_NONE) {
-        std::printf("PIM-Warning: Invalid value %s for environment varialbe %s\n", pimEvalTarget.c_str(), pimUtils::envVarPimEvalTarget);
-        readSimTargetFromMakeArgument = true;
-      }
-      if (readSimTargetFromMakeArgument){
-        configSimTarget(m_deviceType);
-      }
-    } else {
-      std::string errorMessage("PIM-Error: Missing or invalid parameter: ");
-      errorMessage += missing;
-      errorMessage += "\n";
-      std::printf("%s", errorMessage.c_str());
-      return false;
-    }
-  }
-  return true;
 }
 
 //! @brief  Alloc a PIM object
