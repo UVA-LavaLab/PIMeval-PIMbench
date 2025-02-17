@@ -6,7 +6,6 @@
 #SBATCH --mem=100G
 #SBATCH --time=4-00:00:00
 #SBATCH --mail-type=all
-#SBATCH --mail-user=keg9ve@virginia.edu
 
 test_dirs=("$@")
 
