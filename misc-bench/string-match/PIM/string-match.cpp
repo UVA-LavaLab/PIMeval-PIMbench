@@ -103,7 +103,7 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
   for(uint64_t iter=0; iter<numIterations; ++iter) {
     uint64_t needlesThisIteration;
     if(iter == 0) {
-      needlesThisIteration = min(maxNeedlesPerIteration, needles.size());
+      needlesThisIteration = std::min(maxNeedlesPerIteration, needles.size());
     } else if(iter+1 == numIterations) {
       needlesThisIteration = needles.size() - needlesDone;
     } else {
@@ -161,7 +161,7 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
     haystack32Bit[i] = (uint32_t) haystack[i];
   }
 
-  if(needlesTable.size() == 0 || needlesTable[0].size() == 0) {
+  if(needlesTable.empty() || needlesTable[0].empty()) {
     std::cerr << "Error: The needles table is empty" << std::endl;
     exit(1);
   }
