@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-#include "../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 // Params ---------------------------------------------------------------------
@@ -123,7 +123,7 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       return;
     }
 
-    status = pimRedSumInt(dstObj, &dst[i]);
+    status = pimRedSum(dstObj, static_cast<void*>(&dst[i]));
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;

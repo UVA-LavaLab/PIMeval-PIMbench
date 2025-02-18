@@ -71,7 +71,10 @@ int main()
     return 1;
   }
 
+  pimStartTimer();
   ok = testMicroOps();
+  pimEndTimer();
+
   if (!ok) {
     std::cout << "Test failed!" << std::endl;
     return 1;

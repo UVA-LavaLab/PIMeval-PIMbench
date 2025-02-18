@@ -204,6 +204,7 @@ public:
   std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
   unsigned getMaxNumRegionsPerCore() const { return m_maxNumRegionsPerCore; }
   unsigned getNumCoresUsed() const { return m_numCoresUsed; }
+  unsigned getNumCoreAvailable() const { return m_numCoreAvailable; }
   unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
   unsigned getNumColsPerElem() const { return m_numColsPerElem; }
 
@@ -245,6 +246,7 @@ private:
   uint64_t m_numElements = 0;
   unsigned m_bitsPerElement = 0;
   unsigned m_bitsPerElementPadded = 0;
+  unsigned m_numCoreAvailable = 0;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
   unsigned m_maxNumRegionsPerCore = 0;
   unsigned m_numCoresUsed = 0;

@@ -86,6 +86,9 @@ pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
   case PIM_UINT32: return "uint32";
   case PIM_UINT64: return "uint64";
   case PIM_FP32: return "fp32";
+  case PIM_FP16: return "fp16";
+  case PIM_BF16: return "bf16";
+  case PIM_FP8: return "fp8";
   }
   return "Unknown";
 }
@@ -105,6 +108,10 @@ pimUtils::getNumBitsOfDataType(PimDataType dataType)
   case PIM_UINT32: return 32;
   case PIM_UINT64: return 64;
   case PIM_FP32: return 32;
+  // In option 1, PIMeval performs float operations for functional simulation
+  case PIM_FP16: return 32;
+  case PIM_BF16: return 32;
+  case PIM_FP8: return 32;
   default:
     assert(0);
   }

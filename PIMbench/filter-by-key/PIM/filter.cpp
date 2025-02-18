@@ -4,7 +4,7 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include "libpimeval.h"
-#include "../../util.h"
+#include "util.h"
 #include <iostream>
 #include <vector>
 #include <getopt.h>

@@ -6,6 +6,7 @@
 
 #include "pimPerfEnergyFulcrum.h"
 #include "pimCmd.h"
+#include <cmath>
 #include <iostream>
 
 
@@ -26,13 +27,23 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   // the write operation is also pipelined. Thus, only one row write operation is needed.
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
   switch (cmdType)
   {
+    case PimCmdEnum::COPY_O2O:
+    {
+      msRuntime = (m_tR + m_tW) * numPass;
+      mjEnergy = numPass * numCores * m_eAP * 2;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
     case PimCmdEnum::POPCOUNT:
     {
       numberOfALUOperationPerElement *= 12; // 4 shifts, 4 ands, 3 add/sub, 1 mul
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement) * (numPass - 1);
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
       double energyArithmetic = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * 4);
       double energyLogical = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * 8);
       mjEnergy = ((energyArithmetic + energyLogical) + m_eAP) * numCores * numPass;
@@ -45,7 +56,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::ABS:
     {
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * (numPass - 1));
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
       mjEnergy = numPass * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -62,7 +75,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     {
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * numPass);
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement * (numPass - 1));
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
       mjEnergy = numPass * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -84,9 +99,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCoresUsed = obj.getNumCoresUsed();
-
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  double numberOfALUOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   switch (cmdType)
   {
     case PimCmdEnum::ADD:
@@ -94,8 +109,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MUL:
     case PimCmdEnum::DIV:
     {
-      msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
-      msRuntime *= numPass;
+      msRuntime = (2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency) * (numPass - 1);
+      msRuntime += 2 * m_tR + m_tW + minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
       mjEnergy = numCoresUsed * numPass * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -117,7 +132,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
        *
        * As a result, only one read operation and one write operation is necessary for the entire pass.
       */
-      msRuntime = m_tR + m_tW + (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * numPass;
+      msRuntime = (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2) * (numPass - 1);
+      msRuntime += (minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency * 2);
+      msRuntime += m_tR + m_tW;
       mjEnergy = numCoresUsed * numPass * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -132,8 +149,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {
-      msRuntime = 2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency;
-      msRuntime *= numPass;
+      msRuntime = (2 * m_tR + m_tW + maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency) * (numPass - 1);
+      msRuntime += (2 * m_tR + m_tW + minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAluLatency);
       mjEnergy = numCoresUsed * numPass * (((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_eAP * 3 * m_numChipsPerRank * m_numRanks;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -149,25 +166,42 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
 
 //! @brief  Perf energy model of Fulcrum for reduction sum
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForRedSum(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
+pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
-  // read a row to walker, then reduce in serial
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
-  msRuntime = m_tR + (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * numPass);
-  mjEnergy = numPass * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement));
-  // reduction for all regions
-  double aggregateMs = static_cast<double>(numCore) / 3200000;
-  msRuntime += aggregateMs;
-  mjEnergy += aggregateMs * cpuTDP;
-  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-
+  switch (cmdType)
+  {
+  case PimCmdEnum::REDSUM:
+  case PimCmdEnum::REDSUM_RANGE:
+  case PimCmdEnum::REDMIN:
+  case PimCmdEnum::REDMIN_RANGE:
+  case PimCmdEnum::REDMAX:
+  case PimCmdEnum::REDMAX_RANGE:
+  {
+    // read a row to walker, then reduce in serial
+    double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
+    msRuntime = m_tR;
+    msRuntime += (maxElementsPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement * (numPass  - 1));
+    msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfOperationPerElement);
+    mjEnergy = numPass * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALUArithmeticEnergy * numberOfOperationPerElement));
+    // reduction for all regions assuming 16 core AMD EPYC 9124
+    double aggregateMs = static_cast<double>(obj.getNumCoreAvailable()) / (3200000 * 16);
+    msRuntime += aggregateMs;
+    mjEnergy += aggregateMs * cpuTDP;
+    mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+    break;
+  }
+  default:
+    std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+    break;
+  }
   return pimeval::perfEnergy(msRuntime, mjEnergy);
 }
 
@@ -183,7 +217,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
   unsigned numCore = obj.getNumCoresUsed();
 
   // assume taking 1 ALU latency to write an element
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_flucrumAluBitWidth);
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   msRuntime = m_tW + m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement;
   msRuntime *= numPass;
   mjEnergy = numPass * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
@@ -201,8 +235,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numRegions = obj.getRegions().size();
-  // boundary handling
-  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(cmdType, numRegions * bitsPerElement / 8);
+  // boundary handling - assume two times copying between device and host for boundary elements
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
   // rotate within subarray:
   // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row

@@ -15,12 +15,11 @@
 
 void testRedSum(PimDeviceEnum deviceType)
 {
-  // 8GB capacity
-  unsigned numRanks = 1;
-  unsigned numBankPerRank = 2;
-  unsigned numSubarrayPerBank = 4;
+  unsigned numRanks = 4;
+  unsigned numBankPerRank = 128; // 8 chips * 16 banks
+  unsigned numSubarrayPerBank = 32;
   unsigned numRows = 1024;
-  unsigned numCols = 1024;
+  unsigned numCols = 8192;
 
   uint64_t numElements = 65536;
   std::vector<unsigned> src(numElements);
@@ -52,11 +51,11 @@ void testRedSum(PimDeviceEnum deviceType)
     status = pimCopyHostToDevice((void*)src.data(), obj);
     assert(status == PIM_OK);
     uint64_t sum = 0;
-    status = pimRedSumUInt(obj, &sum);
+    status = pimRedSum(obj, static_cast<void*>(&sum));
     assert(status == PIM_OK);
 
     uint64_t sumRanged = 0;
-    status = pimRedSumRangedUInt(obj, idxBegin, idxEnd, &sumRanged);
+    status = pimRedSum(obj, static_cast<void*>(&sumRanged), idxBegin, idxEnd);
     assert(status == PIM_OK);
 
     std::cout << "Result: RedSum: PIM " << sum << " expected 32-bit " << sum32 << " 64-bit " << sum64 << std::endl;
@@ -83,6 +82,8 @@ int main()
   testRedSum(PIM_DEVICE_BITSIMD_V);
 
   testRedSum(PIM_DEVICE_FULCRUM);
+
+  testRedSum(PIM_DEVICE_BANK_LEVEL);
 
   return 0;
 }

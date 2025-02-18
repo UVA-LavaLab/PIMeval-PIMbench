@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -94,7 +94,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSumInt(srcObj1, &SX);
+  status = pimRedSum(srcObj1, static_cast<void*>(&SX));
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -115,7 +115,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSumInt(srcObj2, &SXX);
+  status = pimRedSum(srcObj2, static_cast<void*>(&SXX));
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -129,7 +129,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSumInt(srcObj2, &SY);
+  status = pimRedSum(srcObj2, static_cast<void*>(&SY));
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -143,7 +143,7 @@ void linearRegression(uint64_t dataSize, const std::vector<int> &X, const std::v
     return;
   }
 
-  status = pimRedSumInt(srcObj1, &SXY);
+  status = pimRedSum(srcObj1, static_cast<void*>(&SXY));
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;

@@ -10,7 +10,7 @@
 #include <vector>
 #include <sys/stat.h>
 
-#include "../../util.h"
+#include "util.h"
 #include "libpimeval.h"
 
 using namespace std;

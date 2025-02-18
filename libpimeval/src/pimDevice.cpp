@@ -61,6 +61,16 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
     numRows *= numSubarrayPerBank;
     numSubarrayPerBank = 1;
     break;
+  case PIM_DEVICE_AQUABOLT:
+    std::printf("PIM-Info: Aggregate all subarrays of two consecutive banks as a single core\n");
+    if (numBankPerRank % 2 != 0) {
+      std::printf("PIM-Error: Number of banks must be an even number\n");
+      return false;
+    }
+    numRows *= numSubarrayPerBank*2;
+    numSubarrayPerBank = 1;
+    numBankPerRank /= 2; 
+    break;
   default:
     assert(0);
   }
@@ -100,6 +110,7 @@ pimDevice::isVLayoutDevice() const
   case PIM_DEVICE_BITSIMD_H: return false;
   case PIM_DEVICE_FULCRUM: return false;
   case PIM_DEVICE_BANK_LEVEL: return false;
+  case PIM_DEVICE_AQUABOLT: return false;
   case PIM_DEVICE_NONE:
   case PIM_FUNCTIONAL:
   default:
@@ -123,6 +134,7 @@ pimDevice::isHLayoutDevice() const
   case PIM_DEVICE_BITSIMD_H: return true;
   case PIM_DEVICE_FULCRUM: return true;
   case PIM_DEVICE_BANK_LEVEL: return true;
+  case PIM_DEVICE_AQUABOLT: return true;
   case PIM_DEVICE_NONE:
   case PIM_FUNCTIONAL:
   default:
@@ -148,9 +160,9 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   m_deviceType = deviceType;
   m_simTarget = deviceType;
   if (deviceType == PIM_FUNCTIONAL) {
-    // Read envirnment variable for the simulation target
+    // Read environment variable for the simulation target
     bool readSimTargetFromMakeArgument = false;
-    std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+    std::printf("PIM-Info: Trying to read simulation target from environment variable %s\n", pimUtils::envVarPimEvalTarget);
     std::string pimEvalTarget;
     bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
     if (!readEnvVarStatus) {
@@ -342,9 +354,9 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
   } catch (const std::invalid_argument& e) {
     std::string missing = e.what();
     if (missing == "simulation_target") {
-      // Read envirnment variable for the simulation target
+      // Read environment variable for the simulation target
       bool readSimTargetFromMakeArgument = false;
-      std::printf("PIM-Info: Trying to read simulation target from envirnment variable %s\n", pimUtils::envVarPimEvalTarget);
+      std::printf("PIM-Info: Trying to read simulation target from environment variable %s\n", pimUtils::envVarPimEvalTarget);
       std::string pimEvalTarget;
       bool readEnvVarStatus = pimUtils::getEnvVar(pimUtils::envVarPimEvalTarget, pimEvalTarget);
       if (!readEnvVarStatus) {

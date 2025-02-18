@@ -32,6 +32,7 @@ public:
   virtual double getNsRowRead() const = 0;
   virtual double getNsRowWrite() const = 0;
   virtual double getNsTCCD_S() const = 0;
+  virtual double getNsTCCD_L() const = 0;
   virtual double getNsTCAS() const = 0;
   virtual double getNsAAP() const = 0;
   virtual double getTypicalRankBW() const = 0;

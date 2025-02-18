@@ -42,11 +42,14 @@ public:
   unsigned getNumRows() const;
   unsigned getNumCols() const;
 
+  void startKernelTimer() const;
+  void endKernelTimer() const;
   void showStats() const;
   void resetStats() const;
   pimStatsMgr* getStatsMgr() { return m_statsMgr.get(); }
   const pimParamsDram& getParamsDram() const { assert(m_paramsDram); return *m_paramsDram; }
   pimPerfEnergyBase* getPerfEnergyModel();
+  bool isAnalysisMode() const { return m_analysisMode; }
 
   void initThreadPool(unsigned maxNumThreads);
   pimUtils::threadPool* getThreadPool() { return m_threadPool.get(); }
@@ -65,6 +68,7 @@ public:
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyObjectToObject(PimObjId src, PimObjId dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -96,8 +100,9 @@ public:
   bool pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
   bool pimPopCount(PimObjId src, PimObjId dest);
-  template <typename T> bool pimRedSum(PimObjId src, T* sum);
-  template <typename T> bool pimRedSumRanged(PimObjId src, uint64_t idxBegin, uint64_t idxEnd, T* sum);
+  bool pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);
@@ -145,6 +150,7 @@ private:
   std::unique_ptr<pimStatsMgr> m_statsMgr;
   std::unique_ptr<pimUtils::threadPool> m_threadPool;
   unsigned m_numThreads = 0;
+  bool m_analysisMode = false;
   std::string m_memConfigFileName;
   std::string m_configFilesPath;
   bool m_initCalled = false;

@@ -94,7 +94,8 @@ namespace pimUtils
       {PIM_DEVICE_SIMDRAM, "PIM_DEVICE_SIMDRAM"},
       {PIM_DEVICE_BITSIMD_H, "PIM_DEVICE_BITSIMD_H"},
       {PIM_DEVICE_FULCRUM, "PIM_DEVICE_FULCRUM"},
-      {PIM_DEVICE_BANK_LEVEL, "PIM_DEVICE_BANK_LEVEL"}
+      {PIM_DEVICE_BANK_LEVEL, "PIM_DEVICE_BANK_LEVEL"},
+      {PIM_DEVICE_AQUABOLT, "PIM_DEVICE_AQUABOLT"}
   };
 
   const std::unordered_map<std::string, PimDeviceEnum> strToEnumMap = {
@@ -109,12 +110,14 @@ namespace pimUtils
       {"PIM_DEVICE_SIMDRAM", PIM_DEVICE_SIMDRAM},
       {"PIM_DEVICE_BITSIMD_H", PIM_DEVICE_BITSIMD_H},
       {"PIM_DEVICE_FULCRUM", PIM_DEVICE_FULCRUM},
-      {"PIM_DEVICE_BANK_LEVEL", PIM_DEVICE_BANK_LEVEL}
+      {"PIM_DEVICE_BANK_LEVEL", PIM_DEVICE_BANK_LEVEL},
+      {"PIM_DEVICE_AQUABOLT", PIM_DEVICE_AQUABOLT}
   };
 
   static constexpr const char* envVarPimEvalTarget = "PIMEVAL_TARGET";
   static constexpr const char* envVarPimEvalConfigPath = "PIMEVAL_CONFIG_PATH";
   static constexpr const char* envVarPimEvalConfigSim = "PIMEVAL_CONFIG_SIM";
+  static constexpr const char* envVarPimEvalAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
 
   //! @class  threadWorker
   //! @brief  Thread worker base class
