@@ -74,8 +74,6 @@ namespace pimUtils
   std::string getOptionalParam(const std::unordered_map<std::string, std::string>& params, const std::string& key, bool& returnStatus);
   std::string removeAfterSemicolon(const std::string &input);
 
-  std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
-  bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
 
