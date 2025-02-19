@@ -108,13 +108,6 @@ void hammingTextReplace(std::string& text, uint64_t idx, const std::string& key,
   }
 }
 
-void printTextVecOfKeys(std::vector<size_t>& textVecOfKeys, std::vector<std::string>& keys) {
-  for(size_t idx : textVecOfKeys) {
-    std::cout << keys[idx] << ", ";
-  }
-  std::cout << std::endl;
-}
-
 int main(int argc, char* argv[])
 {
 
@@ -206,7 +199,7 @@ int main(int argc, char* argv[])
 
   std::random_device global_rd;
   std::mt19937 global_gen(global_rd());
-  printTextVecOfKeys(textVecOfKeys, keys);
+  
   // Replace text with keys, approximately evenly spaced
   if(textVecOfKeys.size() == 1) {
     hammingTextReplace(text, 0, keys[0], params.maxHammingDistance, global_gen);
