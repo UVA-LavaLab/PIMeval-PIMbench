@@ -16,7 +16,7 @@
 
 #include "util.h"
 #include "libpimeval.h"
-#include "string-match-utils.h"
+#include "hamming-string-match-utils.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -426,7 +426,10 @@ int main(int argc, char* argv[])
 
   std::vector<std::vector<std::vector<size_t>>> table = stringMatchPrecomputeTable(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
   
-  hammingStringMatch(needles, haystack, 0, table, deviceProp.isHLayoutDevice, matches);
+  // TODO: set dynamically, either through input file or input parameter
+  uint64_t maxHammingDistance = 0;
+
+  hammingStringMatch(needles, haystack, maxHammingDistance, table, deviceProp.isHLayoutDevice, matches);
 
   if (params.shouldVerify) 
   {
@@ -434,7 +437,7 @@ int main(int argc, char* argv[])
     
     matchesCpu.resize(haystack.size());
 
-    stringMatchCpu(needles, haystack, matchesCpu);
+    hammingStringMatchCpu(needles, haystack, maxHammingDistance, matchesCpu);
 
     // verify result
     bool ok = true;
@@ -443,8 +446,11 @@ int main(int argc, char* argv[])
     {
       if (matches[i] != matchesCpu[i])
       {
-        std::cerr << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
-        ok = false;
+        #pragma omp critical
+        {
+          std::cerr << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
+          ok = false;
+        }
       }
     }
     if(ok) {
