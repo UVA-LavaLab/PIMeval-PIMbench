@@ -6,7 +6,7 @@
 
 #include "pimPerfEnergyAquabolt.h"
 #include "pimCmd.h"
-#include <iostream>
+#include <iostream>                    // for cout, endl
 
 
 //! @brief  Perf energy model of aquabolt PIM for func1

@@ -7,8 +7,8 @@
 #ifndef LAVA_LIB_PIM_EVAL_H
 #define LAVA_LIB_PIM_EVAL_H
 
-#include <cstdint>
-#include <cstdarg>
+#include <cstdint>                     // for uint64_t, int64_t
+
 
 //! @brief  PIM API return status
 enum PimStatus {

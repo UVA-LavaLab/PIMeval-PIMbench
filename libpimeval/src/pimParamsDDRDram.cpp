@@ -6,12 +6,10 @@
 
 #include "pimParamsDDRDram.h"
 #include "pimUtils.h"
-#include <sstream>
-#include <string>
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <stdexcept>
+#include <stdexcept>                   // for invalid_argument
+#include <string>                      // for string, stoi, stod
+#include <unordered_map>               // for unordered_map
+
 
 //! @brief  pimParamsDram ctor (based on DDR4_4Gb_x8_2666.ini from DRAMsim3)
 pimParamsDDRDram::pimParamsDDRDram()

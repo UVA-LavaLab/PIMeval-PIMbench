@@ -9,12 +9,11 @@
 #include "pimParamsDDRDram.h"
 #include "pimParamsLPDDRDram.h"
 #include "pimParamsHBMDram.h"
-#include <sstream>
-#include <string>
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <stdexcept>
+#include <string>                      // for string
+#include <memory>                      // for make_unique, unique_ptr
+#include <unordered_map>               // for unordered_map
+#include <stdexcept>                   // for invalid_argument
+
 
 // Static factory method to create appropriate subclass based on protocol enum
 std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum deviceProtocol)

@@ -10,7 +10,8 @@
 #include "pimPerfEnergyFulcrum.h"
 #include "pimPerfEnergyBankLevel.h"
 #include "pimPerfEnergyAquabolt.h"
-#include <iostream>
+#include <iostream>                    // for cout, endl
+#include <memory>                      // for make_unique, unique_ptr
 
 
 //! @brief  A factory function to create perf energy model for sim target
