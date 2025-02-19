@@ -1,5 +1,5 @@
-#ifndef STRING_MATCH_UTILS_H
-#define STRING_MATCH_UTILS_H
+#ifndef HAMMING_STRING_MATCH_UTILS_H
+#define HAMMING_STRING_MATCH_UTILS_H
 
 #include <vector>
 #include <string>
