@@ -7,8 +7,6 @@
 #include "libpimeval.h"
 #include "pimSim.h"
 #include "pimUtils.h"
-#include <cstdarg>                     // for va_list, va_start, va_end
-
 
 //! @brief  Create a PIM device
 PimStatus

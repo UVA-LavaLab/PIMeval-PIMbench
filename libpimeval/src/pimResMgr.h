@@ -7,19 +7,16 @@
 #ifndef LAVA_PIM_RES_MGR_H
 #define LAVA_PIM_RES_MGR_H
 
-#include "libpimeval.h"
-#include "pimUtils.h"
-#include <cassert>                     // for assert
-#include <cstdint>                     // for uint64_t
-#include <cstring>                     // for memcpy
-#include <iostream>                    // for cout, endl
-#include <map>                         // for map
-#include <memory>                      // for unique_ptr
-#include <set>                         // for set
-#include <string>                      // for string
-#include <unordered_map>               // for unordered_map
-#include <utility>                     // for pair, make_pair
-#include <vector>                      // for vector
+#include "libpimeval.h"      // for PimObjId, PimDataType
+#include "pimUtils.h"        // for getNumBitsOfDataType, signExt, pimDataTypeEnumToStr, castTypeToBits
+#include <vector>            // for vector
+#include <unordered_map>     // for unordered_map
+#include <set>               // for set
+#include <map>               // for map
+#include <string>            // for string
+#include <memory>            // for unique_ptr
+#include <cassert>           // for assert
+#include <iostream>          // for cout
 
 class pimDevice;
 

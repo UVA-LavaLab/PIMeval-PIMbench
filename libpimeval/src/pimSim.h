@@ -13,8 +13,8 @@
 #include "pimParamsDram.h"
 #include "pimPerfEnergyBase.h"
 #include "pimStats.h"
-#include <memory>                      // for unique_ptr
-#include <cstdarg>                     // for va_list
+#include <vector>
+#include <cstdarg>
 
 
 //! @class  pimSim

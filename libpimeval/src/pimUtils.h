@@ -8,17 +8,20 @@
 #define LAVA_PIM_UTILS_H
 
 #include "libpimeval.h"
-#include <string>                      // for string
-#include <queue>                       // for queue
-#include <vector>                      // for vector
-#include <thread>                      // for thread
-#include <atomic>                      // for atomic
-#include <mutex>                       // for mutex
-#include <condition_variable>          // for condition_variable
-#include <unordered_map>               // for unordered_map
-#include <type_traits>                 // for is_integral, is_signed
-#include <cstring>                     // for memcpy
-#include <cstdint>                     // for uint64_t
+#include <string>
+#include <queue>
+#include <vector>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <algorithm>
+#include <cctype>
+#include <locale>
+#include <unordered_map>
+#include <type_traits>
+#include <cstring>
+#include <cstdint>
 
 namespace pimUtils
 {
@@ -75,6 +78,9 @@ namespace pimUtils
   std::string getParam(const std::unordered_map<std::string, std::string>& params, const std::string& key);
   std::string getOptionalParam(const std::unordered_map<std::string, std::string>& params, const std::string& key, bool& returnStatus);
   std::string removeAfterSemicolon(const std::string &input);
+
+  std::vector<bool> readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement);
+  bool writeBitsToHost(void* dest, const std::vector<bool>& bits);
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
   bool convertStringToUnsigned(const std::string& str, unsigned& retVal);

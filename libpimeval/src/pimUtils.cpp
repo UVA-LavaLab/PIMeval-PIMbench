@@ -6,22 +6,14 @@
 
 #include "pimUtils.h"
 #include "libpimeval.h"
-#include <fstream>                     // for ifstream
-#include <iostream>                    // for cerr, endl
-#include <sstream>                     // for stringstream, istringstream
-#include <unordered_map>               // for unordered_map
-#include <string>                      // for string, getline
-#include <filesystem>                  // for filesystem
-#include <cstdlib>                     // for printf, getenv
-#include <cassert>                     // for assert
-#include <cctype>                      // for isspace
-#include <algorithm>                   // for find_if
-#include <memory>                      // for unique_lock
-#include <mutex>                       // for mutex
-#include <exception>                   // for exception
-#include <stdexcept>                   // for out_of_range, invalid_argument
-#include <limits>                      // for numeric_limits
-
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <unordered_map>
+#include <string>
+#include <filesystem>
+#include <cstdlib>
+#include <cassert>
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -122,6 +114,45 @@ pimUtils::getNumBitsOfDataType(PimDataType dataType)
     assert(0);
   }
   return 0;
+}
+
+//! @brief  Read bits from host
+std::vector<bool>
+pimUtils::readBitsFromHost(void* src, uint64_t numElements, unsigned bitsPerElement)
+{
+  std::vector<bool> bits;
+  unsigned char* bytePtr = static_cast<unsigned char*>(src);
+
+  for (uint64_t i = 0; i < numElements * bitsPerElement; i += 8) {
+    uint64_t byteIdx = i / 8;
+    unsigned char byteVal = *(bytePtr + byteIdx);
+    for (int j = 0; j < 8; ++j) {
+      bits.push_back(byteVal & 1);
+      byteVal = byteVal >> 1;
+    }
+  }
+
+  return bits;
+}
+
+//! @brief  Write bits to host
+bool
+pimUtils::writeBitsToHost(void* dest, const std::vector<bool>& bits)
+{
+  unsigned char* bytePtr = static_cast<unsigned char*>(dest);
+  uint64_t byteIdx = 0;
+
+  for (uint64_t i = 0; i < bits.size(); i += 8) {
+    unsigned char byteVal = 0;
+    for (int j = 7; j >= 0; --j) {
+      byteVal = byteVal << 1;
+      byteVal |= bits[i + j];
+    }
+    *(bytePtr + byteIdx) = byteVal;
+    byteIdx++;
+  }
+
+  return true;
 }
 
 //! @brief  Convert PimDeviceProtocolEnum to string

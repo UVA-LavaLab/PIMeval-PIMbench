@@ -9,13 +9,15 @@
 #include "pimParamsDram.h"
 #include "pimStats.h"
 #include "pimUtils.h"
-#include <cstdio>                      // for printf
-#include <memory>                      // for make_unique, unique_ptr
-#include <string>                      // for string
-#include <cstdarg>                     // for va_list
-#include <utility>                     // for move, pair
-#include <vector>                      // for vector
-
+#include <cstdio>
+#include <memory>
+#include <algorithm>
+#include <cctype>
+#include <locale>
+#include <stdexcept>
+#include <sstream>
+#include <filesystem>
+#include <string>
 
 // The pimSim singleton
 pimSim* pimSim::s_instance = nullptr;

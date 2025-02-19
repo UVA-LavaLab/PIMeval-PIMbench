@@ -6,8 +6,8 @@
 
 #include "pimPerfEnergyFulcrum.h"
 #include "pimCmd.h"
-#include <cmath>                       // for ceil
-#include <iostream>                    // for cout, endl
+#include <cmath>
+#include <iostream>
 
 
 //! @brief  Perf energy model of Fulcrum for func1

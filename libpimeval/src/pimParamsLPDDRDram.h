@@ -7,10 +7,9 @@
 #ifndef LAVA_PIM_PARAMS_LPDDR_DRAM_H
 #define LAVA_PIM_PARAMS_LPDDR_DRAM_H
 
+#include <string>
+#include <unordered_map>
 #include "pimParamsDram.h"
-#include <string>                      // for string
-#include <unordered_map>               // for unordered_map
-
 
 //! @class  pimParamsLPDDRDram
 //! @brief  DRAM parameters (DRAMsim3 compatible)

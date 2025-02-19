@@ -15,8 +15,9 @@
 #ifdef DRAMSIM3_INTEG
 #include "cpu.h"
 #endif
-#include <memory>                      // for unique_ptr
-#include <vector>                      // for vector
+#include <memory>
+#include <filesystem>
+#include <string>
 
 class pimResMgr;
 
@@ -30,8 +31,6 @@ public:
   ~pimDevice();
 
   bool init(const pimSimConfig& config);
-  bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
-  bool init(PimDeviceEnum deviceType, const char* configFileName);
 
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
   PimDeviceEnum getSimTarget() const { return m_simTarget; }
