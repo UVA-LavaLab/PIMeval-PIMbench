@@ -23,6 +23,7 @@ typedef struct Params
 {
   char *keysInputFile;
   char *textInputFile;
+  char *hammingDistanceInputFile;
   char *configFile;
   bool shouldVerify;
 } Params;
@@ -34,6 +35,7 @@ void usage()
           "\n"
           "\n    -k    keys input file, each key on new line (default=dataset/10mil_l-10_nk-10_kl/keys.txt) must be sorted by increasing length, must have a blank line at end of file"
           "\n    -t    text input file to search for keys from (default=dataset/10mil_l-10_nk-10_kl/text.txt)"
+          "\n    -d    max hamming distance file (default=dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt)"
           "\n    -c    dramsim config file"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
@@ -48,7 +50,7 @@ struct Params getInputParams(int argc, char **argv)
   p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:k:t:c:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:k:t:d:c:v:")) >= 0)
   {
     switch (opt)
     {
@@ -61,6 +63,9 @@ struct Params getInputParams(int argc, char **argv)
       break;
     case 't':
       p.textInputFile = optarg;
+      break;
+    case 'd':
+      p.hammingDistanceInputFile = optarg;
       break;
     case 'c':
       p.configFile = optarg;
@@ -394,14 +399,23 @@ int main(int argc, char* argv[])
   } else {
     needlesFilename = params.keysInputFile;
   }
+
+  const std::string defaultHammingDistanceFilename = "./../dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt";
+  std::string hammingDistanceFilename;
+  if(params.hammingDistanceInputFile == nullptr) {
+    hammingDistanceFilename = defaultHammingDistanceFilename;
+  } else {
+    hammingDistanceFilename = params.hammingDistanceInputFile;
+  }
   
-  std::cout << "Running PIM string match for \"" << needlesFilename << "\" as the keys file, and \"" << textFilename << "\" as the text input file\n";
+  std::cout << "Running PIM string match for \"" << needlesFilename << "\" as the keys file, \"" << textFilename << "\" as the text input file, and \"" << hammingDistanceFilename << "\" as the hamming distance input file\n";
   
   std::string haystack;
   std::vector<std::string> needles;
+  uint64_t maxHammingDistance = -1;
   std::vector<int> matches;
 
-  haystack = getTextFromFile(textFilename);
+  haystack = readStringFromFile(textFilename);
   if(haystack.size() == 0) {
     std::cerr << "There was an error opening the text file" << std::endl;
     return 1;
@@ -412,6 +426,13 @@ int main(int argc, char* argv[])
     std::cerr << "There was an error opening the keys file" << std::endl;
     return 1;
   }
+
+  std::string hammingDistanceString = readStringFromFile(hammingDistanceFilename);
+  if(needles.size() == 0) {
+    std::cerr << "There was an error opening the hamming distance file" << std::endl;
+    return 1;
+  }
+  maxHammingDistance = std::stoull(hammingDistanceString);
   
   if (!createDevice(params.configFile))
   {
@@ -425,9 +446,6 @@ int main(int argc, char* argv[])
   matches.resize(haystack.size(), 0);
 
   std::vector<std::vector<std::vector<size_t>>> table = stringMatchPrecomputeTable(needles, 2 * deviceProp.numRowPerSubarray, deviceProp.isHLayoutDevice);
-  
-  // TODO: set dynamically, either through input file or input parameter
-  uint64_t maxHammingDistance = 0;
 
   hammingStringMatch(needles, haystack, maxHammingDistance, table, deviceProp.isHLayoutDevice, matches);
 

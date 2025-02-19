@@ -27,15 +27,15 @@ std::vector<std::string> getNeedlesFromFile(const std::string& keysInputFile) {
   return needles;
 }
 
-std::string getTextFromFile(const std::string& textInputFile) {
-  std::ifstream textFile(textInputFile);
-  if (!textFile) {
+std::string readStringFromFile(const std::string& inputFileName) {
+  std::ifstream file(inputFileName);
+  if (!file) {
     return "";
   }
 
-  std::ostringstream textFileOss;
-  textFileOss << textFile.rdbuf();
-  return textFileOss.str();
+  std::ostringstream fileOss;
+  fileOss << file.rdbuf();
+  return fileOss.str();
 }
 
 void hammingStringMatchCpu(std::vector<std::string>& needles, std::string& haystack, uint64_t maxHammingDistance, std::vector<int>& matches) {
