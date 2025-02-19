@@ -234,6 +234,13 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
       for(uint64_t needleIdx=0; needleIdx < needlesTable[iter][charIdx].size(); ++needleIdx) {
         
         uint64_t needleIdxHost = needlesTable[iter][charIdx][needleIdx]; // Can be used to index into needles
+        
+        if(needles[needleIdxHost].size() <= maxHammingDistance) {
+          // This means that the string will match everywhere (except for where it would go off the end)
+          // Skip matching calculation for this needle
+          continue;
+        }
+        
         uint64_t needleIdxPim = (needleIdxHost - needlesDone) + firstAvailPimNeedleResult; // Can be used to index into pimIndividualNeedleMatches
         char currentChar = needles[needleIdxHost][charIdx];
 
@@ -269,37 +276,64 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
     for(uint64_t needleIdx = 0; needleIdx < needlesTable[iter][0].size(); ++needleIdx) {
       uint64_t needleIdxHost = needleIdx + needlesDone; // Can be used to index into needles
       uint64_t needleIdxPim = needleIdx + firstAvailPimNeedleResult; // Can be used to index into pimIndividualNeedleMatches
-
-      // pimIndividualNeedleMatches[needleIdxPim] is a binary PIM object containing only 0s and 1s
-      // 0 in pimIndividualNeedleMatches[needleIdxPim] represents no match at the location, while a 1 is a match
-      // To get the output, we want a 0 if there is a no match, or the 1-based index of the needle if there is a match
-      // First, we replace all 1s in each pimIndividualNeedleMatches[needleIdxPim] with 1 + needleIdxHost, and leave all 0s
-      // This can be done in two ways:
-      //      - Multiply by 1 + needleIdxHost (1 * (1 + needleIdxHost) = 1 + needleIdxHost, 0 * (1 + needleIdxHost) = 0)
-      //      - Binary Manipulation:
-      //          - Invert 0s and 1s (pimXorScalar)
-      //          - Subtract 1 (1->0, 0->-1==all ones - uses unsigned integer overflow)
-      //          - And with 1 + needleIdxHost
-      //
-      // Both of these methods have the same output, however the multiplication will be faster on bit parallel architectures
-      // The binary manipulation method is faster on bit serial architectures
-      // On the bit parallel architectures tested, each of the operations above took the same time (multiplication, xor, etc.)
-      // Therefore, on the bit parallel architectures, it is faster to do the single operation (multiplication)
-      // However, on the bit serial architecture tested, multiplication is significantly slower because it is O(n^2) where n is the number of bits
-      // Thus the second method is faster on the bit serial architecture tested
-      // The isHorizonatal parameter serves as a simple check for which we are on
-      if(isHorizontal) {
-        status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
+      if(needles[needleIdxHost].size() <= maxHammingDistance) {
+        // This string matches for all locations [0, haystack.size()-needle.size()]
+        // Setup the match array for this string now, because we didn't create it earlier
+        status = pimBroadcastUInt(pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
         assert (status == PIM_OK);
+        
+        // Ensures that the last needle.size()-1 positions do not match
+        for(uint64_t shiftIdx=1; shiftIdx < needles[needleIdxHost].size(); ++shiftIdx) {
+          status = pimShiftElementsLeft(pimIndividualNeedleMatches[needleIdxPim]);
+          assert (status == PIM_OK);
+        }
       } else {
-        status = pimXorScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
+
+        // Checks for matches within maxHammingDistance distance
+        // pimIndividualNeedleMatches[needleIdxPim] represents the number of matches
+        // Derivation:
+        // For a match:
+        // distance (mismatches) <= maxHammingDistance
+        // distance (mismatches) = needle.size() - matches
+        // needle.size() - matches <= maxHammingDistance
+        // needle.size() - matches - 1 < maxHammingDistance
+        // needle.size() - 1 - maxHammingDistance < matches
+        // Therefore, the below produces a 1 for matches, and a 0 otherwise
+        // Additionally, needle.size() - maxHammingDistance - 1 >= 0, because cases where needle.size() <= maxHammingDistance are filtered out
+        status = pimGTScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], needles[needleIdxHost].size() - maxHammingDistance - 1);
         assert (status == PIM_OK);
 
-        status = pimSubScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
-        assert (status == PIM_OK);
+        // pimIndividualNeedleMatches[needleIdxPim] is a binary PIM object containing only 0s and 1s
+        // 0 in pimIndividualNeedleMatches[needleIdxPim] represents no match at the location, while a 1 is a match
+        // To get the output, we want a 0 if there is a no match, or the 1-based index of the needle if there is a match
+        // First, we replace all 1s in each pimIndividualNeedleMatches[needleIdxPim] with 1 + needleIdxHost, and leave all 0s
+        // This can be done in two ways:
+        //      - Multiply by 1 + needleIdxHost (1 * (1 + needleIdxHost) = 1 + needleIdxHost, 0 * (1 + needleIdxHost) = 0)
+        //      - Binary Manipulation:
+        //          - Invert 0s and 1s (pimXorScalar)
+        //          - Subtract 1 (1->0, 0->-1==all ones - uses unsigned integer overflow)
+        //          - And with 1 + needleIdxHost
+        //
+        // Both of these methods have the same output, however the multiplication will be faster on bit parallel architectures
+        // The binary manipulation method is faster on bit serial architectures
+        // On the bit parallel architectures tested, each of the operations above took the same time (multiplication, xor, etc.)
+        // Therefore, on the bit parallel architectures, it is faster to do the single operation (multiplication)
+        // However, on the bit serial architecture tested, multiplication is significantly slower because it is O(n^2) where n is the number of bits
+        // Thus the second method is faster on the bit serial architecture tested
+        // The isHorizonatal parameter serves as a simple check for which we are on
+        if(isHorizontal) {
+          status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
+          assert (status == PIM_OK);
+        } else {
+          status = pimXorScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
+          assert (status == PIM_OK);
 
-        status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
-        assert (status == PIM_OK);
+          status = pimSubScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
+          assert (status == PIM_OK);
+
+          status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
+          assert (status == PIM_OK);
+        }
       }
     }
 
