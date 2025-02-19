@@ -1,10 +1,18 @@
+// Test: String matching utilities
+// Copyright (c) 2024 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
+
 #ifndef STRING_MATCH_UTILS_H
 #define STRING_MATCH_UTILS_H
 
-#include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
+#include <vector>                      // for vector
+#include <string>                      // for string
+#include <fstream>                     // for ifstream
+#include <sstream>                     // for ostringstream
+#include <algorithm>                   // for max
+#include <limits>                      // for numeric_limits
+
 
 std::vector<std::string> getNeedlesFromFile(const std::string& keysInputFile) {
   std::ifstream keysFile(keysInputFile);
@@ -43,7 +51,7 @@ void stringMatchCpu(std::vector<std::string>& needles, std::string& haystack, st
     size_t pos = haystack.find(needles[needleIdx], 0);
 
     while (pos != std::string::npos) {
-      matches[pos] = std::max((unsigned long) matches[pos], needleIdx + 1);
+      matches[pos] = std::max(matches[pos], static_cast<int>(needleIdx + 1));
       pos = haystack.find(needles[needleIdx], pos + 1);
     }
   }
