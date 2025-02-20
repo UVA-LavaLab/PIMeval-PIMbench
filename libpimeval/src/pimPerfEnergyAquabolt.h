@@ -30,7 +30,6 @@ public:
 
 protected:
   unsigned m_aquaboltFPUBitWidth = 16;
-  unsigned m_aquaboltFPUUnit = 16;
   // Following values are taken from fulcrum paper as BLIMP paper does not model energy
   double m_blimpArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_blimpLogicalEnergy = 0.0000000001467846411; // mJ
