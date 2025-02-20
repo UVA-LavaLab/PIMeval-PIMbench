@@ -76,6 +76,7 @@ public:
   bool pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAbs(PimObjId src, PimObjId dest);
   bool pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimNot(PimObjId src, PimObjId dest);
   bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);

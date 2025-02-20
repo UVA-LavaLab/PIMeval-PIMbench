@@ -45,6 +45,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::MUL, "mul" },
     { PimCmdEnum::SCALED_ADD, "scaled_add" },
     { PimCmdEnum::DIV, "div" },
+    { PimCmdEnum::NOT, "not" },
     { PimCmdEnum::AND, "and" },
     { PimCmdEnum::OR, "or" },
     { PimCmdEnum::XOR, "xor" },
@@ -389,6 +390,15 @@ pimCmdFunc1::sanityCheck() const
   if (!isAssociated(objSrc, objDest) || !isConvertibleType(objSrc, objDest)) {
     return false;
   }
+  if (objSrc.getDataType() == PIM_BOOL) {
+    switch (m_cmdType) {
+      case PimCmdEnum::NOT:
+        // pass
+      default:
+        std::printf("PIM-Error: PIM command does not support PIM_BOOL type\n");
+        return false;
+    }
+  }
   return true;
 }
 
@@ -409,7 +419,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
     bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
-    bool isUnsigned = (dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
+    bool isUnsigned = (dataType == PIM_BOOL || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
     bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
     if (isSigned) {
       int64_t signedOperand = objSrc.getElementBits(elemIdx);
@@ -494,6 +504,18 @@ pimCmdFunc2::sanityCheck() const
   if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest) || !isCompatibleType(objSrc1, objSrc2) || !isConvertibleType(objSrc1, objDest)) {
     return false;
   }
+  if (objSrc1.getDataType() == PIM_BOOL || objSrc2.getDataType() == PIM_BOOL) {
+    switch (m_cmdType) {
+      case PimCmdEnum::AND:
+      case PimCmdEnum::OR:
+      case PimCmdEnum::XOR:
+      case PimCmdEnum::XNOR:
+        // pass
+      default:
+        std::printf("PIM-Error: PIM command does not support PIM_BOOL type\n");
+        return false;
+    }
+  }
   return true;
 }
 
@@ -515,7 +537,7 @@ pimCmdFunc2::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
     bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
-    bool isUnsigned = (dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
+    bool isUnsigned = (dataType == PIM_BOOL || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
     bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
     if (isSigned) {
       uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
