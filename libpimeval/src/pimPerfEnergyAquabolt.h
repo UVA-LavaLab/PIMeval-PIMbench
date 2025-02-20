@@ -29,8 +29,8 @@ public:
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
 
 protected:
-  double m_blimpCoreLatency = 0.000005; // ms; 200 MHz. Reference: BLIMP paper
-  unsigned m_blimpCoreBitWidth = 64;
+  unsigned m_aquaboltFPUBitWidth = 16;
+  unsigned m_aquaboltFPUUnit = 16;
   // Following values are taken from fulcrum paper as BLIMP paper does not model energy
   double m_blimpArithmeticEnergy = 0.0000000004992329586; // mJ
   double m_blimpLogicalEnergy = 0.0000000001467846411; // mJ

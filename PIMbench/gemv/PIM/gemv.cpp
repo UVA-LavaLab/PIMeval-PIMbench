@@ -81,20 +81,20 @@ struct Params getInputParams(int argc, char **argv)
 
 void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst)
 {
-  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, PIM_INT32);
+  PimObjId srcObj1 = pimAlloc(PIM_ALLOC_AUTO, row, PIM_INT16);
   if (srcObj1 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
+  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT16);
   if (srcObj2 == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
   }
 
-  PimObjId dstObj = pimAllocAssociated(srcObj1, PIM_INT32);
+  PimObjId dstObj = pimAllocAssociated(srcObj1, PIM_INT16);
   if (dstObj == -1)
   {
     std::cout << "Abort" << std::endl;

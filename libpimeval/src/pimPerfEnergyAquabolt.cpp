@@ -7,7 +7,7 @@
 #include "pimPerfEnergyAquabolt.h"
 #include "pimCmd.h"
 #include <iostream>
-
+#include <cmath>
 
 //! @brief  Perf energy model of aquabolt PIM for func1
 pimeval::perfEnergy
@@ -18,9 +18,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCores = obj.getNumCoresUsed();
-
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  double numberOfOperationPerElement = ((double)bitsPerElement / m_aquaboltFPUBitWidth);
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned maxGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned minGDLItr = minElementPerRegion * bitsPerElement / m_GDLWidth;
   switch (cmdType)
   {
     case PimCmdEnum::POPCOUNT:
@@ -29,12 +31,10 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
     case PimCmdEnum::DIV_SCALAR:
-    {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      // Refer to fulcrum documentation
-      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+    { 
+      // multiplying by 2 as both read and write needs to consider GDL overhead; Cannot be pipeline because two rows cannot be open simultaeneously
+      msRuntime = (m_tR + m_tW + (maxGDLItr * m_tGDL * numberOfOperationPerElement * 2)) * (numPass - 1);
+      msRuntime += (m_tR + m_tW + (minGDLItr * m_tGDL * numberOfOperationPerElement * 2));
       mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -51,11 +51,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      // Refer to fulcrum documentation
-      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+      // multiplying by 2 as both read and write needs to consider GDL overhead; Cannot be pipeline because two rows cannot be open simultaeneously
+      msRuntime = (m_tR + m_tW + (maxGDLItr * m_tGDL * numberOfOperationPerElement * 2)) * (numPass - 1);
+      msRuntime += (m_tR + m_tW + (minGDLItr * m_tGDL * numberOfOperationPerElement * 2));
       mjEnergy = ((m_eAP * 2) + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass ;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -79,10 +77,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
   unsigned numCoresUsed = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-  // How many iteration require to read / write max elements per region
-  unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   switch (cmdType)
   {
     case PimCmdEnum::ADD:
@@ -90,9 +87,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::MUL:
     case PimCmdEnum::DIV:
     {
-      double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
-      msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
-      msRuntime *= numPass;
+      double numberOfOperationPerElement = ((double)bitsPerElement / (m_aquaboltFPUBitWidth));
+      msRuntime = (2 * m_tR + m_tW + (maxGDLItr * m_tGDL * numberOfOperationPerElement * 3)) * (numPass - 1);
+      msRuntime += (2 * m_tR + m_tW + (minGDLItr * m_tGDL * numberOfOperationPerElement * 3));
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -113,8 +110,10 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
        *
        * As a result, only one read operation is necessary for the entire pass.
       */
-      double totalGDLOverhead = m_tGDL * numGDLItr; // both read can be pipelined as multiplication and addition takes twice the time to execute.
-      msRuntime = m_tR + (m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2) * numPass;
+      double numberOfOperationPerElement = ((double)bitsPerElement / (m_aquaboltFPUBitWidth * m_aquaboltFPUUnit)) * 2; // multiplying by 2 as one addition and one multiplication is needed
+      msRuntime = m_tR + m_tW;
+      msRuntime += (maxGDLItr * m_tGDL * numberOfOperationPerElement * 3) * (numPass - 1);
+      msRuntime += (minGDLItr * m_tGDL * numberOfOperationPerElement * 3);
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_blimpArithmeticEnergy * numCoresUsed;
       mjEnergy *= numPass;
@@ -131,9 +130,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {
-      double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
-      msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
-      msRuntime *= numPass;
+      double numberOfOperationPerElement = ((double)bitsPerElement / (m_aquaboltFPUBitWidth * m_aquaboltFPUUnit));
+      msRuntime = (2 * m_tR + m_tW + (maxGDLItr * m_tGDL * numberOfOperationPerElement * 3)) * (numPass - 1);
+      msRuntime += (2 * m_tR + m_tW + (minGDLItr * m_tGDL * numberOfOperationPerElement * 3));
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy *= numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -156,7 +155,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
-  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+  double cpuTDP = 200; // W; AMD EPYC 9124 16 coredouble numberOfOperationPerElement = ((double)bitsPerElement / (m_aquaboltFPUBitWidth * m_aquaboltFPUUnit));
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned maxGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned minGDLItr = minElementPerRegion * bitsPerElement / m_GDLWidth;
+  double numberOfOperationPerElement = ((double)bitsPerElement / (m_aquaboltFPUBitWidth * m_aquaboltFPUUnit));
 
   switch (cmdType) {
         case PimCmdEnum::REDSUM:
@@ -167,13 +170,13 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
         case PimCmdEnum::REDMAX_RANGE:
         {
           // How many iteration require to read / write max elements per region
-          double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-          msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+          msRuntime = (m_tR + (maxGDLItr * m_tGDL * numberOfOperationPerElement)) * (numPass - 1);
+          msRuntime += (m_tR + (minGDLItr * m_tGDL * numberOfOperationPerElement));
 
           // Refer to fulcrum documentation
           mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
           // reduction for all regions
-          double aggregateMs = static_cast<double>(numCore) / 3200000;
+          double aggregateMs = static_cast<double>(numCore) / (3200000 * 16);
           msRuntime += aggregateMs;
           mjEnergy += aggregateMs * cpuTDP;
           mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -199,12 +202,12 @@ pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimOb
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
 
-  // assume taking 1 ALU latency to write an element
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-  msRuntime = m_tW + m_tGDL + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement);
-  msRuntime *= numPass;
-  msRuntime = (m_eAP + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement)) * numPass; // todo: change m_eR to write energy
-  mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numPass * numCore;
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned maxGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned minGDLItr = minElementPerRegion * bitsPerElement / m_GDLWidth;
+  msRuntime = (m_tW + maxGDLItr * m_tGDL) * (numPass - 1);
+  msRuntime *= (m_tW + minGDLItr * m_tGDL);
+  mjEnergy = (m_eAP + m_eGDL * maxGDLItr) * numPass * numCore;
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy);
