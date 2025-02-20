@@ -384,7 +384,7 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
+pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
   if (allocType == PIM_ALLOC_AUTO) {
     if (isVLayoutDevice()) {
@@ -395,14 +395,14 @@ pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
       assert(0);
     }
   }
-  return m_resMgr->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+  return m_resMgr->pimAlloc(allocType, numElements, dataType);
 }
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 PimObjId
-pimDevice::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
+pimDevice::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
-  return m_resMgr->pimAllocAssociated(bitsPerElement, assocId, dataType);
+  return m_resMgr->pimAllocAssociated(assocId, dataType);
 }
 
 //! @brief  Free a PIM object

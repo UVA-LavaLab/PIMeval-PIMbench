@@ -257,8 +257,9 @@ pimResMgr::~pimResMgr()
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
+pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
   #if defined(DEBUG)
   std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %llu elements %u bits per element %d data-type\n",
               (int)allocType, numElements, bitsPerElement, (int)dataType);
@@ -376,8 +377,9 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
 //!         For V layout, expect same number of elements, while bits per element may be different
 //!         For H layout, expect exact same number of elements and bits per elements
 PimObjId
-pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
+pimResMgr::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
   #if defined(DEBUG)
   std::printf("PIM-Debug: pimResMgr::pimAllocAssociated for %u bits per element %d data-type associated to object %d\n",
               bitsPerElement, (int)dataType, assocId);
