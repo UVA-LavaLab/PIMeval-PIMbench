@@ -6,9 +6,9 @@
 
 #include "pimParamsLPDDRDram.h"
 #include "pimUtils.h"
-#include <stdexcept>                   // for invalid_argument
-#include <string>                      // for string, stoi, stod
-#include <unordered_map>               // for unordered_map
+#include <string>
+#include <stdexcept>
+#include <unordered_map>
 
 
 //! @brief  pimParamsLPDDRDram ctor (based on LPDDR4_8Gb_x16_2400.ini from DRAMsim3)

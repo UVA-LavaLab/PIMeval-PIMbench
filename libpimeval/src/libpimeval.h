@@ -7,7 +7,7 @@
 #ifndef LAVA_LIB_PIM_EVAL_H
 #define LAVA_LIB_PIM_EVAL_H
 
-#include <cstdint>                     // for uint64_t, int64_t
+#include <cstdint>
 
 
 //! @brief  PIM API return status

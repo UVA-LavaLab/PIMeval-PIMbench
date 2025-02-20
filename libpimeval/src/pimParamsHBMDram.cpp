@@ -6,9 +6,9 @@
 
 #include "pimParamsHBMDram.h"
 #include "pimUtils.h"
-#include <stdexcept>                   // for invalid_argument
-#include <string>                      // for string, stoi, stod
-#include <unordered_map>               // for unordered_map
+#include <string>
+#include <stdexcept>
+#include <unordered_map>
 
 
 //! @brief  pimParamsHBMDram ctor (based on HBM2_4Gb_x128.ini from DRAMsim3)

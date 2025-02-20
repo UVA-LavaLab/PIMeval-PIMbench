@@ -8,17 +8,17 @@
 #define LAVA_PIM_UTILS_H
 
 #include "libpimeval.h"
-#include <string>                      // for string
-#include <queue>                       // for queue
-#include <vector>                      // for vector
-#include <thread>                      // for thread
-#include <atomic>                      // for atomic
-#include <mutex>                       // for mutex
-#include <condition_variable>          // for condition_variable
-#include <unordered_map>               // for unordered_map
-#include <type_traits>                 // for is_integral, is_signed
-#include <cstring>                     // for memcpy
-#include <cstdint>                     // for uint64_t
+#include <string>
+#include <queue>
+#include <vector>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
+#include <unordered_map>
+#include <type_traits>
+#include <cstring>
+#include <cstdint>
 
 namespace pimUtils
 {

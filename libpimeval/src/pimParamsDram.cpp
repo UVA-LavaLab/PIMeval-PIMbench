@@ -9,10 +9,10 @@
 #include "pimParamsDDRDram.h"
 #include "pimParamsLPDDRDram.h"
 #include "pimParamsHBMDram.h"
-#include <string>                      // for string
-#include <memory>                      // for make_unique, unique_ptr
-#include <unordered_map>               // for unordered_map
-#include <stdexcept>                   // for invalid_argument
+#include <string>
+#include <stdexcept>
+#include <memory>
+#include <unordered_map>
 
 
 // Static factory method to create appropriate subclass based on protocol enum

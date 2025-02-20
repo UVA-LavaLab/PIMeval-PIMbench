@@ -4,16 +4,16 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
-#include "pimResMgr.h"
-#include "pimDevice.h"
-#include <iostream>                    // for cout, endl
-#include <cstdio>                      // for printf
-#include <algorithm>                   // for sort, prev
-#include <stdexcept>                   // for throw, invalid_argument
-#include <memory>                      // for make_unique
-#include <cassert>                     // for assert
-#include <string>                      // for string
-#include <utility>                     // for pair, make_pair
+#include "pimResMgr.h"       // for pimResMgr
+#include "pimDevice.h"       // for pimDevice
+#include <iostream>          // for cout
+#include <cstdio>            // for printf
+#include <algorithm>         // for sort, prev
+#include <stdexcept>         // for throw, invalid_argument
+#include <memory>            // for make_unique
+#include <cassert>           // for assert
+#include <string>            // for string
+#include <utility>
 
 
 //! @brief  Print info of a PIM region

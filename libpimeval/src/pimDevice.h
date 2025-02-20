@@ -14,8 +14,8 @@
 #ifdef DRAMSIM3_INTEG
 #include "cpu.h"
 #endif
-#include <memory>                      // for unique_ptr
-#include <vector>                      // for vector
+#include <memory>
+#include <vector>
 
 class pimResMgr;
 

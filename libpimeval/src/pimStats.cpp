@@ -7,11 +7,11 @@
 #include "pimStats.h"
 #include "pimSim.h"
 #include "pimUtils.h"
-#include <chrono>                      // for chrono, milli
-#include <cstdint>                     // for uint64_t
-#include <cstdio>                      // for printf
-#include <iostream>                    // for cout
-#include <iomanip>                     // for setw, fixed, setprecision
+#include <chrono>            // for chrono
+#include <cstdint>           // for uint64_t
+#include <cstdio>            // for printf
+#include <iostream>          // for cout
+#include <iomanip>           // for setw, fixed, setprecision
 
 
 //! @brief  Show PIM stats
