@@ -6,10 +6,10 @@
 #ifndef STRING_MATCH_UTILS_H
 #define STRING_MATCH_UTILS_H
 
-#include <vector>                      // for vector
-#include <string>                      // for string
-#include <fstream>                     // for ifstream
-#include <sstream>                     // for ostringstream
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
 #include <algorithm>                   // for max
 #include <limits>                      // for numeric_limits
 
