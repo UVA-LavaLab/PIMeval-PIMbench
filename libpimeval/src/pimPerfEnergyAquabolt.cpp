@@ -38,8 +38,8 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::MUL_SCALAR:
     { 
       // multiplying by 2 as both read and write needs to consider GDL overhead; Cannot be pipeline because two rows cannot be open simultaeneously
-      msRuntime = (m_tR + m_tW + (maxGDLItr * m_tGDL * numberOfOperationPerElement * 2)) * (numPass - 1);
-      msRuntime += (m_tR + m_tW + (minGDLItr * m_tGDL * numberOfOperationPerElement * 2));
+      msRuntime = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
+      msRuntime += m_tR + m_tW + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
       mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
