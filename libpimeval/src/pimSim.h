@@ -85,6 +85,7 @@ public:
   bool pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimNE(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAdd(PimObjId src, PimObjId dest, uint64_t scalarValue);
@@ -98,6 +99,7 @@ public:
   bool pimGT(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimLT(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimEQ(PimObjId src, PimObjId dest, uint64_t scalarValue);
+  bool pimNE(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimMin(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);

@@ -43,6 +43,7 @@ enum class PimCmdEnum {
   GT_SCALAR,
   LT_SCALAR,
   EQ_SCALAR,
+  NE_SCALAR,
   MIN_SCALAR,
   MAX_SCALAR,
   CONVERT_TYPE,
@@ -60,6 +61,7 @@ enum class PimCmdEnum {
   GT,
   LT,
   EQ,
+  NE,
   MIN,
   MAX,
   // Functional special
@@ -231,6 +233,7 @@ private:
     case PimCmdEnum::GT_SCALAR: result = (operand > scalarValue) ? 1 : 0; break;
     case PimCmdEnum::LT_SCALAR: result = (operand < scalarValue) ? 1 : 0; break;
     case PimCmdEnum::EQ_SCALAR: result = (operand == scalarValue) ? 1 : 0; break;
+    case PimCmdEnum::NE_SCALAR: result = (operand != scalarValue) ? 1 : 0; break;
     case PimCmdEnum::MIN_SCALAR: result = std::min(operand, scalarValue); break;
     case PimCmdEnum::MAX_SCALAR: result = std::max(operand, scalarValue); break;
     case PimCmdEnum::POPCOUNT:
@@ -280,6 +283,7 @@ private:
     case PimCmdEnum::GT_SCALAR: result = (operand > scalerValue) ? 1 : 0; break;
     case PimCmdEnum::LT_SCALAR: result = (operand < scalerValue) ? 1 : 0; break;
     case PimCmdEnum::EQ_SCALAR: result = (operand == scalerValue) ? 1 : 0; break;
+    case PimCmdEnum::NE_SCALAR: result = (operand != scalerValue) ? 1 : 0; break;
     case PimCmdEnum::MIN_SCALAR: result = std::min(operand, scalerValue); break;
     case PimCmdEnum::MAX_SCALAR: result = std::max(operand, scalerValue); break;
     case PimCmdEnum::ABS:
@@ -350,6 +354,7 @@ private:
     case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
     case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
     case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+    case PimCmdEnum::NE: result = operand1 != operand2 ? 1 : 0; break;
     case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
     case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
     case PimCmdEnum::SCALED_ADD: result = (operand1 * scalarValue) + operand2; break;
@@ -376,6 +381,7 @@ private:
     case PimCmdEnum::GT: result = operand1 > operand2 ? 1 : 0; break;
     case PimCmdEnum::LT: result = operand1 < operand2 ? 1 : 0; break;
     case PimCmdEnum::EQ: result = operand1 == operand2 ? 1 : 0; break;
+    case PimCmdEnum::NE: result = operand1 != operand2 ? 1 : 0; break;
     case PimCmdEnum::MIN: result = (operand1 < operand2) ? operand1 : operand2; break;
     case PimCmdEnum::MAX: result = (operand1 > operand2) ? operand1 : operand2; break;
     case PimCmdEnum::SCALED_ADD: result = (operand1 * scalarValue) + operand2; break;

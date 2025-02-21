@@ -292,6 +292,14 @@ pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM NE
+PimStatus
+pimNE(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimNE(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM Min
 PimStatus
 pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
@@ -371,6 +379,12 @@ PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
 PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
 {
   bool ok = pimSim::get()->pimEQ(src, dest, scalarValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimNEScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+{
+  bool ok = pimSim::get()->pimNE(src, dest, scalarValue);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
