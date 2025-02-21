@@ -406,20 +406,20 @@ pimSim::resetStats() const
 
 //! @brief  Allocate a PIM object
 PimObjId
-pimSim::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
+pimSim::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAlloc");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+  return m_device->pimAlloc(allocType, numElements, dataType);
 }
 
 //! @brief  Allocate a PIM object that is associated with an existing ojbect
 PimObjId
-pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
+pimSim::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(bitsPerElement, assocId, dataType);
+  return m_device->pimAllocAssociated(assocId, dataType);
 }
 
 // @brief  Free a PIM object

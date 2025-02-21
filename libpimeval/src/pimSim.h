@@ -56,8 +56,8 @@ public:
   unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId obj);
   PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
   PimObjId pimCreateDualContactRef(PimObjId refId);
