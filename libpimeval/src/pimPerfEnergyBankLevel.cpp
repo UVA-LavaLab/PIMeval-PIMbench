@@ -56,6 +56,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::GT_SCALAR:
     case PimCmdEnum::LT_SCALAR:
     case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::NE_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
     case PimCmdEnum::MAX_SCALAR:
     case PimCmdEnum::SHIFT_BITS_L:
@@ -138,6 +139,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::GT:
     case PimCmdEnum::LT:
     case PimCmdEnum::EQ:
+    case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {

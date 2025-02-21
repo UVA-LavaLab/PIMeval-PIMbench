@@ -126,6 +126,27 @@ pimUtils::getNumBitsOfDataType(PimDataType dataType, PimBitWidth bitWidthType)
   return 0;
 }
 
+//! @brief  Check if a PIM data type is signed integer
+bool
+pimUtils::isSigned(PimDataType dataType)
+{
+  return dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64;
+}
+
+//! @brief  Check if a PIM data type is unsigned integer
+bool
+pimUtils::isUnsigned(PimDataType dataType)
+{
+  return dataType == PIM_BOOL || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64;
+}
+
+//! @brief  Check if a PIM data type is floating point
+bool
+pimUtils::isFP(PimDataType dataType)
+{
+  return dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8;
+}
+
 //! @brief  Thread pool ctor
 pimUtils::threadPool::threadPool(size_t numThreads)
   : m_terminate(false),
