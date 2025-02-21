@@ -82,7 +82,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   PimDataType dataType = obj.getDataType();
 
   switch (m_simTarget) {
@@ -110,7 +110,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   PimDataType dataType = obj.getDataType();
 
   switch (m_simTarget) {
@@ -138,7 +138,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   PimDataType dataType = obj.getDataType();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   uint64_t numElements = obj.getNumElements();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
@@ -236,7 +236,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   switch (m_simTarget) {
@@ -282,7 +282,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);

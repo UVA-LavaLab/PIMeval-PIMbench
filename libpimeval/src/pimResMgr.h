@@ -82,7 +82,7 @@ public:
     : m_dataType(dataType),
       m_numElements(numElements)
   {
-    unsigned numBitsOfDataType = pimUtils::getNumBitsOfDataType(m_dataType);
+    unsigned numBitsOfDataType = pimUtils::getNumBitsOfDataType(m_dataType, PimBitWidth::HOST);
     // Note: Each data element is stored as m_bytesPerElement bytes in this data holder.
     // This aligns with the number of bytes per element in the host void* ptr for memcpy.
     m_bytesPerElement = (numBitsOfDataType + 7) / 8;  // round up, e.g. 1 byte per bool
@@ -193,7 +193,7 @@ public:
   PimAllocEnum getAllocType() const { return m_allocType; }
   PimDataType getDataType() const { return m_dataType; }
   uint64_t getNumElements() const { return m_numElements; }
-  unsigned getBitsPerElement() const { return m_bitsPerElement; }
+  unsigned getBitsPerElement(PimBitWidth bitWidthType) const;
   pimDevice* getDevice() { return m_device; }
   bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
   bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
@@ -208,7 +208,6 @@ public:
   unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
   unsigned getNumColsPerElem() const { return m_numColsPerElem; }
 
-  std::string getDataTypeName() const;
   void print() const;
 
   // Note: Below functions are wraper APIs to access PIM object data holder

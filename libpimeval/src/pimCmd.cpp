@@ -141,7 +141,9 @@ pimCmd::isConvertibleType(const pimObjInfo& src, const pimObjInfo& dest) const
 {
   // TODO: Type conversion
   if (src.getDataType() != dest.getDataType()) {
-    std::printf("PIM-Error: Cannot convert from %s to %s\n", src.getDataTypeName().c_str(), dest.getDataTypeName().c_str());
+    std::printf("PIM-Error: Cannot convert from %s to %s\n",
+        pimUtils::pimDataTypeEnumToStr(src.getDataType()).c_str(),
+        pimUtils::pimDataTypeEnumToStr(dest.getDataType()).c_str());
     return false;
   }
   return true;
@@ -302,7 +304,7 @@ pimCmdCopy::updateStats() const
     if (!m_copyFullRange) {
       numElements = m_idxEnd - m_idxBegin;
     }
-    unsigned bitsPerElement = objDest.getBitsPerElement();
+    unsigned bitsPerElement = objDest.getBitsPerElement(PimBitWidth::ACTUAL);
     pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
 
@@ -317,7 +319,7 @@ pimCmdCopy::updateStats() const
     if (!m_copyFullRange) {
       numElements = m_idxEnd - m_idxBegin;
     }
-    unsigned bitsPerElement = objSrc.getBitsPerElement();
+    unsigned bitsPerElement = objSrc.getBitsPerElement(PimBitWidth::ACTUAL);
     pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
 
@@ -332,7 +334,7 @@ pimCmdCopy::updateStats() const
     if (!m_copyFullRange) {
       numElements = m_idxEnd - m_idxBegin;
     }
-    unsigned bitsPerElement = objSrc.getBitsPerElement();
+    unsigned bitsPerElement = objSrc.getBitsPerElement(PimBitWidth::ACTUAL);
     pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement, mPerfEnergy);
 
@@ -422,7 +424,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
 
   PimDataType dataType = objSrc.getDataType();
-  unsigned bitsPerElementSrc = objSrc.getBitsPerElement();
+  unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::SIM);
   const pimRegion& srcRegion = objSrc.getRegions()[index];
 
   // perform the computation
