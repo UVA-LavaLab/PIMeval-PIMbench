@@ -118,6 +118,16 @@ pimStatsMgr::showCopyStats() const
             << std::setw(14) << std::fixed << std::setprecision(6) << totalMsRuntime << " ms Estimated Runtime "
             << std::setw(14) << std::fixed << std::setprecision(6) << totalMjEnergy << " mj Estimated Energy"
             << std::endl;
+#else
+
+  std::printf("\t\tHost to Device: %ld bytes\n", bytesCopiedMainToDevice);
+  std::printf("\t\tDevice to Host: %ld bytes\n", bytesCopiedDeviceToMain);
+  std::printf("\t\tDevice to Device: %ld bytes\n", bytesCopiedDeviceToDevice);
+  std::printf("\t\tTOTAL --------: %ld bytes\n", totalBytes);
+  std::printf("\t\t%f ms Estimated Runtime\n", totalMsRuntime);
+  std::printf("\t\t%f mj Estimated Energy\n", totalMjEnergy);
+
+
 #endif
 }
 
