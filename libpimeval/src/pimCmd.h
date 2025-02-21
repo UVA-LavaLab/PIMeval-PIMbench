@@ -45,6 +45,7 @@ enum class PimCmdEnum {
   EQ_SCALAR,
   MIN_SCALAR,
   MAX_SCALAR,
+  CONVERT_TYPE,
   // Functional 2-operand
   ADD,
   SUB,
@@ -305,6 +306,8 @@ private:
     }
     return true;
   }
+
+  bool convertType(const pimObjInfo& objSrc, pimObjInfo& objDest, uint64_t elemIdx) const;
 };
 
 //! @class  pimCmdFunc2

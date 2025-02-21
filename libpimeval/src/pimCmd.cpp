@@ -68,6 +68,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::EQ_SCALAR, "eq_scalar" },
     { PimCmdEnum::MIN_SCALAR, "min_scalar" },
     { PimCmdEnum::MAX_SCALAR, "max_scalar" },
+    { PimCmdEnum::CONVERT_TYPE, "convert_type" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::REDMIN, "redmin" },
@@ -387,17 +388,28 @@ pimCmdFunc1::sanityCheck() const
   }
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
-  if (!isAssociated(objSrc, objDest) || !isConvertibleType(objSrc, objDest)) {
+  if (!isAssociated(objSrc, objDest)) {
     return false;
   }
   if (objSrc.getDataType() == PIM_BOOL) {
     switch (m_cmdType) {
       case PimCmdEnum::NOT:
+      case PimCmdEnum::CONVERT_TYPE:
         // pass
       default:
-        std::printf("PIM-Error: PIM command does not support PIM_BOOL type\n");
+        std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
     }
+  }
+  // Define command specific type conversion rules
+  switch (m_cmdType) {
+    case PimCmdEnum::CONVERT_TYPE:
+      // pass
+    default:
+      if (objSrc.getDataType() != objDest.getDataType()) {
+        std::printf("PIM-Error: PIM command %s does not support data type conversion\n", getName().c_str());
+        return false;
+      }
   }
   return true;
 }
@@ -418,20 +430,21 @@ pimCmdFunc1::computeRegion(unsigned index)
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
-    bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
-    bool isUnsigned = (dataType == PIM_BOOL || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
-    bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
-    if (isSigned) {
+    if (m_cmdType == PimCmdEnum::CONVERT_TYPE) {
+      convertType(objSrc, objDest, elemIdx);
+      continue;
+    }
+    if (pimUtils::isSigned(dataType)) {
       int64_t signedOperand = objSrc.getElementBits(elemIdx);
       int64_t result = 0;
       if(!computeResult(signedOperand, m_cmdType, (int64_t)m_scalarValue, result, bitsPerElementSrc)) return false;
       objDest.setElement(elemIdx, result);
-    } else if (isUnsigned) {
+    } else if (pimUtils::isUnsigned(dataType)) {
       uint64_t unsignedOperand = objSrc.getElementBits(elemIdx);
       uint64_t result = 0;
       if(!computeResult(unsignedOperand, m_cmdType, m_scalarValue, result, bitsPerElementSrc)) return false;
       objDest.setElement(elemIdx, result);
-    } else if (isFP){
+    } else if (pimUtils::isFP(dataType)) {
       uint64_t bits = objSrc.getElementBits(elemIdx);
       float floatOperand = pimUtils::castBitsToType<float>(bits);
       float result = 0.0;
@@ -440,6 +453,40 @@ pimCmdFunc1::computeRegion(unsigned index)
     } else {
       assert(0); // todo: data type
     }
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 1-operand - compute region - convert data type
+bool
+pimCmdFunc1::convertType(const pimObjInfo& objSrc, pimObjInfo& objDest, uint64_t elemIdx) const
+{
+  PimDataType dataTypeSrc = objSrc.getDataType();
+  PimDataType dataTypeDest = objDest.getDataType();
+  if (pimUtils::isSigned(dataTypeSrc)) {
+    int64_t signedVal = objSrc.getElementBits(elemIdx);
+    if (pimUtils::isSigned(dataTypeDest)) {
+      int64_t result = signedVal;
+      objDest.setElement(elemIdx, result);
+    } else if (pimUtils::isUnsigned(dataTypeDest)) {
+      uint64_t result = static_cast<uint64_t>(signedVal);
+      objDest.setElement(elemIdx, result);
+    } else if (pimUtils::isFP(dataTypeDest)) {
+      assert(0); // todo
+    }
+  } else if (pimUtils::isUnsigned(dataTypeSrc)) {
+    uint64_t unsignedVal = objSrc.getElementBits(elemIdx);
+    if (pimUtils::isSigned(dataTypeDest)) {
+      int64_t result = static_cast<int64_t>(unsignedVal);
+      objDest.setElement(elemIdx, result);
+    } else if (pimUtils::isUnsigned(dataTypeDest)) {
+      uint64_t result = unsignedVal;
+      objDest.setElement(elemIdx, result);
+    } else if (pimUtils::isFP(dataTypeDest)) {
+      assert(0); // todo      
+    }
+  } else if (pimUtils::isFP(dataTypeSrc)) {
+    assert(0); // todo
   }
   return true;
 }
@@ -501,7 +548,7 @@ pimCmdFunc2::sanityCheck() const
   const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
   const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
-  if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest) || !isCompatibleType(objSrc1, objSrc2) || !isConvertibleType(objSrc1, objDest)) {
+  if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest)) {
     return false;
   }
   if (objSrc1.getDataType() == PIM_BOOL || objSrc2.getDataType() == PIM_BOOL) {
@@ -512,9 +559,17 @@ pimCmdFunc2::sanityCheck() const
       case PimCmdEnum::XNOR:
         // pass
       default:
-        std::printf("PIM-Error: PIM command does not support PIM_BOOL type\n");
+        std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
     }
+  }
+  // Define command specific type conversion rules
+  switch (m_cmdType) {
+    default:
+      if (objSrc1.getDataType() != objSrc2.getDataType() || objSrc1.getDataType() != objDest.getDataType()) {
+        std::printf("PIM-Error: PIM command %s does not support data type conversion\n", getName().c_str());
+        return false;
+      }
   }
   return true;
 }
@@ -536,10 +591,7 @@ pimCmdFunc2::computeRegion(unsigned index)
   unsigned numElementsInRegion = src1Region.getNumElemInRegion();
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
-    bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
-    bool isUnsigned = (dataType == PIM_BOOL || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64);
-    bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
-    if (isSigned) {
+    if (pimUtils::isSigned(dataType)) {
       uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
       uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
       int64_t operand1 = pimUtils::signExt(operandBits1, dataType);
@@ -547,13 +599,13 @@ pimCmdFunc2::computeRegion(unsigned index)
       int64_t result = 0;
       if(!computeResult(operand1, operand2, m_cmdType, (int64_t)m_scalarValue, result)) return false;
       objDest.setElement(elemIdx, result);
-    } else if (isUnsigned) {
+    } else if (pimUtils::isUnsigned(dataType)) {
       uint64_t unsignedOperand1 = objSrc1.getElementBits(elemIdx);
       uint64_t unsignedOperand2 = objSrc2.getElementBits(elemIdx);
       uint64_t result = 0;
       if(!computeResult(unsignedOperand1, unsignedOperand2, m_cmdType, m_scalarValue, result)) return false;
       objDest.setElement(elemIdx, result);
-    } else if (isFP){
+    } else if (pimUtils::isFP(dataType)) {
       uint64_t operandBits1 = objSrc1.getElementBits(elemIdx);
       uint64_t operandBits2 = objSrc2.getElementBits(elemIdx);
       float floatOperand1 = pimUtils::castBitsToType<float>(operandBits1);
@@ -562,7 +614,7 @@ pimCmdFunc2::computeRegion(unsigned index)
       if(!computeResultFP(floatOperand1, floatOperand2, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
       objDest.setElement(elemIdx, result);
     } else {
-    assert(0); // todo: data type
+      assert(0); // todo: data type
     }
   }
   return true;
@@ -676,8 +728,8 @@ pimCmdReduction<T>::computeRegion(unsigned index)
   for (unsigned j = 0; j < numElementsInRegion && currIdx < m_idxEnd; ++j) {
     if (currIdx >= m_idxBegin) {
       uint64_t operandBits = objSrc.getElementBits(currIdx);
-      bool isFP = (dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8);
-      bool isSigned = (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64);
+      bool isFP = pimUtils::isFP(dataType);
+      bool isSigned = pimUtils::isSigned(dataType);
       if (!isFP)
       {
         T integerOperand;

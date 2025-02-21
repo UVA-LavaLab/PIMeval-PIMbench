@@ -32,6 +32,9 @@ namespace pimUtils
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
   unsigned getNumBitsOfDataType(PimDataType dataType);
+  bool isSigned(PimDataType dataType);
+  bool isUnsigned(PimDataType dataType);
+  bool isFP(PimDataType dataType);
 
   // Convert raw bits into sign-extended bits based on PIM data type.
   // Input: Raw bits represented as uint64_t
