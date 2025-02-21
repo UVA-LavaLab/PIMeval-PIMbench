@@ -150,9 +150,14 @@ pimDevice::isHybridLayoutDevice() const
   return false;
 }
 
+bool pimDevice::isLoadBalanced() const
+{
+    return m_isLoadBalanced;
+}
+
 //! @brief  Init pim device, with input arguments
 bool
-pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced)
 {
   assert(!m_isInit);
 
@@ -188,6 +193,7 @@ pimDevice::init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPer
   m_numSubarrayPerBank = numSubarrayPerBank;
   m_numRowPerSubarray = numRows;
   m_numColPerSubarray = numCols;
+  m_isLoadBalanced = isLoadBalanced;
 
   if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
     m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
@@ -247,6 +253,7 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   unsigned numSubarrayPerBank;
   unsigned numRows;
   unsigned numCols;
+  bool isLoadBalanced;
 
   std::string fileContent;
   success = pimUtils::readFileContent(configFileName, fileContent);
@@ -256,7 +263,7 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   }
 
   // input params
-  success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
   if (!success) {
     std::printf("PIM-Error: Failed to parse config file %s\n", configFileName);
     return false;
@@ -271,6 +278,7 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   m_numSubarrayPerBank = numSubarrayPerBank;
   m_numRowPerSubarray = numRows;
   m_numColPerSubarray = numCols;
+  m_isLoadBalanced = isLoadBalanced;
 
   if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
     m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
@@ -320,7 +328,7 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
 //! @brief Initilize the device config parameters by parsing the config file
 bool
-pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
+pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols, bool& isLoadBalanced)
 {
   std::istringstream configStream(config);
   std::string line;
@@ -344,6 +352,7 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
+    isLoadBalanced = std::stoi(pimUtils::getParam(params, "should_load_balance"));
     if (m_deviceType == PIM_FUNCTIONAL) {
       m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
       if (m_simTarget == PIM_DEVICE_NONE) {

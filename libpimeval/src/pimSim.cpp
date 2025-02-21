@@ -135,7 +135,7 @@ pimSim::initThreadPool(unsigned maxNumThreads)
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced)
 {
   pimPerfMon perfMon("createDevice");
   if (m_device) {
@@ -148,7 +148,7 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
     return false;
   }
   m_device = std::make_unique<pimDevice>();
-  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
   if (!m_device->isValid()) {
     m_device.reset();
     uninit();
