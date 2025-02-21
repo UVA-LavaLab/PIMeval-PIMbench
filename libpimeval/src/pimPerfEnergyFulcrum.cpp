@@ -19,7 +19,6 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCores = obj.getNumCoresUsed();
-
   // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
   // For instructions that operate on a single operand, the next operand is fetched by the walker.
   // Consequently, only one row read operation is required in this case.
@@ -28,7 +27,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
-  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   switch (cmdType)
   {
     case PimCmdEnum::COPY_O2O:
@@ -100,7 +99,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned numCoresUsed = obj.getNumCoresUsed();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   switch (cmdType)
   {
@@ -172,7 +171,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
   double mjEnergy = 0.0;
   unsigned bitsPerElement = obj.getBitsPerElement();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
 
