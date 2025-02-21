@@ -352,7 +352,14 @@ pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, un
     numSubarrayPerBank = std::stoi(pimUtils::getParam(params, "num_subarray_per_bank"));
     numRows = std::stoi(pimUtils::getParam(params, "num_row_per_subarray"));
     numCols = std::stoi(pimUtils::getParam(params, "num_col_per_subarray"));
-    isLoadBalanced = std::stoi(pimUtils::getParam(params, "should_load_balance"));
+    isLoadBalanced = true;
+    bool hasLoadBalanceParam = false;
+    std::string loadBalanceStr = pimUtils::getOptionalParam(params, "should_load_balance", hasLoadBalanceParam);
+
+    if (hasLoadBalanceParam) {
+      isLoadBalanced = static_cast<bool>(std::stoi(loadBalanceStr));
+    }
+
     if (m_deviceType == PIM_FUNCTIONAL) {
       m_simTarget = pimUtils::strToPimDeviceEnum(pimUtils::getParam(params, "simulation_target"));
       if (m_simTarget == PIM_DEVICE_NONE) {
