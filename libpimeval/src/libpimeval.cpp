@@ -157,6 +157,13 @@ PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Convert data type between two associated PIM objects of different data types
+PimStatus pimConvertType(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimConvertType(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Load vector with a signed int value
 PimStatus
 pimBroadcastInt(PimObjId dest, int64_t value)
