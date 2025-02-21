@@ -23,6 +23,17 @@
 #include <cstring>
 #include <cstdint>
 
+
+//! @enum   PimBitWidth
+//! @brief  Bit width definitions of PIM data types under different usage scenarios
+enum class PimBitWidth
+{
+  ACTUAL = 0,  // bit width of a data type in real hardware
+  HOST,        // bit width of a data type used by host for data transfer in PIMeval
+  SIM,         // bit width of a data type used for functional compution in PIMeval
+  PADDED,      // bit width of a data element with association and padding in PIMeval
+};
+
 namespace pimUtils
 {
   std::string pimStatusEnumToStr(PimStatus status);
@@ -31,7 +42,7 @@ namespace pimUtils
   std::string pimAllocEnumToStr(PimAllocEnum allocType);
   std::string pimCopyEnumToStr(PimCopyEnum copyType);
   std::string pimDataTypeEnumToStr(PimDataType dataType);
-  unsigned getNumBitsOfDataType(PimDataType dataType);
+  unsigned getNumBitsOfDataType(PimDataType dataType, PimBitWidth bitWidthType);
 
   // Convert raw bits into sign-extended bits based on PIM data type.
   // Input: Raw bits represented as uint64_t
