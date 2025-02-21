@@ -69,7 +69,8 @@ enum PimCopyEnum {
 
 //! @brief  PIM datatypes
 enum PimDataType {
-  PIM_INT8 = 0,
+  PIM_BOOL = 0,
+  PIM_INT8,
   PIM_INT16,
   PIM_INT32,
   PIM_INT64,
@@ -134,6 +135,7 @@ PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimAbs(PimObjId src, PimObjId dest);
+PimStatus pimNot(PimObjId src, PimObjId dest);
 PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);

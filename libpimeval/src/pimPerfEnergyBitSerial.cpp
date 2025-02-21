@@ -147,7 +147,9 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     {
-      if (dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT64 || dataType == PIM_INT32 || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
+      if (dataType == PIM_BOOL ||
+          dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64 ||
+          dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64) {
         switch (cmdType)
         {
         case PimCmdEnum::REDSUM:

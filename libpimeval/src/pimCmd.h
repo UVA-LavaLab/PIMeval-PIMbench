@@ -51,6 +51,7 @@ enum class PimCmdEnum {
   MUL,
   SCALED_ADD,
   DIV,
+  NOT,
   AND,
   OR,
   XOR,
@@ -221,6 +222,7 @@ private:
         }
         result /= scalarValue;
         break;
+    case PimCmdEnum::NOT: result = ~operand; break;
     case PimCmdEnum::AND_SCALAR: result &= scalarValue; break;
     case PimCmdEnum::OR_SCALAR: result |= scalarValue; break;
     case PimCmdEnum::XOR_SCALAR: result ^= scalarValue; break;

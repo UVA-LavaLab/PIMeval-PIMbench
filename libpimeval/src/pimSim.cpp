@@ -563,6 +563,16 @@ pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: not
+bool
+pimSim::pimNot(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimNot");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::NOT, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 // @brief  PIM OP: and
 bool
 pimSim::pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)

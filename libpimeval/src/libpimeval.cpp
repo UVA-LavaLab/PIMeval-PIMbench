@@ -205,6 +205,14 @@ pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM not
+PimStatus
+pimNot(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimNot(src, dest);;
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  PIM or
 PimStatus
 pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
