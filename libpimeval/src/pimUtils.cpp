@@ -278,3 +278,35 @@ pimUtils::getDirectoryPath(const std::string& filePath) {
     std::filesystem::path path(filePath);
     return path.parent_path().string() + "/";
 }
+
+//! @brief Given a config file path, read all parameters
+std::unordered_map<std::string, std::string>
+pimUtils::readParamsFromConfigFile(const std::string& configFilePath)
+{
+  std::unordered_map<std::string, std::string> params;
+  if (configFilePath.empty()) {
+    return params;
+  }
+  std::string contents;
+  bool success = pimUtils::readFileContent(configFilePath.c_str(), contents);
+  if (!success) {
+    std::printf("PIM-Error: Failed to read config file %s\n", configFilePath.c_str());
+    return params;
+  }
+  std::istringstream iss(contents);
+  std::string line;
+  while (std::getline(iss, line)) {
+    line = pimUtils::removeAfterSemicolon(line);
+    if (line.empty() || line[0] == '[') {
+      continue;
+    }
+    size_t equalPos = line.find('=');
+    if (equalPos != std::string::npos) {
+      std::string key = line.substr(0, equalPos);
+      std::string value = line.substr(equalPos + 1);
+      params[pimUtils::trim(key)] = pimUtils::trim(value);
+    }
+  }
+  return params;
+}
+

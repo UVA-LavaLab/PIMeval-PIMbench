@@ -79,6 +79,7 @@ namespace pimUtils
 
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
+  std::unordered_map<std::string, std::string> readParamsFromConfigFile(const std::string& configFilePath);
 
   const std::unordered_map<PimDeviceEnum, std::string> enumToStrMap = {
       {PIM_DEVICE_NONE, "PIM_DEVICE_NONE"},

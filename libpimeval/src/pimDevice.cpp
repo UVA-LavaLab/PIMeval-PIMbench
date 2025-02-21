@@ -13,7 +13,6 @@
 #include <deque>
 #include <memory>
 #include <cassert>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <algorithm>
@@ -255,15 +254,8 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
   unsigned numCols;
   bool isLoadBalanced;
 
-  std::string fileContent;
-  success = pimUtils::readFileContent(configFileName, fileContent);
-  if (!success) {
-    std::printf("PIM-Error: Failed to read config file %s\n", configFileName);
-    return false;
-  }
-
   // input params
-  success = parseConfigFromFile(fileContent, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
+  success = parseConfigFromFile(configFileName, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
   if (!success) {
     std::printf("PIM-Error: Failed to parse config file %s\n", configFileName);
     return false;
@@ -328,24 +320,10 @@ pimDevice::init(PimDeviceEnum deviceType, const char* configFileName)
 
 //! @brief Initilize the device config parameters by parsing the config file
 bool
-pimDevice::parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols, bool& isLoadBalanced)
+pimDevice::parseConfigFromFile(const std::string& simConfigFilePath, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols, bool& isLoadBalanced)
 {
-  std::istringstream configStream(config);
-  std::string line;
-  std::unordered_map<std::string, std::string> params;
+  std::unordered_map<std::string, std::string> params = pimUtils::readParamsFromConfigFile(simConfigFilePath);
 
-  while (std::getline(configStream, line)) {
-    line = pimUtils::removeAfterSemicolon(line);
-    if (line.empty() || line[0] == '[') {
-      continue;
-    }
-    size_t equalPos = line.find('=');
-    if (equalPos != std::string::npos) {
-      std::string key = line.substr(0, equalPos);
-      std::string value = line.substr(equalPos + 1);
-      params[pimUtils::trim(key)] = pimUtils::trim(value);
-    }
-  }
   try {
     numRanks = std::stoi(pimUtils::getParam(params, "num_ranks"));
     numBankPerRank = std::stoi(pimUtils::getParam(params, "num_bank_per_rank"));
