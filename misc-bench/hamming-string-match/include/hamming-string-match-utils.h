@@ -1,3 +1,8 @@
+// Test: Hamming string matching utilities
+// Copyright (c) 2025 University of Virginia
+// This file is licensed under the MIT License.
+// See the LICENSE file in the root of this repository for more details.
+
 #ifndef HAMMING_STRING_MATCH_UTILS_H
 #define HAMMING_STRING_MATCH_UTILS_H
 
@@ -5,7 +10,13 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <algorithm>                   // for max
+#include <limits>                      // for numeric_limits
 
+
+//! @brief  Reads a list of needles from an input file
+//! @param[in]  keysInputFile  The name of the file to read from
+//! @return  A list of needles read from the file
 std::vector<std::string> getNeedlesFromFile(const std::string& keysInputFile) {
   std::ifstream keysFile(keysInputFile);
   if (!keysFile) {
@@ -27,6 +38,9 @@ std::vector<std::string> getNeedlesFromFile(const std::string& keysInputFile) {
   return needles;
 }
 
+//! @brief  Reads a string from a file
+//! @param[in]  inputFileName  The name of the file to read from
+//! @return  The string read from the file
 std::string readStringFromFile(const std::string& inputFileName) {
   std::ifstream file(inputFileName);
   if (!file) {
@@ -38,7 +52,12 @@ std::string readStringFromFile(const std::string& inputFileName) {
   return fileOss.str();
 }
 
-void hammingStringMatchCpu(std::vector<std::string>& needles, std::string& haystack, uint64_t maxHammingDistance, std::vector<int>& matches) {
+//! @brief  Matches a list of strings against another string on the CPU, with an allowable hamming distance
+//! @param[in]  needles  The list of needles to be matched
+//! @param[in]  haystack  The string to match against
+//! @param[in]  maxHammingDistance  The maximum hamming distance that will allow a match
+//! @param[out]  matches  A list of matches found
+void hammingStringMatchCpu(const std::vector<std::string>& needles, const std::string& haystack, const uint64_t maxHammingDistance, std::vector<int>& matches) {
   for(uint64_t needleIdx = 0; needleIdx < needles.size(); ++needleIdx) {
     const std::string_view needle = needles[needleIdx];
     if(needle.size() > haystack.size()) {
