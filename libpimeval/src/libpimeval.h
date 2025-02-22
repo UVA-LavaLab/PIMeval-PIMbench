@@ -87,6 +87,7 @@ enum PimDataType {
 //! @brief  PIM device properties
 struct PimDeviceProperties {
   PimDeviceEnum deviceType = PIM_DEVICE_NONE;
+  PimDeviceEnum simTarget = PIM_DEVICE_NONE;
   unsigned numRanks = 0;
   unsigned numBankPerRank = 0;
   unsigned numSubarrayPerBank = 0;

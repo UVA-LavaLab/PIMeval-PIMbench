@@ -220,6 +220,7 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
     return false;
   }
   deviceProperties->deviceType = m_device->getDeviceType();
+  deviceProperties->simTarget = m_device->getSimTarget();
   deviceProperties->numRanks = m_device->getNumRanks();
   deviceProperties->numBankPerRank = m_device->getNumBankPerRank();
   deviceProperties->numSubarrayPerBank = m_device->getNumSubarrayPerBank();
