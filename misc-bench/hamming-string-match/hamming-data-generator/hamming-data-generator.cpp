@@ -15,6 +15,10 @@
 #include <unordered_set>
 #include <iterator>
 #include <random>
+#include <iomanip>
+#include <string_view>
+
+using namespace std::literals::string_view_literals; // for sv literal
 
 typedef struct Params
 {
@@ -98,7 +102,7 @@ struct Params getInputParams(int argc, char **argv)
 //! @param[in]  key  The key to insert into the text
 //! @param[in]  maxHammingDistance  The maximum number of character changes to the key before insertion
 //! @param[in]  gen  Random number generator
-void hammingTextReplace(std::string& text, uint64_t idx, const std::string& key, uint64_t maxHammingDistance, std::mt19937& gen) {
+void hammingTextReplace(std::string& text, const uint64_t idx, const std::string& key, const uint64_t maxHammingDistance, std::mt19937& gen) {
   std::uniform_int_distribution<> numCharsDist(0, std::min(key.size(), maxHammingDistance));
   uint64_t numCharsToSwitch = numCharsDist(gen);
   std::uniform_int_distribution<> charsDist('a', 'b');
@@ -121,7 +125,7 @@ int main(int argc, char* argv[])
   std::cout << "Generating Data..." << std::endl;
 
   if(params.outputFile == nullptr) {
-    printf("Output filename must be provided!\n");
+    std::cerr << "Output filename must be provided!" << std::endl;
     return 1;
   }
 
@@ -131,8 +135,8 @@ int main(int argc, char* argv[])
   }
 
   if((double) params.numKeys > maxPossibleKeys) {
-    printf("Error: Number of keys greater than max possible keys for the given length range\n");
-    printf("Requested Keys: %lu, max number of unique keys of length [%lu, %lu]: %.0f\n", params.numKeys, params.minKeyLen, params.maxKeyLen, maxPossibleKeys);
+    std::cerr << "Error: Number of keys greater than max possible keys for the given length range" << std::endl;
+    std::cerr << "Requested Keys: " << params.numKeys << ", max number of unique keys of length [" << params.minKeyLen << ", " << params.maxKeyLen << "]: " << std::fixed << std::setprecision(0) << maxPossibleKeys << std::endl;
     return 1;
   }
 
@@ -145,7 +149,7 @@ int main(int argc, char* argv[])
     size_t currKeyLen = rand()%(params.maxKeyLen-params.minKeyLen + 1) + params.minKeyLen;
     std::string nextKey(currKeyLen, 0);
     for(size_t j=0; j<currKeyLen; ++j) {
-        nextKey[j] = (rand() % 26) + 'a';
+      nextKey[j] = (rand() % 26) + 'a';
     }
     if(!keysSet.count(nextKey)) {
       keysSet.insert(nextKey);
@@ -193,14 +197,14 @@ int main(int argc, char* argv[])
 
   #pragma omp parallel
   {
-      std::random_device rd;
-      std::mt19937 gen(rd());
-      std::uniform_int_distribution<> dist('A', 'Z');
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist('A', 'Z');
 
-      #pragma omp for
-      for (size_t i = 0; i < params.textLen; ++i) {
-          text[i] = dist(gen);
-      }
+    #pragma omp for
+    for (size_t i = 0; i < params.textLen; ++i) {
+      text[i] = dist(gen);
+    }
   }
 
   std::random_device global_rd;
@@ -234,38 +238,38 @@ int main(int argc, char* argv[])
   std::string hammingDistanceOutputFile = outputDir + "/maxHammingDistance.txt";
 
   if (!std::filesystem::create_directory(outputDir)) {
-      printf("Error creating output directory, dataset/%s may already exist\n", params.outputFile);
-      return 1;
+    std::cerr << "Error creating output directory, dataset/" << params.outputFile << " may already exist" << std::endl;
+    return 1;
   }
 
   FILE* textFile = fopen(textOutputFile.c_str(), "w");
   if (textFile == nullptr) {
-      printf("Error opening text file\n");
-      return 1;
+    std::cerr << "Error opening text file" << std::endl;
+    return 1;
   }
 
   size_t textWritten = fwrite(text.c_str(), sizeof(char), text.size(), textFile);
   if (textWritten != text.size()) {
-      printf("Error writing to text file\n");
-      return 1;
+    std::cerr << "Error writing to text file" << std::endl;
+    return 1;
   }
 
   fclose(textFile);
 
   FILE* keysFile = fopen(keyOutputFile.c_str(), "w");
   if (keysFile == nullptr) {
-      printf("Error opening keys file\n");
-      return 1;
+    std::cerr << "Error opening keys file" << std::endl;
+    return 1;
   }
 
-  std::string newlineChar = "\n";
+  constexpr std::string_view newlineChar = "\n"sv;
   for(size_t i=0; i<keys.size(); ++i) {
     size_t keyWritten = fwrite(keys[i].c_str(), sizeof(char), keys[i].size(), keysFile);
     if (keyWritten != keys[i].size()) {
-        printf("Error writing to keys file\n");
-        return 1;
+      std::cerr << "Error writing to keys file" << std::endl;
+      return 1;
     }
-    fwrite(newlineChar.c_str(), sizeof(char), newlineChar.size(), keysFile);
+    fwrite(newlineChar.data(), sizeof(char), newlineChar.size(), keysFile);
   }
 
   fclose(keysFile);
@@ -274,19 +278,21 @@ int main(int argc, char* argv[])
 
   FILE* hammingDistanceFile = fopen(hammingDistanceOutputFile.c_str(), "w");
   if (hammingDistanceFile == nullptr) {
-      printf("Error opening hamming distance file\n");
-      return 1;
+    std::cerr << "Error opening hamming distance file" << std::endl;
+    return 1;
   }
 
   size_t hammingDistanceWritten = fwrite(hammingDistanceString.c_str(), sizeof(char), hammingDistanceString.size(), hammingDistanceFile);
   if (hammingDistanceWritten != hammingDistanceString.size()) {
-      printf("Error writing to hamming distance file\n");
-      return 1;
+    std::cerr << "Error writing to hamming distance file" << std::endl;
+    return 1;
   }
 
   fclose(hammingDistanceFile);
 
-  printf("Successfully wrote to dataset/%s/keys.txt, dataset/%s/text.txt, and dataset/%s/maxHammingDistance.txt\n", params.outputFile, params.outputFile, params.outputFile);
-
+  std::cout << "Successfully wrote to dataset/" << params.outputFile << "/keys.txt, dataset/"
+            << params.outputFile << "/text.txt, and dataset/"
+            << params.outputFile << "/maxHammingDistance.txt" << std::endl;
+  
   return 0;
 }
