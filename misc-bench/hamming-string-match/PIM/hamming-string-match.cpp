@@ -86,7 +86,7 @@ struct Params getInputParams(int argc, char **argv)
 }
 
 //! @brief  Precomputes a more optimal order to match keys/needles on PIM device for calculation reuse
-//! @details Instead of calling pimEQScalar multiple times for the same character, call only once per character per char index and reuse result
+//! @details Instead of calling pimNEScalar multiple times for the same character, call only once per character per char index and reuse result
 //!          Orders needles within a character index to place needles with the same character next to each other
 //!          Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
 //! @param[in]  needles  A list of needles that will be matched
@@ -231,16 +231,16 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
     // this allows amortization of the pimShiftElementsLeft calls
     for(uint64_t charIdx=0; charIdx < needlesTable[iter].size(); ++charIdx) {
 
-      // Stores the last character checked using pimEQScalar
+      // Stores the last character checked using pimNEScalar
       char prevChar = '\0';
       
       // Iterates through the needles, checking the characters at the index charIdx
       // Processes in an order for optimal reuse
       // e.g.: needles = ["abc", "dec", "aab"]
       // will be processed in the following order:
-      // charIdx==0: 'a', 'a', 'd' -> can reuse pimEQScalar call for the two 'a's
+      // charIdx==0: 'a', 'a', 'd' -> can reuse pimNEScalar call for the two 'a's
       // charIdx==1: 'a', 'b', 'e'
-      // charIdx==2: 'b', 'c', 'c' -> can reuse pimEQScalar call for the two 'c's
+      // charIdx==2: 'b', 'c', 'c' -> can reuse pimNEScalar call for the two 'c's
       // This optimization is helpful whenver there are multiple of the same character in multiple needles at the same index
       // This is more likely to happen when there are a lot of needles/keys
 
@@ -260,7 +260,7 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
         if(charIdx == 0) {
           // If on the first character index, there is no need to pimAnd with the current possible matches
           // Instead, place the equality result directly into the match array
-          status = pimEQScalar(haystackPim, pimIndividualNeedleMatches[needleIdxPim], (uint64_t) currentChar);
+          status = pimNEScalar(haystackPim, pimIndividualNeedleMatches[needleIdxPim], (uint64_t) currentChar);
           assert (status == PIM_OK);
         } else if(prevChar == currentChar) {
           // Reuse the previously calculated equality result in intermediatePim and pimAnd with the current matches
@@ -268,7 +268,7 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
           assert (status == PIM_OK);
         } else {
           // Check the entirety of the text if it is equal with the current character
-          status = pimEQScalar(haystackPim, intermediatePim, (uint64_t) currentChar);
+          status = pimNEScalar(haystackPim, intermediatePim, (uint64_t) currentChar);
           assert (status == PIM_OK);
 
           // Update the potential match array
@@ -303,17 +303,9 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
       } else {
 
         // Checks for matches within maxHammingDistance distance
-        // pimIndividualNeedleMatches[needleIdxPim] represents the number of matches
-        // Derivation:
-        // For a match:
-        // distance (mismatches) <= maxHammingDistance
-        // distance (mismatches) = needle.size() - matches
-        // needle.size() - matches <= maxHammingDistance
-        // needle.size() - matches - 1 < maxHammingDistance
-        // needle.size() - 1 - maxHammingDistance < matches
-        // Therefore, the below produces a 1 for matches, and a 0 otherwise
-        // Additionally, needle.size() - maxHammingDistance - 1 >= 0, because cases where needle.size() <= maxHammingDistance are filtered out
-        status = pimGTScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], needles[needleIdxHost].size() - maxHammingDistance - 1);
+        // pimIndividualNeedleMatches[needleIdxPim] represents the hamming distance between the needle and the haystack at each position
+        // If pimIndividualNeedleMatches[needleIdxPim][i] <= maxHammingDistance, there is a match at the position
+        status = pimLTScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], maxHammingDistance + 1);
         assert (status == PIM_OK);
 
         // pimIndividualNeedleMatches[needleIdxPim] is a binary PIM object containing only 0s and 1s
