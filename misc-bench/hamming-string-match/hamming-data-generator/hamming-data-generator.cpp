@@ -92,6 +92,12 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+//! @brief  Replaces part of a text with random characters
+//! @param[in,out]  text  The text to replace part of
+//! @param[in]  idx  The start index to replace from
+//! @param[in]  key  The key to insert into the text
+//! @param[in]  maxHammingDistance  The maximum number of character changes to the key before insertion
+//! @param[in]  gen  Random number generator
 void hammingTextReplace(std::string& text, uint64_t idx, const std::string& key, uint64_t maxHammingDistance, std::mt19937& gen) {
   std::uniform_int_distribution<> numCharsDist(0, std::min(key.size(), maxHammingDistance));
   uint64_t numCharsToSwitch = numCharsDist(gen);
