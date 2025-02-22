@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
       }
     }
     if(ok) {
-      std::cout << "Correct for string match!" << std::endl;
+      std::cout << "Correct for hamming string match!" << std::endl;
     }
   }
 
