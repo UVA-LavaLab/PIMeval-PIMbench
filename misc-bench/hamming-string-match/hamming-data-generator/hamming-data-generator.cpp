@@ -170,6 +170,7 @@ int main(int argc, char* argv[])
   
   size_t textCharsReplacedWithKeys = 0;
   size_t targetTextCharsReplacedWithKeys = ((double) params.keyFrequency / (double) 100.0) * params.textLen;
+  targetTextCharsReplacedWithKeys = std::min(targetTextCharsReplacedWithKeys, params.textLen);
   size_t lastViableKey = keys.size();
 
   // Replace some of text with keys to generate matches
@@ -178,6 +179,7 @@ int main(int argc, char* argv[])
     std::string& nextKey = keys[nextKeyInd];
     if(nextKey.size() + textCharsReplacedWithKeys > targetTextCharsReplacedWithKeys) {
       lastViableKey = nextKeyInd;
+      continue;
     }
     textVecOfKeys.push_back(nextKeyInd);
     textCharsReplacedWithKeys += nextKey.size();
