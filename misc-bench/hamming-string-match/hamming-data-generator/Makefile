@@ -1,5 +1,5 @@
 # Makefile: C++ data generator for hamming string match
-# Copyright (c) 2024 University of Virginia
+# Copyright (c) 2025 University of Virginia
 # This file is licensed under the MIT License.
 # See the LICENSE file in the root of this repository for more details.
 

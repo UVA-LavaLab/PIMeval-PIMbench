@@ -1,5 +1,5 @@
 // Test: C++ version of hamming string match
-// Copyright (c) 2024 University of Virginia
+// Copyright (c) 2025 University of Virginia
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <cassert>
 #include <algorithm>
+#include <string_view>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
@@ -382,31 +383,13 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
 
-  const std::string defaultTextFileName = "./../dataset/10mil_l-10_nk-10_kl/text.txt";
+  constexpr std::string_view defaultTextFileName = "./../dataset/10mil_l-10_nk-10_kl/text.txt"sv;
+  constexpr std::string_view defaultNeedlesFileName = "./../dataset/10mil_l-10_nk-10_kl/keys.txt"sv;
+  constexpr std::string_view defaultHammingDistanceFilename = "./../dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt"sv;
 
-  std::string textFilename;
-  if(params.textInputFile == nullptr) {
-    textFilename = defaultTextFileName;
-  } else {
-    textFilename = params.textInputFile;
-  }
-
-  const std::string defaultNeedlesFileName = "./../dataset/10mil_l-10_nk-10_kl/keys.txt";
-
-  std::string needlesFilename;
-  if(params.keysInputFile == nullptr) {
-    needlesFilename = defaultNeedlesFileName;
-  } else {
-    needlesFilename = params.keysInputFile;
-  }
-
-  const std::string defaultHammingDistanceFilename = "./../dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt";
-  std::string hammingDistanceFilename;
-  if(params.hammingDistanceInputFile == nullptr) {
-    hammingDistanceFilename = defaultHammingDistanceFilename;
-  } else {
-    hammingDistanceFilename = params.hammingDistanceInputFile;
-  }
+  const std::string_view textFilename = params.textInputFile == nullptr ? defaultTextFileName : std::string_view(params.textInputFile);
+  const std::string_view needlesFilename = params.keysInputFile == nullptr ? defaultNeedlesFileName : std::string_view(params.keysInputFile);
+  const std::string_view hammingDistanceFilename = params.hammingDistanceInputFile == nullptr ? defaultHammingDistanceFilename : std::string_view(params.hammingDistanceInputFile);
   
   std::cout << "Running PIM string match for \"" << needlesFilename << "\" as the keys file, \"" << textFilename << "\" as the text input file, and \"" << hammingDistanceFilename << "\" as the hamming distance input file\n";
   
