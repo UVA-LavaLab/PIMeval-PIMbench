@@ -15,6 +15,13 @@ const std::unordered_map<PimDeviceEnum, std::unordered_map<PimDataType,
     std::unordered_map<PimCmdEnum, std::tuple<unsigned, unsigned, unsigned>>>>
 pimPerfEnergyTables::bitsimdPerfTable = {
   { PIM_DEVICE_BITSIMD_V, {
+    { PIM_BOOL, {
+      { PimCmdEnum::NOT,          {    1,    1,    1 } },
+      { PimCmdEnum::AND,          {    2,    1,    2 } },
+      { PimCmdEnum::OR,           {    2,    1,    2 } },
+      { PimCmdEnum::XOR,          {    2,    1,    2 } },
+      { PimCmdEnum::XNOR,         {    2,    1,    2 } },
+    }},
     { PIM_INT8, {
       { PimCmdEnum::COPY_O2O,     {    8,    8,    0 } },
       { PimCmdEnum::ABS,          {    9,    8,   34 } },
@@ -30,6 +37,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   16,    8,   26 } },
       { PimCmdEnum::LT,           {   16,    8,   26 } },
       { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::NE,           {   16,    8,   27 } },
       { PimCmdEnum::MIN,          {   32,    8,   41 } },
       { PimCmdEnum::MAX,          {   32,    8,   41 } },
       { PimCmdEnum::ADD_SCALAR,   {    8,    8,   33 } },
@@ -43,6 +51,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {    8,    8,   34 } },
       { PimCmdEnum::LT_SCALAR,    {    8,    8,   34 } },
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
+      { PimCmdEnum::NE_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   57 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   57 } },
       { PimCmdEnum::SCALED_ADD,   {   44,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR
@@ -66,6 +75,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   32,   16,   50 } },
       { PimCmdEnum::LT,           {   32,   16,   50 } },
       { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::NE,           {   32,   16,   51 } },
       { PimCmdEnum::MIN,          {   64,   16,   81 } },
       { PimCmdEnum::MAX,          {   64,   16,   81 } },
       { PimCmdEnum::ADD_SCALAR,   {   16,   16,   65 } },
@@ -79,6 +89,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   16,   16,   66 } },
       { PimCmdEnum::LT_SCALAR,    {   16,   16,   66 } },
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
+      { PimCmdEnum::NE_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  113 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  113 } },
       { PimCmdEnum::SCALED_ADD,   {  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR
@@ -102,6 +113,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   64,   32,   98 } },
       { PimCmdEnum::LT,           {   64,   32,   98 } },
       { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::NE,           {   64,   32,   99 } },
       { PimCmdEnum::MIN,          {  128,   32,  161 } },
       { PimCmdEnum::MAX,          {  128,   32,  161 } },
       { PimCmdEnum::ADD_SCALAR,   {   32,   32,  129 } },
@@ -115,6 +127,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   32,   32,  130 } },
       { PimCmdEnum::LT_SCALAR,    {   32,   32,  130 } },
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
+      { PimCmdEnum::NE_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  225 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  225 } },
       { PimCmdEnum::SCALED_ADD,   {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR
@@ -138,6 +151,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {  128,   64,  194 } },
       { PimCmdEnum::LT,           {  128,   64,  194 } },
       { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::NE,           {  128,   64,  195 } },
       { PimCmdEnum::MIN,          {  256,   64,  321 } },
       { PimCmdEnum::MAX,          {  256,   64,  321 } },
       { PimCmdEnum::ADD_SCALAR,   {   64,   64,  257 } },
@@ -151,6 +165,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   64,   64,  258 } },
       { PimCmdEnum::LT_SCALAR,    {   64,   64,  258 } },
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
+      { PimCmdEnum::NE_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  449 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  449 } },
       //{ PimCmdEnum::SCALED_ADD,   {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR
@@ -174,6 +189,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   16,    8,   27 } },
       { PimCmdEnum::LT,           {   16,    8,   27 } },
       { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::NE,           {   16,    8,   27 } },
       { PimCmdEnum::MIN,          {   32,    8,   42 } },
       { PimCmdEnum::MAX,          {   32,    8,   42 } },
       { PimCmdEnum::ADD_SCALAR,   {    8,    8,   33 } },
@@ -187,6 +203,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::LT_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
+      { PimCmdEnum::NE_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   58 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   58 } },
       { PimCmdEnum::SCALED_ADD,   {   44,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR
@@ -210,6 +227,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   32,   16,   51 } },
       { PimCmdEnum::LT,           {   32,   16,   51 } },
       { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::NE,           {   32,   16,   51 } },
       { PimCmdEnum::MIN,          {   64,   16,   82 } },
       { PimCmdEnum::MAX,          {   64,   16,   82 } },
       { PimCmdEnum::ADD_SCALAR,   {   16,   16,   65 } },
@@ -223,6 +241,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::LT_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
+      { PimCmdEnum::NE_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  114 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  114 } },
       { PimCmdEnum::SCALED_ADD,   {  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR
@@ -246,6 +265,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   64,   32,   99 } },
       { PimCmdEnum::LT,           {   64,   32,   99 } },
       { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::NE,           {   64,   32,   99 } },
       { PimCmdEnum::MIN,          {  128,   32,  162 } },
       { PimCmdEnum::MAX,          {  128,   32,  162 } },
       { PimCmdEnum::ADD_SCALAR,   {   32,   32,  129 } },
@@ -259,6 +279,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::LT_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
+      { PimCmdEnum::NE_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  226 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  226 } },
       { PimCmdEnum::SCALED_ADD,   {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR
@@ -282,6 +303,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {  128,   64,  195 } },
       { PimCmdEnum::LT,           {  128,   64,  195 } },
       { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::NE,           {  128,   64,  195 } },
       { PimCmdEnum::MIN,          {  256,   64,  322 } },
       { PimCmdEnum::MAX,          {  256,   64,  322 } },
       { PimCmdEnum::ADD_SCALAR,   {   64,   64,  257 } },
@@ -295,6 +317,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::LT_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
+      { PimCmdEnum::NE_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  450 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  450 } },
       // { PimCmdEnum::SCALED_ADD,  {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR
@@ -313,6 +336,13 @@ pimPerfEnergyTables::bitsimdPerfTable = {
     }}
   }},
   { PIM_DEVICE_BITSIMD_V_AP, {
+    { PIM_BOOL, {
+      { PimCmdEnum::NOT,          {    1,    1,    1 } },
+      { PimCmdEnum::AND,          {    2,    1,    2 } },
+      { PimCmdEnum::OR,           {    2,    1,    2 } },
+      { PimCmdEnum::XOR,          {    2,    1,    2 } },
+      { PimCmdEnum::XNOR,         {    2,    1,    2 } },
+    }},
     { PIM_INT8, {
       { PimCmdEnum::COPY_O2O,     {    8,    8,    0 } },
       { PimCmdEnum::ABS,          {    9,    8,   51 } },
@@ -328,6 +358,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   16,    8,   34 } },
       { PimCmdEnum::LT,           {   16,    8,   34 } },
       { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::NE,           {   16,    8,   27 } },
       { PimCmdEnum::MIN,          {   32,    8,   49 } },
       { PimCmdEnum::MAX,          {   32,    8,   49 } },
       { PimCmdEnum::ADD_SCALAR,   {    8,    8,   33 } },
@@ -341,6 +372,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {    8,    8,   42 } },
       { PimCmdEnum::LT_SCALAR,    {    8,    8,   42 } },
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
+      { PimCmdEnum::NE_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   65 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   65 } },
       { PimCmdEnum::SCALED_ADD,   {   52,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR
@@ -364,6 +396,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   32,   16,   66 } },
       { PimCmdEnum::LT,           {   32,   16,   66 } },
       { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::NE,           {   32,   16,   51 } },
       { PimCmdEnum::MIN,          {   64,   16,   97 } },
       { PimCmdEnum::MAX,          {   64,   16,   97 } },
       { PimCmdEnum::ADD_SCALAR,   {   16,   16,   65 } },
@@ -377,6 +410,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   16,   16,   82 } },
       { PimCmdEnum::LT_SCALAR,    {   16,   16,   82 } },
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
+      { PimCmdEnum::NE_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  129 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  129 } },
       { PimCmdEnum::SCALED_ADD,   {  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR
@@ -400,6 +434,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   64,   32,  130 } },
       { PimCmdEnum::LT,           {   64,   32,  130 } },
       { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::NE,           {   64,   32,   99 } },
       { PimCmdEnum::MIN,          {  128,   32,  193 } },
       { PimCmdEnum::MAX,          {  128,   32,  193 } },
       { PimCmdEnum::ADD_SCALAR,   {   32,   32,  129 } },
@@ -413,6 +448,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   32,   32,  162 } },
       { PimCmdEnum::LT_SCALAR,    {   32,   32,  162 } },
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
+      { PimCmdEnum::NE_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  257 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  257 } },
       { PimCmdEnum::SCALED_ADD,   {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR
@@ -436,6 +472,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {  128,   64,  258 } },
       { PimCmdEnum::LT,           {  128,   64,  258 } },
       { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::NE,           {  128,   64,  195 } },
       { PimCmdEnum::MIN,          {  256,   64,  385 } },
       { PimCmdEnum::MAX,          {  256,   64,  385 } },
       { PimCmdEnum::ADD_SCALAR,   {   64,   64,  257 } },
@@ -449,6 +486,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   64,   64,  322 } },
       { PimCmdEnum::LT_SCALAR,    {   64,   64,  322 } },
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
+      { PimCmdEnum::NE_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  513 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  513 } },
       // { PimCmdEnum::SCALED_ADD,  {   52,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR
@@ -472,6 +510,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   16,    8,   36 } },
       { PimCmdEnum::LT,           {   16,    8,   36 } },
       { PimCmdEnum::EQ,           {   16,    8,   27 } },
+      { PimCmdEnum::NE,           {   16,    8,   27 } },
       { PimCmdEnum::MIN,          {   32,    8,   51 } },
       { PimCmdEnum::MAX,          {   32,    8,   51 } },
       { PimCmdEnum::ADD_SCALAR,   {    8,    8,   33 } },
@@ -485,6 +524,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {    8,    8,   44 } },
       { PimCmdEnum::LT_SCALAR,    {    8,    8,   44 } },
       { PimCmdEnum::EQ_SCALAR,    {    8,    8,   35 } },
+      { PimCmdEnum::NE_SCALAR,    {    8,    8,   35 } },
       { PimCmdEnum::MIN_SCALAR,   {   16,    8,   67 } },
       { PimCmdEnum::MAX_SCALAR,   {   16,    8,   67 } },
       { PimCmdEnum::SCALED_ADD,   {   52,   44,  197 } }, // Derived from adding ADD + MUL_SCALAR
@@ -508,6 +548,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   32,   16,   68 } },
       { PimCmdEnum::LT,           {   32,   16,   68 } },
       { PimCmdEnum::EQ,           {   32,   16,   51 } },
+      { PimCmdEnum::NE,           {   32,   16,   51 } },
       { PimCmdEnum::MIN,          {   64,   16,   99 } },
       { PimCmdEnum::MAX,          {   64,   16,   99 } },
       { PimCmdEnum::ADD_SCALAR,   {   16,   16,   65 } },
@@ -521,6 +562,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   16,   16,   84 } },
       { PimCmdEnum::LT_SCALAR,    {   16,   16,   84 } },
       { PimCmdEnum::EQ_SCALAR,    {   16,   16,   67 } },
+      { PimCmdEnum::NE_SCALAR,    {   16,   16,   67 } },
       { PimCmdEnum::MIN_SCALAR,   {   32,   16,  131 } },
       { PimCmdEnum::MAX_SCALAR,   {   32,   16,  131 } },
       { PimCmdEnum::SCALED_ADD,   {  168,  152,  713 } }, // Derived from adding ADD + MUL_SCALAR
@@ -544,6 +586,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {   64,   32,  132 } },
       { PimCmdEnum::LT,           {   64,   32,  132 } },
       { PimCmdEnum::EQ,           {   64,   32,   99 } },
+      { PimCmdEnum::NE,           {   64,   32,   99 } },
       { PimCmdEnum::MIN,          {  128,   32,  195 } },
       { PimCmdEnum::MAX,          {  128,   32,  195 } },
       { PimCmdEnum::ADD_SCALAR,   {   32,   32,  129 } },
@@ -557,6 +600,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   32,   32,  164 } },
       { PimCmdEnum::LT_SCALAR,    {   32,   32,  164 } },
       { PimCmdEnum::EQ_SCALAR,    {   32,   32,  131 } },
+      { PimCmdEnum::NE_SCALAR,    {   32,   32,  131 } },
       { PimCmdEnum::MIN_SCALAR,   {   64,   32,  259 } },
       { PimCmdEnum::MAX_SCALAR,   {   64,   32,  259 } },
       { PimCmdEnum::SCALED_ADD,   {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR
@@ -580,6 +624,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT,           {  128,   64,  260 } },
       { PimCmdEnum::LT,           {  128,   64,  260 } },
       { PimCmdEnum::EQ,           {  128,   64,  195 } },
+      { PimCmdEnum::NE,           {  128,   64,  195 } },
       { PimCmdEnum::MIN,          {  256,   64,  387 } },
       { PimCmdEnum::MAX,          {  256,   64,  387 } },
       { PimCmdEnum::ADD_SCALAR,   {   64,   64,  257 } },
@@ -593,6 +638,7 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::GT_SCALAR,    {   64,   64,  324 } },
       { PimCmdEnum::LT_SCALAR,    {   64,   64,  324 } },
       { PimCmdEnum::EQ_SCALAR,    {   64,   64,  259 } },
+      { PimCmdEnum::NE_SCALAR,    {   64,   64,  259 } },
       { PimCmdEnum::MIN_SCALAR,   {  128,   64,  515 } },
       { PimCmdEnum::MAX_SCALAR,   {  128,   64,  515 } },
       // { PimCmdEnum::SCALED_ADD,  {  592,  560, 2705 } }, // Derived from adding ADD + MUL_SCALAR

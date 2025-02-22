@@ -76,6 +76,7 @@ std::string
 pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
 {
   switch (dataType) {
+  case PIM_BOOL: return "bool";
   case PIM_INT8: return "int8";
   case PIM_INT16: return "int16";
   case PIM_INT32: return "int32";
@@ -92,28 +93,58 @@ pimUtils::pimDataTypeEnumToStr(PimDataType dataType)
   return "Unknown";
 }
 
+namespace pimUtils {
+  //! @brief  Static definitions of bits of data types (see PimBitWidth)
+  //! Notes:
+  //! - BOOL: PIMeval requires host data to store one bool value per byte
+  //! - FP16/BF16/FP8: PIMeval uses FP32 for functional simulation
+  static const std::unordered_map<PimDataType, std::unordered_map<PimBitWidth, unsigned>> s_bitsOfDataType = {
+    { PIM_BOOL, {{PimBitWidth::ACTUAL, 1}, {PimBitWidth::SIM, 1}, {PimBitWidth::HOST, 8}} },
+    { PIM_INT8, {{PimBitWidth::ACTUAL, 8}, {PimBitWidth::SIM, 8}, {PimBitWidth::HOST, 8}} },
+    { PIM_INT16, {{PimBitWidth::ACTUAL, 16}, {PimBitWidth::SIM, 16}, {PimBitWidth::HOST, 16}} },
+    { PIM_INT32, {{PimBitWidth::ACTUAL, 32}, {PimBitWidth::SIM, 32}, {PimBitWidth::HOST, 32}} },
+    { PIM_INT64, {{PimBitWidth::ACTUAL, 64}, {PimBitWidth::SIM, 64}, {PimBitWidth::HOST, 64}} },
+    { PIM_UINT8, {{PimBitWidth::ACTUAL, 8}, {PimBitWidth::SIM, 8}, {PimBitWidth::HOST, 8}} },
+    { PIM_UINT16, {{PimBitWidth::ACTUAL, 16}, {PimBitWidth::SIM, 16}, {PimBitWidth::HOST, 16}} },
+    { PIM_UINT32, {{PimBitWidth::ACTUAL, 32}, {PimBitWidth::SIM, 32}, {PimBitWidth::HOST, 32}} },
+    { PIM_UINT64, {{PimBitWidth::ACTUAL, 64}, {PimBitWidth::SIM, 64}, {PimBitWidth::HOST, 64}} },
+    { PIM_FP32, {{PimBitWidth::ACTUAL, 32}, {PimBitWidth::SIM, 32}, {PimBitWidth::HOST, 32}} },
+    { PIM_FP16, {{PimBitWidth::ACTUAL, 16}, {PimBitWidth::SIM, 32}, {PimBitWidth::HOST, 32}} },
+    { PIM_BF16, {{PimBitWidth::ACTUAL, 16}, {PimBitWidth::SIM, 32}, {PimBitWidth::HOST, 32}} },
+    { PIM_FP8, {{PimBitWidth::ACTUAL, 8}, {PimBitWidth::SIM, 32}, {PimBitWidth::HOST, 32}} },
+  };
+}
+
 //! @brief  Get number of bits of a PIM data type
 unsigned
-pimUtils::getNumBitsOfDataType(PimDataType dataType)
+pimUtils::getNumBitsOfDataType(PimDataType dataType, PimBitWidth bitWidthType)
 {
-  switch (dataType) {
-  case PIM_INT8: return 8;
-  case PIM_INT16: return 16;
-  case PIM_INT32: return 32;
-  case PIM_INT64: return 64;
-  case PIM_UINT8: return 8;
-  case PIM_UINT16: return 16;
-  case PIM_UINT32: return 32;
-  case PIM_UINT64: return 64;
-  case PIM_FP32: return 32;
-  // In option 1, PIMeval performs float operations for functional simulation
-  case PIM_FP16: return 32;
-  case PIM_BF16: return 32;
-  case PIM_FP8: return 32;
-  default:
-    assert(0);
+  if (bitWidthType == PimBitWidth::ACTUAL || bitWidthType == PimBitWidth::SIM || bitWidthType == PimBitWidth::HOST) {
+    auto it = pimUtils::s_bitsOfDataType.find(dataType);
+    return it != s_bitsOfDataType.end() ? it->second.at(bitWidthType) : 0;
   }
   return 0;
+}
+
+//! @brief  Check if a PIM data type is signed integer
+bool
+pimUtils::isSigned(PimDataType dataType)
+{
+  return dataType == PIM_INT8 || dataType == PIM_INT16 || dataType == PIM_INT32 || dataType == PIM_INT64;
+}
+
+//! @brief  Check if a PIM data type is unsigned integer
+bool
+pimUtils::isUnsigned(PimDataType dataType)
+{
+  return dataType == PIM_BOOL || dataType == PIM_UINT8 || dataType == PIM_UINT16 || dataType == PIM_UINT32 || dataType == PIM_UINT64;
+}
+
+//! @brief  Check if a PIM data type is floating point
+bool
+pimUtils::isFP(PimDataType dataType)
+{
+  return dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8;
 }
 
 //! @brief  Thread pool ctor

@@ -25,7 +25,7 @@ public:
   static void destroy();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool getDeviceProperties(PimDeviceProperties* deviceProperties);
   bool deleteDevice();
@@ -56,8 +56,8 @@ public:
   unsigned getNumThreads() const { return m_numThreads; }
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId obj);
   PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
   PimObjId pimCreateDualContactRef(PimObjId refId);
@@ -69,6 +69,7 @@ public:
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyObjectToObject(PimObjId src, PimObjId dest);
+  bool pimConvertType(PimObjId src, PimObjId dest);
 
   // Computation
   bool pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -76,6 +77,7 @@ public:
   bool pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAbs(PimObjId src, PimObjId dest);
   bool pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimNot(PimObjId src, PimObjId dest);
   bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -83,6 +85,7 @@ public:
   bool pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimNE(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAdd(PimObjId src, PimObjId dest, uint64_t scalarValue);
@@ -96,6 +99,7 @@ public:
   bool pimGT(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimLT(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimEQ(PimObjId src, PimObjId dest, uint64_t scalarValue);
+  bool pimNE(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimMin(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue);
   bool pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);

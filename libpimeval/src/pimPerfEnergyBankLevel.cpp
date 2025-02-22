@@ -16,7 +16,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCores = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -56,6 +56,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::GT_SCALAR:
     case PimCmdEnum::LT_SCALAR:
     case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::NE_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
     case PimCmdEnum::MAX_SCALAR:
     case PimCmdEnum::SHIFT_BITS_L:
@@ -85,7 +86,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCoresUsed = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -138,6 +139,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::GT:
     case PimCmdEnum::LT:
     case PimCmdEnum::EQ:
+    case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {
@@ -163,7 +165,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
@@ -205,7 +207,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
 
@@ -227,7 +229,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);

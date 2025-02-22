@@ -40,20 +40,6 @@ pimObjInfo::print() const
   #endif
 }
 
-std::string
-pimObjInfo::getDataTypeName() const
-{
-  switch (m_dataType)
-  {
-  case PimDataType::PIM_INT32:
-    return "int32";
-  case PimDataType::PIM_INT64:
-    return "int64";
-  default:
-    throw std::invalid_argument("Unsupported Type.");
-  }
-}
-
 //! @brief  Finalize obj info
 void
 pimObjInfo::finalize()
@@ -69,10 +55,26 @@ pimObjInfo::finalize()
   }
   m_numCoresUsed = coreIdCnt.size();
   m_numCoreAvailable = m_device->getNumCores();
+  m_isLoadBalanced = m_device->isLoadBalanced();
 
   const pimRegion& region = m_regions[0];
   m_maxElementsPerRegion = (uint64_t)region.getNumAllocRows() * region.getNumAllocCols() / m_bitsPerElement;
   m_numColsPerElem = region.getNumColsPerElem();
+}
+
+//! @brief  Get number of bits per element
+unsigned
+pimObjInfo::getBitsPerElement(PimBitWidth bitWidthType) const
+{
+  switch (bitWidthType) {
+    case PimBitWidth::ACTUAL:
+    case PimBitWidth::SIM:
+    case PimBitWidth::HOST:
+      return pimUtils::getNumBitsOfDataType(m_dataType, bitWidthType);
+    case PimBitWidth::PADDED:
+      assert(0); // todo
+  }
+  return m_bitsPerElement;
 }
 
 //! @brief  Get all regions on a specific PIM core for current PIM object
@@ -196,7 +198,7 @@ void
 pimObjInfo::syncFromSimulatedMem()
 {
   pimObjInfo &obj = (m_refObjId != -1 ? m_device->getResMgr()->getObjInfo(m_refObjId) : *this);
-  unsigned numBits = getBitsPerElement();
+  unsigned numBits = getBitsPerElement(PimBitWidth::SIM);
   for (size_t i = 0; i < m_regions.size(); ++i) {
     pimRegion& region = m_regions[i];
     PimCoreId coreId = region.getCoreId();
@@ -217,7 +219,7 @@ void
 pimObjInfo::syncToSimulatedMem() const
 {
   const pimObjInfo &obj = (m_refObjId != -1 ? m_device->getResMgr()->getObjInfo(m_refObjId) : *this);
-  unsigned numBits = getBitsPerElement();
+  unsigned numBits = getBitsPerElement(PimBitWidth::SIM);
   for (size_t i = 0; i < m_regions.size(); ++i) {
     const pimRegion& region = m_regions[i];
     PimCoreId coreId = region.getCoreId();
@@ -257,8 +259,9 @@ pimResMgr::~pimResMgr()
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
+pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType, PimBitWidth::SIM);
   #if defined(DEBUG)
   std::printf("PIM-Debug: pimResMgr::pimAlloc for %d alloc-type %llu elements %u bits per element %d data-type\n",
               (int)allocType, numElements, bitsPerElement, (int)dataType);
@@ -376,8 +379,9 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
 //!         For V layout, expect same number of elements, while bits per element may be different
 //!         For H layout, expect exact same number of elements and bits per elements
 PimObjId
-pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
+pimResMgr::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType, PimBitWidth::SIM);
   #if defined(DEBUG)
   std::printf("PIM-Debug: pimResMgr::pimAllocAssociated for %u bits per element %d data-type associated to object %d\n",
               bitsPerElement, (int)dataType, assocId);
@@ -397,9 +401,9 @@ pimResMgr::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimData
   PimAllocEnum allocType = assocObj.getAllocType();
   uint64_t numElements = assocObj.getNumElements();
   if (allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) {
-    if (bitsPerElement != assocObj.getBitsPerElement()) {
+    if (bitsPerElement != assocObj.getBitsPerElement(PimBitWidth::SIM)) {
       std::printf("PIM-Error: Cannot allocate elements of %u bits associated with object ID %d with %u bits in H1 style\n",
-                  bitsPerElement, assocId, assocObj.getBitsPerElement());
+                  bitsPerElement, assocId, assocObj.getBitsPerElement(PimBitWidth::SIM));
       return -1;
     }
   }

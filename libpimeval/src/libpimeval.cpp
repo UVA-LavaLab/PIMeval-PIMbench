@@ -10,9 +10,9 @@
 
 //! @brief  Create a PIM device
 PimStatus
-pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced)
 {
-  bool ok = pimSim::get()->createDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  bool ok = pimSim::get()->createDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -79,16 +79,14 @@ pimIsAnalysisMode()
 PimObjId
 pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
-  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
-  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+  return pimSim::get()->pimAlloc(allocType, numElements, dataType);
 }
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
 pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
-  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
-  return pimSim::get()->pimAllocAssociated(bitsPerElement, assocId, dataType);
+  return pimSim::get()->pimAllocAssociated(assocId, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -159,6 +157,13 @@ PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Convert data type between two associated PIM objects of different data types
+PimStatus pimConvertType(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimConvertType(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Load vector with a signed int value
 PimStatus
 pimBroadcastInt(PimObjId dest, int64_t value)
@@ -204,6 +209,14 @@ PimStatus
 pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   bool ok = pimSim::get()->pimDiv(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM not
+PimStatus
+pimNot(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimNot(src, dest);;
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -276,6 +289,14 @@ PimStatus
 pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   bool ok = pimSim::get()->pimEQ(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM NE
+PimStatus
+pimNE(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimNE(src1, src2, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -358,6 +379,12 @@ PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
 PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
 {
   bool ok = pimSim::get()->pimEQ(src, dest, scalarValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimNEScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+{
+  bool ok = pimSim::get()->pimNE(src, dest, scalarValue);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

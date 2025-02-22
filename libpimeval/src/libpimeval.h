@@ -69,7 +69,8 @@ enum PimCopyEnum {
 
 //! @brief  PIM datatypes
 enum PimDataType {
-  PIM_INT8 = 0,
+  PIM_BOOL = 0,
+  PIM_INT8,
   PIM_INT16,
   PIM_INT32,
   PIM_INT64,
@@ -106,7 +107,7 @@ void pimResetStats();
 bool pimIsAnalysisMode();
 
 // Device creation and deletion
-PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced = true);
 PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
 PimStatus pimGetDeviceProperties(PimDeviceProperties* deviceProperties);
 PimStatus pimDeleteDevice();
@@ -127,6 +128,7 @@ PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId 
 PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
+PimStatus pimConvertType(PimObjId src, PimObjId dest);
 
 // Logic and Arithmetic Operation
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -134,6 +136,7 @@ PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimAbs(PimObjId src, PimObjId dest);
+PimStatus pimNot(PimObjId src, PimObjId dest);
 PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -141,6 +144,7 @@ PimStatus pimXnor(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
+PimStatus pimNE(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
@@ -154,6 +158,7 @@ PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+PimStatus pimNEScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 

@@ -108,7 +108,7 @@ void allocatePimObject(uint64_t numOfPoints, int dimension, std::vector<PimObjId
       std::cout << "Abort" << std::endl;
       return;
     }
-    pimObjectList[0] = obj1;
+    pimObjectList[idx] = obj1;
     refObj = obj1;
     idx = 1;
   }
@@ -244,7 +244,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         std::cout << "Abort" << std::endl;
         return;
       }
-      int64_t totalNeighbors = 0; 
+      int64_t totalNeighbors = 0;
 
       status = pimRedSum(resultObjectList[0], static_cast<void*>(&totalNeighbors));
       if (status != PIM_OK)
@@ -255,19 +255,21 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
 
       for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
       {
-        status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
-        if (status != PIM_OK)
-        {
-          std::cout << "Abort" << std::endl;
-          return;
+        if (totalNeighbors) {
+          status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
+          if (status != PIM_OK)
+          {
+            std::cout << "Abort" << std::endl;
+            return;
+          }
+          status = pimRedSum(resultObjectList[1], static_cast<void*>(&centroids[i][b]));
+          if (status != PIM_OK)
+          {
+            std::cout << "Abort" << std::endl;
+            return;
+          }
+          centroids[i][b] /= totalNeighbors;
         }
-        status = pimRedSum(resultObjectList[1], static_cast<void*>(&centroids[i][b]));
-        if (status != PIM_OK)
-        {
-          std::cout << "Abort" << std::endl;
-          return;
-        }
-        centroids[i][b] /= totalNeighbors;
       }
     }
   }

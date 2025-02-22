@@ -135,7 +135,7 @@ pimSim::initThreadPool(unsigned maxNumThreads)
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced)
 {
   pimPerfMon perfMon("createDevice");
   if (m_device) {
@@ -148,7 +148,7 @@ pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBa
     return false;
   }
   m_device = std::make_unique<pimDevice>();
-  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  m_device->init(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
   if (!m_device->isValid()) {
     m_device.reset();
     uninit();
@@ -406,20 +406,20 @@ pimSim::resetStats() const
 
 //! @brief  Allocate a PIM object
 PimObjId
-pimSim::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
+pimSim::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAlloc");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+  return m_device->pimAlloc(allocType, numElements, dataType);
 }
 
 //! @brief  Allocate a PIM object that is associated with an existing ojbect
 PimObjId
-pimSim::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
+pimSim::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
-  return m_device->pimAllocAssociated(bitsPerElement, assocId, dataType);
+  return m_device->pimAllocAssociated(assocId, dataType);
 }
 
 // @brief  Free a PIM object
@@ -502,6 +502,15 @@ bool pimSim::pimCopyObjectToObject(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+bool
+pimSim::pimConvertType(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimConvertType");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::CONVERT_TYPE, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 // @brief  Load vector with a scalar value
 template <typename T> bool
 pimSim::pimBroadcast(PimObjId dest, T value)
@@ -543,7 +552,7 @@ pimSim::pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
-// @brief  PIM OP: abs v-layout
+// @brief  PIM OP: abs
 bool
 pimSim::pimAbs(PimObjId src, PimObjId dest)
 {
@@ -560,6 +569,16 @@ pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
   pimPerfMon perfMon("pimMul");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::MUL, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: not
+bool
+pimSim::pimNot(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimNot");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::NOT, src, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -630,6 +649,16 @@ pimSim::pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
   pimPerfMon perfMon("pimEQ");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::EQ, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+// @brief  PIM OP: ne
+bool
+pimSim::pimNE(PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  pimPerfMon perfMon("pimNE");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc2>(PimCmdEnum::NE, src1, src2, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -738,6 +767,14 @@ bool pimSim::pimEQ(PimObjId src, PimObjId dest, uint64_t scalarValue)
   pimPerfMon perfMon("pimEQScalar");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::EQ_SCALAR, src, dest, scalarValue);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool pimSim::pimNE(PimObjId src, PimObjId dest, uint64_t scalarValue)
+{
+  pimPerfMon perfMon("pimNEScalar");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::NE_SCALAR, src, dest, scalarValue);
   return m_device->executeCmd(std::move(cmd));
 }
 
