@@ -15,7 +15,6 @@
 #include <cctype>
 #include <locale>
 #include <stdexcept>
-#include <sstream>
 #include <filesystem>
 #include <string>
 
@@ -55,23 +54,18 @@ pimSim::~pimSim()
 
 //! @brief  Initialize pimSim member classes from the config file
 bool
-pimSim::init(const std::string& simConfigFileConetnt)
+pimSim::init(const std::string& simConfigFilePath)
 {
   if (!m_initCalled) {
-    if (!simConfigFileConetnt.empty()) {
-      bool success = parseConfigFromFile(simConfigFileConetnt);
+    if (!simConfigFilePath.empty()) {
+      bool success = parseConfigFromFile(simConfigFilePath);
       if (!success) {
         return false;
       }
 
       if (!m_memConfigFileName.empty()) {
         std::string memConfigFileFullPath = m_configFilesPath + m_memConfigFileName;
-        std::string fileContent;
-        success = pimUtils::readFileContent(memConfigFileFullPath.c_str(), fileContent);
-        if (!success) {
-          return false;
-        }
-        m_paramsDram = pimParamsDram::createFromConfig(fileContent);
+        m_paramsDram = pimParamsDram::createFromConfig(memConfigFileFullPath);
       } else {
         m_paramsDram = pimParamsDram::create(PIM_DEVICE_PROTOCOL_DDR);
       }
@@ -193,16 +187,9 @@ pimSim::createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileN
     return false;
   }
 
-  std::string fileContent;
-  success = pimUtils::readFileContent(correctConfigFileName.c_str(), fileContent);
-  if (!success) {
-    std::printf("PIM-Error: Failed to read config file %s\n", correctConfigFileName.c_str());
-    return false;
-  }
-
   m_configFilesPath = pimUtils::getDirectoryPath(correctConfigFileName);
 
-  success = init(fileContent);
+  success = init(correctConfigFileName);
   if (!success) {
     std::printf("PIM-Error: Init failed\n");
     return false;
@@ -1184,23 +1171,10 @@ pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
 
 //! @breif parse config file to get memory config file path and maximum number of threads
 bool
-pimSim::parseConfigFromFile(const std::string& simConfigFileConetnt) {
-  std::istringstream configStream(simConfigFileConetnt);
-  std::string line;
-  std::unordered_map<std::string, std::string> params;
+pimSim::parseConfigFromFile(const std::string& simConfigFilePath)
+{
+  std::unordered_map<std::string, std::string> params = pimUtils::readParamsFromConfigFile(simConfigFilePath);
 
-  while (std::getline(configStream, line)) {
-    line = pimUtils::removeAfterSemicolon(line);
-    if (line.empty() || line[0] == '[') {
-      continue;
-    }
-    size_t equalPos = line.find('=');
-    if (equalPos != std::string::npos) {
-      std::string key = line.substr(0, equalPos);
-      std::string value = line.substr(equalPos + 1);
-      params[pimUtils::trim(key)] = pimUtils::trim(value);
-    }
-  }
   try {
     bool success = false;
     std::string temp;

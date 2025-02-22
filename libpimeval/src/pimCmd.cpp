@@ -10,20 +10,11 @@
 #include "pimCore.h"         // for pimCore
 #include "pimResMgr.h"       // for pimResMgr
 #include "libpimeval.h"      // for PimObjId
-#include <cstdio>            // for printf
-#include <unordered_map>     // for unordered_map
-#include <unordered_set>     // for unordered_set
-#include "pimCmd.h"
-#include "pimSim.h"
-#include "pimDevice.h"
-#include "pimCore.h"
-#include "pimResMgr.h"
 #include <cstdio>
 #include <cmath>
 #include <unordered_map>
 #include <unordered_set>
 #include <climits>
-#include <cmath>
 
 //! @brief  Get PIM command name from command type enum
 std::string
