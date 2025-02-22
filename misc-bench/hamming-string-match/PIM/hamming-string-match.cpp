@@ -398,7 +398,7 @@ int main(int argc, char* argv[])
   const std::string_view needlesFilename = params.keysInputFile == nullptr ? defaultNeedlesFileName : std::string_view(params.keysInputFile);
   const std::string_view hammingDistanceFilename = params.hammingDistanceInputFile == nullptr ? defaultHammingDistanceFilename : std::string_view(params.hammingDistanceInputFile);
   
-  std::cout << "Running PIM string match for \"" << needlesFilename << "\" as the keys file, \"" << textFilename << "\" as the text input file, and \"" << hammingDistanceFilename << "\" as the hamming distance input file\n";
+  std::cout << "Running PIM Hamming string match for \"" << needlesFilename << "\" as the keys file, \"" << textFilename << "\" as the text input file, and \"" << hammingDistanceFilename << "\" as the hamming distance input file\n";
   
   std::string haystack;
   std::vector<std::string> needles;
@@ -450,13 +450,13 @@ int main(int argc, char* argv[])
     // verify result
     bool ok = true;
     #pragma omp parallel for
-    for (unsigned i = 0; i < matches.size(); ++i)
+    for (uint64_t i = 0; i < matches.size(); ++i)
     {
       if (matches[i] != matchesCpu[i])
       {
         #pragma omp critical
         {
-          std::cerr << "Wrong answer: " << unsigned(matches[i]) << " (expected " << unsigned(matchesCpu[i]) << "), for position " << i << std::endl;
+          std::cerr << "Wrong answer: " << matches[i] << " (expected " << matchesCpu[i] << "), for position " << i << std::endl;
           ok = false;
         }
       }
