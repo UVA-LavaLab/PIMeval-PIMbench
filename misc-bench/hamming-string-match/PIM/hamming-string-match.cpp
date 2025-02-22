@@ -19,6 +19,8 @@
 #include "libpimeval.h"
 #include "hamming-string-match-utils.h"
 
+using namespace std::literals::string_view_literals; // for sv literal
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -83,9 +85,14 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-// Precomputes optimal order to match keys/needles for calculation reuse
-// Instead of calling pimEQScalar multiple times for the same character, call only once per character and reuse result
-// Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
+//! @brief  Precomputes a more optimal order to match keys/needles on PIM device for calculation reuse
+//! @details Instead of calling pimEQScalar multiple times for the same character, call only once per character per char index and reuse result
+//!          Orders needles within a character index to place needles with the same character next to each other
+//!          Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
+//! @param[in]  needles  A list of needles that will be matched
+//! @param[in]  numRows  The number of rows in the PIM device, needed to find the max number of needles per iteration
+//! @param[in]  isHorizontal  Represents if the PIM device is horizontal, needed to find the max number of needles per iteration
+//! @return  A table representing a better ordering to match the needles
 std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::vector<std::string>& needles, uint64_t numRows, bool isHorizontal) {
   std::vector<std::vector<std::vector<size_t>>> resultTable;
   
@@ -150,7 +157,7 @@ std::vector<std::vector<std::vector<size_t>>> stringMatchPrecomputeTable(std::ve
   return resultTable;
 }
 
-//! @brief  Matches strings with an allowed number of character differences
+//! @brief  Matches strings on a PIM device with an allowed number of character differences
 //! @param[in]  needles  A list of strings to search for
 //! @param[in]  haystack  A string to search within
 //! @param[in]  maxHammingDistance  The maximum possible number of characters that can be different for finding a match
