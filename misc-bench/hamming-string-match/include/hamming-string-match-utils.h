@@ -62,7 +62,7 @@ std::string readStringFromFile(const char* inputFileName) {
 //! @param[out]  matches  A list of matches found
 void hammingStringMatchCpu(const std::vector<std::string>& needles, const std::string& haystack, const uint64_t maxHammingDistance, std::vector<int>& matches) {
   for(uint64_t needleIdx = 0; needleIdx < needles.size(); ++needleIdx) {
-    const std::string_view needle = needles[needleIdx];
+    const std::string& needle = needles[needleIdx];
     if(needle.size() > haystack.size()) {
       continue;
     }
@@ -71,6 +71,9 @@ void hammingStringMatchCpu(const std::vector<std::string>& needles, const std::s
       for(uint64_t charIdx = 0; charIdx < needle.size(); ++charIdx) {
         if(haystack[haystackIdx + charIdx] != needle[charIdx]) {
           ++mismatches;
+          if(mismatches > maxHammingDistance) {
+            break;
+          }
         }
       }
       if(mismatches <= maxHammingDistance) {
