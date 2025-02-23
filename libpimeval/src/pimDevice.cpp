@@ -165,15 +165,22 @@ pimDevice::init(const pimSimConfig& config)
   m_deviceMemory = new dramsim3::PIMCPU(configFile, "");
   m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();
   u_int64_t rowsPerBank = m_deviceMemoryConfig->rows, columnPerRow = m_deviceMemoryConfig->columns * m_deviceMemoryConfig->device_width;
+
+  // todo: adjust for sim target
+  m_numRanks = 1;
+  m_numCores = 16;
+  m_numRows = rowsPerBank/m_numCores;
+  m_numCols = columnPerRow;
 #endif
 
   m_isValid = (m_numRanks > 0 && m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
-  if (!m_isValid) {
-    std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
-    return false;
-  }
   if (m_numCols % 8 != 0) {
     std::printf("PIM-Error: Number of columns %u is not a multiple of 8\n", m_numCols);
+    return false;
+  }
+
+  if (!m_isValid) {
+    std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
     return false;
   }
 
@@ -195,7 +202,7 @@ pimDevice::init(const pimSimConfig& config)
 
 //! @brief  Alloc a PIM object
 PimObjId
-pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType)
+pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
   if (allocType == PIM_ALLOC_AUTO) {
     if (isVLayoutDevice()) {
@@ -206,14 +213,14 @@ pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsP
       assert(0);
     }
   }
-  return m_resMgr->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+  return m_resMgr->pimAlloc(allocType, numElements, dataType);
 }
 
 //! @brief  Alloc a PIM object assiciated to a reference object
 PimObjId
-pimDevice::pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType)
+pimDevice::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
-  return m_resMgr->pimAllocAssociated(bitsPerElement, assocId, dataType);
+  return m_resMgr->pimAllocAssociated(assocId, dataType);
 }
 
 //! @brief  Free a PIM object

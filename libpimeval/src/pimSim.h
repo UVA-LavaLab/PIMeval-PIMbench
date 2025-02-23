@@ -26,7 +26,7 @@ public:
   static void destroy();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool getDeviceProperties(PimDeviceProperties* deviceProperties);
   bool deleteDevice();
@@ -59,8 +59,8 @@ public:
   pimUtils::threadPool* getThreadPool() { return m_threadPool.get(); }
 
   // Resource allocation and deletion
-  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId obj);
   PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
   PimObjId pimCreateDualContactRef(PimObjId refId);
@@ -79,6 +79,7 @@ public:
   bool pimDiv(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAbs(PimObjId src, PimObjId dest);
   bool pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimNot(PimObjId src, PimObjId dest);
   bool pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
   bool pimXor(PimObjId src1, PimObjId src2, PimObjId dest);

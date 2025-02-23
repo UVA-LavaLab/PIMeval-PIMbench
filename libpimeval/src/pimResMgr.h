@@ -198,6 +198,7 @@ public:
   bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
   bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
   bool isHLayout() const { return m_allocType == PIM_ALLOC_H || m_allocType == PIM_ALLOC_H1; }
+  bool isLoadBalanced() const { return m_isLoadBalanced; }
 
   const std::vector<pimRegion>& getRegions() const { return m_regions; }
   std::vector<pimRegion> getRegionsOfCore(PimCoreId coreId) const;
@@ -252,6 +253,7 @@ private:
   unsigned m_numColsPerElem = 0; // number of cols per element
   bool m_isDualContactRef = false;
   pimDevice* m_device = nullptr; // for accessing simulated memory
+  bool m_isLoadBalanced = true;
 };
 
 
@@ -263,8 +265,8 @@ public:
   pimResMgr(pimDevice* device);
   ~pimResMgr();
 
-  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, PimDataType dataType);
-  PimObjId pimAllocAssociated(unsigned bitsPerElement, PimObjId assocId, PimDataType dataType);
+  PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
+  PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
   bool pimFree(PimObjId objId);
   PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
   PimObjId pimCreateDualContactRef(PimObjId refId);

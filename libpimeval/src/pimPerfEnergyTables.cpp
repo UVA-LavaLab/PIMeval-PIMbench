@@ -15,6 +15,13 @@ const std::unordered_map<PimDeviceEnum, std::unordered_map<PimDataType,
     std::unordered_map<PimCmdEnum, std::tuple<unsigned, unsigned, unsigned>>>>
 pimPerfEnergyTables::bitsimdPerfTable = {
   { PIM_DEVICE_BITSIMD_V, {
+    { PIM_BOOL, {
+      { PimCmdEnum::NOT,          {    1,    1,    1 } },
+      { PimCmdEnum::AND,          {    2,    1,    2 } },
+      { PimCmdEnum::OR,           {    2,    1,    2 } },
+      { PimCmdEnum::XOR,          {    2,    1,    2 } },
+      { PimCmdEnum::XNOR,         {    2,    1,    2 } },
+    }},
     { PIM_INT8, {
       { PimCmdEnum::COPY_O2O,     {    8,    8,    0 } },
       { PimCmdEnum::ABS,          {    9,    8,   34 } },
@@ -313,6 +320,13 @@ pimPerfEnergyTables::bitsimdPerfTable = {
     }}
   }},
   { PIM_DEVICE_BITSIMD_V_AP, {
+    { PIM_BOOL, {
+      { PimCmdEnum::NOT,          {    1,    1,    1 } },
+      { PimCmdEnum::AND,          {    2,    1,    2 } },
+      { PimCmdEnum::OR,           {    2,    1,    2 } },
+      { PimCmdEnum::XOR,          {    2,    1,    2 } },
+      { PimCmdEnum::XNOR,         {    2,    1,    2 } },
+    }},
     { PIM_INT8, {
       { PimCmdEnum::COPY_O2O,     {    8,    8,    0 } },
       { PimCmdEnum::ABS,          {    9,    8,   51 } },

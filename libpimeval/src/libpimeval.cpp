@@ -10,9 +10,9 @@
 
 //! @brief  Create a PIM device
 PimStatus
-pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
+pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced)
 {
-  bool ok = pimSim::get()->createDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  bool ok = pimSim::get()->createDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, isLoadBalanced);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
@@ -79,16 +79,14 @@ pimIsAnalysisMode()
 PimObjId
 pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType)
 {
-  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
-  return pimSim::get()->pimAlloc(allocType, numElements, bitsPerElement, dataType);
+  return pimSim::get()->pimAlloc(allocType, numElements, dataType);
 }
 
 //! @brief  Allocate a PIM resource, with an associated object as reference
 PimObjId
 pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {
-  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType);
-  return pimSim::get()->pimAllocAssociated(bitsPerElement, assocId, dataType);
+  return pimSim::get()->pimAllocAssociated(assocId, dataType);
 }
 
 //! @brief  Free a PIM resource
@@ -204,6 +202,14 @@ PimStatus
 pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 {
   bool ok = pimSim::get()->pimDiv(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  PIM not
+PimStatus
+pimNot(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimNot(src, dest);;
   return ok ? PIM_OK : PIM_ERROR;
 }
 
