@@ -26,7 +26,7 @@ public:
   static void destroy();
 
   // Device creation and deletion
-  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced);
+  bool createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
   bool createDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
   bool getDeviceProperties(PimDeviceProperties* deviceProperties);
   bool deleteDevice();
@@ -41,7 +41,7 @@ public:
   unsigned getNumSubarrayPerBank() const { return m_config.getNumSubarrayPerBank(); }
   unsigned getNumRowPerSubarray() const { return m_config.getNumRowPerSubarray(); }
   unsigned getNumColPerSubarray() const { return m_config.getNumColPerSubarray(); }
-  bool isAnalysisMode() const { return m_config.getAnalysisMode(); }
+  bool isAnalysisMode() const { return m_config.isAnalysisMode(); }
   unsigned getNumThreads() const { return m_config.getNumThreads(); }
 
   unsigned getNumCores() const;

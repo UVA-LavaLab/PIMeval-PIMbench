@@ -33,6 +33,50 @@ pimSimConfig::init(PimDeviceEnum deviceType, const std::string& configFilePath)
   return deriveConfig(deviceType, configFilePath);
 }
 
+//! @brief  Reset pimSimConfig to uninitialized status
+void
+pimSimConfig::uninit()
+{
+  m_simConfigFile.clear();
+  m_memConfigFile.clear();
+  m_deviceType = PIM_DEVICE_NONE;
+  m_simTarget = PIM_DEVICE_NONE;
+  m_memoryProtocol = PIM_DEVICE_PROTOCOL_DDR;
+  m_numRanks = 0;
+  m_numBankPerRank = 0;
+  m_numSubarrayPerBank = 0;
+  m_numRowPerSubarray = 0;
+  m_numColPerSubarray = 0;
+  m_numThreads = 0;
+  m_analysisMode = false;
+  m_debug = 0;
+  m_loadBalanced = false;
+}
+
+//! @brief  Show all configuration parameters
+void
+pimSimConfig::show() const
+{
+  std::cout << "----------------------------------------" << std::endl;
+  std::cout << "PIM-Params: Debug Flags = 0x" << std::hex << m_debug << std::dec << std::endl;
+  std::cout << "PIM-Params: Simulator Config File: " << m_simConfigFile << std::endl;
+  std::cout << "PIM-Params: Memory Config File: " << m_memConfigFile << std::endl;
+  std::cout << "PIM-Params: Memory Protocol: " << pimUtils::pimProtocolEnumToStr(m_memoryProtocol) << std::endl;
+
+  std::cout << "PIM-Params: Current Device = " << pimUtils::pimDeviceEnumToStr(m_deviceType)
+            << ", Simulation Target = " << pimUtils::pimDeviceEnumToStr(m_simTarget) << std::endl;
+
+  std::cout << "PIM-Params: #ranks = " << m_numRanks
+            << ", #banksPerRank = " << m_numBankPerRank
+            << ", #subarraysPerBank = " << m_numSubarrayPerBank
+            << ", #rowsPerSubarray = " << m_numRowPerSubarray
+            << ", #colsPerSubarray = " << m_numColPerSubarray << std::endl;
+
+  std::cout << "PIM-Params: Number of threads = " << m_numThreads << std::endl;
+  std::cout << "PIM-Params: Load Balanced = " << m_loadBalanced << std::endl;
+  std::cout << "----------------------------------------" << std::endl;
+}
+
 //! @brief  Derive PIMeval simulation configuration parameters with priority rules
 bool
 pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
@@ -61,7 +105,13 @@ pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
   ok = ok & deriveDimensions(numRanks, numBankPerRank, numSubarrayPerBank, numRowPerSubarray, numColPerSubarray);
   ok = ok & deriveNumThreads();
   ok = ok & deriveMiscEnvVars();
+  ok = ok & deriveLoadBalance();
 
+  // Show summary
+  show();
+  if (!ok) {
+    std::cout << "PIM-Error: Please resolve incorrect PIMeval configuration." << std::endl;
+  }
   return ok;
 }
 
@@ -78,9 +128,6 @@ pimSimConfig::deriveDebug()
       std::cout << "PIM-Error: Incorrect environment variable: " << m_envVarDebug << " = " << envVal << std::endl;
       return false;
     }
-  }
-  if (m_debug > 0) {
-    std::cout << "PIM-Debug: Debug flags = 0x" << std::hex << m_debug << std::dec << std::endl;
   }
   return true;
 }
@@ -132,9 +179,6 @@ pimSimConfig::deriveSimConfigFile(const std::string& configFilePath)
       std::cout << "PIM-Error: Cannot find simulator config file: " << m_simConfigFile << std::endl;
       return false;
     }
-    if (m_debug & pimSimConfig::DEBUG_PARAMS) {
-      std::cout << "PIM-Debug: Simulator config file: " << m_simConfigFile << std::endl;
-    }
   }
   return true;
 }
@@ -161,9 +205,6 @@ bool
 pimSimConfig::deriveDeviceType(PimDeviceEnum deviceType)
 {
   m_deviceType = deviceType;
-  if (m_debug & pimSimConfig::DEBUG_PARAMS) {
-    std::cout << "PIM-Debug: Device type = " << pimUtils::pimDeviceEnumToStr(m_deviceType) << std::endl;
-  }
   return true;
 }
 
@@ -212,9 +253,6 @@ pimSimConfig::deriveSimTarget()
     }
   }
 
-  if (m_debug & pimSimConfig::DEBUG_PARAMS) {
-    std::cout << "PIM-Debug: Simulation target = " << pimUtils::pimDeviceEnumToStr(m_simTarget) << std::endl;
-  }
   return true;
 }
 
@@ -258,11 +296,6 @@ pimSimConfig::deriveMemConfigFile()
     } else {
       std::cout << "PIM-Error: Missing protocol parameter in memory config file: " << m_memConfigFile << std::endl;
       return false;
-    }
-
-    if (m_debug & pimSimConfig::DEBUG_PARAMS) {
-      std::cout << "PIM-Debug: Memory config file: " << m_memConfigFile << std::endl;
-      std::cout << "PIM-Debug: Memory protocol: " << pimUtils::pimProtocolEnumToStr(m_memoryProtocol) << std::endl;
     }
   }
   return true;
@@ -318,25 +351,10 @@ pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsig
 {
   bool ok = true;
   ok = ok & deriveDimension(m_cfgVarNumRanks, m_envVarNumRanks, numRanks, DEFAULT_NUM_RANKS, m_numRanks);
-  if (ok && (m_debug & pimSimConfig::DEBUG_PARAMS)) {
-    std::cout << "PIM-Debug: Num ranks: " << m_numRanks << std::endl;
-  }
   ok = ok & deriveDimension(m_cfgVarNumBankPerRank, m_envVarNumBankPerRank, numBankPerRank, DEFAULT_NUM_BANK_PER_RANK, m_numBankPerRank);
-  if (ok && (m_debug & pimSimConfig::DEBUG_PARAMS)) {
-    std::cout << "PIM-Debug: Num banks per rank: " << m_numBankPerRank << std::endl;
-  }
   ok = ok & deriveDimension(m_cfgVarNumSubarrayPerBank, m_envVarNumSubarrayPerBank, numSubarrayPerBank, DEFAULT_NUM_SUBARRAY_PER_BANK, m_numSubarrayPerBank);
-  if (ok && (m_debug & pimSimConfig::DEBUG_PARAMS)) {
-    std::cout << "PIM-Debug: Num subarrays per bank: " << m_numSubarrayPerBank << std::endl;
-  }
   ok = ok & deriveDimension(m_cfgVarNumRowPerSubarray, m_envVarNumRowPerSubarray, numRowPerSubarray, DEFAULT_NUM_ROW_PER_SUBARRAY, m_numRowPerSubarray);
-  if (ok && (m_debug & pimSimConfig::DEBUG_PARAMS)) {
-    std::cout << "PIM-Debug: Num rows per subarray: " << m_numRowPerSubarray << std::endl;
-  }
   ok = ok & deriveDimension(m_cfgVarNumColPerSubarray, m_envVarNumColPerSubarray, numColPerSubarray, DEFAULT_NUM_COL_PER_SUBARRAY, m_numColPerSubarray);
-  if (ok && (m_debug & pimSimConfig::DEBUG_PARAMS)) {
-    std::cout << "PIM-Debug: Num columns per subarray: " << m_numColPerSubarray << std::endl;
-  }
   return ok;
 }
 
@@ -383,6 +401,9 @@ pimSimConfig::deriveNumThreads()
 
   // Check hardware concurrency
   unsigned hwThreads = std::thread::hardware_concurrency();
+  if (m_debug & pimSimConfig::DEBUG_PARAMS) {
+    std::cout << "PIM-Debug: Maximum number of threads = " << m_numThreads << ", hardware concurrency = " << hwThreads << std::endl;
+  }
   if (m_numThreads == 0) {
     m_numThreads = hwThreads;
   } else {
@@ -391,9 +412,6 @@ pimSimConfig::deriveNumThreads()
   // Safety check
   if (m_numThreads < 1) {
     m_numThreads = 1;
-  }
-  if (m_debug & pimSimConfig::DEBUG_PARAMS) {
-    std::cout << "PIM-Debug: Number of threads = " << m_numThreads << ", hardware concurrency = " << hwThreads << std::endl;
   }
   return true;
 }
@@ -415,8 +433,37 @@ pimSimConfig::deriveMiscEnvVars()
     m_analysisMode = (valStr == "1");
   }
   if (m_analysisMode) {
-    std::cout << "PIM-Info: Running analysis only mode. Ignoring computation for fast performance and energy analysis." << std::endl;
+    std::cout << "PIM-Warning: Running analysis only mode. Ignoring computation for fast performance and energy analysis." << std::endl;
   }
 
   return true;
 }
+
+//! @brief  Derive Params: Load balance - Distribute data evenly among parallel cores during allocation
+bool
+pimSimConfig::deriveLoadBalance()
+{
+  m_loadBalanced = false;
+
+  // Check config file then env variable
+  bool hasVal = false;
+  std::string valStr = pimUtils::getOptionalParam(m_cfgParams, m_cfgVarLoadBalance, hasVal);
+  if (hasVal) {
+    if (valStr != "0" && valStr != "1") {
+      std::cout << "PIM-Error: Incorrect config file parameter: " << m_cfgVarLoadBalance << "=" << valStr << std::endl;
+      return false;
+    }
+    m_loadBalanced = (valStr == "1");
+  } else {
+    valStr = pimUtils::getOptionalParam(m_envParams, m_envVarLoadBalance, hasVal);
+    if (hasVal) {
+      if (valStr != "0" && valStr != "1") {
+        std::cout << "PIM-Error: Incorrect environment variable: " << m_envVarLoadBalance << "=" << valStr << std::endl;
+        return false;
+      }
+      m_loadBalanced = (valStr == "1");
+    }
+  }
+  return true;
+}
+

@@ -60,11 +60,12 @@ pimSim::uninit()
   m_threadPool.reset();
   m_statsMgr.reset();
   m_paramsDram.reset();
+  m_config.uninit();
 }
 
 //! @brief  Create a PIM device
 bool
-pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced)
+pimSim::createDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols)
 {
   pimPerfMon perfMon("createDevice");
   uninit();
@@ -96,8 +97,7 @@ pimSim::createDeviceCommon()
   m_paramsDram = pimParamsDram::create(m_config.getMemoryProtocol());
 
   // Create PIM device
-  m_device = std::make_unique<pimDevice>();
-  m_device->init(m_config);
+  m_device = std::make_unique<pimDevice>(m_config);
 
   if (!m_device->isValid()) {
     uninit();
@@ -112,6 +112,14 @@ pimSim::createDeviceCommon()
   if (getNumThreads() > 1) {
     m_threadPool = std::make_unique<pimUtils::threadPool>(getNumThreads());
   }
+  return true;
+}
+
+//! @brief  Delete PIM device
+bool
+pimSim::deleteDevice()
+{
+  uninit();
   return true;
 }
 
@@ -131,14 +139,6 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
   deviceProperties->isHLayoutDevice = m_device->isHLayoutDevice();
-  return true;
-}
-
-//! @brief  Delete PIM device
-bool
-pimSim::deleteDevice()
-{
-  uninit();
   return true;
 }
 

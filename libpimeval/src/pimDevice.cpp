@@ -22,8 +22,10 @@
 #include <filesystem>
 
 //! @brief  pimDevice ctor
-pimDevice::pimDevice()
+pimDevice::pimDevice(const pimSimConfig& config)
+  : m_config(config)
 {
+  init();
 }
 
 //! @brief  pimDevice dtor
@@ -35,8 +37,6 @@ pimDevice::~pimDevice()
 bool
 pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
 {
-  std::printf("PIM-Info: Config: #ranks = %u, #bankPerRank = %u, #subarrayPerBank = %u, #rowsPerSubarray = %u, #colsPerRow = %u\n",
-              numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   switch (m_simTarget) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_NAND:
@@ -133,23 +133,19 @@ pimDevice::isHybridLayoutDevice() const
 
 //! @brief  Init PIM device
 bool
-pimDevice::init(const pimSimConfig& config)
+pimDevice::init()
 {
   assert(!m_isInit);
 
-  m_deviceType = config.getDeviceType();
-  m_simTarget = config.getSimTarget();
-
-  std::printf("PIM-Info: Current Device = %s, Simulation Target = %s\n",
-              pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
-              pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
+  m_deviceType = m_config.getDeviceType();
+  m_simTarget = m_config.getSimTarget();
 
   // Record original dimension parameters
-  m_numRanks = config.getNumRanks();
-  m_numBankPerRank = config.getNumBankPerRank();
-  m_numSubarrayPerBank = config.getNumSubarrayPerBank();
-  m_numRowPerSubarray = config.getNumRowPerSubarray();
-  m_numColPerSubarray = config.getNumColPerSubarray();
+  m_numRanks = m_config.getNumRanks();
+  m_numBankPerRank = m_config.getNumBankPerRank();
+  m_numSubarrayPerBank = m_config.getNumSubarrayPerBank();
+  m_numRowPerSubarray = m_config.getNumRowPerSubarray();
+  m_numColPerSubarray = m_config.getNumColPerSubarray();
 
   // Adjust dimension for simulation, e.g., with subarray aggregation
   unsigned numRanks = m_numRanks;
@@ -166,7 +162,7 @@ pimDevice::init(const pimSimConfig& config)
   }
 
 #ifdef DRAMSIM3_INTEG
-  std::string configFile = config.getSimConfigFile();
+  std::string configFile = m_config.getSimConfigFile();
   //TODO: DRAMSim3 requires an output directory but for our purpose we do not need it so sending empty string
   m_deviceMemory = new dramsim3::PIMCPU(configFile, "");
   m_deviceMemoryConfig = m_deviceMemory->getMemorySystem()->getConfig();

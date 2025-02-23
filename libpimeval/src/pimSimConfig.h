@@ -25,6 +25,7 @@
 //!   num_row_per_subarray = <int>               // number of rows per subarray
 //!   num_col_per_subarray = <int>               // number of columns per subarray
 //!   max_num_threads = <int>                    // maximum number of threads used by simulation
+//!   should_load_balance = <0|1>                // distribute data evenly among all cores
 //!
 //! Supported environment variables:
 //!   PIMEVAL_SIM_CONFIG <abs-path/cfg-file>     // PIMeval config file, e.g., abs-path/PIMeval_BitSimdV.cfg
@@ -38,11 +39,12 @@
 //!   PIMEVAL_MAX_NUM_THREADS <int>              // maximum number of threads used by simulation
 //!   PIMEVAL_ANALYSIS_MODE <0|1>                // PIMeval analysis mode
 //!   PIMEVAL_DEBUG <int>                        // PIMeval debug flags (see enum pimDebugFlags)
+//!   PIMEVAL_LOAD_BALANCE <0|1>                 // distribute data evenly among all cores
 //!
 //! Precedence rules (highest to lowest priority):
-//! - Config file: Either from -c command-line argument or from PIMEVAL_SIM_CONFIG
-//! - Environment variables
-//! - Parameters from pimCreateDevice API or C++ macros
+//! * Config file: Either from -c command-line argument or from PIMEVAL_SIM_CONFIG
+//! * Environment variables
+//! * Parameters from pimCreateDevice API or C++ macros
 //!
 //! About config file paths:
 //! * Simulator config file
@@ -51,6 +53,12 @@
 //! * Memory config file
 //!   - If it is in the same directory as the simulator config file, specifying a file name is sufficient
 //!   - Otherwise, use absolute path
+//!
+//! How to add a new configuration parameter:
+//! * Define a key string below as m_cfgVar* and/or m_envVar*, and update the documentation above
+//! * Define a member variable, and update the uninit and show function
+//! * Add a private derive function (can reuse deriveMiscEnvVars if it's env only)
+//! * Add a public getter function
 //!
 class pimSimConfig
 {
@@ -62,6 +70,8 @@ public:
   bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank,
       unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
   bool init(PimDeviceEnum deviceType, const std::string& configFilePath);
+  void uninit();
+  void show() const;
 
   // Getters
   const std::string& getSimConfigFile() const { return m_simConfigFile; }
@@ -75,8 +85,9 @@ public:
   unsigned getNumRowPerSubarray() const { return m_numRowPerSubarray; }
   unsigned getNumColPerSubarray() const { return m_numColPerSubarray; }
   unsigned getNumThreads() const { return m_numThreads; }
-  bool getAnalysisMode() const { return m_analysisMode; }
+  bool isAnalysisMode() const { return m_analysisMode; }
   unsigned getDebug() const { return m_debug; }
+  bool isLoadBalanced() const { return m_loadBalanced; }
 
   enum pimDebugFlags
   {
@@ -106,6 +117,7 @@ private:
   bool deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
   bool deriveNumThreads();
   bool deriveMiscEnvVars();
+  bool deriveLoadBalance();
 
   bool parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
 
@@ -129,6 +141,7 @@ private:
   inline static const std::string m_envVarMaxNumThreads = "PIMEVAL_MAX_NUM_THREADS";
   inline static const std::string m_envVarAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
   inline static const std::string m_envVarDebug = "PIMEVAL_DEBUG";
+  inline static const std::string m_envVarLoadBalance = "PIMEVAL_LOAD_BALANCE";
 
   // Config file parameter names
   inline static const std::string m_cfgVarMemConfig = "memory_config_file";
@@ -139,6 +152,7 @@ private:
   inline static const std::string m_cfgVarNumRowPerSubarray = "num_row_per_subarray";
   inline static const std::string m_cfgVarNumColPerSubarray = "num_col_per_subarray";
   inline static const std::string m_cfgVarMaxNumThreads = "max_num_threads";
+  inline static const std::string m_cfgVarLoadBalance = "should_load_balance";
 
   // PIM sim env variables
   std::string m_simConfigFile;
@@ -154,6 +168,7 @@ private:
   unsigned m_numThreads = 0;
   bool m_analysisMode = false;
   unsigned m_debug = 0;
+  bool m_loadBalanced = false;
 
   // Store original parameters for extension purpose
   std::unordered_map<std::string, std::string> m_envParams;

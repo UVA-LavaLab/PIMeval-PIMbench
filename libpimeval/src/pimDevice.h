@@ -27,10 +27,10 @@ class pimResMgr;
 class pimDevice
 {
 public:
-  pimDevice();
+  pimDevice(const pimSimConfig& config);
   ~pimDevice();
 
-  bool init(const pimSimConfig& config);
+  const pimSimConfig& getConfig() const { return m_config; }
 
   PimDeviceEnum getDeviceType() const { return m_deviceType; }
   PimDeviceEnum getSimTarget() const { return m_simTarget; }
@@ -47,7 +47,6 @@ public:
   bool isVLayoutDevice() const;
   bool isHLayoutDevice() const;
   bool isHybridLayoutDevice() const;
-  bool isLoadBalanced() const;
 
   PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
   PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
@@ -67,8 +66,10 @@ public:
   bool executeCmd(std::unique_ptr<pimCmd> cmd);
 
 private:
+  bool init();
   bool adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
 
+  const pimSimConfig& m_config;
   PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
   PimDeviceEnum m_simTarget = PIM_DEVICE_NONE;
   unsigned m_numRanks = 0;
@@ -81,7 +82,6 @@ private:
   unsigned m_numCols = 0;
   bool m_isValid = false;
   bool m_isInit = false;
-  bool m_isLoadBalanced = true; // for any bit-parallel architecture; could be applicable for bit-serial as well;
   std::unique_ptr<pimResMgr> m_resMgr;
   std::unique_ptr<pimPerfEnergyBase> m_perfEnergyModel;
   std::vector<pimCore> m_cores;
@@ -94,3 +94,4 @@ private:
 };
 
 #endif
+
