@@ -9,7 +9,6 @@
 #include "pimParamsDDRDram.h"
 #include "pimParamsLPDDRDram.h"
 #include "pimParamsHBMDram.h"
-#include <sstream>
 #include <string>
 #include <algorithm>
 #include <cctype>
