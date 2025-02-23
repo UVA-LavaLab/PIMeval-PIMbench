@@ -37,7 +37,7 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./hamming-string-match.out [options]"
           "\n"
-          "\n    -k    keys input file, each key on new line (default=dataset/10mil_l-10_nk-10_kl/keys.txt) must be sorted by increasing length, must have a blank line at end of file"
+          "\n    -k    keys input file, each key on new line (default=dataset/10mil_l-10_nk-10_kl/keys.txt), must have a blank line at end of file"
           "\n    -t    text input file to search for keys from (default=dataset/10mil_l-10_nk-10_kl/text.txt)"
           "\n    -d    max hamming distance file (default=dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt)"
           "\n    -c    dramsim config file"
