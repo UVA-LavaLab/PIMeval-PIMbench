@@ -207,6 +207,7 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
   }
 
   // Matches are calculated for a group of needles at a time, this vector stores the matches for each needle
+  // Each pimIndividualNeedleMatches[i] contains an array of the number of mismatches for a given needle at each position in the haystack
   // needlesTable[0][0].size() is the number of needles in the first iteration, which will have the most needles out of all iterations
   size_t maxNeedlesInOneIteration = needlesTable[0][0].size();
   std::vector<PimObjId> pimIndividualNeedleMatches(maxNeedlesInOneIteration);
@@ -260,12 +261,12 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
         char currentChar = needles[needleIdxHost][charIdx];
 
         if(charIdx == 0) {
-          // If on the first character index, there is no need to pimAnd with the current possible matches
+          // If on the first character index, there is no need to pimAdd with the current possible matches
           // Instead, place the equality result directly into the match array
           status = pimNEScalar(haystackPim, pimIndividualNeedleMatches[needleIdxPim], (uint64_t) currentChar);
           assert (status == PIM_OK);
         } else if(prevChar == currentChar) {
-          // Reuse the previously calculated equality result in intermediatePim and pimAnd with the current matches
+          // Reuse the previously calculated equality result in intermediatePim and pimAdd with the current matches
           status = pimAdd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
           assert (status == PIM_OK);
         } else {
