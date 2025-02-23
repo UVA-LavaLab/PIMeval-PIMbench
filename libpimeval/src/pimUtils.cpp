@@ -14,6 +14,8 @@
 #include <filesystem>
 #include <cstdlib>
 #include <cassert>
+#include <stdexcept>
+
 
 //! @brief  Convert PimStatus enum to string
 std::string

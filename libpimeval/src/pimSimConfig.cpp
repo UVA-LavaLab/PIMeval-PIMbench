@@ -60,8 +60,10 @@ pimSimConfig::show() const
 {
   std::cout << "----------------------------------------" << std::endl;
   std::cout << "PIM-Config: Debug Flags = 0x" << std::hex << m_debug << std::dec << std::endl;
-  std::cout << "PIM-Config: Simulator Config File: " << m_simConfigFile << std::endl;
-  std::cout << "PIM-Config: Memory Config File: " << m_memConfigFile << std::endl;
+  std::cout << "PIM-Config: Simulator Config File: "
+            << (m_simConfigFile.empty() ? "<NONE>" : m_simConfigFile) << std::endl;
+  std::cout << "PIM-Config: Memory Config File: "
+            << (m_memConfigFile.empty() ? "<DEFAULT>" : m_memConfigFile) << std::endl;
   std::cout << "PIM-Config: Memory Protocol: " << pimUtils::pimProtocolEnumToStr(m_memoryProtocol) << std::endl;
 
   std::cout << "PIM-Config: Current Device = " << pimUtils::pimDeviceEnumToStr(m_deviceType)
