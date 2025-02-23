@@ -10,7 +10,6 @@
 #include <iomanip>
 #include <cassert>
 #include <algorithm>
-#include <string_view>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -23,14 +22,12 @@
 #include "libpimeval.h"
 #include "hamming-string-match-utils.h"
 
-using namespace std::literals::string_view_literals; // for sv literal
-
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  char *keysInputFile;
-  char *textInputFile;
-  char *hammingDistanceInputFile;
+  const char *keysInputFile;
+  const char *textInputFile;
+  const char *hammingDistanceInputFile;
   char *configFile;
   bool shouldVerify;
 } Params;
@@ -51,8 +48,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.keysInputFile = nullptr;
-  p.textInputFile = nullptr;
+  p.keysInputFile = "./../dataset/10mil_l-10_nk-10_kl/keys.txt";
+  p.textInputFile = "./../dataset/10mil_l-10_nk-10_kl/text.txt";
+  p.hammingDistanceInputFile = "./../dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt";
   p.configFile = nullptr;
   p.shouldVerify = false;
 
@@ -385,35 +383,27 @@ void hammingStringMatch(std::vector<std::string>& needles, std::string& haystack
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
-
-  constexpr std::string_view defaultTextFileName = "./../dataset/10mil_l-10_nk-10_kl/text.txt"sv;
-  constexpr std::string_view defaultNeedlesFileName = "./../dataset/10mil_l-10_nk-10_kl/keys.txt"sv;
-  constexpr std::string_view defaultHammingDistanceFilename = "./../dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt"sv;
-
-  const std::string_view textFilename = params.textInputFile == nullptr ? defaultTextFileName : std::string_view(params.textInputFile);
-  const std::string_view needlesFilename = params.keysInputFile == nullptr ? defaultNeedlesFileName : std::string_view(params.keysInputFile);
-  const std::string_view hammingDistanceFilename = params.hammingDistanceInputFile == nullptr ? defaultHammingDistanceFilename : std::string_view(params.hammingDistanceInputFile);
   
-  std::cout << "Running PIM Hamming string match for \"" << needlesFilename << "\" as the keys file, \"" << textFilename << "\" as the text input file, and \"" << hammingDistanceFilename << "\" as the hamming distance input file\n";
+  std::cout << "Running PIM Hamming string match for \"" << params.keysInputFile << "\" as the keys file, \"" << params.textInputFile << "\" as the text input file, and \"" << params.hammingDistanceInputFile << "\" as the hamming distance input file\n";
   
   std::string haystack;
   std::vector<std::string> needles;
   uint64_t maxHammingDistance = -1;
   std::vector<int> matches;
 
-  haystack = readStringFromFile(textFilename);
+  haystack = readStringFromFile(params.textInputFile);
   if(haystack.size() == 0) {
     std::cerr << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  needles = getNeedlesFromFile(needlesFilename);
+  needles = getNeedlesFromFile(params.keysInputFile);
   if(needles.size() == 0) {
     std::cerr << "There was an error opening the keys file" << std::endl;
     return 1;
   }
 
-  std::string hammingDistanceString = readStringFromFile(hammingDistanceFilename);
+  std::string hammingDistanceString = readStringFromFile(params.hammingDistanceInputFile);
   if(needles.size() == 0) {
     std::cerr << "There was an error opening the hamming distance file" << std::endl;
     return 1;

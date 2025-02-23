@@ -10,7 +10,6 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <string_view>
 #include <iostream>
 #include <stdlib.h>
 #include <stdint.h>
@@ -21,8 +20,8 @@
 //! @brief  Reads a list of needles from an input file
 //! @param[in]  keysInputFile  The name of the file to read from
 //! @return  A list of needles read from the file
-std::vector<std::string> getNeedlesFromFile(const std::string_view& keysInputFile) {
-  std::ifstream keysFile(keysInputFile.data());
+std::vector<std::string> getNeedlesFromFile(const char* keysInputFile) {
+  std::ifstream keysFile(keysInputFile);
   if (!keysFile) {
     return {};
   }
@@ -45,8 +44,8 @@ std::vector<std::string> getNeedlesFromFile(const std::string_view& keysInputFil
 //! @brief  Reads a string from a file
 //! @param[in]  inputFileName  The name of the file to read from
 //! @return  The string read from the file
-std::string readStringFromFile(const std::string_view& inputFileName) {
-  std::ifstream file(inputFileName.data());
+std::string readStringFromFile(const char* inputFileName) {
+  std::ifstream file(inputFileName);
   if (!file) {
     return "";
   }
