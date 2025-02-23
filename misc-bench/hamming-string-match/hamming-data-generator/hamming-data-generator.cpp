@@ -8,15 +8,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <vector>
 #include <algorithm>
 #include <filesystem>
 #include <cmath>
-#include <unordered_set>
 #include <iterator>
 #include <random>
 #include <iomanip>
+#include <ios>
+#include <vector>
 #include <string_view>
+#include <unordered_set>
+#include <string>
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 using namespace std::literals::string_view_literals; // for sv literal
 

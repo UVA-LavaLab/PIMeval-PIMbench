@@ -11,6 +11,10 @@
 #include <cassert>
 #include <algorithm>
 #include <string_view>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <numeric>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif

@@ -11,6 +11,9 @@
 #include <fstream>
 #include <sstream>
 #include <string_view>
+#include <iostream>
+#include <stdlib.h>
+#include <stdint.h>
 #include <algorithm>                   // for max
 #include <limits>                      // for numeric_limits
 
