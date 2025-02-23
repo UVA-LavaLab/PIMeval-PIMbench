@@ -150,6 +150,7 @@ pimSimConfig::readEnvVars() const
     m_envVarMaxNumThreads,
     m_envVarAnalysisMode,
     m_envVarDebug,
+    m_envVarLoadBalance,
   };
 
   std::unordered_map<std::string, std::string> params;

@@ -60,6 +60,7 @@
 //! * Define a member variable, and update the uninit and show function
 //! * Add a private derive function (can reuse deriveMiscEnvVars if it's env only)
 //! * Add a public getter function
+//! * Add env var to readEnvVars function
 //!
 class pimSimConfig
 {
