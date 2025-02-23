@@ -34,6 +34,16 @@ enum class PimBitWidth
   PADDED,      // bit width of a data element with association and padding in PIMeval
 };
 
+//! @enum   PimDataLayout
+//! @brief  PIM data layout definitions
+enum class PimDataLayout
+{
+  UNKNOWN = 0,  // unknown
+  H,            // horizontal data layout
+  V,            // vertical data layout
+  HYBRID,       // hybrid data layout
+};
+
 namespace pimUtils
 {
   std::string pimStatusEnumToStr(PimStatus status);
@@ -47,6 +57,7 @@ namespace pimUtils
   bool isUnsigned(PimDataType dataType);
   bool isFP(PimDataType dataType);
   std::string pimProtocolEnumToStr(PimDeviceProtocolEnum protocol);
+  PimDataLayout getDeviceDataLayout(PimDeviceEnum deviceType);
 
   // Convert raw bits into sign-extended bits based on PIM data type.
   // Input: Raw bits represented as uint64_t

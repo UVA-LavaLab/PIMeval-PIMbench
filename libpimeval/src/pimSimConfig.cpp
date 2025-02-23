@@ -6,13 +6,14 @@
 
 #include "pimSimConfig.h"
 #include "pimUtils.h"
-#include <algorithm>                   // for min
-#include <filesystem>                  // for filesystem
-#include <iomanip>                     // for hex, dec
-#include <iostream>                    // for cout, endl
-#include <string>                      // for string
-#include <thread>                      // for thread
-#include <unordered_map>               // for unordered_map
+#include <algorithm>
+#include <filesystem>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <filesystem>
 
 
 //! @brief  Init PIMeval simulation configuration parameters at device creation
@@ -58,22 +59,22 @@ void
 pimSimConfig::show() const
 {
   std::cout << "----------------------------------------" << std::endl;
-  std::cout << "PIM-Params: Debug Flags = 0x" << std::hex << m_debug << std::dec << std::endl;
-  std::cout << "PIM-Params: Simulator Config File: " << m_simConfigFile << std::endl;
-  std::cout << "PIM-Params: Memory Config File: " << m_memConfigFile << std::endl;
-  std::cout << "PIM-Params: Memory Protocol: " << pimUtils::pimProtocolEnumToStr(m_memoryProtocol) << std::endl;
+  std::cout << "PIM-Config: Debug Flags = 0x" << std::hex << m_debug << std::dec << std::endl;
+  std::cout << "PIM-Config: Simulator Config File: " << m_simConfigFile << std::endl;
+  std::cout << "PIM-Config: Memory Config File: " << m_memConfigFile << std::endl;
+  std::cout << "PIM-Config: Memory Protocol: " << pimUtils::pimProtocolEnumToStr(m_memoryProtocol) << std::endl;
 
-  std::cout << "PIM-Params: Current Device = " << pimUtils::pimDeviceEnumToStr(m_deviceType)
+  std::cout << "PIM-Config: Current Device = " << pimUtils::pimDeviceEnumToStr(m_deviceType)
             << ", Simulation Target = " << pimUtils::pimDeviceEnumToStr(m_simTarget) << std::endl;
 
-  std::cout << "PIM-Params: #ranks = " << m_numRanks
+  std::cout << "PIM-Config: #ranks = " << m_numRanks
             << ", #banksPerRank = " << m_numBankPerRank
             << ", #subarraysPerBank = " << m_numSubarrayPerBank
             << ", #rowsPerSubarray = " << m_numRowPerSubarray
             << ", #colsPerSubarray = " << m_numColPerSubarray << std::endl;
 
-  std::cout << "PIM-Params: Number of threads = " << m_numThreads << std::endl;
-  std::cout << "PIM-Params: Load Balanced = " << m_loadBalanced << std::endl;
+  std::cout << "PIM-Config: Number of threads = " << m_numThreads << std::endl;
+  std::cout << "PIM-Config: Load Balanced = " << m_loadBalanced << std::endl;
   std::cout << "----------------------------------------" << std::endl;
 }
 
@@ -355,6 +356,10 @@ pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsig
   ok = ok & deriveDimension(m_cfgVarNumSubarrayPerBank, m_envVarNumSubarrayPerBank, numSubarrayPerBank, DEFAULT_NUM_SUBARRAY_PER_BANK, m_numSubarrayPerBank);
   ok = ok & deriveDimension(m_cfgVarNumRowPerSubarray, m_envVarNumRowPerSubarray, numRowPerSubarray, DEFAULT_NUM_ROW_PER_SUBARRAY, m_numRowPerSubarray);
   ok = ok & deriveDimension(m_cfgVarNumColPerSubarray, m_envVarNumColPerSubarray, numColPerSubarray, DEFAULT_NUM_COL_PER_SUBARRAY, m_numColPerSubarray);
+  if (m_numRanks == 0 || m_numBankPerRank == 0 || m_numSubarrayPerBank == 0 || m_numRowPerSubarray == 0 || m_numColPerSubarray == 0) {
+    std::cout << "PIM-Error: Memory dimension parameter cannot be 0" << std::endl;
+    ok = false;
+  }
   return ok;
 }
 

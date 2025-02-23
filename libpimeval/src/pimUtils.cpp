@@ -152,11 +152,31 @@ std::string
 pimUtils::pimProtocolEnumToStr(PimDeviceProtocolEnum protocol)
 {
   switch (protocol) {
-  case PIM_DEVICE_PROTOCOL_DDR: return "DDR";
-  case PIM_DEVICE_PROTOCOL_LPDDR: return "LPDDR";
-  case PIM_DEVICE_PROTOCOL_HBM: return "HBM";
+    case PIM_DEVICE_PROTOCOL_DDR: return "DDR";
+    case PIM_DEVICE_PROTOCOL_LPDDR: return "LPDDR";
+    case PIM_DEVICE_PROTOCOL_HBM: return "HBM";
   }
   return "Unknown";
+}
+
+//! @brief  Get device data layout
+PimDataLayout
+pimUtils::getDeviceDataLayout(PimDeviceEnum deviceType)
+{
+  switch (deviceType) {
+    case PIM_DEVICE_BITSIMD_V: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_V_NAND: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_V_MAJ: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_V_AP: return PimDataLayout::V;
+    case PIM_DEVICE_DRISA_NOR: return PimDataLayout::V;
+    case PIM_DEVICE_DRISA_MIXED: return PimDataLayout::V;
+    case PIM_DEVICE_SIMDRAM: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_H: return PimDataLayout::H;
+    case PIM_DEVICE_FULCRUM: return PimDataLayout::H;
+    case PIM_DEVICE_BANK_LEVEL: return PimDataLayout::H;
+    case PIM_DEVICE_AQUABOLT: return PimDataLayout::H;
+  }
+  return PimDataLayout::UNKNOWN;
 }
 
 //! @brief  Thread pool ctor

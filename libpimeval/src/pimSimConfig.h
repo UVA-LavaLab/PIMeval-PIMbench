@@ -8,8 +8,9 @@
 #define LAVA_PIM_SIM_CONFIG_H
 
 #include "libpimeval.h"
-#include <string>                      // for string
-#include <unordered_map>               // for unordered_map
+#include <string>
+#include <unordered_map>
+
 
 //! @class  pimSimConfig
 //! @brief  PIM simulator configurations

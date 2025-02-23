@@ -10,16 +10,10 @@
 #include "libpimeval.h"
 #include "pimUtils.h"
 #include <cstdio>
-#include <deque>
 #include <memory>
 #include <cassert>
 #include <string>
-#include <unordered_map>
-#include <algorithm>
-#include <cctype>
-#include <locale>
-#include <stdexcept>
-#include <filesystem>
+
 
 //! @brief  pimDevice ctor
 pimDevice::pimDevice(const pimSimConfig& config)
@@ -37,7 +31,7 @@ pimDevice::~pimDevice()
 bool
 pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols)
 {
-  switch (m_simTarget) {
+  switch (getSimTarget()) {
   case PIM_DEVICE_BITSIMD_V:
   case PIM_DEVICE_BITSIMD_V_NAND:
   case PIM_DEVICE_BITSIMD_V_MAJ:
@@ -80,55 +74,21 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
 bool
 pimDevice::isVLayoutDevice() const
 {
-  switch (m_simTarget) {
-  case PIM_DEVICE_BITSIMD_V: return true;
-  case PIM_DEVICE_BITSIMD_V_NAND: return true;
-  case PIM_DEVICE_BITSIMD_V_MAJ: return true;
-  case PIM_DEVICE_BITSIMD_V_AP: return true;
-  case PIM_DEVICE_DRISA_NOR: return true;
-  case PIM_DEVICE_DRISA_MIXED: return true;
-  case PIM_DEVICE_SIMDRAM: return true;
-  case PIM_DEVICE_BITSIMD_H: return false;
-  case PIM_DEVICE_FULCRUM: return false;
-  case PIM_DEVICE_BANK_LEVEL: return false;
-  case PIM_DEVICE_AQUABOLT: return false;
-  case PIM_DEVICE_NONE:
-  case PIM_FUNCTIONAL:
-  default:
-    assert(0);
-  }
-  return false;
+  return pimUtils::getDeviceDataLayout(getSimTarget()) == PimDataLayout::V;
 }
 
 //! @brief  If a PIM device uses horizontal data layout
 bool
 pimDevice::isHLayoutDevice() const
 {
-  switch (m_simTarget) {
-  case PIM_DEVICE_BITSIMD_V: return false;
-  case PIM_DEVICE_BITSIMD_V_NAND: return false;
-  case PIM_DEVICE_BITSIMD_V_MAJ: return false;
-  case PIM_DEVICE_BITSIMD_V_AP: return false;
-  case PIM_DEVICE_DRISA_NOR: return false;
-  case PIM_DEVICE_DRISA_MIXED: return false;
-  case PIM_DEVICE_SIMDRAM: return false;
-  case PIM_DEVICE_BITSIMD_H: return true;
-  case PIM_DEVICE_FULCRUM: return true;
-  case PIM_DEVICE_BANK_LEVEL: return true;
-  case PIM_DEVICE_AQUABOLT: return true;
-  case PIM_DEVICE_NONE:
-  case PIM_FUNCTIONAL:
-  default:
-    assert(0);
-  }
-  return false;
+  return pimUtils::getDeviceDataLayout(getSimTarget()) == PimDataLayout::H;
 }
 
 //! @brief  If a PIM device uses hybrid data layout
 bool
 pimDevice::isHybridLayoutDevice() const
 {
-  return false;
+  return pimUtils::getDeviceDataLayout(getSimTarget()) == PimDataLayout::HYBRID;
 }
 
 //! @brief  Init PIM device
@@ -137,22 +97,12 @@ pimDevice::init()
 {
   assert(!m_isInit);
 
-  m_deviceType = m_config.getDeviceType();
-  m_simTarget = m_config.getSimTarget();
-
-  // Record original dimension parameters
-  m_numRanks = m_config.getNumRanks();
-  m_numBankPerRank = m_config.getNumBankPerRank();
-  m_numSubarrayPerBank = m_config.getNumSubarrayPerBank();
-  m_numRowPerSubarray = m_config.getNumRowPerSubarray();
-  m_numColPerSubarray = m_config.getNumColPerSubarray();
-
   // Adjust dimension for simulation, e.g., with subarray aggregation
-  unsigned numRanks = m_numRanks;
-  unsigned numBankPerRank = m_numBankPerRank;
-  unsigned numSubarrayPerBank = m_numSubarrayPerBank;
-  unsigned numRows = m_numRowPerSubarray;
-  unsigned numCols = m_numColPerSubarray;
+  unsigned numRanks = getNumRanks();
+  unsigned numBankPerRank = getNumBankPerRank();
+  unsigned numSubarrayPerBank = getNumSubarrayPerBank();
+  unsigned numRows = getNumRowPerSubarray();
+  unsigned numCols = getNumColPerSubarray();
   if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
     m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
     m_numRows = numRows;
@@ -169,18 +119,16 @@ pimDevice::init()
   u_int64_t rowsPerBank = m_deviceMemoryConfig->rows, columnPerRow = m_deviceMemoryConfig->columns * m_deviceMemoryConfig->device_width;
 
   // todo: adjust for sim target
-  m_numRanks = 1;
   m_numCores = 16;
   m_numRows = rowsPerBank/m_numCores;
   m_numCols = columnPerRow;
 #endif
 
-  m_isValid = (m_numRanks > 0 && m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
+  m_isValid = (m_numCores > 0 && m_numRows > 0 && m_numCols > 0);
   if (m_numCols % 8 != 0) {
     std::printf("PIM-Error: Number of columns %u is not a multiple of 8\n", m_numCols);
     return false;
   }
-
   if (!m_isValid) {
     std::printf("PIM-Error: Incorrect device parameters: %u cores, %u rows, %u columns\n", m_numCores, m_numRows, m_numCols);
     return false;
@@ -188,11 +136,11 @@ pimDevice::init()
 
   m_resMgr = std::make_unique<pimResMgr>(this);
   const pimParamsDram& paramsDram = pimSim::get()->getParamsDram(); // created before pimDevice ctor
-  pimPerfEnergyModelParams params(m_simTarget, m_numRanks, paramsDram);
+  pimPerfEnergyModelParams params(getSimTarget(), getNumRanks(), paramsDram);
   m_perfEnergyModel = pimPerfEnergyFactory::createPerfEnergyModel(params);
 
   // Disable simulated memory creation for functional simulation
-  if (m_deviceType != PIM_FUNCTIONAL) {
+  if (getDeviceType() != PIM_FUNCTIONAL) {
     m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
   }
 
