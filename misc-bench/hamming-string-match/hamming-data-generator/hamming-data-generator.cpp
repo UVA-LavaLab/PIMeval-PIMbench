@@ -16,14 +16,11 @@
 #include <iomanip>
 #include <ios>
 #include <vector>
-#include <string_view>
 #include <unordered_set>
 #include <string>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
-
-using namespace std::literals::string_view_literals; // for sv literal
 
 typedef struct Params
 {
@@ -269,14 +266,14 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  constexpr std::string_view newlineChar = "\n"sv;
+  const std::string newlineChar = "\n";
   for(size_t i=0; i<keys.size(); ++i) {
     size_t keyWritten = fwrite(keys[i].c_str(), sizeof(char), keys[i].size(), keysFile);
     if (keyWritten != keys[i].size()) {
       std::cerr << "Error writing to keys file" << std::endl;
       return 1;
     }
-    fwrite(newlineChar.data(), sizeof(char), newlineChar.size(), keysFile);
+    fwrite(newlineChar.c_str(), sizeof(char), newlineChar.size(), keysFile);
   }
 
   fclose(keysFile);
