@@ -144,16 +144,23 @@ pimDevice::init(const pimSimConfig& config)
               pimUtils::pimDeviceEnumToStr(m_deviceType).c_str(),
               pimUtils::pimDeviceEnumToStr(m_simTarget).c_str());
 
+  // Record original dimension parameters
   m_numRanks = config.getNumRanks();
   m_numBankPerRank = config.getNumBankPerRank();
   m_numSubarrayPerBank = config.getNumSubarrayPerBank();
   m_numRowPerSubarray = config.getNumRowPerSubarray();
   m_numColPerSubarray = config.getNumColPerSubarray();
 
-  m_numRows = m_numRowPerSubarray;
-  m_numCols = m_numColPerSubarray;
-  if (adjustConfigForSimTarget(m_numRanks, m_numBankPerRank, m_numSubarrayPerBank, m_numRows, m_numCols)) {
-    m_numCores = m_numRanks * m_numBankPerRank * m_numSubarrayPerBank;
+  // Adjust dimension for simulation, e.g., with subarray aggregation
+  unsigned numRanks = m_numRanks;
+  unsigned numBankPerRank = m_numBankPerRank;
+  unsigned numSubarrayPerBank = m_numSubarrayPerBank;
+  unsigned numRows = m_numRowPerSubarray;
+  unsigned numCols = m_numColPerSubarray;
+  if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
+    m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
+    m_numRows = numRows;
+    m_numCols = numCols;
   } else {
     return false;
   }
@@ -215,7 +222,7 @@ pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType da
   return m_resMgr->pimAlloc(allocType, numElements, dataType);
 }
 
-//! @brief  Alloc a PIM object assiciated to a reference object
+//! @brief  Allocate a PIM object associated with another PIM object
 PimObjId
 pimDevice::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
 {

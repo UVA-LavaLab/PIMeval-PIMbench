@@ -115,14 +115,6 @@ pimSim::createDeviceCommon()
   return true;
 }
 
-//! @brief  Delete PIM device
-bool
-pimSim::deleteDevice()
-{
-  uninit();
-  return true;
-}
-
 //! @brief  Get device properties
 bool
 pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
@@ -139,6 +131,14 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
   deviceProperties->isHLayoutDevice = m_device->isHLayoutDevice();
+  return true;
+}
+
+//! @brief  Delete PIM device
+bool
+pimSim::deleteDevice()
+{
+  uninit();
   return true;
 }
 
@@ -1003,3 +1003,4 @@ pimSim::pimOpAAP(int numSrc, int numDest, va_list args)
 template bool pimSim::pimBroadcast<uint64_t>(PimObjId dest, uint64_t value);
 template bool pimSim::pimBroadcast<int64_t>(PimObjId dest, int64_t value);
 template bool pimSim::pimBroadcast<float>(PimObjId dest, float value);
+

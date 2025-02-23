@@ -34,8 +34,6 @@ public:
 
   // From pimSimConfig
   const pimSimConfig& getConfig() const { return m_config; }
-  bool isAnalysisMode() const { return m_config.getAnalysisMode(); }
-  unsigned getNumThreads() const { return m_config.getNumThreads(); }
   PimDeviceEnum getDeviceType() const { return m_config.getDeviceType(); }
   PimDeviceEnum getSimTarget() const { return m_config.getSimTarget(); }
   unsigned getNumRanks() const { return m_config.getNumRanks(); }
@@ -43,6 +41,8 @@ public:
   unsigned getNumSubarrayPerBank() const { return m_config.getNumSubarrayPerBank(); }
   unsigned getNumRowPerSubarray() const { return m_config.getNumRowPerSubarray(); }
   unsigned getNumColPerSubarray() const { return m_config.getNumColPerSubarray(); }
+  bool isAnalysisMode() const { return m_config.getAnalysisMode(); }
+  unsigned getNumThreads() const { return m_config.getNumThreads(); }
 
   unsigned getNumCores() const;
   unsigned getNumRows() const;

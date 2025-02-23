@@ -13,71 +13,44 @@
 
 //! @class  pimSimConfig
 //! @brief  PIM simulator configurations
-//! After the PIMeval library is linked to PIM application executables,
-//! its behavior can be controlled using environment variables and/or configuration files.
-//! This class is for managing the configuration parameters.
+//!         Configure PIMeval library using configuration files and/or environment variables,
+//!         after it is linked with PIM application executables
 //!
-//! Overriding rules (highest to lowest priority):
-//! - Config files, either from -c command-line argument or PIMEVAL_SIM_CONFIG
-//! - Other environment variables
-//! - Parameters from pimCreateDevice API and C++ macros
+//! Supported configuration file parameters:
+//!   memory_config_file = <ini-file>            // memory config file, e.g., DDR4_8Gb_x16_3200.ini
+//!   simulation_target = <PimDeviceEnum>        // simulation target, e.g., PIM_DEVICE_BITSIMD_V
+//!   num_ranks = <int>                          // number of ranks
+//!   num_bank_per_rank = <int>                  // number of banks per rank
+//!   num_subarray_per_bank = <int>              // number of subarrays per bank
+//!   num_row_per_subarray = <int>               // number of rows per subarray
+//!   num_col_per_subarray = <int>               // number of columns per subarray
+//!   max_num_threads = <int>                    // maximum number of threads used by simulation
 //!
-//! Supported environment parameters:
+//! Supported environment variables:
+//!   PIMEVAL_SIM_CONFIG <abs-path/cfg-file>     // PIMeval config file, e.g., abs-path/PIMeval_BitSimdV.cfg
+//!   PIMEVAL_MEM_CONFIG <abs-path/ini-file>     // memory config file, e.g., DDR4_8Gb_x16_3200.ini
+//!   PIMEVAL_SIM_TARGET <PimDeviceEnum>         // simulation target, e.g., PIM_DEVICE_BITSIMD_V
+//!   PIMEVAL_NUM_RANKS <int>                    // number of ranks
+//!   PIMEVAL_NUM_BANK_PER_RANK <int>            // number of banks per rank
+//!   PIMEVAL_NUM_SUBARRAY_PER_BANK <int>        // number of subarrays per bank
+//!   PIMEVAL_NUM_ROW_PER_SUBARRAY <int>         // number of rows per subarray
+//!   PIMEVAL_NUM_COL_PER_SUBARRAY <int>         // number of columns per subarray
+//!   PIMEVAL_MAX_NUM_THREADS <int>              // maximum number of threads used by simulation
+//!   PIMEVAL_ANALYSIS_MODE <0|1>                // PIMeval analysis mode
+//!   PIMEVAL_DEBUG <int>                        // PIMeval debug flags (see enum pimDebugFlags)
 //!
-//! PIMEVAL_SIM_CONFIG <full-path-to-simulator-config-file>
-//! - Description: Specify a simulator config file
-//! - Example:
-//!     export PIMEVAL_SIM_CONFIG="<path-to-this-repo>/configs/PIMeval_BitSimdV.cfg"
+//! Precedence rules (highest to lowest priority):
+//! - Config file: Either from -c command-line argument or from PIMEVAL_SIM_CONFIG
+//! - Environment variables
+//! - Parameters from pimCreateDevice API or C++ macros
 //!
-//! PIMEVAL_MEM_CONFIG <full-path-to-memory-config-ini-file>
-//! - Description: Specify memory technology config file
-//!   For backward compatility, the path can be relative path to PIMEVAL_SIM_CONFIG.
-//! - Example:
-//!     export PIMEVAL_MEM_CONFIG="<path-to-this-repo>/configs/DDR4_8Gb_x16_3200.ini"
-//!     export PIMEVAL_MEM_CONFIG="DDR4_8Gb_x16_3200.ini"
-//! - Equivalent config file parameter:
-//!     memory_config_file = <ini-file>
-//!
-//! PIMEVAL_SIM_TARGET <PimDeviceEnum>
-//! - Description: Specify simulation target
-//! - Example:
-//!     export PIMEVAL_SIM_TARGET="PIM_DEVICE_BITSIMD_V"
-//! - Equivalent config file parameter:
-//!     simulation_target = <PimDeviceEnum>
-//!
-//! PIMEVAL_NUM_RANKS <int>
-//! PIMEVAL_NUM_BANK_PER_RANK <int>
-//! PIMEVAL_NUM_SUBARRAY_PER_BANK <int>
-//! PIMEVAL_NUM_ROW_PER_SUBARRAY <int>
-//! PIMEVAL_NUM_COL_PER_SUBARRAY <int>
-//! - Description: Memory dimension parameters
-//! - Equivalent config file parameters:
-//!     num_ranks = <int>
-//!     num_bank_per_rank = <int>
-//!     num_subarray_per_bank = <int>
-//!     num_row_per_subarray = <int>
-//!     num_col_per_subarray = <int>
-//!
-//! PIMEVAL_MAX_NUM_THREADS <int>
-//! - Description: Specify max number of threads for simulation. If the number is negative,
-//!   zero, or greater than hardware_concurrency, use hardware_concurrency
-//! - Example:
-//!     export PIMEVAL_MAX_NUM_THREADS=10
-//! - Equivalent config file parameters:
-//!     max_num_threads = <int>
-//!
-//! PIMEVAL_ANALYSIS_MODE <0|1>
-//! - Description: Do fast performance analysis without functional computation. Data
-//!   results will be incorrect in this mode. Not recommended for result dependent kernel
-//! - Example:
-//!     export PIMEVAL_ANALYSIS_MODE=1
-//!
-//! PIMEVAL_DEBUG <int>
-//! - Description: Debug bit flags
-//! - Example:
-//!     export PIMEVAL_DEBUG=1
-//!
-//! TODO: Need future extension to support multi device or non-uniform device
+//! About config file paths:
+//! * Simulator config file
+//!   - If passing it through -c command line argument, it's already a valid absolute or relative path
+//!   - If using the PIMEVAL_SIM_CONFIG env variable, its value needs to be a valid absolute path
+//! * Memory config file
+//!   - If it is in the same directory as the simulator config file, specifying a file name is sufficient
+//!   - Otherwise, use absolute path
 //!
 class pimSimConfig
 {
@@ -138,7 +111,7 @@ private:
 
   // Default values if not specified by input parameters, config files, or env vars
   static constexpr int DEFAULT_NUM_RANKS = 1;
-  static constexpr int DEFAULT_NUM_BANK_PER_RANK = 128;
+  static constexpr int DEFAULT_NUM_BANK_PER_RANK = 4;
   static constexpr int DEFAULT_NUM_SUBARRAY_PER_BANK = 32;
   static constexpr int DEFAULT_NUM_ROW_PER_SUBARRAY = 1024;
   static constexpr int DEFAULT_NUM_COL_PER_SUBARRAY = 8192;

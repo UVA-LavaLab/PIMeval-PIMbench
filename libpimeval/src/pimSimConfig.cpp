@@ -60,6 +60,7 @@ pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
   ok = ok & deriveMemConfigFile();
   ok = ok & deriveDimensions(numRanks, numBankPerRank, numSubarrayPerBank, numRowPerSubarray, numColPerSubarray);
   ok = ok & deriveNumThreads();
+  ok = ok & deriveMiscEnvVars();
 
   return ok;
 }
@@ -230,7 +231,7 @@ pimSimConfig::deriveMemConfigFile()
   }
   if (!m_memConfigFile.empty()) {
     if (!std::filesystem::exists(m_memConfigFile)) {
-      // Try to find it in the directory of sim config file
+      // Try to find it in the same directory of sim config file
       std::string configFilePath = pimUtils::getDirectoryPath(m_simConfigFile);
       if (std::filesystem::exists(configFilePath + "/" + m_memConfigFile)) {
         m_memConfigFile = configFilePath + "/" + m_memConfigFile;
