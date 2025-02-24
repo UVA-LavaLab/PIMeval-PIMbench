@@ -14,6 +14,8 @@
 #include <filesystem>
 #include <cstdlib>
 #include <cassert>
+#include <stdexcept>
+
 
 //! @brief  Convert PimStatus enum to string
 std::string
@@ -145,6 +147,40 @@ bool
 pimUtils::isFP(PimDataType dataType)
 {
   return dataType == PIM_FP32 || dataType == PIM_FP16 || dataType == PIM_BF16 || dataType == PIM_FP8;
+}
+
+//! @brief  Convert PimDeviceProtocolEnum to string
+std::string
+pimUtils::pimProtocolEnumToStr(PimDeviceProtocolEnum protocol)
+{
+  switch (protocol) {
+    case PIM_DEVICE_PROTOCOL_DDR: return "DDR";
+    case PIM_DEVICE_PROTOCOL_LPDDR: return "LPDDR";
+    case PIM_DEVICE_PROTOCOL_HBM: return "HBM";
+  }
+  return "Unknown";
+}
+
+//! @brief  Get device data layout
+PimDataLayout
+pimUtils::getDeviceDataLayout(PimDeviceEnum deviceType)
+{
+  switch (deviceType) {
+    case PIM_DEVICE_BITSIMD_V: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_V_NAND: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_V_MAJ: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_V_AP: return PimDataLayout::V;
+    case PIM_DEVICE_DRISA_NOR: return PimDataLayout::V;
+    case PIM_DEVICE_DRISA_MIXED: return PimDataLayout::V;
+    case PIM_DEVICE_SIMDRAM: return PimDataLayout::V;
+    case PIM_DEVICE_BITSIMD_H: return PimDataLayout::H;
+    case PIM_DEVICE_FULCRUM: return PimDataLayout::H;
+    case PIM_DEVICE_BANK_LEVEL: return PimDataLayout::H;
+    case PIM_DEVICE_AQUABOLT: return PimDataLayout::H;
+    case PIM_FUNCTIONAL:
+    case PIM_DEVICE_NONE: return PimDataLayout::UNKNOWN;
+  }
+  return PimDataLayout::UNKNOWN;
 }
 
 //! @brief  Thread pool ctor
@@ -308,6 +344,23 @@ pimUtils::getDirectoryPath(const std::string& filePath) {
     return path.parent_path().string() + "/";
 }
 
+//! @brief Convert a string to unsigned int. Return false and 0 if invalid
+bool
+pimUtils::convertStringToUnsigned(const std::string& str, unsigned& retVal)
+{
+  try {
+    unsigned long val = std::stoul(str);
+    if (val > std::numeric_limits<unsigned int>::max()) { // out of range
+      throw std::out_of_range("Value exceeds unsigned int range");
+    }
+    retVal = static_cast<unsigned int>(val);
+  } catch (const std::exception &e) {
+    retVal = 0;
+    return false;
+  }
+  return true;
+}
+
 //! @brief Given a config file path, read all parameters
 std::unordered_map<std::string, std::string>
 pimUtils::readParamsFromConfigFile(const std::string& configFilePath)
@@ -334,6 +387,22 @@ pimUtils::readParamsFromConfigFile(const std::string& configFilePath)
       std::string key = line.substr(0, equalPos);
       std::string value = line.substr(equalPos + 1);
       params[pimUtils::trim(key)] = pimUtils::trim(value);
+    }
+  }
+  return params;
+}
+
+//! @brief Read environment variables, given a list of env var names
+std::unordered_map<std::string, std::string>
+pimUtils::readParamsFromEnvVars(const std::vector<std::string>& envVarNames)
+{
+  std::unordered_map<std::string, std::string> params;
+  for (const auto& envVar : envVarNames) {
+    std::string val;
+    bool hasEnv = pimUtils::getEnvVar(envVar, val);
+    val = pimUtils::trim(val);
+    if (hasEnv && !val.empty()) {
+      params[envVar] = val;
     }
   }
   return params;

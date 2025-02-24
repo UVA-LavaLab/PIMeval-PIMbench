@@ -108,7 +108,7 @@ void pimResetStats();
 bool pimIsAnalysisMode();
 
 // Device creation and deletion
-PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, bool isLoadBalanced = true);
+PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
 PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
 PimStatus pimGetDeviceProperties(PimDeviceProperties* deviceProperties);
 PimStatus pimDeleteDevice();
