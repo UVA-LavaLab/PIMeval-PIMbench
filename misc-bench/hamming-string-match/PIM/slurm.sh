@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# Test: Hamming string match slurm file
+# Copyright (c) 2025 University of Virginia
+# This file is licensed under the MIT License.
+# See the LICENSE file in the root of this repository for more details.
+
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --partition=cpu
