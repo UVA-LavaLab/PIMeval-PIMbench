@@ -56,7 +56,7 @@ The PIM variant is implemented using C++ with some simlation speedup from OpenMP
 
 ### Data Format
 
-Running the string match algorithm requires both a text file and a keys file. The text file should consist of a string to be matched against. The keys file should contain the keys to be matched, with each key on a newline, as well as a blank line at the end of the file. Do not include duplicate keys. The hamming distance file should contain one unsigned integer.
+Running the string match algorithm requires a text file, a keys file, and a max hamming distance file. The text file should consist of a string to be matched against. The keys file should contain the keys to be matched, with each key on a newline, as well as a blank line at the end of the file. Do not include duplicate keys. The hamming distance file should contain one unsigned integer representing the maximum number of character substitutions a key can have while stile matching part of the text.
 
 ### Data Generator Instructions
 
@@ -82,7 +82,7 @@ To see help text on all usages and how to modify any of the input parameters, us
 
 ## Compilation Instructions
 
-To compile for the PIM variant, use:
+To compile the PIM hamming string match kernel, use:
 
 ```bash
 cd PIM
@@ -93,7 +93,7 @@ make
 
 ### Running the Executable
 
-After compiling, run each executable with the following command. Note that the default keys file is `dataset/10mil_l-10_nk-10_kl/keys.txt`, the default text file is `dataset/10mil_l-10_nk-10_kl/text.txt`, and the default hamming distance file is `dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt` but can be changed using `-k`, `-t`, and `-d`, respectively.
+After compiling, run each executable with the following command. Note that the default keys file is `dataset/10mil_l-10_nk-10_kl/keys.txt`, the default text file is `dataset/10mil_l-10_nk-10_kl/text.txt`, and the default hamming distance file is `dataset/10mil_l-10_nk-10_kl/maxHammingDistance.txt`, but these can be changed using `-k`, `-t`, and `-d`, respectively.
 
 ```bash
 ./hamming-string-match.out
