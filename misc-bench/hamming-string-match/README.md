@@ -12,7 +12,7 @@ For example:
 - text = "ABCAEFG"
 - keys = ["WW", "ABC"]
 - maxHammingDistance = 2
-- string_match(text, keys) -> [3, 1, 1, 3, 1, 1, 0]
+- hammingStringMatch(text, keys, maxHammingDistance) -> [3, 1, 1, 3, 1, 1, 0]
 - Explanation:
     - "WW" is key 1, "ABC" is key 2
     - "WW" matches everywhere, since its length is less than or equal to maxHammingDistance
