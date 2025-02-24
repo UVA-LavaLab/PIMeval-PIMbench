@@ -117,16 +117,14 @@ PimStatus pimDeleteDevice();
 PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
 PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
 PimStatus pimFree(PimObjId obj);
-PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
 
 // Data transfer
 // Note: idxBegin and idxEnd specify the range of indexes to be processed by the PIM.
 // The size of the host-side vector should match the size of this range on the PIM side.
 // If the default values for idxBegin and idxEnd are used, the entire range of the PIM object will be considered.
+// For PIM_BOOL type, please use std::vector<uint8_t> instead of std::vector<bool> as host data.
 PimStatus pimCopyHostToDevice(void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 PimStatus pimConvertType(PimObjId src, PimObjId dest);
@@ -182,6 +180,29 @@ PimStatus pimShiftElementsLeft(PimObjId src);
 PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
 PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Warning: Avoid using below customized APIs for functional simulation       //
+//          Some are PIM architecture dependent, some are in progress         //
+////////////////////////////////////////////////////////////////////////////////
+
+// Data copy APIs that supports data transposition between V/H layout
+PimStatus pimCopyHostToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
+// Dual contact reference: Create a new PimObjId that references to the negation of the original PimObjId
+// Do not use a dual contact reference PimObjId as refId
+PimObjId pimCreateDualContactRef(PimObjId refId);
+
+// Ranged reference: Create a new PimObjId that references to a range of the original PimObjId
+// This is not available for now
+PimObjId pimCreateRangedRef(PimObjId refId, uint64_t idxBegin, uint64_t idxEnd);
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Warning: Do not use below micro-ops level APIs for functional simulation   //
+////////////////////////////////////////////////////////////////////////////////
+
 // BitSIMD micro ops
 // Note: Below APIs are for low-level micro-ops programming but not for functional simulation
 // BitSIMD-V: Row-wide bit registers per subarray
@@ -226,9 +247,6 @@ PimStatus pimOpRotateLH(PimObjId objId, PimRowReg src);
 //   - numSrc must be odd (1 or 3) to perform MAJ operation
 //   - Number of var args must be 2*numSrc for AP and 2*(numDest+numSrc) for AAP
 //   - Var args must be a list of (PimObjId, unsigned ofst) pairs
-// Dual contact ref:
-//   - Warning: Dual contact ref is only supported by pimCopy/AP/AAP for now
-PimObjId pimCreateDualContactRef(PimObjId refId);
 PimStatus pimOpAP(int numSrc, ...);
 PimStatus pimOpAAP(int numSrc, int numDest, ...);
 

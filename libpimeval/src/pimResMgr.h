@@ -166,14 +166,14 @@ private:
 class pimObjInfo
 {
 public:
-  pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElement, pimDevice* device)
+  pimObjInfo(PimObjId objId, PimDataType dataType, PimAllocEnum allocType, uint64_t numElements, unsigned bitsPerElementPadded, pimDevice* device)
     : m_objId(objId),
       m_assocObjId(objId),
       m_dataType(dataType),
       m_allocType(allocType),
       m_data(dataType, numElements),
       m_numElements(numElements),
-      m_bitsPerElement(bitsPerElement),
+      m_bitsPerElementPadded(bitsPerElementPadded),
       m_device(device)
   {}
   ~pimObjInfo() {}
@@ -195,7 +195,7 @@ public:
   uint64_t getNumElements() const { return m_numElements; }
   unsigned getBitsPerElement(PimBitWidth bitWidthType) const;
   pimDevice* getDevice() { return m_device; }
-  bool isValid() const { return m_numElements > 0 && m_bitsPerElement > 0 && !m_regions.empty(); }
+  bool isValid() const { return m_numElements > 0 && m_bitsPerElementPadded > 0 && !m_regions.empty(); }
   bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
   bool isHLayout() const { return m_allocType == PIM_ALLOC_H || m_allocType == PIM_ALLOC_H1; }
   bool isLoadBalanced() const { return m_isLoadBalanced; }
@@ -243,7 +243,7 @@ private:
   PimAllocEnum m_allocType;
   pimDataHolder m_data;
   uint64_t m_numElements = 0;
-  unsigned m_bitsPerElement = 0;
+  unsigned m_bitsPerElementPadded = 0;
   unsigned m_numCoreAvailable = 0;
   std::vector<pimRegion> m_regions;  // a list of core ID and regions
   unsigned m_maxNumRegionsPerCore = 0;
@@ -307,6 +307,7 @@ private:
   std::unordered_map<PimObjId, pimObjInfo> m_objMap;
   std::unordered_map<PimCoreId, std::unique_ptr<pimResMgr::coreUsage>> m_coreUsage;
   std::unordered_map<PimObjId, std::set<PimObjId>> m_refMap;
+  bool m_debugAlloc = 0;
 };
 
 #endif
