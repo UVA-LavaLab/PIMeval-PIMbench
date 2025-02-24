@@ -385,7 +385,10 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   
-  std::cout << "Running PIM Hamming string match for \"" << params.keysInputFile << "\" as the keys file, \"" << params.textInputFile << "\" as the text input file, and \"" << params.hammingDistanceInputFile << "\" as the hamming distance input file\n";
+  std::cout << "Running PIM hamming string match" << std::endl;
+  std::cout << "Keys file: " << params.keysInputFile << std::endl;
+  std::cout << "Text file: " << params.textInputFile << std::endl;
+  std::cout << "Hamming distance file: " << params.hammingDistanceInputFile << std::endl;
   
   std::string haystack;
   std::vector<std::string> needles;
