@@ -22,6 +22,7 @@ pimSimConfig::init(PimDeviceEnum deviceType,
     unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank,
     unsigned numRowPerSubarray, unsigned numColPerSubarray)
 {
+  reset();  // always reset before init
   return deriveConfig(deviceType, "",
                       numRanks, numBankPerRank, numSubarrayPerBank,
                       numRowPerSubarray, numColPerSubarray);
@@ -31,27 +32,8 @@ pimSimConfig::init(PimDeviceEnum deviceType,
 bool
 pimSimConfig::init(PimDeviceEnum deviceType, const std::string& configFilePath)
 {
+  reset();  // always reset before init
   return deriveConfig(deviceType, configFilePath);
-}
-
-//! @brief  Reset pimSimConfig to uninitialized status
-void
-pimSimConfig::uninit()
-{
-  m_simConfigFile.clear();
-  m_memConfigFile.clear();
-  m_deviceType = PIM_DEVICE_NONE;
-  m_simTarget = PIM_DEVICE_NONE;
-  m_memoryProtocol = PIM_DEVICE_PROTOCOL_DDR;
-  m_numRanks = 0;
-  m_numBankPerRank = 0;
-  m_numSubarrayPerBank = 0;
-  m_numRowPerSubarray = 0;
-  m_numColPerSubarray = 0;
-  m_numThreads = 0;
-  m_analysisMode = false;
-  m_debug = 0;
-  m_loadBalanced = false;
 }
 
 //! @brief  Show all configuration parameters
@@ -115,6 +97,7 @@ pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
   if (!ok) {
     std::cout << "PIM-Error: Please resolve incorrect PIMeval configuration." << std::endl;
   }
+  m_isInit = true;
   return ok;
 }
 
@@ -139,24 +122,8 @@ pimSimConfig::deriveDebug()
 std::unordered_map<std::string, std::string>
 pimSimConfig::readEnvVars() const
 {
-  // Align with env var name list in header
-  const std::vector<std::string> envVars = {
-    m_envVarSimConfig,
-    m_envVarMemConfig,
-    m_envVarSimTarget,
-    m_envVarNumRanks,
-    m_envVarNumBankPerRank,
-    m_envVarNumSubarrayPerBank,
-    m_envVarNumRowPerSubarray,
-    m_envVarNumColPerSubarray,
-    m_envVarMaxNumThreads,
-    m_envVarAnalysisMode,
-    m_envVarDebug,
-    m_envVarLoadBalance,
-  };
-
   std::unordered_map<std::string, std::string> params;
-  params = pimUtils::readParamsFromEnvVars(envVars);
+  params = pimUtils::readParamsFromEnvVars(m_envVarList);
 
   if (m_debug & pimSimConfig::DEBUG_PARAMS) {
     for (const auto& [key, val] : params) {
@@ -172,6 +139,7 @@ bool
 pimSimConfig::deriveSimConfigFile(const std::string& configFilePath)
 {
   m_simConfigFile.clear();
+
   // If a config file is specified through APIs, use it. Otherwise check env var
   if (!configFilePath.empty()) {
     m_simConfigFile = configFilePath;
@@ -265,6 +233,7 @@ bool
 pimSimConfig::deriveMemConfigFile()
 {
   m_memConfigFile.clear();
+
   // Read config file and env
   if (m_cfgParams.find(m_cfgVarMemConfig) != m_cfgParams.end()) {
     m_memConfigFile = m_cfgParams.at(m_cfgVarMemConfig);
@@ -309,7 +278,7 @@ pimSimConfig::deriveMemConfigFile()
 bool
 pimSimConfig::deriveDimension(const std::string& cfgVar, const std::string& envVar, const unsigned apiVal, const unsigned defVal, unsigned& retVal)
 {
-  retVal = 0;
+  retVal = 0; // auto derived
 
   bool hasVal = false;
   std::string valStr;
@@ -370,7 +339,7 @@ pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsig
 bool
 pimSimConfig::deriveNumThreads()
 {
-  m_numThreads = 0;
+  m_numThreads = 0; // auto derived
 
   bool hasVal = false;
   std::string valStr;
@@ -431,7 +400,8 @@ pimSimConfig::deriveMiscEnvVars()
   bool hasVal = false;
   std::string valStr;
 
-  m_analysisMode = false;
+  // Analysis Mode
+  m_analysisMode = false;  // off by default
   valStr = pimUtils::getOptionalParam(m_envParams, m_envVarAnalysisMode, hasVal);
   if (hasVal) {
     if (valStr != "0" && valStr != "1") {
@@ -451,7 +421,7 @@ pimSimConfig::deriveMiscEnvVars()
 bool
 pimSimConfig::deriveLoadBalance()
 {
-  m_loadBalanced = false;
+  m_loadBalanced = true;  // on by default
 
   // Check config file then env variable
   bool hasVal = false;

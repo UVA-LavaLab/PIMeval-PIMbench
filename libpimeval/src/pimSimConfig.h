@@ -10,12 +10,13 @@
 #include "libpimeval.h"
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 
 //! @class  pimSimConfig
 //! @brief  PIM simulator configurations
-//!         Configure PIMeval library using configuration files and/or environment variables,
-//!         after it is linked with PIM application executables
+//! This class manages global static PIMeval configurations from config files, env vars, or API parameters,
+//! which are for controlling PIMeval library behavior once it is linked with PIM application executables.
 //!
 //! Supported configuration file parameters:
 //!   memory_config_file = <ini-file>            // memory config file, e.g., DDR4_8Gb_x16_3200.ini
@@ -65,14 +66,15 @@
 class pimSimConfig
 {
 public:
-  pimSimConfig() {}
+  pimSimConfig() { reset(); }
   ~pimSimConfig() {}
 
   // Update PIMeval simulation configuration parameters at device creation
   bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank,
       unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
   bool init(PimDeviceEnum deviceType, const std::string& configFilePath);
-  void uninit();
+  void uninit() { reset(); }
+  bool isInit() const { return m_isInit; }
   void show() const;
 
   // Getters
@@ -123,15 +125,18 @@ private:
 
   bool parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
 
-  // Default values if not specified by input parameters, config files, or env vars
-  static constexpr int DEFAULT_NUM_RANKS = 1;
-  static constexpr int DEFAULT_NUM_BANK_PER_RANK = 4;
-  static constexpr int DEFAULT_NUM_SUBARRAY_PER_BANK = 32;
-  static constexpr int DEFAULT_NUM_ROW_PER_SUBARRAY = 1024;
-  static constexpr int DEFAULT_NUM_COL_PER_SUBARRAY = 8192;
-  static constexpr PimDeviceEnum DEFAULT_SIM_TARGET = PIM_DEVICE_BITSIMD_V;
+  // Config file parameters
+  inline static const std::string m_cfgVarMemConfig = "memory_config_file";
+  inline static const std::string m_cfgVarSimTarget = "simulation_target";
+  inline static const std::string m_cfgVarNumRanks = "num_ranks";
+  inline static const std::string m_cfgVarNumBankPerRank = "num_bank_per_rank";
+  inline static const std::string m_cfgVarNumSubarrayPerBank = "num_subarray_per_bank";
+  inline static const std::string m_cfgVarNumRowPerSubarray = "num_row_per_subarray";
+  inline static const std::string m_cfgVarNumColPerSubarray = "num_col_per_subarray";
+  inline static const std::string m_cfgVarMaxNumThreads = "max_num_threads";
+  inline static const std::string m_cfgVarLoadBalance = "should_load_balance";
 
-  // Environment variable names
+  // Environment variables
   inline static const std::string m_envVarSimConfig = "PIMEVAL_SIM_CONFIG";
   inline static const std::string m_envVarMemConfig = "PIMEVAL_MEM_CONFIG";
   inline static const std::string m_envVarSimTarget = "PIMEVAL_SIM_TARGET";
@@ -145,36 +150,71 @@ private:
   inline static const std::string m_envVarDebug = "PIMEVAL_DEBUG";
   inline static const std::string m_envVarLoadBalance = "PIMEVAL_LOAD_BALANCE";
 
-  // Config file parameter names
-  inline static const std::string m_cfgVarMemConfig = "memory_config_file";
-  inline static const std::string m_cfgVarSimTarget = "simulation_target";
-  inline static const std::string m_cfgVarNumRanks = "num_ranks";
-  inline static const std::string m_cfgVarNumBankPerRank = "num_bank_per_rank";
-  inline static const std::string m_cfgVarNumSubarrayPerBank = "num_subarray_per_bank";
-  inline static const std::string m_cfgVarNumRowPerSubarray = "num_row_per_subarray";
-  inline static const std::string m_cfgVarNumColPerSubarray = "num_col_per_subarray";
-  inline static const std::string m_cfgVarMaxNumThreads = "max_num_threads";
-  inline static const std::string m_cfgVarLoadBalance = "should_load_balance";
+  // Add env vars to this list for readEnvVars
+  inline static const std::vector<std::string> m_envVarList = {
+    m_envVarSimConfig,
+    m_envVarMemConfig,
+    m_envVarSimTarget,
+    m_envVarNumRanks,
+    m_envVarNumBankPerRank,
+    m_envVarNumSubarrayPerBank,
+    m_envVarNumRowPerSubarray,
+    m_envVarNumColPerSubarray,
+    m_envVarMaxNumThreads,
+    m_envVarAnalysisMode,
+    m_envVarDebug,
+    m_envVarLoadBalance,
+  };
+
+  // Default values if not specified during init
+  static constexpr int DEFAULT_NUM_RANKS = 1;
+  static constexpr int DEFAULT_NUM_BANK_PER_RANK = 4;
+  static constexpr int DEFAULT_NUM_SUBARRAY_PER_BANK = 32;
+  static constexpr int DEFAULT_NUM_ROW_PER_SUBARRAY = 1024;
+  static constexpr int DEFAULT_NUM_COL_PER_SUBARRAY = 8192;
+  static constexpr PimDeviceEnum DEFAULT_SIM_TARGET = PIM_DEVICE_BITSIMD_V;
+
+  //! @brief  Reset all member variables to default status
+  inline void reset() {
+    m_simConfigFile.clear();
+    m_memConfigFile.clear();
+    m_deviceType = PIM_DEVICE_NONE;
+    m_simTarget = PIM_DEVICE_NONE;
+    m_memoryProtocol = PIM_DEVICE_PROTOCOL_DDR;
+    m_numRanks = 0;
+    m_numBankPerRank = 0;
+    m_numSubarrayPerBank = 0;
+    m_numRowPerSubarray = 0;
+    m_numColPerSubarray = 0;
+    m_numThreads = 0;
+    m_analysisMode = false;
+    m_debug = 0;
+    m_loadBalanced = false;
+    m_envParams.clear();
+    m_cfgParams.clear();
+    m_isInit = false;
+  }
 
   // PIM sim env variables
   std::string m_simConfigFile;
   std::string m_memConfigFile;
-  PimDeviceEnum m_deviceType = PIM_DEVICE_NONE;
-  PimDeviceEnum m_simTarget = PIM_DEVICE_NONE;
-  PimDeviceProtocolEnum m_memoryProtocol = PIM_DEVICE_PROTOCOL_DDR;
-  unsigned m_numRanks = 0;
-  unsigned m_numBankPerRank = 0;
-  unsigned m_numSubarrayPerBank = 0;
-  unsigned m_numRowPerSubarray = 0;
-  unsigned m_numColPerSubarray = 0;
-  unsigned m_numThreads = 0;
-  bool m_analysisMode = false;
-  unsigned m_debug = 0;
-  bool m_loadBalanced = false;
+  PimDeviceEnum m_deviceType;
+  PimDeviceEnum m_simTarget;
+  PimDeviceProtocolEnum m_memoryProtocol;
+  unsigned m_numRanks;
+  unsigned m_numBankPerRank;
+  unsigned m_numSubarrayPerBank;
+  unsigned m_numRowPerSubarray;
+  unsigned m_numColPerSubarray;
+  unsigned m_numThreads;
+  bool m_analysisMode;
+  unsigned m_debug;
+  bool m_loadBalanced;
 
   // Store original parameters for extension purpose
   std::unordered_map<std::string, std::string> m_envParams;
   std::unordered_map<std::string, std::string> m_cfgParams;
+  bool m_isInit;
 };
 
 #endif

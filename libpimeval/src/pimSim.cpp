@@ -90,7 +90,11 @@ bool
 pimSim::createDeviceCommon()
 {
   // Create memory params, which is needed before creating pimDevice
-  m_paramsDram = pimParamsDram::create(m_config.getMemoryProtocol());
+  if (!m_config.getMemConfigFile().empty()) {
+    m_paramsDram = pimParamsDram::createFromConfig(m_config.getMemConfigFile());
+  } else {
+    m_paramsDram = pimParamsDram::create(m_config.getMemoryProtocol());
+  }
 
   // Create PIM device
   m_device = std::make_unique<pimDevice>(m_config);
