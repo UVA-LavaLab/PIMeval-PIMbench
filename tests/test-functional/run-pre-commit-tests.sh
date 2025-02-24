@@ -16,24 +16,31 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL="$SCRIPT_DIR/result-local.txt"
 GOLDEN="$SCRIPT_DIR/result-golden.txt"
 
+# Temporarily unset PIMEVAL_* environment variables during this testing
+for var in $(env | grep '^PIMEVAL_' | awk -F= '{print $1}'); do
+    unset "$var"
+done
+
 echo "##################################" | tee $LOCAL
 echo "PIMeval Functional Testing Results" | tee -a $LOCAL
 echo "##################################" | tee -a $LOCAL
 
-export PIMEVAL_TARGET=PIM_DEVICE_BITSIMD_V_AP
+export PIMEVAL_SIM_TARGET=PIM_DEVICE_BITSIMD_V_AP
 $SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
-export PIMEVAL_TARGET=PIM_DEVICE_FULCRUM
+export PIMEVAL_SIM_TARGET=PIM_DEVICE_FULCRUM
 $SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
-export PIMEVAL_TARGET=PIM_DEVICE_BANK_LEVEL
+export PIMEVAL_SIM_TARGET=PIM_DEVICE_BANK_LEVEL
 $SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 
 # replace number of threads with #
 if [[ "$OSTYPE" == "darwin"* ]]; then # OSX
     sed -i '' 's/thread pool with [0-9]* threads/thread pool with # threads/g' $LOCAL
+    sed -i '' 's/PIM-Config: Number of Threads = [0-9]*/PIM-Config: Number of Threads = #/g' $LOCAL
 else # Linux
     sed -i 's/thread pool with [0-9]* threads/thread pool with # threads/g' $LOCAL
+    sed -i 's/PIM-Config: Number of Threads = [0-9]*/PIM-Config: Number of Threads = #/g' $LOCAL
 fi
 
 # STEP 2: Compare result_local.txt with result_golden.txt

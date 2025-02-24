@@ -22,7 +22,6 @@ string-match/
 ├── PIM/
 │   ├── Makefile
 │   ├── string-match.cpp
-│   ├── run_slurm.sh
 │   ├── slurm.sh
 ├── baselines/
 │   ├── CPU/
@@ -42,7 +41,9 @@ string-match/
 │   ├── data-generator.cpp
 │   ├── generate_example_dataset.sh
 ├── dataset/
-│   ├── .gitkeep
+│   ├── 10mil_l-10_nk-10_kl/
+│   │   ├── text.txt
+│   │   ├── keys.txt
 ├── README.md
 ├── Makefile
 ```
@@ -96,7 +97,7 @@ cd data-generator
 To see help text on all usages and how to modify any of the input parameters, use following command:
 
 ```bash
-./string-match.out -h
+./data-generator.out -h
 ```
 
 ## Compilation Instructions for Specific Variants
@@ -159,7 +160,7 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command (Must be run in the build directory for the CPU baseline). Note that for the GPU baseline, the LD_LIBRARY_PATH enviornment variable (DYLD_LIBRARY_PATH on Mac) must include the PFAC lib directory, as set in the compilation instructions for the GPU varient. The default keys file is `dataset/10mil_l-10_nk-10_kl/keys.txt` and the default text file is `dataset/10mil_l-10_nk-10_kl/text.txt`, but can be changed using `-k` and `-t`, respectively.
+After compiling, run each executable with the following command (Must be run in the build directory for the CPU baseline). Note that for the GPU baseline, the LD_LIBRARY_PATH enviornment variable (DYLD_LIBRARY_PATH on Mac) must include the PFAC lib directory, as set in the compilation instructions for the GPU varient. The default keys file is `dataset/10mil_l-10_nk-10_kl/keys.txt` and the default text file is `dataset/10mil_l-10_nk-10_kl/text.txt`, but can be changed using `-k` and `-t`, respectively.
 
 ```bash
 ./string-match.out -k <keys file> -t <text file>

@@ -34,6 +34,16 @@ enum class PimBitWidth
   PADDED,      // bit width of a data element with association and padding in PIMeval
 };
 
+//! @enum   PimDataLayout
+//! @brief  PIM data layout definitions
+enum class PimDataLayout
+{
+  UNKNOWN = 0,  // unknown
+  H,            // horizontal data layout
+  V,            // vertical data layout
+  HYBRID,       // hybrid data layout
+};
+
 namespace pimUtils
 {
   std::string pimStatusEnumToStr(PimStatus status);
@@ -46,6 +56,8 @@ namespace pimUtils
   bool isSigned(PimDataType dataType);
   bool isUnsigned(PimDataType dataType);
   bool isFP(PimDataType dataType);
+  std::string pimProtocolEnumToStr(PimDeviceProtocolEnum protocol);
+  PimDataLayout getDeviceDataLayout(PimDeviceEnum deviceType);
 
   // Convert raw bits into sign-extended bits based on PIM data type.
   // Input: Raw bits represented as uint64_t
@@ -83,6 +95,7 @@ namespace pimUtils
     return signExtBits;
   }
 
+  // Service APIs for file system, config files, env vars
   std::string& ltrim(std::string& s);
   std::string& rtrim(std::string& s);
   std::string& trim(std::string& s);
@@ -93,7 +106,9 @@ namespace pimUtils
 
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
+  bool convertStringToUnsigned(const std::string& str, unsigned& retVal);
   std::unordered_map<std::string, std::string> readParamsFromConfigFile(const std::string& configFilePath);
+  std::unordered_map<std::string, std::string> readParamsFromEnvVars(const std::vector<std::string>& envVarNames);
 
   const std::unordered_map<PimDeviceEnum, std::string> enumToStrMap = {
       {PIM_DEVICE_NONE, "PIM_DEVICE_NONE"},
@@ -126,11 +141,6 @@ namespace pimUtils
       {"PIM_DEVICE_BANK_LEVEL", PIM_DEVICE_BANK_LEVEL},
       {"PIM_DEVICE_AQUABOLT", PIM_DEVICE_AQUABOLT}
   };
-
-  static constexpr const char* envVarPimEvalTarget = "PIMEVAL_TARGET";
-  static constexpr const char* envVarPimEvalConfigPath = "PIMEVAL_CONFIG_PATH";
-  static constexpr const char* envVarPimEvalConfigSim = "PIMEVAL_CONFIG_SIM";
-  static constexpr const char* envVarPimEvalAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
 
   //! @class  threadWorker
   //! @brief  Thread worker base class
