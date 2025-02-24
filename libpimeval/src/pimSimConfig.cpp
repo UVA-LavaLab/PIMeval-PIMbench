@@ -57,7 +57,7 @@ pimSimConfig::show() const
             << ", #rowsPerSubarray = " << m_numRowPerSubarray
             << ", #colsPerSubarray = " << m_numColPerSubarray << std::endl;
 
-  std::cout << "PIM-Config: Number of threads = " << m_numThreads << std::endl;
+  std::cout << "PIM-Config: Number of Threads = " << m_numThreads << std::endl;
   std::cout << "PIM-Config: Load Balanced = " << m_loadBalanced << std::endl;
   std::cout << "----------------------------------------" << std::endl;
 }

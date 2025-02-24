@@ -37,8 +37,10 @@ $SCRIPT_DIR/test-functional.out 2>&1 | tee -a $LOCAL
 # replace number of threads with #
 if [[ "$OSTYPE" == "darwin"* ]]; then # OSX
     sed -i '' 's/thread pool with [0-9]* threads/thread pool with # threads/g' $LOCAL
+    sed -i '' 's/PIM-Config: Number of Threads = [0-9]*/PIM-Config: Number of Threads = #/g' $LOCAL
 else # Linux
     sed -i 's/thread pool with [0-9]* threads/thread pool with # threads/g' $LOCAL
+    sed -i 's/PIM-Config: Number of Threads = [0-9]*/PIM-Config: Number of Threads = #/g' $LOCAL
 fi
 
 # STEP 2: Compare result_local.txt with result_golden.txt
