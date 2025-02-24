@@ -66,10 +66,10 @@ def compare_files_with_tolerance(file1, file2, tolerance):
     """ Compare two files with a small FP error tolerance """
     if not os.path.isfile(file1):
         print('Error: Invalid input file', file1)
-        return
+        return 2
     if not os.path.isfile(file2):
         print('Error: Invalid input file', file2)
-        return
+        return 2
     lines1 = []
     with open(file1, 'r') as f1:
         lines1 = f1.readlines()
@@ -87,6 +87,8 @@ def compare_files_with_tolerance(file1, file2, tolerance):
     for line in filtered_diff:
         print(line)
 
+    return 0 if len(filtered_diff) == 0 else 1
+
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage: fuzzy_diff.py <file1> <file2>')
@@ -97,5 +99,6 @@ if __name__ == '__main__':
     file1 = sys.argv[1]
     file2 = sys.argv[2]
     tolerance = 1.5e-6
-    compare_files_with_tolerance(file1, file2, tolerance)
+    retVal = compare_files_with_tolerance(file1, file2, tolerance)
+    sys.exit(retVal)  # 0 same, 1 diff, 2 error
 
