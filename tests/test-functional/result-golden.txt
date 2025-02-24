@@ -9,7 +9,7 @@ PIM-Config: Memory Config File: <DEFAULT>
 PIM-Config: Memory Protocol: DDR
 PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BITSIMD_V_AP
 PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 1024, #colsPerSubarray = 256
-PIM-Config: Number of threads = 10
+PIM-Config: Number of Threads = #
 PIM-Config: Load Balanced = 1
 ----------------------------------------
 PIM-Info: Aggregate every two subarrays as a single core
@@ -1374,7 +1374,7 @@ PIM-Config: Memory Config File: <DEFAULT>
 PIM-Config: Memory Protocol: DDR
 PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_FULCRUM
 PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 1024, #colsPerSubarray = 256
-PIM-Config: Number of threads = 10
+PIM-Config: Number of Threads = #
 PIM-Config: Load Balanced = 1
 ----------------------------------------
 PIM-Info: Aggregate every two subarrays as a single core
@@ -2622,7 +2622,7 @@ PIM-Config: Memory Config File: <DEFAULT>
 PIM-Config: Memory Protocol: DDR
 PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BANK_LEVEL
 PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 1024, #colsPerSubarray = 256
-PIM-Config: Number of threads = 10
+PIM-Config: Number of Threads = #
 PIM-Config: Load Balanced = 1
 ----------------------------------------
 PIM-Info: Aggregate all subarrays within a bank as a single core
