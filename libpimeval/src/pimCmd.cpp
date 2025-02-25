@@ -44,6 +44,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::GT, "gt" },
     { PimCmdEnum::LT, "lt" },
     { PimCmdEnum::EQ, "eq" },
+    { PimCmdEnum::NE, "ne" },
     { PimCmdEnum::MIN, "min" },
     { PimCmdEnum::MAX, "max" },
     { PimCmdEnum::ADD_SCALAR, "add_scalar" },
@@ -57,6 +58,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::GT_SCALAR, "gt_scalar" },
     { PimCmdEnum::LT_SCALAR, "lt_scalar" },
     { PimCmdEnum::EQ_SCALAR, "eq_scalar" },
+    { PimCmdEnum::NE_SCALAR, "ne_scalar" },
     { PimCmdEnum::MIN_SCALAR, "min_scalar" },
     { PimCmdEnum::MAX_SCALAR, "max_scalar" },
     { PimCmdEnum::CONVERT_TYPE, "convert_type" },
@@ -388,7 +390,7 @@ pimCmdFunc1::sanityCheck() const
     switch (m_cmdType) {
       case PimCmdEnum::NOT:
       case PimCmdEnum::CONVERT_TYPE:
-        // pass
+        break;
       default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
@@ -397,7 +399,7 @@ pimCmdFunc1::sanityCheck() const
   // Define command specific type conversion rules
   switch (m_cmdType) {
     case PimCmdEnum::CONVERT_TYPE:
-      // pass
+      break;
     default:
       if (objSrc.getDataType() != objDest.getDataType()) {
         std::printf("PIM-Error: PIM command %s does not support data type conversion\n", getName().c_str());
@@ -550,7 +552,7 @@ pimCmdFunc2::sanityCheck() const
       case PimCmdEnum::OR:
       case PimCmdEnum::XOR:
       case PimCmdEnum::XNOR:
-        // pass
+        break;
       default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
