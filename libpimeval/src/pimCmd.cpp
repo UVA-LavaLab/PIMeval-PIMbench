@@ -390,7 +390,7 @@ pimCmdFunc1::sanityCheck() const
     switch (m_cmdType) {
       case PimCmdEnum::NOT:
       case PimCmdEnum::CONVERT_TYPE:
-        // pass
+        break;
       default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
@@ -399,7 +399,7 @@ pimCmdFunc1::sanityCheck() const
   // Define command specific type conversion rules
   switch (m_cmdType) {
     case PimCmdEnum::CONVERT_TYPE:
-      // pass
+      break;
     default:
       if (objSrc.getDataType() != objDest.getDataType()) {
         std::printf("PIM-Error: PIM command %s does not support data type conversion\n", getName().c_str());
@@ -552,7 +552,7 @@ pimCmdFunc2::sanityCheck() const
       case PimCmdEnum::OR:
       case PimCmdEnum::XOR:
       case PimCmdEnum::XNOR:
-        // pass
+        break;
       default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
