@@ -163,7 +163,9 @@ int main(int argc, char* argv[])
         std::make_move_iterator(keysSet.end())
     );
 
-  std::sort(keys.begin(), keys.end(), [](auto& l, auto& r){
+  std::vector<std::string> keysSorted(keys);
+
+  std::sort(keysSorted.begin(), keysSorted.end(), [](auto& l, auto& r){
     return l.size() < r.size();
   });
 
@@ -173,12 +175,12 @@ int main(int argc, char* argv[])
   size_t textCharsReplacedWithKeys = 0;
   size_t targetTextCharsReplacedWithKeys = ((double) params.keyFrequency / (double) 100.0) * params.textLen;
   targetTextCharsReplacedWithKeys = std::min(targetTextCharsReplacedWithKeys, params.textLen);
-  size_t lastViableKey = keys.size();
+  size_t lastViableKey = keysSorted.size();
 
   // Replace some of text with keys to generate matches
   while(textCharsReplacedWithKeys < targetTextCharsReplacedWithKeys && lastViableKey > 0) {
     size_t nextKeyInd = rand()%lastViableKey;
-    std::string& nextKey = keys[nextKeyInd];
+    std::string& nextKey = keysSorted[nextKeyInd];
     if(nextKey.size() + textCharsReplacedWithKeys > targetTextCharsReplacedWithKeys) {
       lastViableKey = nextKeyInd;
       continue;
@@ -191,9 +193,9 @@ int main(int argc, char* argv[])
   // Covers edge case where all keys are too long to fit without going over desired frequency,
   // otherwise causing zero matches at low key frequencies
   if((textCharsReplacedWithKeys == 0 && targetTextCharsReplacedWithKeys > 0)
-  && (keys[0].size() < params.textLen)) {
+  && (keysSorted[0].size() < params.textLen)) {
     textVecOfKeys.push_back(0);
-    textCharsReplacedWithKeys = keys[0].size();
+    textCharsReplacedWithKeys = keysSorted[0].size();
   }
 
   // Generate random string of text of length params.textLen, all of uppercase letters so that there aren't extra matches
@@ -216,7 +218,7 @@ int main(int argc, char* argv[])
   
   // Replace text with keys, approximately evenly spaced
   if(textVecOfKeys.size() == 1) {
-    hammingTextReplace(text, 0, keys[0], params.maxHammingDistance, global_gen);
+    hammingTextReplace(text, 0, keysSorted[0], params.maxHammingDistance, global_gen);
   } else if(textVecOfKeys.size() > 1) {
     size_t nonKeyCharsInText = params.textLen - textCharsReplacedWithKeys;
     size_t minSpace = nonKeyCharsInText / textVecOfKeys.size();
@@ -224,7 +226,7 @@ int main(int argc, char* argv[])
 
     size_t textInd = 0;
     for(size_t i=0; i < textVecOfKeys.size(); ++i) {
-      std::string& currentKey = keys[textVecOfKeys[i]];
+      std::string& currentKey = keysSorted[textVecOfKeys[i]];
       hammingTextReplace(text, textInd, currentKey, params.maxHammingDistance, global_gen);
       textInd += currentKey.size();
       textInd += minSpace;
