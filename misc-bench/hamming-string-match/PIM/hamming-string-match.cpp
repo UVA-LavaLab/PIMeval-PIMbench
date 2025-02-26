@@ -6,8 +6,10 @@
 // The output format is based on PFAC by Lin et. al.
 // This version of string matching only matches one key per position in the text
 // However, it could be modified to any of the below formats with few changes:
-// Example: text="abcda", keys=["a", "abc"]
-// PFAC Style Output: Array of the length of the text, where each position is a 0 (no match), or the index of the key that matches (starts at 1). Example Format: [2, 0, 0, 0, 1]. Note that for this format, each position can only have one matching key. For the regular matching, the longer key takes priority. For Hamming, I have the priorities set in advance.
+// Example: text="abcda", keys=["a", "abc"], maxHammingDistance=0
+// PFAC Style Output: Array of the length of the text, where each position is a 0 (no match), or the index of the key that matches (starts at 1).
+//      Example Format: [2, 0, 0, 0, 1]. Note that for this format, each position can only have one matching key.
+//      For the regular matching, the longer key takes priority. For Hamming, I have the priorities set in advance.
 // Binary match array for each key. Example: [[1, 0, 0, 0, 1], [1, 0, 0, 0, 0]]
 // Number of matches for each key. Example: [2, 1]
 // Binary match array for all keys (phoenix-like). Example: [1, 1]
