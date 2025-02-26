@@ -4,18 +4,26 @@
 // See the LICENSE file in the root of this repository for more details.
 
 // The output format is based on PFAC by Lin et. al.
-// This version of string matching only matches one key per position in the text
-// However, it could be modified to any of the below formats with few changes:
+// This version of string matching only matches one key per position in the text.
+// However, it could be modified to any of the below formats with few changes.
 // Example: text="abcda", keys=["a", "abc"], maxHammingDistance=0
-// PFAC Style Output: Array of the length of the text, where each position is a 0 (no match), or the index of the key that matches (starts at 1).
-//      Example Format: [2, 0, 0, 0, 1]. Note that for this format, each position can only have one matching key.
-//      For the regular matching, the longer key takes priority. For Hamming, I have the priorities set in advance.
-// Binary match array for each key. Example: [[1, 0, 0, 0, 1], [1, 0, 0, 0, 0]]
-// Number of matches for each key. Example: [2, 1]
-// Binary match array for all keys (phoenix-like). Example: [1, 1]
+// PFAC Style Output (Current): Array of the length of the text, where each position is a 0 (no match), or the index of the key that matches (starts at 1).
+//      Example Output: [2, 0, 0, 0, 1].
+//      Note that for this format, each position can only have one matching key.
+//      For the regular matching, the longer key takes priority. For Hamming matching, the priorities are set arbitrarily in advance.
+// Binary match array for each key:
+//      Example Output: [[1, 0, 0, 0, 1], [1, 0, 0, 0, 0]]
+//      Would be done by copying the binary match arrays in pimIndividualNeedleMatches back to the host.
+// Number of matches for each key:
+//      Example Output: [2, 1]
+//      Would be done by doing a reduction sum on each binary match array.
+// Binary match array for all keys (phoenix-like):
+//      Example Output: [1, 1]
+//      Would be done using a max reduction on each binary match array.
 
 // Format that is not reasonably implementable in PIM:
-// Matching positions for each key. Example: [[0, 4], [0]]
+// Matching positions for each key:
+//      Example Output: [[0, 4], [0]]
 
 #include <iostream>
 #include <vector>
