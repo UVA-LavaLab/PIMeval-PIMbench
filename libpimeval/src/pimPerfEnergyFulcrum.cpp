@@ -63,9 +63,10 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
         numberOfALUOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
       }
-      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement) * (numPass - 1);
-      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
-      msRuntime += m_tR + m_tW;
+      msRead = m_tR;
+      msWrite = m_tW;
+      msALU = ((maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement) * (numPass - 1)) + (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime = msRead + msWrite + msALU;
       double energyLogical = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement);
       mjEnergy = (energyLogical + m_eAP) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
