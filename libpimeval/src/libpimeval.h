@@ -167,6 +167,9 @@ PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idx
 // Min/Max Reduction APIs
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+// Bit slice operations
+PimStatus pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
+PimStatus pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);
 
 // Note: Reduction sum range is [idxBegin, idxEnd)
 

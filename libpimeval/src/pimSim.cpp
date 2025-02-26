@@ -763,6 +763,26 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
   return m_device->executeCmd(std::move(cmd));
 }
 
+//! @brief  Extract a bit slice from a data vector. Dest must be BOOL type
+bool
+pimSim::pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx)
+{
+  pimPerfMon perfMon("pimBitSliceExtract");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::BIT_SLICE_EXTRACT, src, destBool, bitIdx);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+//! @brief  Insert a bit slice to a data vector. Src must be BOOL type
+bool
+pimSim::pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx)
+{
+  pimPerfMon perfMon("pimBitSliceInsert");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::BIT_SLICE_INSERT, srcBool, dest, bitIdx);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 bool
 pimSim::pimRotateElementsRight(PimObjId src)
 {

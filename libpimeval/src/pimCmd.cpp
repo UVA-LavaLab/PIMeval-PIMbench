@@ -62,6 +62,8 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::MIN_SCALAR, "min_scalar" },
     { PimCmdEnum::MAX_SCALAR, "max_scalar" },
     { PimCmdEnum::CONVERT_TYPE, "convert_type" },
+    { PimCmdEnum::BIT_SLICE_EXTRACT, "bit_slice_extract" },
+    { PimCmdEnum::BIT_SLICE_INSERT, "bit_slice_insert" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::REDMIN, "redmin" },
@@ -391,6 +393,28 @@ pimCmdFunc1::sanityCheck() const
       case PimCmdEnum::NOT:
       case PimCmdEnum::CONVERT_TYPE:
         break;
+      case PimCmdEnum::BIT_SLICE_EXTRACT: // src, destBool, bitIdx
+        if (objDest.getDataType() != PIM_BOOL) {
+          std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
+          return false;
+        }
+        if (m_scalarValue >= objSrc.getBitsPerElement(PimBitWidth::SIM)) {
+          std::printf("PIM-Error: PIM command %s bit index %llu out of range of %s type\n", getName().c_str(),
+                      m_scalarValue, pimUtils::pimDataTypeEnumToStr(objSrc.getDataType()).c_str());
+          return false;
+        }
+        break;
+      case PimCmdEnum::BIT_SLICE_INSERT: // srcBool, dest, bitIdx
+        if (objSrc.getDataType() != PIM_BOOL) {
+          std::printf("PIM-Error: PIM command %s source operand must be PIM_BOOL type\n", getName().c_str());
+          return false;
+        }
+        if (m_scalarValue >= objDest.getBitsPerElement(PimBitWidth::SIM)) {
+          std::printf("PIM-Error: PIM command %s bit index %llu out of range of %s type\n", getName().c_str(),
+                      m_scalarValue, pimUtils::pimDataTypeEnumToStr(objDest.getDataType()).c_str());
+          return false;
+        }
+        break;
       default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
@@ -427,6 +451,12 @@ pimCmdFunc1::computeRegion(unsigned index)
     uint64_t elemIdx = elemIdxBegin + j;
     if (m_cmdType == PimCmdEnum::CONVERT_TYPE) {
       convertType(objSrc, objDest, elemIdx);
+      continue;
+    } else if (m_cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
+      bitSliceExtract(objSrc, objDest, m_scalarValue, elemIdx);
+      continue;
+    } else if (m_cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
+      bitSliceInsert(objSrc, objDest, m_scalarValue, elemIdx);
       continue;
     }
     if (pimUtils::isSigned(dataType)) {
@@ -483,6 +513,27 @@ pimCmdFunc1::convertType(const pimObjInfo& objSrc, pimObjInfo& objDest, uint64_t
   } else if (pimUtils::isFP(dataTypeSrc)) {
     assert(0); // todo
   }
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 1-operand - compute region - bit slice extract
+bool
+pimCmdFunc1::bitSliceExtract(const pimObjInfo& objSrc, pimObjInfo& objDestBool, uint64_t bitIdx, uint64_t elemIdx) const
+{
+  uint64_t src = objSrc.getElementBits(elemIdx);
+  uint64_t result = (src >> bitIdx) & 1L;
+  objDestBool.setElement(elemIdx, result);
+  return true;
+}
+
+//! @brief  PIM CMD: Functional 1-operand - compute region - bit slice insert
+bool
+pimCmdFunc1::bitSliceInsert(const pimObjInfo& objSrcBool, pimObjInfo& objDest, uint64_t bitIdx, uint64_t elemIdx) const
+{
+  uint64_t src = objSrcBool.getElementBits(elemIdx);
+  uint64_t dest = objDest.getElementBits(elemIdx);
+  uint64_t result = (dest & ~(1L << bitIdx)) | (src << bitIdx);
+  objDest.setElement(elemIdx, result);
   return true;
 }
 
