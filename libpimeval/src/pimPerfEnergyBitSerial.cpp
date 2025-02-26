@@ -58,7 +58,9 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
           case PimCmdEnum::BIT_SLICE_EXTRACT:
           case PimCmdEnum::BIT_SLICE_INSERT:
             // each bit-slice extract/insert operation takes 1 row read and 1 row write
-            msRuntime += m_tR + m_tW;
+            msRead += m_tR;
+            msWrite += m_tW;
+            msRuntime += msRead + msWrite;
             mjEnergy += (m_eAP + m_eAP) * numCores;
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
             ok = true;
@@ -67,9 +69,9 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
           case PimCmdEnum::SHIFT_BITS_R:
             // handle bit-shift specially
             msRead += m_tR * (bitsPerElement - 1);
-        msWrite += m_tW * bitsPerElement;
-        msLogic += m_tL;
-        msRuntime += msRead + msWrite + msLogic;
+            msWrite += m_tW * bitsPerElement;
+            msLogic += m_tL;
+            msRuntime += msRead + msWrite + msLogic;
             ok = true;
             break;
           default:
