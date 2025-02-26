@@ -395,7 +395,7 @@ pimCmdFunc1::sanityCheck() const
       case PimCmdEnum::BIT_SLICE_EXTRACT:
       case PimCmdEnum::BIT_SLICE_INSERT:
         break;
-     default:
+      default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
         return false;
     }
