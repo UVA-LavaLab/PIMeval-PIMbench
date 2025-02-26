@@ -414,6 +414,22 @@ pimPopCount(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Extract a bit slice from a data vector. Dest must be BOOL type
+PimStatus
+pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx)
+{
+  bool ok = pimSim::get()->pimBitSliceExtract(src, destBool, bitIdx);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Insert a bit slice to a data vector. Src must be BOOL type
+PimStatus
+pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx)
+{
+  bool ok = pimSim::get()->pimBitSliceInsert(srcBool, dest, bitIdx);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 // Implementation of min reduction
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
     bool ok = pimSim::get()->pimRedMin(src, min, idxBegin, idxEnd);

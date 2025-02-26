@@ -47,6 +47,8 @@ enum class PimCmdEnum {
   MIN_SCALAR,
   MAX_SCALAR,
   CONVERT_TYPE,
+  BIT_SLICE_EXTRACT,
+  BIT_SLICE_INSERT,
   // Functional 2-operand
   ADD,
   SUB,
@@ -312,6 +314,8 @@ private:
   }
 
   bool convertType(const pimObjInfo& objSrc, pimObjInfo& objDest, uint64_t elemIdx) const;
+  bool bitSliceExtract(const pimObjInfo& objSrc, pimObjInfo& objDestBool, uint64_t bitIdx, uint64_t elemIdx) const;
+  bool bitSliceInsert(const pimObjInfo& objSrcBool, pimObjInfo& objDest, uint64_t bitIdx, uint64_t elemIdx) const;
 };
 
 //! @class  pimCmdFunc2

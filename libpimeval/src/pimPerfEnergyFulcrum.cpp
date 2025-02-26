@@ -49,6 +49,22 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
+    case PimCmdEnum::BIT_SLICE_EXTRACT:
+    case PimCmdEnum::BIT_SLICE_INSERT:
+    {
+      if (cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
+        numberOfALUOperationPerElement *= 2; // 1 shift, 1 and
+      } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
+        numberOfALUOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
+      }
+      msRuntime = (maxElementsPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement) * (numPass - 1);
+      msRuntime += (minElementPerRegion * m_fulcrumAluLatency * numberOfALUOperationPerElement);
+      msRuntime += m_tR + m_tW;
+      double energyLogical = ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfALUOperationPerElement);
+      mjEnergy = (energyLogical + m_eAP) * numCores * numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::SUB_SCALAR:
     case PimCmdEnum::MUL_SCALAR:

@@ -110,6 +110,8 @@ public:
   bool pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
+  bool pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);
   template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);
