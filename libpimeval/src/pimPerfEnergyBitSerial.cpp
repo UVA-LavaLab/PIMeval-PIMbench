@@ -46,10 +46,26 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
           }
         }
       }
-      // handle bit-shift specially
-      if (cmdType == PimCmdEnum::SHIFT_BITS_L || cmdType == PimCmdEnum::SHIFT_BITS_R) {
-        msRuntime += m_tR * (bitsPerElement - 1) + m_tW * bitsPerElement + m_tL;
-        ok = true;
+      // handle bit-serial operations not in the above table
+      if (!ok) {
+        switch (cmdType) {
+          case PimCmdEnum::BIT_SLICE_EXTRACT:
+          case PimCmdEnum::BIT_SLICE_INSERT:
+            // each bit-slice extract/insert operation takes 1 row read and 1 row write
+            msRuntime += m_tR + m_tW;
+            mjEnergy += (m_eAP + m_eAP) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            ok = true;
+            break;
+          case PimCmdEnum::SHIFT_BITS_L:
+          case PimCmdEnum::SHIFT_BITS_R:
+            // handle bit-shift specially
+            msRuntime += m_tR * (bitsPerElement - 1) + m_tW * bitsPerElement + m_tL;
+            ok = true;
+            break;
+          default:
+            ; // pass
+        }
       }
       break;
     }
