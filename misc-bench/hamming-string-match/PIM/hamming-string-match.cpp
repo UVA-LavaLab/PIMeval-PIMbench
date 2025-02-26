@@ -3,6 +3,18 @@
 // This file is licensed under the MIT License.
 // See the LICENSE file in the root of this repository for more details.
 
+// The output format is based on PFAC by Lin et. al.
+// This version of string matching only matches one key per position in the text
+// However, it could be modified to any of the below formats with few changes:
+// Example: text="abcda", keys=["a", "abc"]
+// PFAC Style Output: Array of the length of the text, where each position is a 0 (no match), or the index of the key that matches (starts at 1). Example Format: [2, 0, 0, 0, 1]. Note that for this format, each position can only have one matching key. For the regular matching, the longer key takes priority. For Hamming, I have the priorities set in advance.
+// Binary match array for each key. Example: [[1, 0, 0, 0, 1], [1, 0, 0, 0, 0]]
+// Number of matches for each key. Example: [2, 1]
+// Binary match array for all keys (phoenix-like). Example: [1, 1]
+
+// Format that is not reasonably implementable in PIM:
+// Matching positions for each key. Example: [[0, 4], [0]]
+
 #include <iostream>
 #include <vector>
 #include <getopt.h>
@@ -539,3 +551,7 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+
+
+// References
+// Cheng-Hung Lin, Chen-Hsiung Liu, Lung-Sheng Chien, Shih-Chieh Chang, "Accelerating Pattern Matching Using a Novel Parallel Algorithm on GPUs," IEEE Transactions on Computers, vol. 62, no. 10, pp. 1906-1916, Oct. 2013, doi:10.1109/TC.2012.254
