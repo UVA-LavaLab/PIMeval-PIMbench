@@ -6,6 +6,7 @@
 
 #include "pimCmd.h"          // for pimCmd
 #include "pimSim.h"          // for pimSim
+#include "pimSimConfig.h"    // for pimSimConfig
 #include "pimDevice.h"       // for pimDevice
 #include "pimCore.h"         // for pimCore
 #include "pimResMgr.h"       // for pimResMgr
@@ -94,6 +95,13 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
   };
   auto it = cmdNames.find(cmdType);
   return it != cmdNames.end() ? it->second + suffix : "unknown";
+}
+
+//! @brief  pimCmd constructor
+pimCmd::pimCmd(PimCmdEnum cmdType)
+  : m_cmdType(cmdType)
+{
+  m_debugCmds = pimSim::get()->isDebug(pimSimConfig::DEBUG_CMDS);
 }
 
 //! @brief  Check if an obj ID is valid
@@ -303,11 +311,10 @@ pimCmdCopy::updateStats() const
     pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
 
-    #if defined(DEBUG)
-    std::printf("PIM-Info: Copied %llu elements of %u bits from host to PIM obj %d\n",
-                numElements, bitsPerElement, m_dest);
-    #endif
-
+    if (m_debugCmds) {
+      std::printf("PIM-Cmd: Copied %llu elements of %u bits from host to PIM obj %d\n",
+                  numElements, bitsPerElement, m_dest);
+    }
   } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
@@ -318,11 +325,10 @@ pimCmdCopy::updateStats() const
     pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
 
-    #if defined(DEBUG)
-    std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to host\n",
-                numElements, bitsPerElement, m_src);
-    #endif
-
+    if (m_debugCmds) {
+      std::printf("PIM-Cmd: Copied %llu elements of %u bits from PIM obj %d to host\n",
+                  numElements, bitsPerElement, m_src);
+    }
   } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
@@ -333,11 +339,10 @@ pimCmdCopy::updateStats() const
     pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement, mPerfEnergy);
 
-    #if defined(DEBUG)
-    std::printf("PIM-Info: Copied %llu elements of %u bits from PIM obj %d to PIM obj %d\n",
-                numElements, bitsPerElement, m_src, m_dest);
-    #endif
-
+    if (m_debugCmds) {
+      std::printf("PIM-Cmd: Copied %llu elements of %u bits from PIM obj %d to PIM obj %d\n",
+                  numElements, bitsPerElement, m_src, m_dest);
+    }
   } else {
     assert(0);
   }
@@ -349,9 +354,9 @@ pimCmdCopy::updateStats() const
 bool
 pimCmdFunc1::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
+  }
 
   if (!sanityCheck()) {
     return false;
@@ -558,9 +563,9 @@ pimCmdFunc1::updateStats() const
 bool
 pimCmdFunc2::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d - %d -> %d)\n", getName().c_str(), m_src1, m_src2, m_dest);
+  }
 
   if (!sanityCheck()) {
     return false;
@@ -706,9 +711,9 @@ pimCmdReduction<T>::sanityCheck() const
 template <typename T> bool
 pimCmdReduction<T>::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d)\n", getName().c_str(), m_src);
+  }
 
   if (!sanityCheck()) {
     return false;
@@ -869,9 +874,9 @@ pimCmdReduction<T>::updateStats() const
 bool
 pimCmdBroadcast::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: %s (obj id %d value %llu)\n", getName().c_str(), m_dest, m_signExtBits);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d value %llu)\n", getName().c_str(), m_dest, m_signExtBits);
+  }
 
   if (!sanityCheck()) {
     return false;
@@ -935,9 +940,9 @@ pimCmdBroadcast::updateStats() const
 bool
 pimCmdRotate::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: %s (obj id %d)\n", getName().c_str(), m_src);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d)\n", getName().c_str(), m_src);
+  }
 
   if (!sanityCheck()) {
     return false;
@@ -1066,9 +1071,9 @@ pimCmdRotate::updateStats() const
 bool
 pimCmdReadRowToSa::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: BitSIMD-V ReadRowToSa (obj id %d ofst %u)\n", m_objId, m_ofst);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-MicroOp: BitSIMD-V ReadRowToSa (obj id %d ofst %u)\n", m_objId, m_ofst);
+  }
 
   pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
@@ -1092,9 +1097,9 @@ pimCmdReadRowToSa::execute()
 bool
 pimCmdWriteSaToRow::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: BitSIMD-V WriteSaToRow (obj id %d ofst %u)\n", m_objId, m_ofst);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-MicroOp: BitSIMD-V WriteSaToRow (obj id %d ofst %u)\n", m_objId, m_ofst);
+  }
 
   pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
@@ -1118,10 +1123,10 @@ pimCmdWriteSaToRow::execute()
 bool
 pimCmdRRegOp::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: BitSIMD-V %s (obj-id %d dest-reg %d src-reg %d %d %d val %d)\n",
-              getName().c_str(), m_objId, m_dest, m_src1, m_src2, m_src3, m_val);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-MicroOp: BitSIMD-V %s (obj-id %d dest-reg %d src-reg %d %d %d val %d)\n",
+                getName().c_str(), m_objId, m_dest, m_src1, m_src2, m_src3, m_val);
+  }
 
   pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& refObj = resMgr->getObjInfo(m_objId);
@@ -1223,9 +1228,9 @@ pimCmdRRegOp::execute()
 bool
 pimCmdRRegRotate::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-MicroOp: BitSIMD-V %s (obj-id %d src-reg %d)\n", getName().c_str(), m_objId, m_dest);
+  }
 
   pimResMgr* resMgr = m_device->getResMgr();
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_objId);
@@ -1275,9 +1280,9 @@ pimCmdRRegRotate::execute()
 bool
 pimCmdAnalogAAP::execute()
 {
-  #if defined(DEBUG)
-  printDebugInfo();
-  #endif
+  if (m_debugCmds) {
+    printDebugInfo();
+  }
 
   if (m_srcRows.empty()) {
     return false;
@@ -1373,7 +1378,7 @@ pimCmdAnalogAAP::printDebugInfo() const
   for (const auto &kv : m_destRows) {
     msg += " " + std::to_string(kv.first) + "[" + std::to_string(kv.second) + "]";
   }
-  std::printf("PIM-Info: %s (#src = %lu, #dest = %lu, rows =%s)\n",
+  std::printf("PIM-MicroOp: %s (#src = %lu, #dest = %lu, rows =%s)\n",
               getName().c_str(), m_srcRows.size(), m_destRows.size(), msg.c_str());
 }
 
