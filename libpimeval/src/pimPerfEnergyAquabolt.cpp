@@ -23,9 +23,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  double percentRead = 0.0;
-  double percentWrite = 0.0;
-  double percentCompute = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCores = obj.getNumCoresUsed();
@@ -67,7 +67,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
       break;
   }
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy, percentRead, percentWrite, percentCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of aquabolt PIM for func2
@@ -76,9 +76,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  double percentRead = 0.0;
-  double percentWrite = 0.0;
-  double percentCompute = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCoresUsed = obj.getNumCoresUsed();
@@ -143,7 +143,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
       break;
   }
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy, percentRead, percentWrite, percentCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of aquabolt PIM for reduction sum
@@ -152,9 +152,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  double percentRead = 0.0;
-  double percentWrite = 0.0;
-  double percentCompute = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
@@ -189,7 +189,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
                 << pimCmd::getName(cmdType, "") << std::endl;
       break;
   }
-  return pimeval::perfEnergy(msRuntime, mjEnergy, percentRead, percentWrite, percentCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of aquabolt PIM for broadcast
@@ -198,9 +198,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimOb
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  double percentRead = 0.0;
-  double percentWrite = 0.0;
-  double percentCompute = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -214,7 +214,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimOb
   mjEnergy = (m_eAP + m_eGDL * maxGDLItr) * numPass * numCore;
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy, percentRead, percentWrite, percentCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of aquabolt PIM for rotate
@@ -223,10 +223,10 @@ pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjIn
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  double percentRead = 0.0;
-  double percentWrite = 0.0;
-  double percentCompute = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   std::cout << "PIM-Warning: Unsupported for Aquabolt: " << pimCmd::getName(cmdType, "") << std::endl;
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy, percentRead, percentWrite, percentCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
