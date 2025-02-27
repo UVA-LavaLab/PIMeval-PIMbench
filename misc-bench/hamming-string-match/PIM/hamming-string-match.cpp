@@ -36,13 +36,14 @@
 #include <stdlib.h>
 #include <string>
 #include <numeric>
+#include <stdexcept>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
 #include "util.h"
 #include "libpimeval.h"
-#include "hamming-string-match-utils.h"
+#include "utilStringMatch.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -497,23 +498,16 @@ int main(int argc, char* argv[])
   std::vector<int> matches;
 
   haystack = readStringFromFile(params.textInputFile);
-  if(haystack.size() == 0) {
-    std::cerr << "There was an error opening the text file" << std::endl;
-    return 1;
-  }
-
   needles = getNeedlesFromFile(params.keysInputFile);
-  if(needles.size() == 0) {
-    std::cerr << "There was an error opening the keys file" << std::endl;
-    return 1;
-  }
 
   std::string hammingDistanceString = readStringFromFile(params.hammingDistanceInputFile);
-  if(needles.size() == 0) {
-    std::cerr << "There was an error opening the hamming distance file" << std::endl;
-    return 1;
+  try {
+    maxHammingDistance = std::stoull(hammingDistanceString);
+  } catch (std::invalid_argument const& ex) {
+    std::cerr << "Error: " << ex.what() << std::endl;
+    exit(1);
   }
-  maxHammingDistance = std::stoull(hammingDistanceString);
+  
   
   if (!createDevice(params.configFile))
   {

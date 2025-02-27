@@ -16,7 +16,7 @@
 
 #include "util.h"
 #include "libpimeval.h"
-#include "string-match-utils.h"
+#include "utilStringMatch.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -360,13 +360,13 @@ int main(int argc, char* argv[])
   std::vector<std::string> needles;
   std::vector<int> matches;
 
-  haystack = getTextFromFile(textFilename);
+  haystack = readStringFromFile(textFilename.c_str());
   if(haystack.size() == 0) {
     std::cerr << "There was an error opening the text file" << std::endl;
     return 1;
   }
 
-  needles = getNeedlesFromFile(needlesFilename);
+  needles = getNeedlesFromFile(needlesFilename.c_str());
   if(needles.size() == 0) {
     std::cerr << "There was an error opening the keys file" << std::endl;
     return 1;

@@ -18,7 +18,7 @@
 #include <hs.h>
 
 #include "utilBaselines.h"
-#include "string-match-utils.h"
+#include "utilStringMatch.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -111,17 +111,8 @@ int main(int argc, char **argv)
   std::vector<std::string> needles;
   std::vector<int> matches;
 
-  haystack = getTextFromFile(textFilename);
-  if(haystack.size() == 0) {
-    std::cout << "There was an error opening the text file" << std::endl;
-    return 1;
-  }
-
-  needles = getNeedlesFromFile(needlesFilename);
-  if(needles.size() == 0) {
-    std::cout << "There was an error opening the keys file" << std::endl;
-    return 1;
-  }
+  haystack = readStringFromFile(textFilename.c_str());
+  needles = getNeedlesFromFile(needlesFilename.c_str());
 
   matches.resize(haystack.size());
 

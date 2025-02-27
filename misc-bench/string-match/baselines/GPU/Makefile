@@ -13,7 +13,7 @@ EXEC := string-match.out
 SOURCES := string-match.cu
 
 # Header files
-INCLUDE_FLAGS := -I./../../include
+INCLUDE_FLAGS := -I./../../../../util
 
 # PFAC flags
 PFAC_ROOT := ./PFAC/PFAC
