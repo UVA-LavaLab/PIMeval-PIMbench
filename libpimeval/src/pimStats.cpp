@@ -122,17 +122,26 @@ void
 pimStatsMgr::showCmdStats() const
 {
   std::printf("PIM Command Stats:\n");
-  std::printf(" %44s : %10s %14s %14s\n", "PIM-CMD", "CNT", "EstimatedRuntime(ms)", "EstimatedEnergyConsumption(mJ)");
+  std::printf(" %44s : %10s %14s %14s %7s %7s %7s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "%R", "%W", "%L");
   int totalCmd = 0;
   double totalMsRuntime = 0.0;
   double totalMjEnergy = 0.0;
+  double totalMsRead = 0.0;
+  double totalMsWrite = 0.0;
+  double totalMsCompute = 0.0;
   for (const auto& it : m_cmdPerf) {
-    std::printf(" %44s : %10d %14f %14f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy);
+    double percentRead = (it.second.second.m_msRead * 100 / it.second.second.m_msRuntime);
+    double percentWrite = (it.second.second.m_msWrite * 100 / it.second.second.m_msRuntime);
+    double percentCompute = (it.second.second.m_msCompute * 100 / it.second.second.m_msRuntime);
+    std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, percentRead, percentWrite, percentCompute);
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
     totalMjEnergy += it.second.second.m_mjEnergy;
+    totalMsRead += it.second.first * percentRead;
+    totalMsWrite += it.second.first * percentWrite;
+    totalMsCompute += it.second.first * percentCompute;
   }
-  std::printf(" %44s : %10d %14f %14f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy);
+  std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
 
   // analyze micro-ops
   int numR = 0;
@@ -179,6 +188,9 @@ pimStatsMgr::recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEner
   item.second.m_msRuntime += mPerfEnergy.m_msRuntime;
   m_curApiMsEstRuntime += mPerfEnergy.m_msRuntime;
   item.second.m_mjEnergy += mPerfEnergy.m_mjEnergy;
+  item.second.m_msRead += mPerfEnergy.m_msRead;
+  item.second.m_msWrite += mPerfEnergy.m_msWrite;
+  item.second.m_msCompute += mPerfEnergy.m_msCompute;
 }
 
 //! @brief  Record estimated runtime and energy of data copy
