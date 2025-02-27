@@ -18,11 +18,14 @@ namespace pimeval {
   class perfEnergy
   {
     public:
-      perfEnergy() : m_msRuntime(0.0), m_mjEnergy(0.0) {}
-      perfEnergy(double msRuntime, double mjEnergy) : m_msRuntime(msRuntime), m_mjEnergy(mjEnergy) {}
+      perfEnergy() : m_msRuntime(0.0), m_mjEnergy(0.0), m_msRead(0.0), m_msWrite(0.0), m_msCompute(0.0) {}
+      perfEnergy(double msRuntime, double mjEnergy, double msRead, double msWrite, double msCompute) : m_msRuntime(msRuntime), m_mjEnergy(mjEnergy), m_msRead(msRead), m_msWrite(msWrite), m_msCompute(msCompute)  {}
 
       double m_msRuntime;
       double m_mjEnergy;
+      double m_msRead;
+      double m_msWrite;
+      double m_msCompute;
   };
 }
 
