@@ -122,7 +122,7 @@ void
 pimStatsMgr::showCmdStats() const
 {
   std::printf("PIM Command Stats:\n");
-  std::printf(" %44s : %10s %14s %14s %14s %14s %14s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "%R", "%W", "%L");
+  std::printf(" %44s : %10s %14s %14s %7s %7s %7s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "%R", "%W", "%L");
   int totalCmd = 0;
   double totalMsRuntime = 0.0;
   double totalMjEnergy = 0.0;
@@ -133,7 +133,7 @@ pimStatsMgr::showCmdStats() const
     double percentRead = (it.second.second.m_msRead * 100 / it.second.second.m_msRuntime);
     double percentWrite = (it.second.second.m_msWrite * 100 / it.second.second.m_msRuntime);
     double percentCompute = (it.second.second.m_msCompute * 100 / it.second.second.m_msRuntime);
-    std::printf(" %44s : %10d %14f %14f %14.2f %14.2f %14.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, percentRead, percentWrite, percentCompute);
+    std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, percentRead, percentWrite, percentCompute);
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
     totalMjEnergy += it.second.second.m_mjEnergy;
@@ -141,7 +141,7 @@ pimStatsMgr::showCmdStats() const
     totalMsWrite += it.second.first * percentWrite;
     totalMsCompute += it.second.first * percentCompute;
   }
-  std::printf(" %44s : %10d %14f %14f %14.2f %14.2f %14.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
+  std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
 
   // analyze micro-ops
   int numR = 0;
