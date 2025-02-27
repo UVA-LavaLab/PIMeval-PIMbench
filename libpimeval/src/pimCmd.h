@@ -106,7 +106,7 @@ enum class PimCmdEnum {
 class pimCmd
 {
 public:
-  pimCmd(PimCmdEnum cmdType) : m_cmdType(cmdType) {}
+  pimCmd(PimCmdEnum cmdType);
   virtual ~pimCmd() {}
 
   void setDevice(pimDevice* device) { m_device = device; }
@@ -153,6 +153,7 @@ protected:
 
   PimCmdEnum m_cmdType;
   pimDevice* m_device = nullptr;
+  bool m_debugCmds;
 
   //! @class  pimCmd::regionWorker
   //! @brief  Thread worker to process regions in parallel

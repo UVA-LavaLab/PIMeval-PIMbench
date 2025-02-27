@@ -99,6 +99,7 @@ public:
     DEBUG_API_CALLS   = 0x0002,
     DEBUG_CMDS        = 0x0004,
     DEBUG_ALLOC       = 0x0008,
+    DEBUG_PERF        = 0x0010,
   };
 
 private:

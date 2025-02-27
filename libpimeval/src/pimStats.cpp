@@ -19,9 +19,9 @@ void
 pimStatsMgr::showStats() const
 {
   std::printf("----------------------------------------\n");
-  #if defined(DEBUG)
-  showApiStats();
-  #endif
+  if (pimSim::get()->isDebug(pimSimConfig::DEBUG_API_CALLS)) {
+    showApiStats();
+  }
   showDeviceParams();
   showCopyStats();
   showCmdStats();
@@ -92,9 +92,9 @@ pimStatsMgr::showDeviceParams() const
   std::printf(" %30s : %f\n", "Row Read (ns)", paramsDram.getNsRowRead());
   std::printf(" %30s : %f\n", "Row Write (ns)", paramsDram.getNsRowWrite());
   std::printf(" %30s : %f\n", "tCCD (ns)", paramsDram.getNsTCCD_S());
-  #if defined(DEBUG)
-  std::printf(" %30s : %f\n", "AAP (ns)", paramsDram.getNsAAP());
-  #endif
+  if (pimSim::get()->isDebug(pimSimConfig::DEBUG_PERF)) {
+    std::printf(" %30s : %f\n", "AAP (ns)", paramsDram.getNsAAP());
+  }
 }
 
 //! @brief  Show data copy stats
