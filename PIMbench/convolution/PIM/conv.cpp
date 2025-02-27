@@ -127,12 +127,13 @@ struct Params getInputParams(int argc, char **argv)
 void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int filterColumn, int stride, std::vector<std::vector<int>> &inputMatrix, std::vector<std::vector<int>> &decompMatrix)
 {
   decompMatrix.resize(filterRow * filterColumn, std::vector<int>(matrixRow * matrixColumn, 0));
-  int colIdx = 0;
+  int colIdx = 0, total = 0;
   for (uint64_t i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
   {
     for (uint64_t j = 0; j < (inputMatrix[i].size() - filterColumn + 1); j += stride)
     {
       int rowIDX = 0;
+      total += 1;
       for (uint64_t k = i; k < i + filterRow; k++)
       {
         for (uint64_t l = j; l < j + filterColumn; l++)
@@ -143,6 +144,7 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow, int fil
       ++colIdx;
     }
   }
+  // std::cout << "Total Decomposed Mat: " << total << std::endl;
 }
 
 void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::vector<int>> &inputMatrix, std::vector<int> &outputVector, uint64_t numRequiredPIMRows, int numRequiredPIMCol, bool moreDebugPrints)
@@ -201,6 +203,56 @@ void performConv(std::vector<std::vector<int>> &filterMatrix, std::vector<std::v
   pimFree(filterObject);
   pimFree(matrixObject);
 
+}
+
+void aggregate(std::vector<int> &inputVector, std::vector<int> &outputVector, int hopSize) {
+  
+  PimObjId filterObject = pimAlloc(PIM_ALLOC_AUTO, hopSize, PIM_INT32);
+  if (filterObject == -1)
+  {
+    std::cout << "Abort: pimAlloc failed for obj1" << std::endl;
+    return;
+  }
+
+  PimObjId matrixObject = pimAllocAssociated(filterObject, PIM_INT32);
+  if (matrixObject == -1)
+  {
+    std::cout << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: " << matrixObject << std::endl;
+    return;
+  }
+  std::vector<int> tempVec(hopSize);
+  std::copy(inputVector.begin(), inputVector.begin() + hopSize, tempVec.begin()); 
+  PimStatus status = pimCopyHostToDevice((void *)tempVec.data(), filterObject);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects at iteration: " << std::endl;
+    return;
+  }
+
+  for (int i = hopSize; i < inputVector.size(); i+=hopSize){
+
+  std::copy(inputVector.begin()+i, inputVector.begin() + i + hopSize, tempVec.begin()); 
+  status = pimCopyHostToDevice((void *)tempVec.data(), matrixObject);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects at iteration: " << std::endl;
+    return;
+  }
+  status = pimAdd(filterObject, matrixObject, filterObject);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+  }
+  status = pimCopyDeviceToHost(filterObject, outputVector.data());
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort: pimCopyDeviceToHost failed between filterObjects[0] and outputVector" << std::endl;
+    return;
+  }
+  pimFree(filterObject);
+  pimFree(matrixObject);
 }
 
 // Function to perform 3D convolution on CPU and compare the results with PIM results
@@ -348,6 +400,7 @@ int main(int argc, char *argv[])
   {
     int tempcol = 0;
     std::vector<int> dstVec(outMatRow * outMatCol);
+    std::vector<int> outVector (outMatRow * outMatCol *  inputDepth, 0);
     for (uint64_t j = 0; j < params.dim; j += numOfMatPerRow)
     {
       uint64_t matChunk = (numOfMatPerRow + j) <= params.dim ? (numOfMatPerRow + j) : params.dim;
@@ -377,7 +430,6 @@ int main(int argc, char *argv[])
         printMatrix(mergedMat);
       }      
 
-      std::vector<int> outVector (outMatRow * outMatCol *  inputDepth);
       performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol, params.moreDebugPrints);
       if (params.moreDebugPrints == true) {
         // Debug print
@@ -385,21 +437,22 @@ int main(int argc, char *argv[])
         printVector(outVector);
       }
 
-      int hopSize = outMatCol * outMatRow;
-      auto start = std::chrono::high_resolution_clock::now();
-      if (j == 0)
-      {
-        std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
-      }      
-      for (int m = 0; m < hopSize; ++m)
-      {
-        for (uint64_t n = m + hopSize; n < outVector.size(); n += hopSize)
-        {
-          dstVec[m] += outVector[n];
-        }
-      }
-      auto end = std::chrono::high_resolution_clock::now();
-      hostElapsedTime += (end - start);
+      // int hopSize = outMatCol * outMatRow;
+      // std::cout << "hopSize: " << hopSize << "\n";
+      // auto start = std::chrono::high_resolution_clock::now();
+      // if (j == 0)
+      // {
+      //   std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());
+      // }      
+      // for (int m = 0; m < hopSize; ++m)
+      // {
+      //   for (uint64_t n = m + hopSize; n < outVector.size(); n += hopSize)
+      //   {
+      //     dstVec[m] += outVector[n];
+      //   }
+      // }
+      // auto end = std::chrono::high_resolution_clock::now();
+      // hostElapsedTime += (end - start);
     
       if (params.moreDebugPrints == true) {
         // Debug print
@@ -408,6 +461,20 @@ int main(int argc, char *argv[])
       }
 
     }
+      int hopSize = outMatCol * outMatRow;
+      aggregate(outVector, dstVec, hopSize);
+      // std::cout << "hopSize: " << outVector.size()/hopSize << "\n";
+      // auto start = std::chrono::high_resolution_clock::now();
+      // std::copy(outVector.begin(), outVector.begin() + hopSize, dstVec.begin());      
+      // for (int m = 0; m < hopSize; ++m)
+      // {
+      //   for (uint64_t n = m + hopSize; n < outVector.size(); n += hopSize)
+      //   {
+      //     dstVec[m] += outVector[n];
+      //   }
+      // }
+      // auto end = std::chrono::high_resolution_clock::now();
+      // hostElapsedTime += (end - start);
     int ddx = 0;
     for (int rdx = 0; rdx < outMatRow; ++rdx)
     {
