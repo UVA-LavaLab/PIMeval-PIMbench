@@ -153,7 +153,9 @@ NeedlesTable stringMatchPrecomputeTable(const std::vector<std::string>& needles,
   // If vertical, each pim object takes 32 rows, 1 row if horizontal
   // Three objects used by haystack, intermediate, and haystack copy
   // Haystack copy only needed if more than one iteration
-  uint64_t maxNeedlesPerIteration = (isHorizontal ? numRows : (numRows>>5)) - 3;
+  constexpr uint64_t bitsPerElement = 32;
+  constexpr uint64_t nonNeedleElements = 3;
+  uint64_t maxNeedlesPerIteration = (isHorizontal ? numRows : (numRows / bitsPerElement)) - nonNeedleElements;
   uint64_t maxNeedlesPerIterationOneIteration = maxNeedlesPerIteration + 1;
   uint64_t numIterations;
   if(needles.size() <= maxNeedlesPerIterationOneIteration) {
