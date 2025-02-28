@@ -127,7 +127,7 @@ struct NeedlesTable {
 //! @brief  Precomputes a more optimal order to match keys/needles on PIM device for calculation reuse
 //! @details Instead of calling pimNEScalar multiple times for the same character, call only once per character per char index and reuse result
 //!          Orders needles within a character index to place needles with the same character next to each other
-//!          Not included in benchmarking time, as it only depends on the keys/needles and not on the text/haystack
+//!          Not included in benchmarking time as it is a one time cost that can be reused to match against multiple haystacks
 //! @param[in]  needles  A list of needles that will be matched
 //! @param[in]  numRows  The number of rows in the PIM device, needed to find the max number of needles per iteration
 //! @param[in]  isHorizontal  Represents if the PIM device is horizontal, needed to find the max number of needles per iteration
