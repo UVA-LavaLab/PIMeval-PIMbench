@@ -16,6 +16,10 @@
 #include <algorithm>                   // for max
 #include <limits>                      // for numeric_limits
 
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 
 //! @brief  Reads a list of needles from an input file
 //! @param[in]  keysInputFilename  The name of the file to read from
@@ -95,6 +99,7 @@ void hammingStringMatchCpu(const std::vector<std::string>& needles, const std::s
     if(needle.size() > haystack.size()) {
       continue;
     }
+    #pragma omp parallel for
     for(uint64_t haystackIdx = 0; haystackIdx <= haystack.size()-needle.size(); ++haystackIdx) {
       uint64_t mismatches = 0;
       for(uint64_t charIdx = 0; charIdx < needle.size(); ++charIdx) {
