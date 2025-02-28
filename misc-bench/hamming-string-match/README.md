@@ -24,8 +24,6 @@ For example:
 
 ```
 hamming-string-match/
-├── include/
-│   ├── hamming-string-match-utils.h
 ├── PIM/
 │   ├── Makefile
 │   ├── hamming-string-match.cpp

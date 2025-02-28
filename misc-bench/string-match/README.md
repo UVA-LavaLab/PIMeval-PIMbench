@@ -17,8 +17,6 @@ For example:
 
 ```
 string-match/
-├── include/
-│   ├── string-match-utils.h
 ├── PIM/
 │   ├── Makefile
 │   ├── string-match.cpp
