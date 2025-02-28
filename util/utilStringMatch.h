@@ -20,10 +20,11 @@
 //! @brief  Reads a list of needles from an input file
 //! @param[in]  keysInputFilename  The name of the file to read from
 //! @return  A list of needles read from the file
+//! @warning Exits program if file cannot be read from or is empty
 std::vector<std::string> getNeedlesFromFile(const char* keysInputFilename) {
   std::ifstream keysFile(keysInputFilename);
   if (!keysFile) {
-    std::cerr << "Error: Cannot open keys file " << keysInputFilename << std::endl;
+    std::cerr << "Error: Cannot open keys file " << keysInputFilename << ", aborting" << std::endl;
     std::exit(1);
   }
   
@@ -32,7 +33,7 @@ std::vector<std::string> getNeedlesFromFile(const char* keysInputFilename) {
   while (std::getline(keysFile, line)) {
     // As the output is formatted as the 32 bit index of the needle for matches, there cannot be more than INT_MAX needles
     if(needles.size() == std::numeric_limits<int>::max()) {
-      std::cerr << "Error: Too many keys, can only process up to " << std::numeric_limits<int>::max() << " keys" << std::endl;
+      std::cerr << "Error: Too many keys, can only process up to " << std::numeric_limits<int>::max() << " keys, aborting" << std::endl;
       std::exit(1);
     }
 
@@ -40,7 +41,7 @@ std::vector<std::string> getNeedlesFromFile(const char* keysInputFilename) {
   }
   
   if(needles.empty()) {
-    std::cerr << "Error: Keys file (" << keysInputFilename << ") is empty " << std::endl;
+    std::cerr << "Error: Keys file (" << keysInputFilename << ") is empty, aborting" << std::endl;
     std::exit(1);
   }
 
@@ -50,20 +51,22 @@ std::vector<std::string> getNeedlesFromFile(const char* keysInputFilename) {
 //! @brief  Reads a string from a file
 //! @param[in]  inputFileName  The name of the file to read from
 //! @return  The string read from the file
+//! @warning Exits program if file cannot be read from or is empty
 std::string readStringFromFile(const char* inputFileName) {
   std::ifstream file(inputFileName);
   if (!file) {
-    std::cerr << "Error: Cannot open file " << inputFileName << std::endl;
+    std::cerr << "Error: Cannot open file " << inputFileName << ", aborting" << std::endl;
     std::exit(1);
   }
 
   std::ostringstream fileOss;
   fileOss << file.rdbuf();
-  if(fileOss.eof()) {
-    std::cerr << "Error: File is empty " << inputFileName << std::endl;
+  std::string fileText = fileOss.str();
+  if(fileText.empty()) {
+    std::cerr << "Error: File is empty " << inputFileName << ", aborting" << std::endl;
     std::exit(1);
   }
-  return fileOss.str();
+  return fileText;
 }
 
 //! @brief  Matches a list of strings against another string on the CPU, with exact matching
