@@ -21,8 +21,8 @@
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  char *keysInputFile;
-  char *textInputFile;
+  const char *keysInputFile;
+  const char *textInputFile;
   char *configFile;
   bool shouldVerify;
 } Params;
@@ -42,8 +42,8 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.keysInputFile = nullptr;
-  p.textInputFile = nullptr;
+  p.keysInputFile = "./../dataset/10mil_l-10_nk-10_kl/keys.txt";
+  p.textInputFile = "./../dataset/10mil_l-10_nk-10_kl/text.txt";
   p.configFile = nullptr;
   p.shouldVerify = false;
 
@@ -335,42 +335,15 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
-
-  const std::string defaultTextFileName = "./../dataset/10mil_l-10_nk-10_kl/text.txt";
-
-  std::string textFilename;
-  if(params.textInputFile == nullptr) {
-    textFilename = defaultTextFileName;
-  } else {
-    textFilename = params.textInputFile;
-  }
-
-  const std::string defaultNeedlesFileName = "./../dataset/10mil_l-10_nk-10_kl/keys.txt";
-
-  std::string needlesFilename;
-  if(params.keysInputFile == nullptr) {
-    needlesFilename = defaultNeedlesFileName;
-  } else {
-    needlesFilename = params.keysInputFile;
-  }
   
-  std::cout << "Running PIM string match for \"" << needlesFilename << "\" as the keys file, and \"" << textFilename << "\" as the text input file\n";
+  std::cout << "Running PIM string match for \"" << params.keysInputFile << "\" as the keys file, and \"" << params.textInputFile << "\" as the text input file\n";
   
   std::string haystack;
   std::vector<std::string> needles;
   std::vector<int> matches;
 
-  haystack = readStringFromFile(textFilename.c_str());
-  if(haystack.size() == 0) {
-    std::cerr << "There was an error opening the text file" << std::endl;
-    return 1;
-  }
-
-  needles = getNeedlesFromFile(needlesFilename.c_str());
-  if(needles.size() == 0) {
-    std::cerr << "There was an error opening the keys file" << std::endl;
-    return 1;
-  }
+  haystack = readStringFromFile(params.textInputFile);
+  needles = getNeedlesFromFile(params.keysInputFile);
   
   if (!createDevice(params.configFile))
   {
