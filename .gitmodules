@@ -4,4 +4,4 @@
 [submodule "misc-bench/string-match/baselines/GPU/PFAC"]
 	path = misc-bench/string-match/baselines/GPU/PFAC
 	url = https://github.com/Arleee1/PFAC.git
-	branch = kernel_timing
+	branch = pimeval_pimbench_pfac_fork
