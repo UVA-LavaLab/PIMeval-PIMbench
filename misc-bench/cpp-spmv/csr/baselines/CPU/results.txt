@@ -1,0 +1,64 @@
+Architecture:                         x86_64
+CPU op-mode(s):                       32-bit, 64-bit
+Address sizes:                        48 bits physical, 48 bits virtual
+Byte Order:                           Little Endian
+CPU(s):                               32
+On-line CPU(s) list:                  0-31
+Vendor ID:                            AuthenticAMD
+Model name:                           AMD Ryzen 9 7945HX3D with Radeon Graphics
+CPU family:                           25
+Model:                                97
+Thread(s) per core:                   2
+Core(s) per socket:                   16
+Socket(s):                            1
+Stepping:                             2
+BogoMIPS:                             4591.28
+Flags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm
+Virtualization:                       AMD-V
+Hypervisor vendor:                    Microsoft
+Virtualization type:                  full
+L1d cache:                            512 KiB (16 instances)
+L1i cache:                            512 KiB (16 instances)
+L2 cache:                             16 MiB (16 instances)
+L3 cache:                             96 MiB (1 instance)
+Vulnerability Gather data sampling:   Not affected
+Vulnerability Itlb multihit:          Not affected
+Vulnerability L1tf:                   Not affected
+Vulnerability Mds:                    Not affected
+Vulnerability Meltdown:               Not affected
+Vulnerability Mmio stale data:        Not affected
+Vulnerability Reg file data sampling: Not affected
+Vulnerability Retbleed:               Not affected
+Vulnerability Spec rstack overflow:   Mitigation; safe RET
+Vulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl and seccomp
+Vulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:             Mitigation; Retpolines; IBPB conditional; IBRS_FW; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected
+Vulnerability Srbds:                  Not affected
+Vulnerability Tsx async abort:        Not affected
+Average duration: 1719.315 ms.
+Rearrangement Duration: 14.103 ms.
+2048 x 2048 - 26843545 nnz
+--------------------------------
+Average duration: 1754.474 ms.
+Rearrangement Duration: 19.429 ms.
+4096 x 4096 - 26843545 nnz
+--------------------------------
+Average duration: 824.525 ms.
+Rearrangement Duration: 9.175 ms.
+2048 x 2048 - 13421773 nnz
+--------------------------------
+Average duration: 131.423 ms.
+Rearrangement Duration: 1.647 ms.
+2048 x 2048 - 2684355 nnz
+--------------------------------
+Average duration: 2.072 ms.
+Rearrangement Duration: 0.090 ms.
+2048 x 2048 - 268435 nnz
+--------------------------------
+Average duration: 0.166 ms.
+Rearrangement Duration: 0.009 ms.
+2048 x 2048 - 26843 nnz
+--------------------------------
+Average duration: 821.744 ms.
+Rearrangement Duration: 8.746 ms.
+4096 x 4096 - 13421773 nnz

@@ -1,0 +1,22 @@
+## February
+- Implement FP32 benchmarks
+- Refactor input functions
+- Implement better output system
+- Make benchmark script
+
+## December
+Comparison:
+- batched and packed BSR implementation (redSum)
+  - needs scripts
+- batched and not packed BSR implementation (redSum) 
+  - (running)
+- CSR on CPU
+- packed CSR with CPU unpacking
+
+if possible:
+- packed CSR with redSum unpacking
+- batched BSR with CPU summing
+- batched packed BSR with CPU summing
+
+side quests:
+- [x] redo random generation in BSR spmv (implement nnz and randomSet)
