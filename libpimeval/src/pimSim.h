@@ -112,6 +112,10 @@ public:
   bool pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
   bool pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);
+  bool pimCondCopy(PimObjId condBool, PimObjId src, PimObjId dest);
+  bool pimCondBroadcast(PimObjId condBool, uint64_t scalarBits, PimObjId dest);
+  bool pimCondSelect(PimObjId condBool, PimObjId src1, PimObjId src2, PimObjId dest);
+  bool pimCondSelectScalar(PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimObjId dest);
   template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);
