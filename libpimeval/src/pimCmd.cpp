@@ -65,6 +65,10 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::CONVERT_TYPE, "convert_type" },
     { PimCmdEnum::BIT_SLICE_EXTRACT, "bit_slice_extract" },
     { PimCmdEnum::BIT_SLICE_INSERT, "bit_slice_insert" },
+    { PimCmdEnum::COND_COPY, "cond_copy" },
+    { PimCmdEnum::COND_BROADCAST, "cond_broadcast" },
+    { PimCmdEnum::COND_SELECT, "cond_select" },
+    { PimCmdEnum::COND_SELECT_SCALAR, "cond_select_scalar" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::REDMIN, "redmin" },
@@ -365,6 +369,10 @@ pimCmdFunc1::execute()
   if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
     pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     objSrc.syncFromSimulatedMem();
+    if (m_cmdType == PimCmdEnum::BIT_SLICE_INSERT) {  // require dest data to be synced
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objDest.syncFromSimulatedMem();
+    }
   }
 
   const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
@@ -683,6 +691,177 @@ pimCmdFunc2::updateStats() const
   bool isVLayout = objSrc1.isVLayout();
 
   pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
+  return true;
+}
+
+//! @brief  PIM CMD: Conditional Operations
+bool
+pimCmdCond::execute()
+{
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj ids: bool %d, src1 %d, src2 %d, dest %d, scalar 0x%llx)\n",
+        getName().c_str(), m_condBool, m_src1, m_src2, m_dest, m_scalarBits);
+  }
+
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    pimObjInfo &objBool = m_device->getResMgr()->getObjInfo(m_condBool);
+    objBool.syncFromSimulatedMem();
+    if (m_cmdType == PimCmdEnum::COND_COPY || m_cmdType == PimCmdEnum::COND_SELECT || m_cmdType == PimCmdEnum::COND_SELECT_SCALAR) {
+      pimObjInfo &objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+      objSrc1.syncFromSimulatedMem();
+    }
+    if (m_cmdType == PimCmdEnum::COND_SELECT) {
+      pimObjInfo &objSrc2 = m_device->getResMgr()->getObjInfo(m_src2);
+      objSrc2.syncFromSimulatedMem();
+    }
+    if (m_cmdType == PimCmdEnum::COND_COPY || m_cmdType == PimCmdEnum::COND_BROADCAST) {  // require dest data to be synced
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objDest.syncFromSimulatedMem();
+    }
+  }
+
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  unsigned numRegions = objDest.getRegions().size();
+  computeAllRegions(numRegions);
+
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    objDest.syncToSimulatedMem();
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: Conditional Operations - sanity check
+bool
+pimCmdCond::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+
+  // common checks
+  if (!isValidObjId(resMgr, m_condBool) || !isValidObjId(resMgr, m_dest)) {
+    return false;
+  }
+  const pimObjInfo& objBool = resMgr->getObjInfo(m_condBool);
+  if (objBool.getDataType() != PIM_BOOL) {
+    std::printf("PIM-Error: PIM command %s condition must be PIM_BOOL type\n", getName().c_str());
+    return false;
+  }
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  if (!isAssociated(objBool, objDest)) {
+    return false;
+  }
+
+  // command specific checks
+  if (m_cmdType == PimCmdEnum::COND_COPY || m_cmdType == PimCmdEnum::COND_SELECT || m_cmdType == PimCmdEnum::COND_SELECT_SCALAR) {
+    if (!isValidObjId(resMgr, m_src1)) {
+      return false;
+    }
+    const pimObjInfo& objSrc1 = resMgr->getObjInfo(m_src1);
+    if (!isAssociated(objSrc1, objBool)) {
+      return false;
+    }
+    if (objSrc1.getDataType() != objDest.getDataType()) {
+      std::printf("PIM-Error: PIM command %s does not support mixed data type\n", getName().c_str());
+      return false;
+    }
+  }
+  if (m_cmdType == PimCmdEnum::COND_SELECT) {
+    if (!isValidObjId(resMgr, m_src2)) {
+      return false;
+    }
+    const pimObjInfo& objSrc2 = resMgr->getObjInfo(m_src2);
+    if (!isAssociated(objSrc2, objBool)) {
+      return false;
+    }
+    if (objSrc2.getDataType() != objDest.getDataType()) {
+      std::printf("PIM-Error: PIM command %s does not support mixed data type\n", getName().c_str());
+      return false;
+    }
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: Conditional Operations - compute region
+bool
+pimCmdCond::computeRegion(unsigned index)
+{
+  const pimObjInfo& objBool = m_device->getResMgr()->getObjInfo(m_condBool);
+  pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+
+  // perform the computation
+  const pimRegion& destRegion = objDest.getRegions()[index];
+  uint64_t elemIdxBegin = destRegion.getElemIdxBegin();
+  unsigned numElementsInRegion = destRegion.getNumElemInRegion();
+  switch (m_cmdType) {
+    case PimCmdEnum::COND_COPY: {
+      const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+      for (unsigned j = 0; j < numElementsInRegion; ++j) {
+        uint64_t elemIdx = elemIdxBegin + j;
+        uint64_t bitsBool = objBool.getElementBits(elemIdx);
+        uint64_t bitsSrc1 = objSrc1.getElementBits(elemIdx);
+        uint64_t bitsDest = objDest.getElementBits(elemIdx);
+        uint64_t bitsResult = bitsBool ? bitsSrc1 : bitsDest;
+        objDest.setElement(elemIdx, bitsResult);
+      }
+      break;
+    }
+    case PimCmdEnum::COND_BROADCAST: {
+      for (unsigned j = 0; j < numElementsInRegion; ++j) {
+        uint64_t elemIdx = elemIdxBegin + j;
+        uint64_t bitsBool = objBool.getElementBits(elemIdx);
+        uint64_t bitsDest = objDest.getElementBits(elemIdx);
+        uint64_t bitsResult = bitsBool ? m_scalarBits : bitsDest;
+        objDest.setElement(elemIdx, bitsResult);
+      }
+      break;
+    }
+    case PimCmdEnum::COND_SELECT: {
+      const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+      const pimObjInfo& objSrc2 = m_device->getResMgr()->getObjInfo(m_src2);
+      for (unsigned j = 0; j < numElementsInRegion; ++j) {
+        uint64_t elemIdx = elemIdxBegin + j;
+        uint64_t bitsBool = objBool.getElementBits(elemIdx);
+        uint64_t bitsSrc1 = objSrc1.getElementBits(elemIdx);
+        uint64_t bitsSrc2 = objSrc2.getElementBits(elemIdx);
+        uint64_t bitsResult = bitsBool ? bitsSrc1 : bitsSrc2;
+        objDest.setElement(elemIdx, bitsResult);
+      }
+      break;
+    }
+    case PimCmdEnum::COND_SELECT_SCALAR: {
+      const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
+      for (unsigned j = 0; j < numElementsInRegion; ++j) {
+        uint64_t elemIdx = elemIdxBegin + j;
+        uint64_t bitsBool = objBool.getElementBits(elemIdx);
+        uint64_t bitsSrc1 = objSrc1.getElementBits(elemIdx);
+        uint64_t bitsResult = bitsBool ? bitsSrc1 : m_scalarBits;
+        objDest.setElement(elemIdx, bitsResult);
+      }
+      break;
+    }
+    default:
+      assert(0);
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: Conditional Operations - update stats
+bool
+pimCmdCond::updateStats() const
+{
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  PimDataType dataType = objDest.getDataType();
+  bool isVLayout = objDest.isVLayout();
+
+  // Reuse func2 to calculate performance and energy
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objDest);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }

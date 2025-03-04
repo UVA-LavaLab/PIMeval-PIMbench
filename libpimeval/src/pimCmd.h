@@ -66,6 +66,11 @@ enum class PimCmdEnum {
   NE,
   MIN,
   MAX,
+  // Conditional operations
+  COND_COPY,
+  COND_BROADCAST,
+  COND_SELECT,
+  COND_SELECT_SCALAR,
   // Functional special
   REDSUM,
   REDSUM_RANGE,
@@ -404,7 +409,49 @@ private:
   }
 };
 
-//! @class  pimCmdReductiom
+//! @class  pimCmdCond
+//! @brief  Pim CMD: Conditional operations using BOOL as the first operand
+//!   COND_COPY:          dest[i] = cond ? src[i] : dest[i]
+//!   COND_BROADCAST:     dest[i] = cond ? scalar : dest[i]
+//!   COND_SELECT:        dest[i] = cond ? src1[i] : src2[i]
+//!   COND_SELECT_SCALAR: dest[i] = cond ? src[1] : scalar
+class pimCmdCond : public pimCmd
+{
+public:
+  pimCmdCond(PimCmdEnum cmdType, PimObjId condBool, PimObjId src1, PimObjId dest)
+    : pimCmd(cmdType), m_condBool(condBool), m_src1(src1), m_dest(dest)
+  {
+    assert(cmdType == PimCmdEnum::COND_COPY);
+  }
+  pimCmdCond(PimCmdEnum cmdType, PimObjId condBool, uint64_t scalarBits, PimObjId dest)
+    : pimCmd(cmdType), m_condBool(condBool), m_scalarBits(scalarBits), m_dest(dest)
+  {
+    assert(cmdType == PimCmdEnum::COND_BROADCAST);
+  }
+  pimCmdCond(PimCmdEnum cmdType, PimObjId condBool, PimObjId src1, PimObjId src2, PimObjId dest)
+    : pimCmd(cmdType), m_condBool(condBool), m_src1(src1), m_src2(src2), m_dest(dest)
+  {
+    assert(cmdType == PimCmdEnum::COND_SELECT);
+  }
+  pimCmdCond(PimCmdEnum cmdType, PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimObjId dest)
+  : pimCmd(cmdType), m_condBool(condBool), m_src1(src1), m_scalarBits(scalarBits), m_dest(dest)
+  {
+    assert(cmdType == PimCmdEnum::COND_SELECT_SCALAR);
+  }
+  virtual ~pimCmdCond() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected:
+  PimObjId m_condBool;
+  PimObjId m_src1 = -1;
+  PimObjId m_src2 = -1;
+  uint64_t m_scalarBits = 0;
+  PimObjId m_dest;
+};
+
+//! @class  pimCmdReduction
 //! @brief  Pim CMD: Reduction non-ranged/ranged
 template <typename T>
 class pimCmdReduction : public pimCmd
