@@ -810,6 +810,7 @@ pimCmdCond::computeRegion(unsigned index)
         uint64_t bitsResult = bitsBool ? bitsSrc1 : bitsDest;
         objDest.setElement(elemIdx, bitsResult);
       }
+      break;
     }
     case PimCmdEnum::COND_BROADCAST: {
       for (unsigned j = 0; j < numElementsInRegion; ++j) {
@@ -819,6 +820,7 @@ pimCmdCond::computeRegion(unsigned index)
         uint64_t bitsResult = bitsBool ? m_scalarBits : bitsDest;
         objDest.setElement(elemIdx, bitsResult);
       }
+      break;
     }
     case PimCmdEnum::COND_SELECT: {
       const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
@@ -831,6 +833,7 @@ pimCmdCond::computeRegion(unsigned index)
         uint64_t bitsResult = bitsBool ? bitsSrc1 : bitsSrc2;
         objDest.setElement(elemIdx, bitsResult);
       }
+      break;
     }
     case PimCmdEnum::COND_SELECT_SCALAR: {
       const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
@@ -841,6 +844,7 @@ pimCmdCond::computeRegion(unsigned index)
         uint64_t bitsResult = bitsBool ? bitsSrc1 : m_scalarBits;
         objDest.setElement(elemIdx, bitsResult);
       }
+      break;
     }
     default:
       assert(0);
