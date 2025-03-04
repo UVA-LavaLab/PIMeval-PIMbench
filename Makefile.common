@@ -23,7 +23,7 @@ ifeq ($(MAKECMDGOALS),)
 	MAKECMDGOALS := $(.DEFAULT_GOAL)
 endif
 ifeq ($(MAKECMDGOALS),debug)
-	CXXFLAGS += -g -DDEBUG
+	CXXFLAGS += -g
 endif
 ifeq ($(MAKECMDGOALS),perf)
 	CXXFLAGS += -O3 -Wno-unknown-pragmas

@@ -31,7 +31,7 @@ ifeq ($(MAKECMDGOALS),)
 endif
 
 ifeq ($(MAKECMDGOALS),debug)
-	CXXFLAGS += $(CXXFLAGS_DEBUG) -DDEBUG
+	CXXFLAGS += $(CXXFLAGS_DEBUG)
 endif
 
 ifeq ($(MAKECMDGOALS),perf)

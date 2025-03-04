@@ -43,6 +43,7 @@ public:
   unsigned getNumColPerSubarray() const { return m_config.getNumColPerSubarray(); }
   bool isAnalysisMode() const { return m_config.isAnalysisMode(); }
   unsigned getNumThreads() const { return m_config.getNumThreads(); }
+  bool isDebug(pimSimConfig::pimDebugFlags flag) const { return m_config.getDebug() & flag; }
 
   unsigned getNumCores() const;
   unsigned getNumRows() const;

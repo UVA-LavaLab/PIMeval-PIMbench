@@ -7,6 +7,7 @@
 #include "pimPerfEnergyBankLevel.h"
 #include "pimCmd.h"
 #include <iostream>
+#include <cmath>
 
 
 //! @brief  Perf energy model of bank-level PIM for func1
@@ -15,20 +16,28 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCores = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  // How many iteration require to read / write max elements per region
+  unsigned maxGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned minGDLItr = minElementPerRegion * bitsPerElement / m_GDLWidth;
+
   switch (cmdType)
   {
     case PimCmdEnum::COPY_O2O:
     {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      msRuntime = (m_tR + m_tW + totalGDLOverhead) * numPass;
+      msRead = ((m_tR  + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tR + (minGDLItr * m_tGDL));
+      msWrite = ((m_tW + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = 0;
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = numPass * numCores * ((m_eAP * 2) + (m_eGDL * 2));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -47,11 +56,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
         numberOfOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
       }
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
       // Refer to fulcrum documentation
-      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+      msRead = m_tR;
+      msWrite = ((m_tW + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -69,11 +78,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     {
-      // How many iteration require to read / write max elements per region
-      unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
-      double totalGDLOverhead = m_tGDL * numGDLItr; // read can be pipelined and write cannot be pipelined
-      // Refer to fulcrum documentation
-      msRuntime = m_tR + m_tW + totalGDLOverhead + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+      msRead = m_tR;
+      msWrite = ((m_tW + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = ((m_eAP * 2) + (m_eGDL * 2 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCores * numPass ;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -83,7 +91,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       break;
   }
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of bank-level PIM for func2
@@ -92,14 +100,19 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCoresUsed = obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   // How many iteration require to read / write max elements per region
-  unsigned numGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned maxGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned minGDLItr = minElementPerRegion * bitsPerElement / m_GDLWidth;
 
   switch (cmdType)
   {
@@ -108,9 +121,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::MUL:
     case PimCmdEnum::DIV:
     {
-      double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
-      msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
-      msRuntime *= numPass;
+      msRead = ((2 * m_tR) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((2 * m_tR) + (minGDLItr * m_tGDL));
+      msWrite = (m_tW + (maxGDLItr * m_tGDL)) * (numPass - 1) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
@@ -131,8 +145,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
        *
        * As a result, only one read operation is necessary for the entire pass.
       */
-      double totalGDLOverhead = m_tGDL * numGDLItr; // both read can be pipelined as multiplication and addition takes twice the time to execute.
-      msRuntime = m_tR + (m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2) * numPass;
+      msRead = m_tR + (maxGDLItr * m_tGDL);
+      msWrite = (m_tW + (maxGDLItr * m_tGDL)) * (numPass - 1) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2 * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_blimpArithmeticEnergy * numCoresUsed;
       mjEnergy *= numPass;
@@ -150,9 +166,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     {
-      double totalGDLOverhead = m_tGDL * numGDLItr * 2; // one read can be pipelined
-      msRuntime = 2 * m_tR + m_tW + totalGDLOverhead + maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement;
-      msRuntime *= numPass;
+      msRead = ((2 * m_tR) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((2 * m_tR) + (minGDLItr * m_tGDL));
+      msWrite = (m_tW + (maxGDLItr * m_tGDL)) * (numPass - 1) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy *= numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -163,7 +180,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       break;
   }
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of bank-level PIM for reduction sum
@@ -172,39 +189,44 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
   double cpuTDP = 200; // W; AMD EPYC 9124 16 core
-
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+ 
   switch (cmdType) {
-        case PimCmdEnum::REDSUM:
-        case PimCmdEnum::REDSUM_RANGE:
-        case PimCmdEnum::REDMIN:
-        case PimCmdEnum::REDMIN_RANGE:
-        case PimCmdEnum::REDMAX:
-        case PimCmdEnum::REDMAX_RANGE:
-        {
-          // How many iteration require to read / write max elements per region
-          double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-          msRuntime = m_tR + m_tGDL + (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * numPass);
+    case PimCmdEnum::REDSUM:
+    case PimCmdEnum::REDSUM_RANGE:
+    case PimCmdEnum::REDMIN:
+    case PimCmdEnum::REDMIN_RANGE:
+    case PimCmdEnum::REDMAX:
+    case PimCmdEnum::REDMAX_RANGE:
+    {
+      // How many iteration require to read / write max elements per region
+      double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+      msRead = m_tR + m_tGDL;
+      // reduction for all regions assuming 16 core AMD EPYC 9124
+      double aggregateMs = static_cast<double>(numCore) / (3200000 * 16);
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement) + aggregateMs;
+      msRuntime = msRead + msWrite + msCompute;
 
-          // Refer to fulcrum documentation
-          mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
-          // reduction for all regions
-          double aggregateMs = static_cast<double>(numCore) / 3200000;
-          msRuntime += aggregateMs;
-          mjEnergy += aggregateMs * cpuTDP;
-          mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-          break;
-        }
-        default:
-          std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
-                    << pimCmd::getName(cmdType, "") << std::endl;
-          break;
+      // Refer to fulcrum documentation
+      mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
+      mjEnergy += aggregateMs * cpuTDP;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
+    default:
+      std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
+                << pimCmd::getName(cmdType, "") << std::endl;
+      break;
     }
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
 //! @brief  Perf energy model of bank-level PIM for broadcast
@@ -213,28 +235,35 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned numCore = obj.getNumCoresUsed();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned numCore = obj.getNumCoresUsed();
-
-  // assume taking 1 ALU latency to write an element
-  double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-  msRuntime = m_tW + m_tGDL + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement);
-  msRuntime *= numPass;
-  msRuntime = (m_eAP + (m_blimpCoreLatency * maxElementsPerRegion * numberOfOperationPerElement)) * numPass; // todo: change m_eR to write energy
-  mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement))) * numPass * numCore;
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+   // How many iteration require to read / write max elements per region
+  unsigned maxGDLItr = maxElementsPerRegion * bitsPerElement / m_GDLWidth;
+  unsigned minGDLItr = minElementPerRegion * bitsPerElement / m_GDLWidth;
+  msWrite = (m_tW + (maxGDLItr * m_tGDL)) * (numPass - 1) + (m_tW + (minGDLItr * m_tGDL));
+  msRuntime = msRead + msWrite + msCompute;
+  mjEnergy = (m_eAP + m_eGDL) * numPass * numCore;
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
+// TODO: This needs to be revisited
 //! @brief  Perf energy model of bank-level PIM for rotate
 pimeval::perfEnergy
 pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
@@ -251,6 +280,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   msRuntime += 2 * perfEnergyBT.m_msRuntime;
   mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
 
-  return pimeval::perfEnergy(msRuntime, mjEnergy);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
 
