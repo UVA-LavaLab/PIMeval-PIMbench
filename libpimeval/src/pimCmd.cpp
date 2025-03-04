@@ -699,9 +699,10 @@ pimCmdFunc2::updateStats() const
 bool
 pimCmdCond::execute()
 {
-  #if defined(DEBUG)
-  std::printf("PIM-Info: %s (obj id %d ? %d : %d -> %d)\n", getName().c_str(), m_condBool, m_src1, m_src2, m_dest);
-  #endif
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj ids: bool %d, src1 %d, src2 %d, dest %d, scalar 0x%llx)\n",
+        getName().c_str(), m_condBool, m_src1, m_src2, m_dest, m_scalarBits);
+  }
 
   if (!sanityCheck()) {
     return false;
