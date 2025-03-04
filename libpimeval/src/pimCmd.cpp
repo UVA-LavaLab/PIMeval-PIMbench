@@ -725,8 +725,8 @@ pimCmdCond::execute()
     }
   }
 
-  const pimObjInfo& objSrc1 = m_device->getResMgr()->getObjInfo(m_src1);
-  unsigned numRegions = objSrc1.getRegions().size();
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  unsigned numRegions = objDest.getRegions().size();
   computeAllRegions(numRegions);
 
   if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
