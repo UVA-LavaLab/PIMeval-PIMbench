@@ -7,7 +7,7 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -Wno-unknown-pragmas
+CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -Wno-unknown-pragmas -I./../../../util
 
 # Executable name
 EXEC := hamming-data-generator.out
