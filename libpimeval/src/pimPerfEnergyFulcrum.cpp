@@ -256,14 +256,16 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned numCore = obj.getNumCoresUsed();
-
+  unsigned numCore = obj.getNumCoreAvailable();
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  
   // assume taking 1 ALU latency to write an element
   double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   msWrite = m_tW * numPass;
-  msCompute = m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement * numPass;
+  msCompute = (m_fulcrumAluLatency * maxElementsPerRegion * numberOfOperationPerElement * (numPass - 1)) + (m_fulcrumAluLatency * minElementPerRegion * numberOfOperationPerElement);
   msRuntime = msRead + msWrite + msCompute;
-  mjEnergy = numPass * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
+  mjEnergy = (numPass - 1) * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
+  mjEnergy += numCore * (m_eAP + ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumALULogicalEnergy * numberOfOperationPerElement));
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
@@ -295,6 +297,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
   msRuntime += 2 * perfEnergyBT.m_msRuntime;
   mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+  std::cout << "PIM-Warning: Perf energy model not precise for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
 }
