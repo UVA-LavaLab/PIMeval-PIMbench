@@ -123,21 +123,6 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
       std::cout << "Abort" << std::endl;
       return;
     }
-
-    // Let's not remove this following commented block
-    // status = pimMulScalar(srcObj1, srcObj2, srcVector[i]);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
-
-    // status = pimAdd(srcObj2, dstObj, dstObj);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
   }
 
   dst.resize(row);
@@ -158,15 +143,18 @@ int main(int argc, char *argv[])
 
   std::vector<int> srcVector (params.column, 1), resultVector;
   std::vector<std::vector<int>> srcMatrix (params.column, std::vector<int>(params.row, 1)); // matrix should lay out in colXrow format for bitserial PIM
-  if (params.inputFile == nullptr && params.shouldVerify)
-  {
-    getVector(params.column, srcVector);
-    getMatrix(params.column, params.row, 0, srcMatrix);
-  }
-  else
-  {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
+
+  if (params.shouldVerify) {
+    if (params.inputFile == nullptr)
+    {
+      getVector(params.column, srcVector);
+      getMatrix(params.column, params.row, 0, srcMatrix);
+    }
+    else
+    {
+      std::cout << "Reading from input file is not implemented yet." << std::endl;
+      return 1;
+    }
   }
 
   if (!createDevice(params.configFile))
