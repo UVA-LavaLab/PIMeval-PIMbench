@@ -312,8 +312,8 @@ int main(int argc, char *argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running KMeans for PIM on number of points: " << params.numPoints << "\n";
   // row = dimension, col = number of datapoints. this is done to simplify data movement.
-  std::vector<std::vector<int>> dataPoints;
-  if (params.inputFile == nullptr)
+  std::vector<std::vector<int>> dataPoints (params.dimension, std::vector<int>(params.numPoints, 2));
+  if (params.inputFile == nullptr && params.shouldVerify)
   {
     getMatrix(params.dimension, params.numPoints, 0, dataPoints);
   }
