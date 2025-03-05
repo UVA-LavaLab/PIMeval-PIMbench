@@ -128,7 +128,7 @@ void hammingStringMatchCpu(const std::vector<std::string>& needles, const std::s
 //! @param[in]  maxHammingDistance  The maximum number of character changes to the key before insertion
 //! @param[in]  gen  Random number generator
 void hammingTextReplace(std::string& text, const uint64_t idx, const std::string& key, const uint64_t maxHammingDistance, std::mt19937& gen) {
-  std::uniform_int_distribution<> numCharsDist(0, std::min(key.size(), maxHammingDistance));
+  std::uniform_int_distribution<> numCharsDist(0, std::min(static_cast<uint64_t>(key.size()), static_cast<uint64_t>(maxHammingDistance)));
   uint64_t numCharsToSwitch = numCharsDist(gen);
   std::uniform_int_distribution<> charsDist('a', 'b');
   for(uint64_t keyIdx=0; keyIdx < key.size(); ++keyIdx) {
@@ -205,7 +205,7 @@ void generateStringMatchData(const char* outputFolderName, const uint64_t textLe
   
   size_t textCharsReplacedWithKeys = 0;
   size_t targetTextCharsReplacedWithKeys = ((double) keyFrequency / (double) 100.0) * textLen;
-  targetTextCharsReplacedWithKeys = std::min(targetTextCharsReplacedWithKeys, textLen);
+  targetTextCharsReplacedWithKeys = std::min(static_cast<uint64_t>(targetTextCharsReplacedWithKeys), static_cast<uint64_t>(textLen));
   size_t lastViableKey = keysSorted.size();
 
   // Replace some of text with keys to generate matches
