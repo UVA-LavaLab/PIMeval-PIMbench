@@ -107,16 +107,21 @@ int main(int argc, char* argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running PIM AXPY for vector length: " << params.vectorLength << "\n";
   std::vector<int> X(params.vectorLength, 1), Y(params.vectorLength, 1), Y_device(params.vectorLength, 0);
-  if (params.inputFile == nullptr && params.shouldVerify)
+  // Only generate vectors if verification is turned on
+  if (params.shouldVerify)
   {
-    getVector(params.vectorLength, X);
-    getVector(params.vectorLength, Y);
-  } 
-  else 
-  {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
+    if (params.inputFile == nullptr)
+    {
+        getVector(params.vectorLength, X);
+        getVector(params.vectorLength, Y);
+    }
+    else
+    {
+        std::cout << "Reading from input file is not implemented yet." << std::endl;
+        return 1;
+    }
   }
+
   
   if (!createDevice(params.configFile))
   {
