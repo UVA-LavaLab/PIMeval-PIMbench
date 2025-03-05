@@ -106,8 +106,8 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running PIM AXPY for vector length: " << params.vectorLength << "\n";
-  std::vector<int> X, Y, Y_device;
-  if (params.inputFile == nullptr)
+  std::vector<int> X(params.vectorLength, 1), Y(params.vectorLength, 1), Y_device(params.vectorLength, 0);
+  if (params.inputFile == nullptr && params.shouldVerify)
   {
     getVector(params.vectorLength, X);
     getVector(params.vectorLength, Y);

@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running Linear Regression on PIM for data size: " << params.dataSize << "\n";
-  std::vector<int> dataPointsX, dataPointsY;
-  if (params.inputFile == nullptr)
+  std::vector<int> dataPointsX (params.dataSize, 1), dataPointsY (params.dataSize, 1);
+  if (params.inputFile == nullptr && params.shouldVerify)
   {
     getVector(params.dataSize, dataPointsX);
     getVector(params.dataSize, dataPointsY);

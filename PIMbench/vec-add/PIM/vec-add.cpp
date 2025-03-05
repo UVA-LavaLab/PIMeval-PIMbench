@@ -126,8 +126,8 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running Vector Add on PIM for vector length: " << params.vectorLength << "\n\n";
-  std::vector<int> src1, src2, dst;
-  if (params.inputFile == nullptr)
+  std::vector<int> src1(params.vectorLength, 1), src2(params.vectorLength, 2), dst;
+  if (params.inputFile == nullptr && params.shouldVerify)
   {
     getVector(params.vectorLength, src1);
     getVector(params.vectorLength, src2);
