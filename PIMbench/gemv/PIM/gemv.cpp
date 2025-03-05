@@ -156,9 +156,9 @@ int main(int argc, char *argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running GEMV for matrix row: " << params.row << " column: " << params.column << " and vector of size: " << params.column << std::endl;
 
-  std::vector<int> srcVector, resultVector;
-  std::vector<std::vector<int>> srcMatrix; // matrix should lay out in colXrow format for bitserial PIM
-  if (params.inputFile == nullptr)
+  std::vector<int> srcVector (params.column, 1), resultVector;
+  std::vector<std::vector<int>> srcMatrix (params.column, std::vector<int>(params.row, 1)); // matrix should lay out in colXrow format for bitserial PIM
+  if (params.inputFile == nullptr && params.shouldVerify)
   {
     getVector(params.column, srcVector);
     getMatrix(params.column, params.row, 0, srcMatrix);
