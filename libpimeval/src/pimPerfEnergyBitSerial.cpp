@@ -20,7 +20,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   bool ok = false;
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  unsigned numCores = obj.getNumCoresUsed();
+  unsigned numCores = obj.getNumCoreAvailable();
   double msRead = 0.0;
   double msWrite = 0.0;
   double msLogic = 0.0;
