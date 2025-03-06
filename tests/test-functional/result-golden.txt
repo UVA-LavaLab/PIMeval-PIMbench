@@ -2717,9 +2717,13 @@ INFO: PIMeval Functional Tests for INT8
 [PASS] INT8 pimRedSumRanged
 [PASS] INT8 pimBroadcastInt
 [PASS] INT8 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] INT8 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] INT8 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] INT8 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] INT8 pimShiftElementsLeft
 [PASS] INT8 pimShiftBitsRight
 [PASS] INT8 pimShiftBitsLeft
@@ -2744,13 +2748,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
-                                   add.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                   add.int8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                             add_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                    and.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                             and_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                              broadcast.int8.h :          2       0.016875       0.013166    0.00  100.00    0.00
                               copy_o2o.int8.h :          1       0.016875       0.013166   50.00   50.00    0.00
-                                   div.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                   div.int8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                             div_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                     eq.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                              eq_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
@@ -2762,7 +2766,7 @@ PIM Command Stats:
                             max_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                    min.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                             min_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
-                                   mul.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                   mul.int8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                             mul_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                     or.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                              or_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
@@ -2775,18 +2779,18 @@ PIM Command Stats:
                           redsum_range.int8.h :          1       0.002552       0.002482    2.03    0.00   97.97
                          rotate_elem_l.int8.h :          1       0.015384       0.000058    0.00    0.00    0.00
                          rotate_elem_r.int8.h :          1       0.015384       0.000058    0.00    0.00    0.00
-                            scaled_add.int8.h :          1       0.013505       0.012381    0.50   62.48   37.02
+                            scaled_add.int8.h :          1       0.013505       0.008459    0.50   62.48   37.02
                           shift_bits_l.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                           shift_bits_r.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                           shift_elem_l.int8.h :          1       0.015384       0.000058    0.00    0.00    0.00
                           shift_elem_r.int8.h :          1       0.015384       0.000058    0.00    0.00    0.00
-                                   sub.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                   sub.int8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                             sub_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                   xnor.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                            xnor_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                    xor.int8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                             xor_scalar.int8.h :          1       0.010984       0.009490    0.42   76.82   22.76
-                              TOTAL --------- :         44       0.638267       0.472169   18.30   46.68   25.93
+                              TOTAL --------- :         44       0.638267       0.452559   18.30   46.68   25.93
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT8
@@ -2828,9 +2832,13 @@ INFO: PIMeval Functional Tests for UINT8
 [PASS] UINT8 pimRedSumRanged
 [PASS] UINT8 pimBroadcastInt
 [PASS] UINT8 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] UINT8 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] UINT8 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] UINT8 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] UINT8 pimShiftElementsLeft
 [PASS] UINT8 pimShiftBitsRight
 [PASS] UINT8 pimShiftBitsLeft
@@ -2855,13 +2863,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
-                                  add.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                  add.uint8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                            add_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                   and.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                            and_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                             broadcast.uint8.h :          2       0.016875       0.013166    0.00  100.00    0.00
                              copy_o2o.uint8.h :          1       0.016875       0.013166   50.00   50.00    0.00
-                                  div.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                  div.uint8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                            div_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                    eq.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                             eq_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
@@ -2873,7 +2881,7 @@ PIM Command Stats:
                            max_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                   min.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                            min_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
-                                  mul.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                  mul.uint8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                            mul_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                    or.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                             or_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
@@ -2886,18 +2894,18 @@ PIM Command Stats:
                          redsum_range.uint8.h :          1       0.002552       0.002482    2.03    0.00   97.97
                         rotate_elem_l.uint8.h :          1       0.015384       0.000058    0.00    0.00    0.00
                         rotate_elem_r.uint8.h :          1       0.015384       0.000058    0.00    0.00    0.00
-                           scaled_add.uint8.h :          1       0.013505       0.012381    0.50   62.48   37.02
+                           scaled_add.uint8.h :          1       0.013505       0.008459    0.50   62.48   37.02
                          shift_bits_l.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                          shift_bits_r.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                          shift_elem_l.uint8.h :          1       0.015384       0.000058    0.00    0.00    0.00
                          shift_elem_r.uint8.h :          1       0.015384       0.000058    0.00    0.00    0.00
-                                  sub.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
+                                  sub.uint8.h :          1       0.025187       0.015749   56.58   33.50    9.93
                            sub_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                  xnor.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                           xnor_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
                                   xor.uint8.h :          1       0.025187       0.019670   56.58   33.50    9.93
                            xor_scalar.uint8.h :          1       0.010984       0.009490    0.42   76.82   22.76
-                              TOTAL --------- :         44       0.638267       0.472169   18.30   46.68   25.93
+                              TOTAL --------- :         44       0.638267       0.452559   18.30   46.68   25.93
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT16
@@ -2939,9 +2947,13 @@ INFO: PIMeval Functional Tests for INT16
 [PASS] INT16 pimRedSumRanged
 [PASS] INT16 pimBroadcastInt
 [PASS] INT16 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] INT16 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] INT16 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] INT16 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] INT16 pimShiftElementsLeft
 [PASS] INT16 pimShiftBitsRight
 [PASS] INT16 pimShiftBitsLeft
@@ -2966,13 +2978,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
-                                  add.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                  add.int16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                            add_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                   and.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                            and_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                             broadcast.int16.h :          2       0.033750       0.026331    0.00  100.00    0.00
                              copy_o2o.int16.h :          1       0.033750       0.026331   50.00   50.00    0.00
-                                  div.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                  div.int16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                            div_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                    eq.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                             eq_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
@@ -2984,7 +2996,7 @@ PIM Command Stats:
                            max_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                   min.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                            min_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
-                                  mul.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                  mul.int16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                            mul_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                    or.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                             or_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
@@ -2997,18 +3009,18 @@ PIM Command Stats:
                          redsum_range.int16.h :          1       0.005052       0.004928    1.02    0.00   98.98
                         rotate_elem_l.int16.h :          1       0.036786       0.000145    0.00    0.00    0.00
                         rotate_elem_r.int16.h :          1       0.036786       0.000145    0.00    0.00    0.00
-                           scaled_add.int16.h :          1       0.026943       0.024720    0.25   62.63   37.12
+                           scaled_add.int16.h :          1       0.026943       0.016844    0.25   62.63   37.12
                          shift_bits_l.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                          shift_bits_r.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                          shift_elem_l.int16.h :          1       0.036786       0.000145    0.00    0.00    0.00
                          shift_elem_r.int16.h :          1       0.036786       0.000145    0.00    0.00    0.00
-                                  sub.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                  sub.int16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                            sub_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                  xnor.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                           xnor_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                   xor.int16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                            xor_scalar.int16.h :          1       0.021922       0.018950    0.21   76.98   22.81
-                              TOTAL --------- :         44       1.299439       0.943704   18.08   46.74   26.09
+                              TOTAL --------- :         44       1.299439       0.904327   18.08   46.74   26.09
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT16
@@ -3050,9 +3062,13 @@ INFO: PIMeval Functional Tests for UINT16
 [PASS] UINT16 pimRedSumRanged
 [PASS] UINT16 pimBroadcastInt
 [PASS] UINT16 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] UINT16 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] UINT16 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] UINT16 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] UINT16 pimShiftElementsLeft
 [PASS] UINT16 pimShiftBitsRight
 [PASS] UINT16 pimShiftBitsLeft
@@ -3077,13 +3093,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
-                                 add.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                 add.uint16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                           add_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                  and.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                           and_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                            broadcast.uint16.h :          2       0.033750       0.026331    0.00  100.00    0.00
                             copy_o2o.uint16.h :          1       0.033750       0.026331   50.00   50.00    0.00
-                                 div.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                 div.uint16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                           div_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                   eq.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                            eq_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
@@ -3095,7 +3111,7 @@ PIM Command Stats:
                           max_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                  min.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                           min_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
-                                 mul.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                 mul.uint16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                           mul_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                   or.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                            or_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
@@ -3108,18 +3124,18 @@ PIM Command Stats:
                         redsum_range.uint16.h :          1       0.005052       0.004928    1.02    0.00   98.98
                        rotate_elem_l.uint16.h :          1       0.036786       0.000145    0.00    0.00    0.00
                        rotate_elem_r.uint16.h :          1       0.036786       0.000145    0.00    0.00    0.00
-                          scaled_add.uint16.h :          1       0.026943       0.024720    0.25   62.63   37.12
+                          scaled_add.uint16.h :          1       0.026943       0.016844    0.25   62.63   37.12
                         shift_bits_l.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                         shift_bits_r.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                         shift_elem_l.uint16.h :          1       0.036786       0.000145    0.00    0.00    0.00
                         shift_elem_r.uint16.h :          1       0.036786       0.000145    0.00    0.00    0.00
-                                 sub.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
+                                 sub.uint16.h :          1       0.050375       0.031466   56.58   33.50    9.93
                           sub_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                 xnor.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                          xnor_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
                                  xor.uint16.h :          1       0.050375       0.039341   56.58   33.50    9.93
                           xor_scalar.uint16.h :          1       0.021922       0.018950    0.21   76.98   22.81
-                              TOTAL --------- :         44       1.299439       0.943704   18.08   46.74   26.09
+                              TOTAL --------- :         44       1.299439       0.904327   18.08   46.74   26.09
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT32
@@ -3161,9 +3177,13 @@ INFO: PIMeval Functional Tests for INT32
 [PASS] INT32 pimRedSumRanged
 [PASS] INT32 pimBroadcastInt
 [PASS] INT32 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] INT32 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] INT32 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] INT32 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] INT32 pimShiftElementsLeft
 [PASS] INT32 pimShiftBitsRight
 [PASS] INT32 pimShiftBitsLeft
@@ -3188,13 +3208,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                                  add.int32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                  add.int32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                            add_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                   and.int32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                            and_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                             broadcast.int32.h :          2       0.067500       0.052662    0.00  100.00    0.00
                              copy_o2o.int32.h :          1       0.067500       0.052662   50.00   50.00    0.00
-                                  div.int32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                  div.int32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                            div_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                    eq.int32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                             eq_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
@@ -3206,31 +3226,31 @@ PIM Command Stats:
                            max_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                   min.int32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                            min_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                                  mul.int32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                  mul.int32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                            mul_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                    or.int32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                             or_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                              popcount.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                redmax.int32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                         redmax_range.int32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                         redmax_range.int32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                                redmin.int32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                         redmin_range.int32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                         redmin_range.int32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                                redsum.int32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                         redsum_range.int32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                         redsum_range.int32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                         rotate_elem_l.int32.h :          1       0.097646       0.000409    0.00    0.00    0.00
                         rotate_elem_r.int32.h :          1       0.097646       0.000409    0.00    0.00    0.00
-                           scaled_add.int32.h :          1       0.053817       0.049397    0.13   62.71   37.16
+                           scaled_add.int32.h :          1       0.053817       0.033614    0.13   62.71   37.16
                          shift_bits_l.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                          shift_bits_r.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                          shift_elem_l.int32.h :          1       0.097646       0.000409    0.00    0.00    0.00
                          shift_elem_r.int32.h :          1       0.097646       0.000409    0.00    0.00    0.00
-                                  sub.int32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                  sub.int32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                            sub_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                  xnor.int32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                           xnor_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                   xor.int32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                            xor_scalar.int32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                              TOTAL --------- :         44       2.694001       1.887098   17.97   46.78   26.17
+                              TOTAL --------- :         44       2.694001       1.808187   17.97   46.78   26.17
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT32
@@ -3272,9 +3292,13 @@ INFO: PIMeval Functional Tests for UINT32
 [PASS] UINT32 pimRedSumRanged
 [PASS] UINT32 pimBroadcastInt
 [PASS] UINT32 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] UINT32 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] UINT32 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] UINT32 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] UINT32 pimShiftElementsLeft
 [PASS] UINT32 pimShiftBitsRight
 [PASS] UINT32 pimShiftBitsLeft
@@ -3299,13 +3323,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                                 add.uint32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                 add.uint32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                           add_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                  and.uint32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                           and_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                            broadcast.uint32.h :          2       0.067500       0.052662    0.00  100.00    0.00
                             copy_o2o.uint32.h :          1       0.067500       0.052662   50.00   50.00    0.00
-                                 div.uint32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                 div.uint32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                           div_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                   eq.uint32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                            eq_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
@@ -3317,31 +3341,31 @@ PIM Command Stats:
                           max_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                  min.uint32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                           min_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                                 mul.uint32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                 mul.uint32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                           mul_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                   or.uint32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                            or_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                             popcount.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                               redmax.uint32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                        redmax_range.uint32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                        redmax_range.uint32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                               redmin.uint32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                        redmin_range.uint32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                        redmin_range.uint32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                               redsum.uint32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                        redsum_range.uint32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                        redsum_range.uint32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                        rotate_elem_l.uint32.h :          1       0.097646       0.000409    0.00    0.00    0.00
                        rotate_elem_r.uint32.h :          1       0.097646       0.000409    0.00    0.00    0.00
-                          scaled_add.uint32.h :          1       0.053817       0.049397    0.13   62.71   37.16
+                          scaled_add.uint32.h :          1       0.053817       0.033614    0.13   62.71   37.16
                         shift_bits_l.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                         shift_bits_r.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                         shift_elem_l.uint32.h :          1       0.097646       0.000409    0.00    0.00    0.00
                         shift_elem_r.uint32.h :          1       0.097646       0.000409    0.00    0.00    0.00
-                                 sub.uint32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                 sub.uint32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                           sub_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                 xnor.uint32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                          xnor_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                  xor.uint32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                           xor_scalar.uint32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                              TOTAL --------- :         44       2.694001       1.887098   17.97   46.78   26.17
+                              TOTAL --------- :         44       2.694001       1.808187   17.97   46.78   26.17
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT64
@@ -3383,9 +3407,13 @@ INFO: PIMeval Functional Tests for INT64
 [PASS] INT64 pimRedSumRanged
 [PASS] INT64 pimBroadcastInt
 [PASS] INT64 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] INT64 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] INT64 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] INT64 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] INT64 pimShiftElementsLeft
 [PASS] INT64 pimShiftBitsRight
 [PASS] INT64 pimShiftBitsLeft
@@ -3410,13 +3438,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
-                                  add.int64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                  add.int64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                            add_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                   and.int64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                            and_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                             broadcast.int64.h :          2       0.135000       0.105324    0.00  100.00    0.00
                              copy_o2o.int64.h :          1       0.135000       0.105324   50.00   50.00    0.00
-                                  div.int64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                  div.int64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                            div_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                    eq.int64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                             eq_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
@@ -3428,7 +3456,7 @@ PIM Command Stats:
                            max_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                   min.int64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                            min_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
-                                  mul.int64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                  mul.int64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                            mul_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                    or.int64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                             or_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
@@ -3441,18 +3469,18 @@ PIM Command Stats:
                          redsum_range.int64.h :          1       0.020052       0.019581    0.26    0.00   99.74
                         rotate_elem_l.int64.h :          1       0.291582       0.001293    0.00    0.00    0.00
                         rotate_elem_r.int64.h :          1       0.291582       0.001293    0.00    0.00    0.00
-                           scaled_add.int64.h :          1       0.107568       0.098752    0.06   62.75   37.19
+                           scaled_add.int64.h :          1       0.107568       0.067154    0.06   62.75   37.19
                          shift_bits_l.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                          shift_bits_r.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                          shift_elem_l.int64.h :          1       0.291582       0.001293    0.00    0.00    0.00
                          shift_elem_r.int64.h :          1       0.291582       0.001293    0.00    0.00    0.00
-                                  sub.int64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                  sub.int64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                            sub_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                  xnor.int64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                           xnor_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                   xor.int64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                            xor_scalar.int64.h :          1       0.087547       0.075714    0.05   77.10   22.85
-                              TOTAL --------- :         44       5.771997       3.775347   17.91   46.79   26.21
+                              TOTAL --------- :         44       5.771997       3.617365   17.91   46.79   26.21
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT64
@@ -3494,9 +3522,13 @@ INFO: PIMeval Functional Tests for UINT64
 [PASS] UINT64 pimRedSumRanged
 [PASS] UINT64 pimBroadcastInt
 [PASS] UINT64 pimBroadcastUInt
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] UINT64 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] UINT64 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] UINT64 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] UINT64 pimShiftElementsLeft
 [PASS] UINT64 pimShiftBitsRight
 [PASS] UINT64 pimShiftBitsLeft
@@ -3521,13 +3553,13 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
-                                 add.uint64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                 add.uint64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                           add_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                  and.uint64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                           and_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                            broadcast.uint64.h :          2       0.135000       0.105324    0.00  100.00    0.00
                             copy_o2o.uint64.h :          1       0.135000       0.105324   50.00   50.00    0.00
-                                 div.uint64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                 div.uint64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                           div_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                   eq.uint64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                            eq_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
@@ -3539,7 +3571,7 @@ PIM Command Stats:
                           max_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                  min.uint64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                           min_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
-                                 mul.uint64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                 mul.uint64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                           mul_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                   or.uint64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                            or_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
@@ -3552,18 +3584,18 @@ PIM Command Stats:
                         redsum_range.uint64.h :          1       0.020052       0.019581    0.26    0.00   99.74
                        rotate_elem_l.uint64.h :          1       0.291582       0.001293    0.00    0.00    0.00
                        rotate_elem_r.uint64.h :          1       0.291582       0.001293    0.00    0.00    0.00
-                          scaled_add.uint64.h :          1       0.107568       0.098752    0.06   62.75   37.19
+                          scaled_add.uint64.h :          1       0.107568       0.067154    0.06   62.75   37.19
                         shift_bits_l.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                         shift_bits_r.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                         shift_elem_l.uint64.h :          1       0.291582       0.001293    0.00    0.00    0.00
                         shift_elem_r.uint64.h :          1       0.291582       0.001293    0.00    0.00    0.00
-                                 sub.uint64.h :          1       0.201500       0.157364   56.58   33.50    9.93
+                                 sub.uint64.h :          1       0.201500       0.125768   56.58   33.50    9.93
                           sub_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                 xnor.uint64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                          xnor_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
                                  xor.uint64.h :          1       0.201500       0.157363   56.58   33.50    9.93
                           xor_scalar.uint64.h :          1       0.087547       0.075714    0.05   77.10   22.85
-                              TOTAL --------- :         44       5.771997       3.775347   17.91   46.79   26.21
+                              TOTAL --------- :         44       5.771997       3.617365   17.91   46.79   26.21
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP32
@@ -3589,9 +3621,13 @@ INFO: PIMeval Functional Tests for FP32
 [PASS] FP32 pimMaxScalar
 [PASS] FP32 pimScaledAdd
 [PASS] FP32 pimBroadcastFP32
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] FP32 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] FP32 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] FP32 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] FP32 pimShiftElementsLeft
 [PASS] FP32 pimRedMin
 [PASS] FP32 pimRedMinRanged
@@ -3618,11 +3654,11 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                                   add.fp32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                   add.fp32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                             add_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                              broadcast.fp32.h :          1       0.033750       0.026331    0.00  100.00    0.00
                               copy_o2o.fp32.h :          1       0.067500       0.052662   50.00   50.00    0.00
-                                   div.fp32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                   div.fp32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                             div_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                     eq.fp32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                              eq_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
@@ -3634,22 +3670,22 @@ PIM Command Stats:
                             max_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                    min.fp32.h :          1       0.100750       0.078681   56.58   33.50    9.93
                             min_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                                   mul.fp32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                   mul.fp32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                             mul_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
                                 redmax.fp32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                          redmax_range.fp32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                          redmax_range.fp32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                                 redmin.fp32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                          redmin_range.fp32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                          redmin_range.fp32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                                 redsum.fp32.h :          1       0.010052       0.011548    0.51    0.00   99.49
-                          redsum_range.fp32.h :          1       0.010052       0.009808    0.51    0.00   99.49
+                          redsum_range.fp32.h :          1       0.010052       0.009809    0.51    0.00   99.49
                          rotate_elem_l.fp32.h :          1       0.097646       0.000409    0.00    0.00    0.00
                          rotate_elem_r.fp32.h :          1       0.097646       0.000409    0.00    0.00    0.00
-                            scaled_add.fp32.h :          1       0.053817       0.049397    0.13   62.71   37.16
+                            scaled_add.fp32.h :          1       0.053817       0.033614    0.13   62.71   37.16
                           shift_elem_l.fp32.h :          1       0.097646       0.000409    0.00    0.00    0.00
                           shift_elem_r.fp32.h :          1       0.097646       0.000409    0.00    0.00    0.00
-                                   sub.fp32.h :          1       0.100750       0.078682   56.58   33.50    9.93
+                                   sub.fp32.h :          1       0.100750       0.062900   56.58   33.50    9.93
                             sub_scalar.fp32.h :          1       0.043796       0.037871    0.11   77.06   22.83
-                              TOTAL --------- :         32       1.950675       1.280943   17.61   40.15   29.74
+                              TOTAL --------- :         32       1.950675       1.202031   17.61   40.15   29.74
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP16
@@ -3675,9 +3711,13 @@ INFO: PIMeval Functional Tests for FP16
 [PASS] FP16 pimMaxScalar
 [PASS] FP16 pimScaledAdd
 [PASS] FP16 pimBroadcastFP32
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] FP16 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] FP16 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] FP16 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] FP16 pimShiftElementsLeft
 [PASS] FP16 pimRedMin
 [PASS] FP16 pimRedMinRanged
@@ -3704,11 +3744,11 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
-                                   add.fp16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   add.fp16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             add_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                              broadcast.fp16.h :          1       0.028500       0.023055    0.00  100.00    0.00
                               copy_o2o.fp16.h :          1       0.057000       0.046110   50.00   50.00    0.00
-                                   div.fp16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   div.fp16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             div_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                                     eq.fp16.h :          1       0.085250       0.069009   60.70   33.43    5.87
                              eq_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
@@ -3720,7 +3760,7 @@ PIM Command Stats:
                             max_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                                    min.fp16.h :          1       0.085250       0.069009   60.70   33.43    5.87
                             min_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
-                                   mul.fp16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   mul.fp16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             mul_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                                 redmax.fp16.h :          1       0.005052       0.008428    1.02    0.00   98.98
                           redmax_range.fp16.h :          1       0.005052       0.006688    1.02    0.00   98.98
@@ -3730,12 +3770,12 @@ PIM Command Stats:
                           redsum_range.fp16.h :          1       0.005052       0.006688    1.02    0.00   98.98
                          rotate_elem_l.fp16.h :          1       0.073573       0.000290    0.00    0.00    0.00
                          rotate_elem_r.fp16.h :          1       0.073573       0.000290    0.00    0.00    0.00
-                            scaled_add.fp16.h :          1       0.038557       0.039874    0.15   73.92   25.94
+                            scaled_add.fp16.h :          1       0.038557       0.024091    0.15   73.92   25.94
                           shift_elem_l.fp16.h :          1       0.073573       0.000290    0.00    0.00    0.00
                           shift_elem_r.fp16.h :          1       0.073573       0.000290    0.00    0.00    0.00
-                                   sub.fp16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   sub.fp16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             sub_scalar.fp16.h :          1       0.033546       0.031475    0.14   84.96   14.90
-                              TOTAL --------- :         32       1.551374       1.091381   18.88   42.95   25.68
+                              TOTAL --------- :         32       1.551374       1.012472   18.88   42.95   25.68
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for BF16
@@ -3761,9 +3801,13 @@ INFO: PIMeval Functional Tests for BF16
 [PASS] BF16 pimMaxScalar
 [PASS] BF16 pimScaledAdd
 [PASS] BF16 pimBroadcastFP32
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] BF16 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] BF16 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] BF16 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] BF16 pimShiftElementsLeft
 [PASS] BF16 pimRedMin
 [PASS] BF16 pimRedMinRanged
@@ -3790,11 +3834,11 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
-                                   add.bf16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   add.bf16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             add_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                              broadcast.bf16.h :          1       0.028500       0.023055    0.00  100.00    0.00
                               copy_o2o.bf16.h :          1       0.057000       0.046110   50.00   50.00    0.00
-                                   div.bf16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   div.bf16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             div_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                                     eq.bf16.h :          1       0.085250       0.069009   60.70   33.43    5.87
                              eq_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
@@ -3806,7 +3850,7 @@ PIM Command Stats:
                             max_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                                    min.bf16.h :          1       0.085250       0.069009   60.70   33.43    5.87
                             min_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
-                                   mul.bf16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   mul.bf16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             mul_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
                                 redmax.bf16.h :          1       0.005052       0.008428    1.02    0.00   98.98
                           redmax_range.bf16.h :          1       0.005052       0.006688    1.02    0.00   98.98
@@ -3816,12 +3860,12 @@ PIM Command Stats:
                           redsum_range.bf16.h :          1       0.005052       0.006688    1.02    0.00   98.98
                          rotate_elem_l.bf16.h :          1       0.073573       0.000290    0.00    0.00    0.00
                          rotate_elem_r.bf16.h :          1       0.073573       0.000290    0.00    0.00    0.00
-                            scaled_add.bf16.h :          1       0.038557       0.039874    0.15   73.92   25.94
+                            scaled_add.bf16.h :          1       0.038557       0.024091    0.15   73.92   25.94
                           shift_elem_l.bf16.h :          1       0.073573       0.000290    0.00    0.00    0.00
                           shift_elem_r.bf16.h :          1       0.073573       0.000290    0.00    0.00    0.00
-                                   sub.bf16.h :          1       0.085250       0.069009   60.70   33.43    5.87
+                                   sub.bf16.h :          1       0.085250       0.053228   60.70   33.43    5.87
                             sub_scalar.bf16.h :          1       0.033546       0.031475    0.14   84.96   14.90
-                              TOTAL --------- :         32       1.551374       1.091381   18.88   42.95   25.68
+                              TOTAL --------- :         32       1.551374       1.012472   18.88   42.95   25.68
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP8
@@ -3847,9 +3891,13 @@ INFO: PIMeval Functional Tests for FP8
 [PASS] FP8 pimMaxScalar
 [PASS] FP8 pimScaledAdd
 [PASS] FP8 pimBroadcastFP32
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_r
 [PASS] FP8 pimRotateElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command rotate_elem_l
 [PASS] FP8 pimRotateElementsLeft
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_r
 [PASS] FP8 pimShiftElementsRight
+PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 [PASS] FP8 pimShiftElementsLeft
 [PASS] FP8 pimRedMin
 [PASS] FP8 pimRedMinRanged
@@ -3876,11 +3924,11 @@ Data Copy Stats:
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                     abs.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
-                                    add.fp8.h :          1       0.077500       0.064173   63.39   33.39    3.23
+                                    add.fp8.h :          1       0.077500       0.048392   63.39   33.39    3.23
                              add_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
                               broadcast.fp8.h :          1       0.025875       0.021417    0.00  100.00    0.00
                                copy_o2o.fp8.h :          1       0.051750       0.042834   50.00   50.00    0.00
-                                    div.fp8.h :          1       0.077500       0.064173   63.39   33.39    3.23
+                                    div.fp8.h :          1       0.077500       0.048392   63.39   33.39    3.23
                              div_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
                                      eq.fp8.h :          1       0.077500       0.064173   63.39   33.39    3.23
                               eq_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
@@ -3892,7 +3940,7 @@ PIM Command Stats:
                              max_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
                                     min.fp8.h :          1       0.077500       0.064173   63.39   33.39    3.23
                              min_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
-                                    mul.fp8.h :          1       0.077500       0.064173   63.39   33.39    3.23
+                                    mul.fp8.h :          1       0.077500       0.048392   63.39   33.39    3.23
                              mul_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
                                  redmax.fp8.h :          1       0.002552       0.006867    2.03    0.00   97.97
                            redmax_range.fp8.h :          1       0.002552       0.005128    2.03    0.00   97.97
@@ -3902,11 +3950,11 @@ PIM Command Stats:
                            redsum_range.fp8.h :          1       0.002552       0.005128    2.03    0.00   97.97
                           rotate_elem_l.fp8.h :          1       0.061536       0.000230    0.00    0.00    0.00
                           rotate_elem_r.fp8.h :          1       0.061536       0.000230    0.00    0.00    0.00
-                             scaled_add.fp8.h :          1       0.030927       0.035112    0.17   83.67   16.17
+                             scaled_add.fp8.h :          1       0.030927       0.019330    0.17   83.67   16.17
                            shift_elem_l.fp8.h :          1       0.061536       0.000230    0.00    0.00    0.00
                            shift_elem_r.fp8.h :          1       0.061536       0.000230    0.00    0.00    0.00
-                                    sub.fp8.h :          1       0.077500       0.064173   63.39   33.39    3.23
+                                    sub.fp8.h :          1       0.077500       0.048392   63.39   33.39    3.23
                              sub_scalar.fp8.h :          1       0.028421       0.028277    0.16   91.04    8.80
-                              TOTAL --------- :         32       1.351723       0.996600   19.83   45.14   22.53
+                              TOTAL --------- :         32       1.351723       0.917692   19.83   45.14   22.53
 ----------------------------------------
 Result: COMPLETED
