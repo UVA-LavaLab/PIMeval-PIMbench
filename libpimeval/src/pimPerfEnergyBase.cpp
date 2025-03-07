@@ -50,10 +50,10 @@ pimPerfEnergyBase::pimPerfEnergyBase(const pimPerfEnergyModelParams& params)
   m_tW = m_paramsDram.getNsRowWrite() / m_nano_to_milli;
   m_tL = m_paramsDram.getNsTCCD_S() / m_nano_to_milli;
   m_tGDL = m_paramsDram.getNsTCCD_L() / m_nano_to_milli;
-  m_eAP = m_paramsDram.getPjRowRead() / m_pico_to_milli; // Convert pJ to mJ
+  m_eAP = m_paramsDram.getPjActPre() / m_pico_to_milli; // Convert pJ to mJ
   m_eL = m_paramsDram.getPjLogic() / m_pico_to_milli; // Convert pJ to mJ
-  m_eR = m_paramsDram.getMwRead() / 1000.0;
-  m_eW = m_paramsDram.getMwWrite() / 1000.0;
+  m_eR = m_paramsDram.getPjRead() / m_pico_to_milli;
+  m_eW = m_paramsDram.getPjWrite() / m_pico_to_milli;
   // m_pBCore = (m_paramsDram.getMwIDD3N() - m_paramsDram.getMwIDD2N()) / 1000.0; // Convert mW to W, so that W * ms = mJ
   m_pBChip = m_paramsDram.getMwIDD3N() / 1000.0; // Convert mW to W, so that W * ms = mJ
   m_GDLWidth = m_paramsDram.getBurstLength() * m_paramsDram.getDeviceWidth();

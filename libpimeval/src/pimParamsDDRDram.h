@@ -30,12 +30,12 @@ public:
   double getNsTCAS() const override { return m_tCK * m_CL; }
   double getNsAAP() const override { return m_tCK * (m_tRAS + m_tRP); }
   double getTypicalRankBW() const override { return m_typicalRankBW; }
-  double getPjRowRead() const override { return m_VDD * (m_IDD0 * (m_tRAS + m_tRP) - (m_IDD3N * m_tRAS + m_IDD2N * m_tRP)); } // Energy for 1 Activate command (and the correspound precharge command) in one subarray of one bank of one chip
+  double getPjActPre() const override { return m_VDD * (m_IDD0 * (m_tRAS + m_tRP) - (m_IDD3N * m_tRAS + m_IDD2N * m_tRP)); } // Energy for 1 Activate command (and the correspound precharge command) in one subarray of one bank of one chip
   double getPjLogic() const override { return 0.007 * m_tCK * m_tCCD_S ; } // 0.007 mW is the total power per BSLU, 0.007 * m_tCK * m_tCCD_S is the energy of one BSLU during one logic operation in pJ.
   double getMwIDD2N() const override {return m_VDD * m_IDD2N; }
   double getMwIDD3N() const override {return m_VDD * m_IDD3N; }
-  double getMwRead() const override { return m_VDD * (m_IDD4R - m_IDD3N); } // read power per chip (data copy)
-  double getMwWrite() const override { return m_VDD * (m_IDD4W - m_IDD3N); } // write power per chip (data copy)
+  double getPjRead() const override { return m_VDD * 0.15 * m_tCK * m_tCCD_L * (m_IDD4R - m_IDD3N); } // read power per chip (data copy)
+  double getPjWrite() const override { return m_VDD * 0.15 * m_tCK * m_tCCD_L * (m_IDD4W - m_IDD3N); } // write power per chip (data copy)
 
 private:
   // [dram_structure]
