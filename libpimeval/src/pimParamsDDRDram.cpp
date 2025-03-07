@@ -21,7 +21,7 @@ pimParamsDDRDram::pimParamsDDRDram()
     m_banksPerGroup(4),
     m_rows(32768),
     m_columns(1024),
-    m_deviceWidth(16),
+    m_deviceWidth(8),
     m_BL(8),
     // [timing]
     m_tCK(0.75),
