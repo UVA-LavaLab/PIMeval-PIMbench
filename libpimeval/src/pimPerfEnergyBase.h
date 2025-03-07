@@ -87,11 +87,10 @@ protected:
 
   double m_eAP; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
-  double m_eR; // Read data from PIM
-  double m_eW; // Write data to PIM
+  double m_eR; // local row buffer to global row buffer
+  double m_eW; // global row buffer to local row buffer
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
-  double m_eGDL = 0.0000102; // CAS energy in mJ
 };
 
 #endif

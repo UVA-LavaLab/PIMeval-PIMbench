@@ -42,7 +42,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
     { 
       msRuntime = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
       msRuntime += m_tR + m_tW + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
-      mjEnergy = (m_eAP * 2 + (m_eGDL * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
+      mjEnergy = (m_eAP * 2 + (m_eR * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
@@ -96,7 +96,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
       unsigned numberOfOperationPerElement = std::ceil(bitsPerElement * 1.0 / m_aquaboltFPUBitWidth);
       msRuntime = (2 * m_tR + m_tW + (maxGDLItr * numberOfOperationPerElement * aquaboltCoreCycle)) * (numPass - 1);
       msRuntime += (2 * m_tR + m_tW + (minGDLItr * numberOfOperationPerElement * aquaboltCoreCycle));
-      mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
+      mjEnergy = ((m_eAP * 3) + (m_eR * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
@@ -120,7 +120,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
       msRuntime = m_tR + m_tW;
       msRuntime += (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
       msRuntime += (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
-      mjEnergy = ((m_eAP * 3) + (m_eGDL * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
+      mjEnergy = ((m_eAP * 3) + (m_eR * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_aquaboltArithmeticEnergy * numCoresUsed;
       mjEnergy *= numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -172,7 +172,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
       msRuntime = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
       msRuntime += (m_tR + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement));
       // Refer to fulcrum documentation
-      mjEnergy = (m_eAP + (m_eGDL + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
+      mjEnergy = (m_eAP + (m_eR + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
       // reduction for all regions
       double aggregateMs = static_cast<double>(numCore) / (3200000 * 16);
       msRuntime += aggregateMs;
@@ -211,7 +211,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimOb
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   msRuntime = (m_tW + maxGDLItr * m_tGDL) * (numPass - 1);
   msRuntime *= (m_tW + minGDLItr * m_tGDL);
-  mjEnergy = (m_eAP + m_eGDL * maxGDLItr) * numPass * numCore;
+  mjEnergy = (m_eAP + m_eR * maxGDLItr) * numPass * numCore;
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
