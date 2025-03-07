@@ -38,7 +38,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       msWrite = ((m_tW + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tW + (minGDLItr * m_tGDL));
       msCompute = 0;
       msRuntime = msRead + msWrite + msCompute;
-      mjEnergy = numPass * numCores * ((m_eAP * 2) + m_eR + m_eW);
+      mjEnergy = numPass * numCores * m_eAP * 2;
+      mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr));
+      mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
@@ -230,8 +232,8 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
       msRuntime = msRead + msWrite + msCompute;
 
       // Refer to fulcrum documentation
-      mjEnergy = (m_eAP + (m_eR + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * (numPass - 1) * numCore;
-      mjEnergy += (m_eAP + (m_eR + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement))) * numCore;
+      mjEnergy = (m_eAP + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * (numPass - 1) * numCore;
+      mjEnergy += (m_eAP + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numCore;
       mjEnergy += aggregateMs * cpuTDP;
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
