@@ -409,6 +409,15 @@ pimCmdFunc1::sanityCheck() const
   switch (m_cmdType) {
     case PimCmdEnum::CONVERT_TYPE:
       break;
+    case PimCmdEnum::GT_SCALAR:
+    case PimCmdEnum::LT_SCALAR:
+    case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::NE_SCALAR:
+      if (objDest.getDataType() != PIM_BOOL) {
+        std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
+        return false;
+      }
+      break;
     case PimCmdEnum::BIT_SLICE_EXTRACT: // src, destBool, bitIdx
       if (objDest.getDataType() != PIM_BOOL) {
         std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
@@ -619,6 +628,15 @@ pimCmdFunc2::sanityCheck() const
   }
   // Define command specific data type rules
   switch (m_cmdType) {
+    case PimCmdEnum::GT:
+    case PimCmdEnum::LT:
+    case PimCmdEnum::EQ:
+    case PimCmdEnum::NE:
+      if (objDest.getDataType() != PIM_BOOL) {
+        std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
+        return false;
+      }
+      break;
     default:
       if (objSrc1.getDataType() != objSrc2.getDataType() || objSrc1.getDataType() != objDest.getDataType()) {
         std::printf("PIM-Error: PIM command %s does not support mixed data type\n", getName().c_str());
