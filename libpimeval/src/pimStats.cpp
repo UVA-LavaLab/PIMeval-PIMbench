@@ -12,7 +12,6 @@
 #include <cstdio>            // for printf
 #include <iostream>          // for cout
 #include <iomanip>           // for setw, fixed, setprecision
-#include <cmath>             // isnan
 
 
 //! @brief  Show PIM stats
@@ -131,9 +130,10 @@ pimStatsMgr::showCmdStats() const
   double totalMsWrite = 0.0;
   double totalMsCompute = 0.0;
   for (const auto& it : m_cmdPerf) {
-    double percentRead = it.second.second.m_msRuntime == 0.0 ? 0.0 : (it.second.second.m_msRead * 100 / it.second.second.m_msRuntime);
-    double percentWrite = it.second.second.m_msRuntime == 0.0 ? 0.0 : (it.second.second.m_msWrite * 100 / it.second.second.m_msRuntime);
-    double percentCompute = it.second.second.m_msRuntime == 0.0 ? 0.0 : (it.second.second.m_msCompute * 100 / it.second.second.m_msRuntime);
+    double cmdRuntime = it.second.second.m_msRuntime;
+    double percentRead = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msRead * 100 / cmdRuntime);
+    double percentWrite = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msWrite * 100 / cmdRuntime);
+    double percentCompute = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msCompute * 100 / cmdRuntime);
     std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, percentRead, percentWrite, percentCompute);
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
