@@ -3,7 +3,7 @@ NVCC := nvcc
 CUDA_DIR ?= $(shell dirname $(shell dirname $(shell which nvcc)))
 CUDA_INCLUDE := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64
-CUDA_LIB := -lcublas
+CUDA_LIB := -lcublas -lnvidia-ml
 FOPENMP := -Xcompiler -fopenmp
 ARCH_FLAG := -arch=sm_80
 
@@ -12,6 +12,8 @@ EXEC := vec-add.out
 
 # Source files
 SOURCES := vec-add.cu
+
+UTIL_DIR := ../../../../util
 
 # Compiler flags
 CFLAGS := -O3
@@ -24,7 +26,7 @@ all: $(EXEC)
 
 # Rule to build the target executable
 $(EXEC): $(SOURCES)
-	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I$(DEP) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
+	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I$(UTIL_DIR) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 
 # Rule to clean the project
 clean:

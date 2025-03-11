@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
+#include <nvml.h>
+#include <chrono>
+#include <thread>
 
 #include "utilBaselines.h"
 
@@ -124,14 +127,43 @@ int main(int argc, char *argv[])
 
     std::cout << "Launching CUDA Kernel." << std::endl;
 
-    // Event creation
+    // CUDA Event Timing
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     float timeElapsed = 0;
 
+    // **Get active CUDA device**
+    int cudaDevice;
+    errorCode = cudaGetDevice(&cudaDevice);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    // **NVML Power Measurement**
+    nvmlReturn_t result;
+    nvmlDevice_t device;
+    result = nvmlInit();
+    if (result != NVML_SUCCESS) {
+        std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result) << std::endl;
+        return 1;
+    }
+
+    result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
+    if (result != NVML_SUCCESS) {
+        std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result) << std::endl;
+        return 1;
+    }
+    // **Start Power Measurement**
+    unsigned int powerBefore;
+    nvmlDeviceGetPowerUsage(device, &powerBefore);
+
     // Start timer
     cudaEventRecord(start, 0);
+    // End timer
+    cudaEventRecord(stop, 0);
 
     /* Kernel Call */
     vecAdd<<<numBlock, blockSize>>>(x, y, z);
@@ -144,12 +176,22 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // End timer
-    cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&timeElapsed, start, stop);
 
+    // **End Power Measurement**
+    unsigned int powerAfter;
+    nvmlDeviceGetPowerUsage(device, &powerAfter);
+
+    float avgPower_mW = (powerBefore + powerAfter) / 2.0;  // Average power in mW
+
+    // **Compute Energy in milliJoules (mJ)**
+    float energy_mJ = avgPower_mW * timeElapsed / 1000;
+
     printf("Execution time of vector addition = %f ms\n", timeElapsed);
+    printf("Average Power = %f mW\n", avgPower_mW);
+    printf("Energy Consumption = %f mJ\n", energy_mJ);
+
     errorCode = cudaMemcpy(C.data(), z, vectorSize * sizeof(int), cudaMemcpyDeviceToHost);
     if (errorCode != cudaSuccess)
     {
@@ -170,6 +212,8 @@ int main(int argc, char *argv[])
     cudaFree(x);
     cudaFree(y);
     cudaFree(z);
+
+    nvmlShutdown();
 
     return 0;
 } /* main */
