@@ -111,14 +111,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    errorCode = cudaMemcpy(x, A.data(), n_pad * sizeof(int), cudaMemcpyHostToDevice);
+    errorCode = cudaMemcpy(x, A.data(), vectorSize * sizeof(int), cudaMemcpyHostToDevice);
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
 
-    errorCode = cudaMemcpy(y, B.data(), n_pad * sizeof(int), cudaMemcpyHostToDevice);
+    errorCode = cudaMemcpy(y, B.data(), vectorSize * sizeof(int), cudaMemcpyHostToDevice);
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
@@ -142,7 +142,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // **NVML Power Measurement**
     nvmlReturn_t result;
     nvmlDevice_t device;
     result = nvmlInit();
@@ -156,9 +155,9 @@ int main(int argc, char *argv[])
         std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result) << std::endl;
         return 1;
     }
-    // **Start Power Measurement**
-    unsigned int powerBefore;
-    nvmlDeviceGetPowerUsage(device, &powerBefore);
+    
+    // Variables for power sampling
+    std::vector<unsigned int> powerSamples;
 
     // Start timer
     cudaEventRecord(start, 0);
@@ -176,14 +175,26 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    while (true) {
+        unsigned int power;
+        if (nvmlDeviceGetPowerUsage(device, &power) == NVML_SUCCESS) {
+            powerSamples.push_back(power);
+        }
+        if (cudaEventQuery(stop) == cudaSuccess) {
+            break;
+        }
+    }
+
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&timeElapsed, start, stop);
 
-    // **End Power Measurement**
-    unsigned int powerAfter;
-    nvmlDeviceGetPowerUsage(device, &powerAfter);
+    double totalPower = 0;
+    for (size_t i = 0; i < powerSamples.size(); ++i) {
+        std::cout << "Power Now: " << powerSamples[i] << "\n";
+        totalPower += powerSamples[i]; // Convert mW to W * time
+    }
 
-    float avgPower_mW = (powerBefore + powerAfter) / 2.0;  // Average power in mW
+    float avgPower_mW = totalPower / powerSamples.size();  // Average power in mW
 
     // **Compute Energy in milliJoules (mJ)**
     float energy_mJ = avgPower_mW * timeElapsed / 1000;
