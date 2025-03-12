@@ -312,15 +312,17 @@ int main(int argc, char *argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running KMeans for PIM on number of points: " << params.numPoints << "\n";
   // row = dimension, col = number of datapoints. this is done to simplify data movement.
-  std::vector<std::vector<int>> dataPoints;
-  if (params.inputFile == nullptr)
-  {
-    getMatrix(params.dimension, params.numPoints, 0, dataPoints);
-  }
-  else
-  {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
+  std::vector<std::vector<int>> dataPoints (params.dimension, std::vector<int>(params.numPoints, 2));
+  if (params.shouldVerify) {
+    if (params.inputFile == nullptr)
+    {
+      getMatrix(params.dimension, params.numPoints, 0, dataPoints);
+    }
+    else
+    {
+      std::cout << "Reading from input file is not implemented yet." << std::endl;
+      return 1;
+    }
   }
 
   if (!createDevice(params.configFile))

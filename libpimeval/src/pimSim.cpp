@@ -784,6 +784,42 @@ pimSim::pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx)
 }
 
 bool
+pimSim::pimCondCopy(PimObjId condBool, PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondCopy");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_COPY, condBool, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondBroadcast(PimObjId condBool, uint64_t scalarBits, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondBroadcast");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_BROADCAST, condBool, scalarBits, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondSelect(PimObjId condBool, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondSelect");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_SELECT, condBool, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondSelectScalar(PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondSelectScalar");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_SELECT_SCALAR, condBool, src1, scalarBits, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
 pimSim::pimRotateElementsRight(PimObjId src)
 {
   pimPerfMon perfMon("pimRotateElementsRight");

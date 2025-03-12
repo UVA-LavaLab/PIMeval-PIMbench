@@ -13,14 +13,14 @@
 #include <omp.h>
 #endif
 
-#include "string-match-utils.h"
+#include "utilStringMatch.h"
 #include "PFAC.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
-  char *keysInputFile;
-  char *textInputFile;
+  const char *keysInputFile;
+  const char *textInputFile;
   bool shouldVerify;
 } Params;
 
@@ -38,8 +38,8 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.keysInputFile = nullptr;
-  p.textInputFile = nullptr;
+  p.keysInputFile = "./../../dataset/10mil_l-10_nk-10_kl/keys.txt";
+  p.textInputFile = "./../../dataset/10mil_l-10_nk-10_kl/text.txt";
   p.shouldVerify = false;
 
   int opt;
@@ -69,7 +69,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-float stringMatchGpu(std::string& needleFilename, std::string& haystack, std::vector<int>& matches) {
+float stringMatchGpu(const char* needlesFilename, std::string& haystack, std::vector<int>& matches) {
   PFAC_handle_t pfacHandle;
   PFAC_status_t pfacError;
   cudaError_t cudaError;
@@ -86,7 +86,7 @@ float stringMatchGpu(std::string& needleFilename, std::string& haystack, std::ve
       exit(1);
   }
 
-  pfacError = PFAC_readPatternFromFile(pfacHandle, needleFilename.data());
+  pfacError = PFAC_readPatternFromFile(pfacHandle, needlesFilename);
   if (PFAC_STATUS_SUCCESS != pfacError){
     std::cerr << "Cuda Error: " << PFAC_getErrorString(pfacError) << std::endl;
     exit(1);
@@ -165,45 +165,18 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   
-  const std::string defaultTextFileName = "./../../dataset/10mil_l-10_nk-10_kl/text.txt";
-
-  std::string textFilename;
-  if(params.textInputFile == nullptr) {
-    textFilename = defaultTextFileName;
-  } else {
-    textFilename = params.textInputFile;
-  }
-
-  const std::string defaultNeedlesFileName = "./../../dataset/10mil_l-10_nk-10_kl/keys.txt";
-
-  std::string needlesFilename;
-  if(params.keysInputFile == nullptr) {
-    needlesFilename = defaultNeedlesFileName;
-  } else {
-    needlesFilename = params.keysInputFile;
-  }
-  
-  std::cout << "Running GPU string match for \"" << needlesFilename << "\" as the keys file, and \"" << textFilename << "\" as the text input file\n";
+  std::cout << "Running GPU string match for \"" << params.keysInputFile << "\" as the keys file, and \"" << params.textInputFile << "\" as the text input file\n";
   
   std::string haystack;
   std::vector<std::string> needles;
   std::vector<int> matches;
 
-  haystack = getTextFromFile(textFilename);
-  if(haystack.size() == 0) {
-    std::cout << "There was an error opening the text file" << std::endl;
-    return 1;
-  }
-
-  needles = getNeedlesFromFile(needlesFilename);
-  if(needles.size() == 0) {
-    std::cout << "There was an error opening the keys file" << std::endl;
-    return 1;
-  }
+  haystack = readStringFromFile(params.textInputFile);
+  needles = getNeedlesFromFile(params.keysInputFile);
 
   matches.resize(haystack.size());
 
-  float timeElapsed = stringMatchGpu(needlesFilename, haystack, matches);
+  float timeElapsed = stringMatchGpu(params.keysInputFile, haystack, matches);
   printf("Execution time of string match = %f ms\n", timeElapsed);
 
   if (params.shouldVerify) 

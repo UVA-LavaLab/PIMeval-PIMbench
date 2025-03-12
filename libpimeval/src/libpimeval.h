@@ -166,6 +166,7 @@ PimStatus pimNEScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
+// Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 // Min/Max Reduction APIs
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
@@ -173,8 +174,15 @@ PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idx
 // Bit slice operations
 PimStatus pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
 PimStatus pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);
-
-// Note: Reduction sum range is [idxBegin, idxEnd)
+// Conditional operations
+// pimCondCopy:         dest[i] = cond ? src[i] : dest[i]
+// pimCondBroadcast:    dest[i] = cond ? scalar : dest[i]
+// pimCondSelect:       dest[i] = cond ? src1[i] : src2[i]
+// pimCondSelectScalar: dest[i] = cond ? src[i] : scalar
+PimStatus pimCondCopy(PimObjId condBool, PimObjId src, PimObjId dest);
+PimStatus pimCondBroadcast(PimObjId condBool, uint64_t scalarBits, PimObjId dest);
+PimStatus pimCondSelect(PimObjId condBool, PimObjId src1, PimObjId src2, PimObjId dest);
+PimStatus pimCondSelectScalar(PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimObjId dest);
 
 PimStatus pimBroadcastInt(PimObjId dest, int64_t value);
 PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);

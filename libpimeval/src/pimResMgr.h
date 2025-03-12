@@ -271,8 +271,8 @@ public:
   PimObjId pimCreateDualContactRef(PimObjId refId);
 
   bool isValidObjId(PimObjId objId) const { return m_objMap.find(objId) != m_objMap.end(); }
-  const pimObjInfo& getObjInfo(PimObjId objId) const { return m_objMap.at(objId); }
-  pimObjInfo& getObjInfo(PimObjId objId) { return m_objMap.at(objId); }
+  const pimObjInfo& getObjInfo(PimObjId objId) const { assert(objId != -1); return m_objMap.at(objId); }
+  pimObjInfo& getObjInfo(PimObjId objId) { assert(objId != -1); return m_objMap.at(objId); }
 
   bool isVLayoutObj(PimObjId objId) const;
   bool isHLayoutObj(PimObjId objId) const;

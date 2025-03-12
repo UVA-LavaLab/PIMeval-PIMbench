@@ -158,16 +158,18 @@ int main(int argc, char *argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running Linear Regression on PIM for data size: " << params.dataSize << "\n";
-  std::vector<int> dataPointsX, dataPointsY;
-  if (params.inputFile == nullptr)
-  {
-    getVector(params.dataSize, dataPointsX);
-    getVector(params.dataSize, dataPointsY);
-  }
-  else
-  {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
+  std::vector<int> dataPointsX (params.dataSize, 1), dataPointsY (params.dataSize, 1);
+  if (params.shouldVerify) {
+    if (params.inputFile == nullptr)
+    {
+      getVector(params.dataSize, dataPointsX);
+      getVector(params.dataSize, dataPointsY);
+    }
+    else
+    {
+      std::cout << "Reading from input file is not implemented yet." << std::endl;
+      return 1;
+    }
   }
 
   if (!createDevice(params.configFile))
