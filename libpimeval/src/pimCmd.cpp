@@ -498,7 +498,12 @@ pimCmdFunc1::computeRegion(unsigned index)
       float floatOperand = pimUtils::castBitsToType<float>(bits);
       float result = 0.0;
       if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
-      objDest.setElement(elemIdx, result);
+      if (objDest.getDataType() == PIM_BOOL) {
+        bool resultBool = result > 0;
+        objDest.setElement(elemIdx, resultBool);
+      } else {
+        objDest.setElement(elemIdx, result);
+      }
     } else {
       assert(0); // todo: data type
     }
@@ -692,7 +697,12 @@ pimCmdFunc2::computeRegion(unsigned index)
       float floatOperand2 = pimUtils::castBitsToType<float>(operandBits2);
       float result = 0.0;
       if(!computeResultFP(floatOperand1, floatOperand2, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
-      objDest.setElement(elemIdx, result);
+      if (objDest.getDataType() == PIM_BOOL) {
+        bool resultBool = result > 0;
+        objDest.setElement(elemIdx, resultBool);
+      } else {
+        objDest.setElement(elemIdx, result);
+      }
     } else {
       assert(0); // todo: data type
     }
