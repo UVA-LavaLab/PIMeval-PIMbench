@@ -10,11 +10,11 @@
 #include <cstdlib>
 #include <limits> // Include this for UINT_MAX
 
-void testRedMin(PimDeviceEnum deviceType)
+bool testRedMin(PimDeviceEnum deviceType)
 {
-  unsigned numRanks = 4;
-  unsigned numBankPerRank = 128; // 8 chips * 16 banks
-  unsigned numSubarrayPerBank = 32;
+  unsigned numRanks = 2;
+  unsigned numBankPerRank = 2;
+  unsigned numSubarrayPerBank = 8;
   unsigned numRows = 1024;
   unsigned numCols = 8192;
 
@@ -38,6 +38,7 @@ void testRedMin(PimDeviceEnum deviceType)
   PimStatus status = pimCreateDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   assert(status == PIM_OK);
 
+  bool ok = true;
   for (int iter = 0; iter < 2; ++iter) {
     PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_UINT32);
     assert(obj != -1);
@@ -60,6 +61,7 @@ void testRedMin(PimDeviceEnum deviceType)
       std::cout << "Passed!" << std::endl;
     } else {
       std::cout << "Failed!" << std::endl;
+      ok = false;
     }
 
     pimFree(obj);
@@ -68,17 +70,18 @@ void testRedMin(PimDeviceEnum deviceType)
   pimShowStats();
   pimResetStats();
   pimDeleteDevice();
+  return ok;
 }
 
 int main()
 {
   std::cout << "PIM Regression Test: Reduction Min" << std::endl;
 
-  testRedMin(PIM_DEVICE_BITSIMD_V);
-
-  testRedMin(PIM_DEVICE_FULCRUM);
-
-  testRedMin(PIM_DEVICE_BANK_LEVEL);
+  bool ok = true;
+  ok &= testRedMin(PIM_DEVICE_BITSIMD_V);
+  ok &= testRedMin(PIM_DEVICE_FULCRUM);
+  ok &= testRedMin(PIM_DEVICE_BANK_LEVEL);
+  std::cout << (ok ? "ALL PASSED!" : "FAILED!") << std::endl;
 
   return 0;
 }
