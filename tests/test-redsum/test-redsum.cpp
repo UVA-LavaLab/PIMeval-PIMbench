@@ -11,13 +11,14 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <limits>
 
 
-void testRedSum(PimDeviceEnum deviceType)
+bool testRedSum(PimDeviceEnum deviceType)
 {
-  unsigned numRanks = 4;
-  unsigned numBankPerRank = 128; // 8 chips * 16 banks
-  unsigned numSubarrayPerBank = 32;
+  unsigned numRanks = 2;
+  unsigned numBankPerRank = 2;
+  unsigned numSubarrayPerBank = 8;
   unsigned numRows = 1024;
   unsigned numCols = 8192;
 
@@ -31,7 +32,7 @@ void testRedSum(PimDeviceEnum deviceType)
   unsigned idxBegin = 12345;
   unsigned idxEnd = 22222;
   for (uint64_t i = 0; i < numElements; ++i) {
-    src[i] = i;
+    src[i] = std::numeric_limits<unsigned>::max() - i;  // test when sum is greater than unsigned max
     sum32 += src[i];
     sum64 += src[i];
     if (i >= idxBegin && i < idxEnd) {
@@ -44,6 +45,7 @@ void testRedSum(PimDeviceEnum deviceType)
   assert(status == PIM_OK);
 
   // test a few iterations
+  bool ok = true;
   for (int iter = 0; iter < 2; ++iter) {
     PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_UINT32);
     assert(obj != -1);
@@ -61,10 +63,12 @@ void testRedSum(PimDeviceEnum deviceType)
     std::cout << "Result: RedSum: PIM " << sum << " expected 32-bit " << sum32 << " 64-bit " << sum64 << std::endl;
     std::cout << "Result: RedSumRanged: PIM " << sumRanged << " expected 32-bit " << sumRanged32 << " 64-bit " << sumRanged64 << std::endl;
 
-    if (sum == sum32 && sumRanged == sumRanged32) {
+    // results are 64 bit but not 32 bit
+    if (sum == sum64 && sumRanged == sumRanged64) {
       std::cout << "Passed!" << std::endl;
     } else {
       std::cout << "Failed!" << std::endl;
+      ok = false;
     }
 
     pimFree(obj);
@@ -73,17 +77,18 @@ void testRedSum(PimDeviceEnum deviceType)
   pimShowStats();
   pimResetStats();
   pimDeleteDevice();
+  return ok;
 }
 
 int main()
 {
   std::cout << "PIM Regression Test: Reduction Sum" << std::endl;
 
-  testRedSum(PIM_DEVICE_BITSIMD_V);
-
-  testRedSum(PIM_DEVICE_FULCRUM);
-
-  testRedSum(PIM_DEVICE_BANK_LEVEL);
+  bool ok = true;
+  ok &= testRedSum(PIM_DEVICE_BITSIMD_V);
+  ok &= testRedSum(PIM_DEVICE_FULCRUM);
+  ok &= testRedSum(PIM_DEVICE_BANK_LEVEL);
+  std::cout << (ok ? "ALL PASSED!" : "FAILED!") << std::endl;
 
   return 0;
 }
