@@ -109,7 +109,7 @@ int main(int argc, char **argv){
         inVector[i] = rand() % MY_RANGE;
     }
 
-    std::vector<uint64_t> bitMap(inVectorSize, 0);
+    std::vector<uint8_t> bitMap(inVectorSize, 0);
     std::vector<int> bitMapHost(inVectorSize, 0);
 
     if (!createDevice(p.configFile)){
@@ -123,7 +123,7 @@ int main(int argc, char **argv){
         std::cout << "Abort" << std::endl;
         return 1;
     }
-    PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_UINT64);
+    PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_BOOL);
     if (srcObj2 == -1){
         std::cout << "Abort" << std::endl;
         return 1;
