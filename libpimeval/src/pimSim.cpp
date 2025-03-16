@@ -744,6 +744,7 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
     case PimDataType::PIM_INT64:
       cmd = std::make_unique<pimCmdReduction<int64_t>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
+    case PimDataType::PIM_BOOL:
     case PimDataType::PIM_UINT8:
     case PimDataType::PIM_UINT16:
     case PimDataType::PIM_UINT32:
