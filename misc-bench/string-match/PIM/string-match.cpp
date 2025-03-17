@@ -152,8 +152,8 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   assert(haystackPim != -1);
   
   // Used for intermediate calculations
-  PimObjId intermediatePim = pimAllocAssociated(haystackPim, PIM_UINT32);
-  assert(intermediatePim != -1);
+  PimObjId intermediatePimBool = pimAllocAssociated(haystackPim, PIM_BOOL);
+  assert(intermediatePimBool != -1);
 
   // PIM simulator currently only supports operations between objects of the same size
   // We define the output as an array of 32 bit ints to represent the index of the keys
@@ -172,7 +172,7 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   PimObjId haystackCopyPim = -1;
   if(needlesTable.size() > 1) {
     haystackCopyPim = pimAllocAssociated(haystackPim, PIM_UINT32);
-    assert(intermediatePim != -1);
+    assert(haystackCopyPim != -1);
 
     status = pimCopyObjectToObject(haystackPim, haystackCopyPim);
     assert (status == PIM_OK);
@@ -191,6 +191,11 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   for(size_t i=0; i<maxNeedlesInOneIteration; ++i) {
     pimIndividualNeedleMatches[i] = pimAllocAssociated(haystackPim, PIM_UINT32);
     assert(pimIndividualNeedleMatches[i] != -1);
+  }
+  std::vector<PimObjId> pimIndividualNeedleMatchesBool(maxNeedlesInOneIteration);
+  for (size_t i = 0; i < maxNeedlesInOneIteration; ++i) {
+    pimIndividualNeedleMatchesBool[i] = pimAllocAssociated(haystackPim, PIM_BOOL);
+    assert(pimIndividualNeedleMatchesBool[i] != -1);
   }
 
   uint64_t needlesDone = 0;
@@ -233,19 +238,19 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
         if(charIdx == 0) {
           // If on the first character index, there is no need to pimAnd with the current possible matches
           // Instead, place the equality result directly into the match array
-          status = pimEQScalar(haystackPim, pimIndividualNeedleMatches[needleIdxPim], (uint64_t) currentChar);
+          status = pimEQScalar(haystackPim, pimIndividualNeedleMatchesBool[needleIdxPim], (uint64_t) currentChar);
           assert (status == PIM_OK);
         } else if(prevChar == currentChar) {
           // Reuse the previously calculated equality result in intermediatePim and pimAnd with the current matches
-          status = pimAnd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
+          status = pimAnd(pimIndividualNeedleMatchesBool[needleIdxPim], intermediatePimBool, pimIndividualNeedleMatchesBool[needleIdxPim]);
           assert (status == PIM_OK);
         } else {
           // Check the entirety of the text if it is equal with the current character
-          status = pimEQScalar(haystackPim, intermediatePim, (uint64_t) currentChar);
+          status = pimEQScalar(haystackPim, intermediatePimBool, (uint64_t) currentChar);
           assert (status == PIM_OK);
 
           // Update the potential match array
-          status = pimAnd(pimIndividualNeedleMatches[needleIdxPim], intermediatePim, pimIndividualNeedleMatches[needleIdxPim]);
+          status = pimAnd(pimIndividualNeedleMatchesBool[needleIdxPim], intermediatePimBool, pimIndividualNeedleMatchesBool[needleIdxPim]);
           assert (status == PIM_OK);
         }
         prevChar = currentChar;
@@ -281,19 +286,24 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
       // However, on the bit serial architecture tested, multiplication is significantly slower because it is O(n^2) where n is the number of bits
       // Thus the second method is faster on the bit serial architecture tested
       // The isHorizonatal parameter serves as a simple check for which we are on
-      if(isHorizontal) {
-        status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
-        assert (status == PIM_OK);
-      } else {
-        status = pimXorScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
-        assert (status == PIM_OK);
+      //if(isHorizontal) {
+      //  status = pimMulScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
+      //  assert (status == PIM_OK);
+      //} else {
+      //  status = pimXorScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
+      //  assert (status == PIM_OK);
 
-        status = pimSubScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
-        assert (status == PIM_OK);
+      //  status = pimSubScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1);
+      //  assert (status == PIM_OK);
 
-        status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
-        assert (status == PIM_OK);
-      }
+      //  status = pimAndScalar(pimIndividualNeedleMatches[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
+      //  assert (status == PIM_OK);
+      //}
+      // Switch to conditional operations
+      status = pimBroadcastUInt(pimIndividualNeedleMatches[needleIdxPim], 0);
+      assert (status == PIM_OK);
+      status = pimCondBroadcast(pimIndividualNeedleMatchesBool[needleIdxPim], pimIndividualNeedleMatches[needleIdxPim], 1 + needleIdxHost);
+      assert (status == PIM_OK);
     }
 
     // Update the final result array with the matches from this iteration
@@ -323,11 +333,15 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
   status = pimFree(haystackPim);
   assert (status == PIM_OK);
 
-  status = pimFree(intermediatePim);
+  status = pimFree(intermediatePimBool);
   assert (status == PIM_OK);
 
   for(PimObjId individualNeedleMatch : pimIndividualNeedleMatches) {
     status = pimFree(individualNeedleMatch);
+    assert (status == PIM_OK);
+  }
+  for(PimObjId individualNeedleMatchBool : pimIndividualNeedleMatchesBool) {
+    status = pimFree(individualNeedleMatchBool);
     assert (status == PIM_OK);
   }
 }
