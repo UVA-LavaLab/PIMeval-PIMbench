@@ -170,6 +170,12 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     std::cout << "Abort" << std::endl;
     return;
   }
+  PimObjId tempBool = pimAllocAssociated(resultObjectList[0], PIM_BOOL);
+  if (tempObj == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   for (int itr = 0; itr < iteration; ++itr)
   {
@@ -238,7 +244,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       {
         std::cout << "Abort" << std::endl;
       }
-      status = pimEQ(resultObjectList[0], tempObj, resultObjectList[0]);
+      status = pimEQ(resultObjectList[0], tempObj, tempBool);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -246,7 +252,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
       int64_t totalNeighbors = 0;
 
-      status = pimRedSum(resultObjectList[0], static_cast<void*>(&totalNeighbors));
+      status = pimRedSum(tempBool, static_cast<void*>(&totalNeighbors));
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -256,13 +262,13 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
       {
         if (totalNeighbors) {
-          status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
+          status = pimAnd(resultObjectList[0], dataPointObjectList[b], tempBool);
           if (status != PIM_OK)
           {
             std::cout << "Abort" << std::endl;
             return;
           }
-          status = pimRedSum(resultObjectList[1], static_cast<void*>(&centroids[i][b]));
+          status = pimRedSum(tempBool, static_cast<void*>(&centroids[i][b]));
           if (status != PIM_OK)
           {
             std::cout << "Abort" << std::endl;
