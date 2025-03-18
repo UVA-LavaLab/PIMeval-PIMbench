@@ -262,13 +262,13 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
       {
         if (totalNeighbors) {
-          status = pimAnd(resultObjectList[0], dataPointObjectList[b], tempBool);
+          status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
           if (status != PIM_OK)
           {
             std::cout << "Abort" << std::endl;
             return;
           }
-          status = pimRedSum(tempBool, static_cast<void*>(&centroids[i][b]));
+          status = pimRedSum(resultObjectList[1], static_cast<void*>(&centroids[i][b]));
           if (status != PIM_OK)
           {
             std::cout << "Abort" << std::endl;
