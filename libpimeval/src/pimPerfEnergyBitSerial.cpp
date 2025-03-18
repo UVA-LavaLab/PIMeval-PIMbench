@@ -65,6 +65,27 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
             ok = true;
             break;
+          case PimCmdEnum::COND_BROADCAST:
+          {
+            // bit-serial approach:
+            // read the bool condition row, and move it to a bit register
+            // for each row of dest:
+            //   save the scalar value bit into a bit register
+            //   read the row
+            //   select between existing value and scalar value (more efficient with SEL instruction)
+            //   write the row
+            unsigned numR = 1 + bitsPerElement;
+            unsigned numW = bitsPerElement;
+            unsigned numL = 1 + 2 * bitsPerElement; // mov, (set, sel)
+            msRead += numR * m_tR;
+            msWrite += numW * m_tW;
+            msLogic += numL * m_tL;
+            msRuntime += msRead + msWrite + msLogic;
+            mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            ok = true;
+            break;
+          }
           case PimCmdEnum::SHIFT_BITS_L:
           case PimCmdEnum::SHIFT_BITS_R:
             // handle bit-shift specially
