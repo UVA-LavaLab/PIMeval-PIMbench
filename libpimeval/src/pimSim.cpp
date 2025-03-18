@@ -671,7 +671,7 @@ bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxE
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, min, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedMin does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -720,7 +720,7 @@ bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxE
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, max, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedMax does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -758,7 +758,7 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedSum does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
