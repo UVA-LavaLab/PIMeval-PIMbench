@@ -86,7 +86,7 @@ void getMatrixBool(uint64_t numRows, uint64_t numCols, std::vector<std::vector<u
     std::mt19937 gen(rd());
     std::uniform_int_distribution<uint8_t> dist(0, 1);
 
-    #pragma omp for
+    #pragma omp for collapse(2)
     for(size_t i = 0; i < numRows; ++i) {
       for(size_t j = 0; j < numCols; ++j) {
         matrix[i][j] = static_cast<bool>(dist(gen));
