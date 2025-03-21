@@ -12,7 +12,7 @@ Note that neighbors are defined as the block of 8 cells surrounding a cell, incl
 ## Directory Structure
 
 ```
-cpp-game-of-life/
+game-of-life/
 ├── PIM/
 │   ├── Makefile
 │   ├── game-of-life.cpp
