@@ -71,7 +71,7 @@ void getMatrix(uint64_t numRows, uint64_t numCols, vector<vector<T>> &matrix) {
  * This function creates a matrix with the specified number of rows and columns
  * and fills it with random values ranging from true to false. It uses parallelism
  * to speed up the initialization. The matrix is stored values are stored as uint8_t
- * because the PIM API expects std::vector<uint8_t> instead of std::vector<bool>
+ * because the PIM API expects std::vector<uint8_t> instead of std::vector<bool>.
  *
  * @param numRows The number of rows in the matrix.
  * @param numCols The number of columns in the matrix.
