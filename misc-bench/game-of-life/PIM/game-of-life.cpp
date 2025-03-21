@@ -15,6 +15,7 @@
 #endif
 
 #include "util.h"
+#include "utilBaselines.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -255,16 +256,8 @@ int main(int argc, char* argv[])
   std::vector<std::vector<uint8_t>> x, y;
   if (params.inputFile == nullptr)
   {
-    srand((unsigned)time(NULL));
-    x.resize(params.height);
-#pragma omp parallel for
-    for(size_t i=0; i<params.height; ++i) {
-      x[i].resize(params.width);
-      for(size_t j=0; j<params.width; ++j) {
-        x[i][j] = rand() & 1;
-      }
-    }
-  } 
+    getMatrixBool(params.height, params.width, x);
+  }
   else 
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
@@ -276,13 +269,9 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  y.resize(x.size());
-#pragma omp parallel for
-  for(size_t i=0; i<y.size(); ++i) {
-    y[i].resize(x[0].size());
-  }
+  y.resize(params.height, std::vector<uint8_t>(params.width, 0));
 
+  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iterations.
   game_of_life(x, y);
 
   if (params.shouldVerify) 

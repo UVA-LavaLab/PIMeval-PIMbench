@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <omp.h>
 #include <cstdint>
+#include <random>
 
 using namespace std;
 
@@ -62,6 +63,36 @@ void getMatrix(uint64_t numRows, uint64_t numCols, vector<vector<T>> &matrix) {
             matrix[row][col] = rand() % MAX_NUMBER;
         }
     }
+}
+
+/**
+ * @brief Initializes a matrix with random bool values.
+ *
+ * This function creates a matrix with the specified number of rows and columns
+ * and fills it with random values ranging from true to false. It uses parallelism
+ * to speed up the initialization. The matrix is stored values are stored as uint8_t
+ * because the PIM API expects std::vector<uint8_t> instead of std::vector<bool>
+ *
+ * @param numRows The number of rows in the matrix.
+ * @param numCols The number of columns in the matrix.
+ * @param matrix A reference to the matrix that will be initialized.
+ */
+void getMatrixBool(uint64_t numRows, uint64_t numCols, std::vector<std::vector<uint8_t>> &matrix)
+{
+  matrix.resize(numRows, std::vector<uint8_t>(numCols, 0));
+#pragma omp parallel
+  {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint8_t> dist(0, 1);
+
+    #pragma omp for
+    for(size_t i = 0; i < numRows; ++i) {
+      for(size_t j = 0; j < numCols; ++j) {
+        matrix[i][j] = static_cast<bool>(dist(gen));
+      }
+    }
+  }
 }
 
 #endif // _COMMON_H_
