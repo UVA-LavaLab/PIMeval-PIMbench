@@ -203,8 +203,9 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
   std::list<PimObjId> pim_board;
   std::list<PimObjId> pim_board_sums;
 
-  for(size_t i=0; i<2; ++i) {
-    add_vector_to_grid(src_host[i], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
+  add_vector_to_grid(src_host[0], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
+  if(height > 1) {
+    add_vector_to_grid(src_host[1], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
   }
 
   PimObjId result_object = pimAllocAssociated(tmp_pim_obj, PIM_BOOL);
