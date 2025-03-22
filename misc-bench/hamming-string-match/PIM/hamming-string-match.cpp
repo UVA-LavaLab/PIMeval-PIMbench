@@ -254,45 +254,49 @@ void hammingStringMatch(const std::vector<std::string>& needles, const std::stri
     exit(1);
   }
 
+  // needlesTableOrdering[0][0].size() is the number of needles in the first iteration, which will have the most needles out of all iterations
+  size_t maxNeedlesInOneIteration = needlesTableOrdering[0][0].size();
+
+  // Matches are calculated for a group of needles at a time, this vector stores the mismatches for each needle
+  // Each pimIndividualNeedleMatches[i] contains an array of the number of mismatches for a given needle at each position in the haystack
+  std::vector<PimObjId> pimIndividualNeedleMatches(maxNeedlesInOneIteration);
+  pimIndividualNeedleMatches[0] = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
+  assert(pimIndividualNeedleMatches[0] != -1);
+  PimObjId rootObjToAssoc = pimIndividualNeedleMatches[0];
+  for(size_t i=1; i<maxNeedlesInOneIteration; ++i) {
+    pimIndividualNeedleMatches[i] = pimAllocAssociated(rootObjToAssoc, PIM_UINT32);
+    assert(pimIndividualNeedleMatches[i] != -1);
+  }
+
   // Used for converting PIM_BOOL into PIM_UINT32, can be removed with support for mixed width PIM addition
   // TODO: Replace insert and add logic with bool and uint PIM addition when available
-  PimObjId tmpForConversion = pimAlloc(PIM_ALLOC_AUTO, haystack.size(), PIM_UINT32);
+  PimObjId tmpForConversion = pimAllocAssociated(rootObjToAssoc, PIM_UINT32);
   assert(tmpForConversion != -1);
   status = pimBroadcastUInt(tmpForConversion, 0);
   assert (status == PIM_OK);
 
   // Stores the text that is being checked for the needles
-  PimObjId haystackPim = pimAllocAssociated(tmpForConversion, PIM_UINT8);
+  PimObjId haystackPim = pimAllocAssociated(rootObjToAssoc, PIM_UINT8);
   assert(haystackPim != -1);
   status = pimCopyHostToDevice((void *) haystack.data(), haystackPim);
   assert (status == PIM_OK);
   
   // Used for intermediate calculations
-  PimObjId intermediatePimBool = pimAllocAssociated(tmpForConversion, PIM_BOOL);
+  PimObjId intermediatePimBool = pimAllocAssociated(rootObjToAssoc, PIM_BOOL);
   assert(intermediatePimBool != -1);
 
   // Used for checking if haystack elements are non-zero
-  PimObjId isHaystackNonZeroPimBool = pimAllocAssociated(tmpForConversion, PIM_BOOL);
+  PimObjId isHaystackNonZeroPimBool = pimAllocAssociated(rootObjToAssoc, PIM_BOOL);
   assert(isHaystackNonZeroPimBool != -1);
 
   // Haystack copy is only necessary if there is more than one iteration
   PimObjId haystackCopyPim = -1;
   if(needlesTableOrdering.size() > 1) {
-    haystackCopyPim = pimAllocAssociated(haystackPim, PIM_UINT8);
+    haystackCopyPim = pimAllocAssociated(rootObjToAssoc, PIM_UINT8);
     assert(haystackCopyPim != -1);
 
     status = pimCopyObjectToObject(haystackPim, haystackCopyPim);
     assert (status == PIM_OK);
-  }
-
-  // Matches are calculated for a group of needles at a time, this vector stores the matches for each needle
-  // Each pimIndividualNeedleMatches[i] contains an array of the number of mismatches for a given needle at each position in the haystack
-  // needlesTableOrdering[0][0].size() is the number of needles in the first iteration, which will have the most needles out of all iterations
-  size_t maxNeedlesInOneIteration = needlesTableOrdering[0][0].size();
-  std::vector<PimObjId> pimIndividualNeedleMatches(maxNeedlesInOneIteration);
-  for(size_t i=0; i<maxNeedlesInOneIteration; ++i) {
-    pimIndividualNeedleMatches[i] = pimAllocAssociated(haystackPim, PIM_UINT32);
-    assert(pimIndividualNeedleMatches[i] != -1);
   }
 
   uint64_t needlesDone = 0;
