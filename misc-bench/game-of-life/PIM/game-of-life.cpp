@@ -93,7 +93,7 @@ void game_of_life_row(const std::list<PimObjId> &pim_board, const std::list<PimO
     it++;
     it++;
   }
-  // Could be replaced with the ability to add PIM_BOOL
+  // TODO: Replace insert and add logic with bool and uint PIM addition when available
   status = pimBitSliceInsert(*it, tmp_pim_obj_2, 0);
   assert (status == PIM_OK);
 
@@ -138,7 +138,7 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
 
   PimObjId left = pimAllocAssociated(mid, PIM_BOOL);
   assert(left != -1);
-  status = pimCopyDeviceToDevice(mid, left); // Could simulator support bool to bool copy object to object?
+  status = pimCopyObjectToObject(mid, left);
   assert (status == PIM_OK);
   status = pimShiftElementsRight(left);
   assert (status == PIM_OK);
@@ -147,7 +147,7 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
 
   PimObjId right = pimAllocAssociated(mid, PIM_BOOL);
   assert(right != -1);
-  status = pimCopyDeviceToDevice(mid, right); // Could simulator support bool to bool copy object to object?
+  status = pimCopyObjectToObject(mid, right);
   assert (status == PIM_OK);
   status = pimShiftElementsLeft(right);
   assert (status == PIM_OK);
@@ -157,7 +157,7 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
   pim_board.push_back(right);
 
   // Cache sums to reduce repeated work
-  // Would be more efficient/cleaner with the ability to add PIM_BOOL+PIM_UINT8=PIM_UINT8
+  // TODO: Replace insert and add logic with bool and uint PIM addition when available
   PimObjId sum = pimAllocAssociated(to_associate, PIM_UINT8);
   assert(mid != -1);
   
@@ -192,6 +192,7 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
   assert(tmp_pim_obj != -1);
 
   // tmp_pim_obj_2 is used for adding bools - bools must be converted into UINT8 via splicing before addition
+  // TODO: Replace insert and add logic with bool and uint PIM addition when available
   PimObjId tmp_pim_obj_2 = pimAllocAssociated(tmp_pim_obj, PIM_UINT8);
   assert(tmp_pim_obj_2 != -1);
   status = pimBroadcastUInt(tmp_pim_obj_2, 0);
