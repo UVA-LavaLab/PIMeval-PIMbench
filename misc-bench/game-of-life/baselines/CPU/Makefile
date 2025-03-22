@@ -11,7 +11,7 @@ EXEC := game-of-life.out
 SRC_FILES := $(wildcard *.cpp)
 
 #Util Include
-INCLUDE_FLAGS := -I../../../../PIMbench
+INCLUDE_FLAGS := -I../../../../util
 
 
 .PHONY: all clean

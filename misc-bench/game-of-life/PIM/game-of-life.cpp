@@ -9,11 +9,13 @@
 #include <stdint.h>
 #include <iomanip>
 #include <cassert>
+#include <list>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
 #include "util.h"
+#include "utilBaselines.h"
 #include "libpimeval.h"
 
 using namespace std;
@@ -83,48 +85,69 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void game_of_life_row(const std::vector<PimObjId> &pim_board, size_t row_idx, PimObjId tmp_pim_obj, const std::vector<PimObjId>& pim_sums, int old_ind, PimObjId result_obj) {
-  size_t mid_idx = 3*row_idx + 1;
-
-  pimAdd(pim_board[mid_idx + 2], pim_board[mid_idx + 3], pim_sums[old_ind]);
-  pimAdd(pim_board[mid_idx + 4], pim_sums[old_ind], pim_sums[old_ind]);
-
-  pimAdd(pim_sums[old_ind], pim_sums[(old_ind + 1) % pim_sums.size()], tmp_pim_obj);
-  pimAdd(pim_board[mid_idx - 1], tmp_pim_obj, tmp_pim_obj);
-  pimAdd(pim_board[mid_idx + 1], tmp_pim_obj, tmp_pim_obj);
-
-  PimStatus status = pimEQScalar(tmp_pim_obj, result_obj, 3);
+void game_of_life_row(const std::list<PimObjId> &pim_board, const std::list<PimObjId> &pim_board_sums, PimObjId tmp_pim_obj, PimObjId tmp_pim_obj_2, PimObjId tmp_pim_bool, PimObjId result_obj, const bool is_start, const bool is_end) {
+  PimStatus status;
+  auto it = pim_board.cbegin();
+  if(!is_start) {
+    it++;
+    it++;
+    it++;
+  }
+  // Could be replaced with the ability to add PIM_BOOL
+  status = pimBitSliceInsert(*it, tmp_pim_obj_2, 0);
   assert (status == PIM_OK);
 
-  status = pimEQScalar(tmp_pim_obj, tmp_pim_obj, 2);
+  status = pimCopyObjectToObject(tmp_pim_obj_2, tmp_pim_obj);
+  assert (status == PIM_OK);
+  it++;
+  it++;
+  status = pimBitSliceInsert(*it, tmp_pim_obj_2, 0);
   assert (status == PIM_OK);
 
-  status = pimAnd(tmp_pim_obj, pim_board[mid_idx], tmp_pim_obj);
+  status = pimAdd(tmp_pim_obj, tmp_pim_obj_2, tmp_pim_obj);
   assert (status == PIM_OK);
 
-  status = pimOr(tmp_pim_obj, result_obj, result_obj);
+  if(!is_start) {
+    status = pimAdd(tmp_pim_obj, pim_board_sums.front(), tmp_pim_obj);
+    assert (status == PIM_OK);
+  }
+  if(!is_end) {
+    status = pimAdd(tmp_pim_obj, pim_board_sums.back(), tmp_pim_obj);
+    assert (status == PIM_OK);
+  }
+
+  status = pimEQScalar(tmp_pim_obj, result_obj, 3);
+  assert (status == PIM_OK);
+
+  status = pimEQScalar(tmp_pim_obj, tmp_pim_bool, 2);
+  assert (status == PIM_OK);
+  it--;
+  status = pimAnd(tmp_pim_bool, *it, tmp_pim_bool);
+  assert (status == PIM_OK);
+
+  status = pimOr(result_obj, tmp_pim_bool, result_obj);
   assert (status == PIM_OK);
 }
 
-void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, std::vector<PimObjId> &pim_board) {
+void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, PimObjId tmp_pim_obj_2, std::list<PimObjId> &pim_board, std::list<PimObjId>& pim_board_sums) {
 
-  PimObjId mid = pimAllocAssociated(to_associate, PIM_UINT8);
+  PimObjId mid = pimAllocAssociated(to_associate, PIM_BOOL);
   assert(mid != -1);
   PimStatus status = pimCopyHostToDevice((void *)to_add.data(), mid);
   assert (status == PIM_OK);
 
-  PimObjId left = pimAllocAssociated(mid, PIM_UINT8);
+  PimObjId left = pimAllocAssociated(mid, PIM_BOOL);
   assert(left != -1);
-  status = pimCopyDeviceToDevice(mid, left);
+  status = pimCopyDeviceToDevice(mid, left); // Could simulator support bool to bool copy object to object?
   assert (status == PIM_OK);
   status = pimShiftElementsRight(left);
   assert (status == PIM_OK);
 
   
 
-  PimObjId right = pimAllocAssociated(mid, PIM_UINT8);
+  PimObjId right = pimAllocAssociated(mid, PIM_BOOL);
   assert(right != -1);
-  status = pimCopyDeviceToDevice(mid, right);
+  status = pimCopyDeviceToDevice(mid, right); // Could simulator support bool to bool copy object to object?
   assert (status == PIM_OK);
   status = pimShiftElementsLeft(right);
   assert (status == PIM_OK);
@@ -132,72 +155,90 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
   pim_board.push_back(left);
   pim_board.push_back(mid);
   pim_board.push_back(right);
+
+  // Cache sums to reduce repeated work
+  // Would be more efficient/cleaner with the ability to add PIM_BOOL+PIM_UINT8=PIM_UINT8
+  PimObjId sum = pimAllocAssociated(to_associate, PIM_UINT8);
+  assert(mid != -1);
+  
+  status = pimBitSliceInsert(left, tmp_pim_obj_2, 0);
+  assert (status == PIM_OK);
+
+  status = pimCopyObjectToObject(tmp_pim_obj_2, sum);
+  assert (status == PIM_OK);
+
+  status = pimBitSliceInsert(mid, tmp_pim_obj_2, 0);
+  assert (status == PIM_OK);
+
+  status = pimAdd(sum, tmp_pim_obj_2, sum);
+  assert (status == PIM_OK);
+
+  status = pimBitSliceInsert(right, tmp_pim_obj_2, 0);
+  assert (status == PIM_OK);
+
+  status = pimAdd(sum, tmp_pim_obj_2, sum);
+  assert (status == PIM_OK);
+
+  pim_board_sums.push_back(sum);
 }
 
 void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector<std::vector<uint8_t>> &dst_host)
 {
-
+  PimStatus status;
   size_t width = src_host[0].size();
   size_t height = src_host.size();
 
   PimObjId tmp_pim_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_UINT8);
   assert(tmp_pim_obj != -1);
 
-  std::vector<PimObjId> pim_board;
+  // tmp_pim_obj_2 is used for adding bools - bools must be converted into UINT8 via splicing before addition
+  PimObjId tmp_pim_obj_2 = pimAllocAssociated(tmp_pim_obj, PIM_UINT8);
+  assert(tmp_pim_obj_2 != -1);
+  status = pimBroadcastUInt(tmp_pim_obj_2, 0);
+  assert (status == PIM_OK);
 
-  std::vector<uint8_t> tmp_zeros(width, 0);
-  add_vector_to_grid(tmp_zeros, tmp_pim_obj, pim_board);
+  PimObjId tmp_pim_bool = pimAllocAssociated(tmp_pim_obj, PIM_BOOL);
+  assert(tmp_pim_bool != -1);
 
-  for(size_t i=0; i<2; ++i) {
-    add_vector_to_grid(src_host[i], tmp_pim_obj, pim_board);
+
+  std::list<PimObjId> pim_board;
+  std::list<PimObjId> pim_board_sums;
+
+  add_vector_to_grid(src_host[0], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
+  if(height > 1) {
+    add_vector_to_grid(src_host[1], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
   }
 
-  std::vector<PimObjId> tmp_sums;
-
-  tmp_sums.push_back(pimAllocAssociated(tmp_pim_obj, PIM_UINT8));
-  tmp_sums.push_back(pimAllocAssociated(tmp_pim_obj, PIM_UINT8));
-  tmp_sums.push_back(pimAllocAssociated(tmp_pim_obj, PIM_UINT8));
-
-  PimStatus status = pimAdd(pim_board[0], pim_board[1], tmp_sums[0]);
-  assert (status == PIM_OK);
-  status = pimAdd(pim_board[2], tmp_sums[0], tmp_sums[0]);
-  assert (status == PIM_OK);
-
-  status = pimAdd(pim_board[3], pim_board[4], tmp_sums[1]);
-  assert (status == PIM_OK);
-  status = pimAdd(pim_board[5], tmp_sums[1], tmp_sums[1]);
-  assert (status == PIM_OK);
-
-  int old_ind = 2;
-
-  PimObjId result_object = pimAllocAssociated(tmp_pim_obj, PIM_UINT8);
+  PimObjId result_object = pimAllocAssociated(tmp_pim_obj, PIM_BOOL);
   assert(result_object != -1);
 
   for(size_t i=0; i<height; ++i) {
-    game_of_life_row(pim_board, i+1, tmp_pim_obj, tmp_sums, old_ind, result_object);
-    old_ind = (1+old_ind) % tmp_sums.size();
-    PimStatus copy_status = pimCopyDeviceToHost(result_object, dst_host[i].data());
-    assert (copy_status == PIM_OK);
-    pimFree(pim_board[3*i]);
-    pimFree(pim_board[3*i+1]);
-    pimFree(pim_board[3*i+2]);
-    if(i+2 == height) {
-      add_vector_to_grid(tmp_zeros, tmp_pim_obj, pim_board);
-    } else if(i+2 < height) {
-      add_vector_to_grid(src_host[i+2], tmp_pim_obj, pim_board);
+    game_of_life_row(pim_board, pim_board_sums, tmp_pim_obj, tmp_pim_obj_2, tmp_pim_bool, result_object, i==0, i+1==height);
+    status = pimCopyDeviceToHost(result_object, dst_host[i].data());
+    assert (status == PIM_OK);
+    if(i!=0) {
+      for(int i=0; i<3; ++i) {
+        pimFree(pim_board.front());
+        pim_board.pop_front();
+      }
+      pimFree(pim_board_sums.front());
+      pim_board_sums.pop_front();
+    }
+    if(i+2<height) {
+      add_vector_to_grid(src_host[i+2], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
     }
   }
 
   pimFree(tmp_pim_obj);
-
-  for(size_t i=pim_board.size()-1; i>=(pim_board.size()-6); --i) {
-    pimFree(pim_board[i]);
+  pimFree(tmp_pim_obj_2);
+  pimFree(tmp_pim_bool);
+  while(!pim_board.empty()) {
+    pimFree(pim_board.front());
+    pim_board.pop_front();
   }
-
-  pimFree(result_object);
-
-  for(size_t i=0; i<tmp_sums.size(); ++i) {
-    pimFree(tmp_sums[i]);
+  while(!pim_board_sums.empty()) {
+    pimFree(pim_board_sums.front());
+    pim_board_sums.pop_front();
   }
 }
 
@@ -215,16 +256,8 @@ int main(int argc, char* argv[])
   std::vector<std::vector<uint8_t>> x, y;
   if (params.inputFile == nullptr)
   {
-    srand((unsigned)time(NULL));
-    x.resize(params.height);
-#pragma omp parallel for
-    for(size_t i=0; i<params.height; ++i) {
-      x[i].resize(params.width);
-      for(size_t j=0; j<params.width; ++j) {
-        x[i][j] = rand() & 1;
-      }
-    }
-  } 
+    getMatrixBool(params.height, params.width, x);
+  }
   else 
   {
     std::cout << "Reading from input file is not implemented yet." << std::endl;
@@ -236,13 +269,9 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  y.resize(x.size());
-#pragma omp parallel for
-  for(size_t i=0; i<y.size(); ++i) {
-    y[i].resize(x[0].size());
-  }
+  y.resize(params.height, std::vector<uint8_t>(params.width, 0));
 
+  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iterations.
   game_of_life(x, y);
 
   if (params.shouldVerify) 
@@ -267,7 +296,7 @@ int main(int argc, char* argv[])
 
         if (res_cpu != y[i][j])
         {
-          std::cout << "Wrong answer: " << unsigned(y[i][j]) << " (expected " << unsigned(res_cpu) << ")" << std::endl;
+          std::cout << "Wrong answer: " << unsigned(y[i][j]) << " (expected " << unsigned(res_cpu) << ") at position " << i << ", " << j << std::endl;
           is_correct = false;
         }
       }
