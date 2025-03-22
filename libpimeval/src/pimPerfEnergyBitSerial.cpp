@@ -55,6 +55,20 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
       // handle bit-serial operations not in the above table
       if (!ok) {
         switch (cmdType) {
+          case PimCmdEnum::COPY_O2O:
+          {
+            unsigned numR = bitsPerElement;
+            unsigned numW = bitsPerElement;
+            unsigned numL = 0;
+            msRead += numR * m_tR;
+            msWrite += numW * m_tW;
+            msLogic += numL * m_tL;
+            msRuntime += msRead + msWrite + msLogic;
+            mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            ok = true;
+            break;
+          }
           case PimCmdEnum::BIT_SLICE_EXTRACT:
           case PimCmdEnum::BIT_SLICE_INSERT:
             // each bit-slice extract/insert operation takes 1 row read and 1 row write

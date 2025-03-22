@@ -5,7 +5,9 @@
 #include <vector>
 #include <cstdlib>
 #include <iomanip>
+#if defined(_OPENMP)
 #include <omp.h>
+#endif
 #include <cstdint>
 #include <random>
 
