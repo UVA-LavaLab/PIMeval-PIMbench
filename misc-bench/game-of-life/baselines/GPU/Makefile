@@ -13,7 +13,7 @@ EXEC := game-of-life.out
 SOURCES := game-of-life.cu
 
 # Header files
-INCLUDE_FLAGS := -I../../../../PIMbench
+INCLUDE_FLAGS := -I../../../../util
 
 # Compiler flags
 CFLAGS := -O3
