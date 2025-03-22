@@ -470,22 +470,22 @@ void hammingStringMatch(const std::vector<std::string>& needles, const std::stri
 
   pimEndTimer();
 
+  for(PimObjId individualNeedleMismatch : pimIndividualNeedleMismatches) {
+    status = pimFree(individualNeedleMismatch);
+    assert (status == PIM_OK);
+  }
+
+  status = pimFree(tmpForConversion);
+  assert (status == PIM_OK);
   status = pimFree(haystackPim);
+  assert (status == PIM_OK);
+  status = pimFree(intermediatePimBool);
+  assert (status == PIM_OK);
+  status = pimFree(isHaystackNonZeroPimBool);
   assert (status == PIM_OK);
 
   if(haystackCopyPim != -1) {
     status = pimFree(haystackCopyPim);
-    assert (status == PIM_OK);
-  }
-
-  status = pimFree(intermediatePimBool);
-  assert (status == PIM_OK);
-
-  status = pimFree(isHaystackNonZeroPimBool);
-  assert (status == PIM_OK);
-
-  for(PimObjId individualNeedleMatch : pimIndividualNeedleMismatches) {
-    status = pimFree(individualNeedleMatch);
     assert (status == PIM_OK);
   }
 }
