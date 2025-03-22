@@ -219,10 +219,12 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
     assert (status == PIM_OK);
     if(i!=0) {
       for(int i=0; i<3; ++i) {
-        pimFree(pim_board.front());
+        status = pimFree(pim_board.front());
+        assert (status == PIM_OK);
         pim_board.pop_front();
       }
-      pimFree(pim_board_sums.front());
+      status = pimFree(pim_board_sums.front());
+      assert (status == PIM_OK);
       pim_board_sums.pop_front();
     }
     if(i+2<height) {
@@ -230,15 +232,22 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
     }
   }
 
-  pimFree(tmp_pim_obj);
-  pimFree(tmp_pim_obj_2);
-  pimFree(tmp_pim_bool);
+  status = pimFree(tmp_pim_obj);
+  assert (status == PIM_OK);
+  status = pimFree(tmp_pim_obj_2);
+  assert (status == PIM_OK);
+  status = pimFree(tmp_pim_bool);
+  assert (status == PIM_OK);
+  status = pimFree(result_object);
+  assert (status == PIM_OK);
   while(!pim_board.empty()) {
-    pimFree(pim_board.front());
+    status = pimFree(pim_board.front());
+    assert (status == PIM_OK);
     pim_board.pop_front();
   }
   while(!pim_board_sums.empty()) {
-    pimFree(pim_board_sums.front());
+    status = pimFree(pim_board_sums.front());
+    assert (status == PIM_OK);
     pim_board_sums.pop_front();
   }
 }

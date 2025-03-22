@@ -280,11 +280,19 @@ void stringMatch(std::vector<std::string>& needles, std::string& haystack, std::
 
   pimEndTimer();
 
+  status = pimFree(resultPim);
+  assert (status == PIM_OK);
   status = pimFree(haystackPim);
   assert (status == PIM_OK);
-
   status = pimFree(intermediatePimBool);
   assert (status == PIM_OK);
+  status = pimFree(preResultPim);
+  assert (status == PIM_OK);
+
+  if(haystackCopyPim != -1) {
+    status = pimFree(haystackCopyPim);
+    assert (status == PIM_OK);
+  }
 
   for(PimObjId individualNeedleMatchBool : pimIndividualNeedleMatchesBool) {
     status = pimFree(individualNeedleMatchBool);
