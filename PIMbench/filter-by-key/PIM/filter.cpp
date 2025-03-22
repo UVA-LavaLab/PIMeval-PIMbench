@@ -110,7 +110,6 @@ int main(int argc, char **argv){
     }
 
     std::vector<uint8_t> bitMap(inVectorSize, 0);
-    std::vector<int> bitMapHost(inVectorSize, 0);
 
     if (!createDevice(p.configFile)){
         return 1;
