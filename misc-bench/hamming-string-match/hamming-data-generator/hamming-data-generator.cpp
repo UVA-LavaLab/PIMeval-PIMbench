@@ -4,23 +4,10 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include <unistd.h>
-#include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <algorithm>
-#include <filesystem>
-#include <cmath>
-#include <iterator>
-#include <random>
-#include <iomanip>
-#include <ios>
-#include <vector>
-#include <unordered_set>
-#include <string>
-#if defined(_OPENMP)
-#include <omp.h>
-#endif
+#include <stdint.h>
 
 #include "utilStringMatch.h"
 

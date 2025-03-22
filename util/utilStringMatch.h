@@ -15,6 +15,9 @@
 #include <stdint.h>
 #include <unordered_set>
 #include <filesystem>
+#include <cmath>
+#include <iomanip>
+#include <random>
 #include <algorithm>                   // for max
 #include <limits>                      // for numeric_limits
 

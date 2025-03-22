@@ -15,6 +15,9 @@ EXEC := hamming-data-generator.out
 # Source files
 SRC_FILES := hamming-data-generator.cpp
 
+# Dependencies
+DEPS := ./../../../util/utilStringMatch.h
+
 # make USE_OPENMP=1
 USE_OPENMP ?= 0
 ifeq ($(USE_OPENMP),1)
@@ -25,7 +28,7 @@ endif
 
 all: $(EXEC)
 
-$(EXEC): $(SRC_FILES) |
+$(EXEC): $(SRC_FILES) $(DEPS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
