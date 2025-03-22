@@ -160,22 +160,31 @@ NeedlesTable stringMatchPrecomputeTable(const std::vector<std::string>& needles,
   for(uint64_t needleIdx=0; needleIdx<needles.size(); ++needleIdx) {
     resultTableActualToSorted[sortedToActualNeedles[needleIdx]] = needleIdx;
   }
-  
-  // If vertical, each pim object takes 32 rows, 1 row if horizontal
-  // Three objects used by haystack, intermediate, and haystack copy
-  // Haystack copy only needed if more than one iteration
-  constexpr uint64_t bitsPerElement = 32;
-  constexpr uint64_t nonNeedleElements = 3;
-  uint64_t maxNeedlesPerIteration = (isHorizontal ? numRows : (numRows / bitsPerElement)) - nonNeedleElements;
-  uint64_t maxNeedlesPerIterationOneIteration = maxNeedlesPerIteration + 1;
+
+  // TODO: Remove references to tmpForConversion when mixed width PIM addition available
+  // Maximize the number of needles computed each iteration
+  constexpr uint64_t verticalNonNeedleRows = 32 + 8 + 1 + 1; // tmpForConversion, haystackPim, intermediatePimBool, isHaystackNonZeroPimBool
+  constexpr uint64_t horizontalNonNeedleRows = 4; // tmpForConversion, haystackPim, intermediatePimBool, isHaystackNonZeroPimBool
+  constexpr uint64_t verticalHaystackCopyRows = 8; // haystackCopyPim
+  constexpr uint64_t horizontalHaystackCopyRows = 1; // haystackCopyPim
+  constexpr uint64_t verticalRowsPerNeedle = 32;
+  constexpr uint64_t horizontalRowsPerNeedle = 1;
+
+  const uint64_t needleRowsOneIteration = numRows - (isHorizontal ? horizontalNonNeedleRows : verticalNonNeedleRows);
+  // Require space for haystack copy if running for more than one iteration
+  const uint64_t needleRowsMultipleIterations = needleRowsOneIteration - (isHorizontal ? horizontalHaystackCopyRows : verticalHaystackCopyRows);
+  const uint64_t rowsPerNeedle = isHorizontal ? horizontalRowsPerNeedle : verticalRowsPerNeedle;
+  const uint64_t maxNeedlesPerIterationOneIteration = needleRowsOneIteration / rowsPerNeedle;
+  const uint64_t maxNeedlesPerIterationMultipleIterations = needleRowsMultipleIterations / rowsPerNeedle;
+
   uint64_t numIterations;
   if(needles.size() <= maxNeedlesPerIterationOneIteration) {
     numIterations = 1;
   } else {
-    uint64_t needlesAfterFirstIteration = needles.size() - maxNeedlesPerIteration;
+    uint64_t needlesAfterFirstIteration = needles.size() - maxNeedlesPerIterationMultipleIterations;
     // Can do 1 more needle in first iteration than in later iterations
-    // During the first iteration we can use the final result array as an individual result array in the first iteration
-    numIterations = 1 + ((needlesAfterFirstIteration + maxNeedlesPerIteration - 2) / (maxNeedlesPerIteration - 1));
+    // During the first iteration we can use the final result array as an individual result array
+    numIterations = 1 + ((needlesAfterFirstIteration + maxNeedlesPerIterationOneIteration - 2) / (maxNeedlesPerIterationOneIteration - 1));
   }
 
   resultTableOrdering.resize(numIterations);
@@ -188,11 +197,11 @@ NeedlesTable stringMatchPrecomputeTable(const std::vector<std::string>& needles,
     if(numIterations == 1) {
       needlesThisIteration = needles.size();
     } else if(iter == 0) {
-      needlesThisIteration = maxNeedlesPerIteration;
+      needlesThisIteration = maxNeedlesPerIterationMultipleIterations;
     } else if(iter+1 == numIterations) {
       needlesThisIteration = needles.size() - needlesDone;
     } else {
-      needlesThisIteration = maxNeedlesPerIteration - 1;
+      needlesThisIteration = maxNeedlesPerIterationMultipleIterations - 1;
     }
 
     // Range: [needlesDone, needlesDone + needlesThisIteration - 1]
