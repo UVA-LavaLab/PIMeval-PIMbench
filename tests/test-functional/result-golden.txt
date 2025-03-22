@@ -8,13 +8,13 @@ PIM-Config: Simulator Config File: <NONE>
 PIM-Config: Memory Config File: <DEFAULT>
 PIM-Config: Memory Protocol: DDR
 PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BITSIMD_V_AP
-PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 1024, #colsPerSubarray = 256
+PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 2048, #colsPerSubarray = 256
 PIM-Config: Number of Threads = #
 PIM-Config: Load Balanced = 1
 ----------------------------------------
 PIM-Info: Aggregate every two subarrays as a single core
 PIM-Info: Created performance energy model for bit-serial PIM
-PIM-Info: Created PIM device with 2 cores of 2048 rows and 256 columns.
+PIM-Info: Created PIM device with 2 cores of 4096 rows and 256 columns.
 PIM-Info: Created thread pool with # threads.
 ================================================================
 INFO: PIMeval Functional Tests for INT8
@@ -68,9 +68,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -78,9 +78,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 176000 bytes
+                               Device to Host : 155000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 188000 bytes       0.007421 ms Estimated Runtime       0.004631 mj Estimated Energy
+                              TOTAL --------- : 167000 bytes       0.006658 ms Estimated Runtime       0.004154 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.int8.v :          1       0.007548       0.004807   44.36   39.43   16.22
@@ -92,12 +92,12 @@ PIM Command Stats:
                               copy_o2o.int8.v :          1       0.005952       0.003802   50.00   50.00    0.00
                                    div.int8.v :          1       0.135708       0.086546   53.73   37.55    8.72
                             div_scalar.int8.v :          1       0.121476       0.077441   44.71   44.40   10.89
-                                    eq.int8.v :          1       0.009576       0.006109   62.16   31.08    6.77
-                             eq_scalar.int8.v :          1       0.006792       0.004329   43.82   43.82   12.37
-                                    gt.int8.v :          1       0.009744       0.006215   61.08   30.54    8.37
-                             gt_scalar.int8.v :          1       0.006960       0.004434   42.76   42.76   14.48
-                                    lt.int8.v :          1       0.009744       0.006215   61.08   30.54    8.37
-                             lt_scalar.int8.v :          1       0.006960       0.004434   42.76   42.76   14.48
+                                    eq.int8.v :          1       0.006948       0.004431   85.66    5.35    8.98
+                             eq_scalar.int8.v :          1       0.004164       0.002651   71.47    8.93   19.60
+                                    gt.int8.v :          1       0.007116       0.004536   83.64    5.23   11.13
+                             gt_scalar.int8.v :          1       0.004332       0.002756   68.70    8.59   22.71
+                                    lt.int8.v :          1       0.007116       0.004536   83.64    5.23   11.13
+                             lt_scalar.int8.v :          1       0.004332       0.002756   68.70    8.59   22.71
                                    max.int8.v :          1       0.016056       0.010242   74.14   18.54    7.32
                             max_scalar.int8.v :          1       0.010488       0.006681   56.75   28.38   14.87
                                    min.int8.v :          1       0.016056       0.010242   74.14   18.54    7.32
@@ -126,7 +126,7 @@ PIM Command Stats:
                            xnor_scalar.int8.v :          1       0.006528       0.004163   45.59   45.59    8.82
                                    xor.int8.v :          1       0.009528       0.006079   62.47   31.23    6.30
                             xor_scalar.int8.v :          1       0.006744       0.004299   44.13   44.13   11.74
-                              TOTAL --------- :         44 8000000.971110       0.595772   52.92   36.60    8.21
+                              TOTAL --------- :         44 8000000.955342       0.585703   56.29   32.52    8.92
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT8
@@ -179,9 +179,9 @@ INFO: PIMeval Functional Tests for UINT8
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -189,9 +189,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 176000 bytes
+                               Device to Host : 155000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 188000 bytes       0.014843 ms Estimated Runtime       0.009262 mj Estimated Energy
+                              TOTAL --------- : 167000 bytes       0.013315 ms Estimated Runtime       0.008309 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.uint8.v :          1       0.005952       0.003802   50.00   50.00    0.00
@@ -203,12 +203,12 @@ PIM Command Stats:
                              copy_o2o.uint8.v :          1       0.005952       0.003802   50.00   50.00    0.00
                                   div.uint8.v :          1       0.142824       0.091107   56.26   36.46    7.28
                            div_scalar.uint8.v :          1       0.120552       0.076865   46.90   43.20    9.89
-                                   eq.uint8.v :          1       0.009576       0.006109   62.16   31.08    6.77
-                            eq_scalar.uint8.v :          1       0.006792       0.004329   43.82   43.82   12.37
-                                   gt.uint8.v :          1       0.009792       0.006245   60.78   30.39    8.82
-                            gt_scalar.uint8.v :          1       0.007008       0.004464   42.47   42.47   15.07
-                                   lt.uint8.v :          1       0.009792       0.006245   60.78   30.39    8.82
-                            lt_scalar.uint8.v :          1       0.007008       0.004464   42.47   42.47   15.07
+                                   eq.uint8.v :          1       0.006948       0.004431   85.66    5.35    8.98
+                            eq_scalar.uint8.v :          1       0.004164       0.002651   71.47    8.93   19.60
+                                   gt.uint8.v :          1       0.007164       0.004566   83.08    5.19   11.73
+                            gt_scalar.uint8.v :          1       0.004380       0.002786   67.95    8.49   23.56
+                                   lt.uint8.v :          1       0.007164       0.004566   83.08    5.19   11.73
+                            lt_scalar.uint8.v :          1       0.004380       0.002786   67.95    8.49   23.56
                                   max.uint8.v :          1       0.016104       0.010272   73.92   18.48    7.60
                            max_scalar.uint8.v :          1       0.010536       0.006712   56.49   28.25   15.26
                                   min.uint8.v :          1       0.016104       0.010272   73.92   18.48    7.60
@@ -237,7 +237,7 @@ PIM Command Stats:
                           xnor_scalar.uint8.v :          1       0.006528       0.004163   45.59   45.59    8.82
                                   xor.uint8.v :          1       0.009528       0.006079   62.47   31.23    6.30
                            xor_scalar.uint8.v :          1       0.006744       0.004299   44.13   44.13   11.74
-                              TOTAL --------- :         44       0.977098       0.599625   53.09   36.75    7.88
+                              TOTAL --------- :         44       0.961330       0.589556   56.42   32.69    8.62
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT16
@@ -291,9 +291,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -301,9 +301,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 352000 bytes
+                               Device to Host : 307000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 376000 bytes       0.029686 ms Estimated Runtime       0.018524 mj Estimated Energy
+                              TOTAL --------- : 331000 bytes       0.026521 ms Estimated Runtime       0.016549 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int16.v :          1       0.014652       0.009332   43.16   40.62   16.22
@@ -315,12 +315,12 @@ PIM Command Stats:
                              copy_o2o.int16.v :          1       0.011904       0.007603   50.00   50.00    0.00
                                   div.int16.v :          1       0.503436       0.321085   57.04   34.66    8.30
                            div_scalar.int16.v :          1       0.431124       0.274834   47.11   41.85   11.04
-                                   eq.int16.v :          1       0.019080       0.012173   62.39   31.19    6.42
-                            eq_scalar.int16.v :          1       0.013512       0.008612   44.05   44.05   11.90
-                                   gt.int16.v :          1       0.019440       0.012399   61.23   30.62    8.15
-                            gt_scalar.int16.v :          1       0.013872       0.008838   42.91   42.91   14.19
-                                   lt.int16.v :          1       0.019440       0.012399   61.23   30.62    8.15
-                            lt_scalar.int16.v :          1       0.013872       0.008838   42.91   42.91   14.19
+                                   eq.int16.v :          1       0.013476       0.008594   88.33    2.76    8.90
+                            eq_scalar.int16.v :          1       0.007908       0.005033   75.27    4.70   20.03
+                                   gt.int16.v :          1       0.013836       0.008820   86.04    2.69   11.27
+                            gt_scalar.int16.v :          1       0.008268       0.005259   71.99    4.50   23.51
+                                   lt.int16.v :          1       0.013836       0.008820   86.04    2.69   11.27
+                            lt_scalar.int16.v :          1       0.008268       0.005259   71.99    4.50   23.51
                                   max.int16.v :          1       0.032088       0.020469   74.20   18.55    7.26
                            max_scalar.int16.v :          1       0.020952       0.013348   56.82   28.41   14.78
                                   min.int16.v :          1       0.032088       0.020469   74.20   18.55    7.26
@@ -349,7 +349,7 @@ PIM Command Stats:
                           xnor_scalar.int16.v :          1       0.013056       0.008326   45.59   45.59    8.82
                                   xor.int16.v :          1       0.019032       0.012143   62.55   31.27    6.18
                            xor_scalar.int16.v :          1       0.013464       0.008582   44.21   44.21   11.59
-                              TOTAL --------- :         44 8000002.549672       1.578161   53.11   36.48    8.14
+                              TOTAL --------- :         44 8000002.516048       1.556687   56.85   31.93    8.94
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT16
@@ -403,9 +403,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -413,9 +413,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 352000 bytes
+                               Device to Host : 307000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 376000 bytes       0.044529 ms Estimated Runtime       0.027786 mj Estimated Energy
+                              TOTAL --------- : 331000 bytes       0.039727 ms Estimated Runtime       0.024790 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint16.v :          1       0.011904       0.007603   50.00   50.00    0.00
@@ -427,12 +427,12 @@ PIM Command Stats:
                             copy_o2o.uint16.v :          1       0.011904       0.007603   50.00   50.00    0.00
                                  div.uint16.v :          1       0.518328       0.330625   58.56   33.88    7.56
                           div_scalar.uint16.v :          1       0.429240       0.273655   48.53   40.91   10.56
-                                  eq.uint16.v :          1       0.019080       0.012173   62.39   31.19    6.42
-                           eq_scalar.uint16.v :          1       0.013512       0.008612   44.05   44.05   11.90
-                                  gt.uint16.v :          1       0.019488       0.012429   61.08   30.54    8.37
-                           gt_scalar.uint16.v :          1       0.013920       0.008868   42.76   42.76   14.48
-                                  lt.uint16.v :          1       0.019488       0.012429   61.08   30.54    8.37
-                           lt_scalar.uint16.v :          1       0.013920       0.008868   42.76   42.76   14.48
+                                  eq.uint16.v :          1       0.013476       0.008594   88.33    2.76    8.90
+                           eq_scalar.uint16.v :          1       0.007908       0.005033   75.27    4.70   20.03
+                                  gt.uint16.v :          1       0.013884       0.008850   85.74    2.68   11.58
+                           gt_scalar.uint16.v :          1       0.008316       0.005289   71.57    4.47   23.95
+                                  lt.uint16.v :          1       0.013884       0.008850   85.74    2.68   11.58
+                           lt_scalar.uint16.v :          1       0.008316       0.005289   71.57    4.47   23.95
                                  max.uint16.v :          1       0.032136       0.020499   74.09   18.52    7.39
                           max_scalar.uint16.v :          1       0.021000       0.013378   56.69   28.34   14.97
                                  min.uint16.v :          1       0.032136       0.020499   74.09   18.52    7.39
@@ -461,7 +461,7 @@ PIM Command Stats:
                          xnor_scalar.uint16.v :          1       0.013056       0.008326   45.59   45.59    8.82
                                  xor.uint16.v :          1       0.019032       0.012143   62.55   31.27    6.18
                           xor_scalar.uint16.v :          1       0.013464       0.008582   44.21   44.21   11.59
-                              TOTAL --------- :         44 8000002.561324       1.585668   53.29   36.64    7.79
+                              TOTAL --------- :         44 8000002.527700       1.564194   57.02   32.09    8.61
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT32
@@ -514,9 +514,9 @@ INFO: PIMeval Functional Tests for INT32
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -524,9 +524,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 704000 bytes
+                               Device to Host : 611000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 752000 bytes       0.074215 ms Estimated Runtime       0.046310 mj Estimated Energy
+                              TOTAL --------- : 659000 bytes       0.066029 ms Estimated Runtime       0.041202 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int32.v :          1       0.028860       0.018381   42.54   41.25   16.22
@@ -538,12 +538,12 @@ PIM Command Stats:
                              copy_o2o.int32.v :          1       0.023808       0.015206   50.00   50.00    0.00
                                   div.int32.v :          1       1.937004       1.235437   59.07   32.82    8.10
                            div_scalar.int32.v :          1       1.614900       1.029440   48.70   40.10   11.20
-                                   eq.int32.v :          1       0.038088       0.024301   62.51   31.25    6.24
-                            eq_scalar.int32.v :          1       0.026952       0.017180   44.17   44.17   11.67
-                                   gt.int32.v :          1       0.038832       0.024768   61.31   30.66    8.03
-                            gt_scalar.int32.v :          1       0.027696       0.017646   42.98   42.98   14.04
-                                   lt.int32.v :          1       0.038832       0.024768   61.31   30.66    8.03
-                            lt_scalar.int32.v :          1       0.027696       0.017646   42.98   42.98   14.04
+                                   eq.int32.v :          1       0.026532       0.016920   89.73    1.40    8.86
+                            eq_scalar.int32.v :          1       0.015396       0.009799   77.32    2.42   20.27
+                                   gt.int32.v :          1       0.027276       0.017387   87.29    1.36   11.35
+                            gt_scalar.int32.v :          1       0.016140       0.010266   73.75    2.30   23.94
+                                   lt.int32.v :          1       0.027276       0.017387   87.29    1.36   11.35
+                            lt_scalar.int32.v :          1       0.016140       0.010266   73.75    2.30   23.94
                                   max.int32.v :          1       0.064152       0.040923   74.22   18.56    7.22
                            max_scalar.int32.v :          1       0.041880       0.026681   56.85   28.42   14.73
                                   min.int32.v :          1       0.064152       0.040923   74.22   18.56    7.22
@@ -572,7 +572,7 @@ PIM Command Stats:
                           xnor_scalar.int32.v :          1       0.026112       0.016652   45.59   45.59    8.82
                                   xor.int32.v :          1       0.038040       0.024271   62.59   31.29    6.12
                            xor_scalar.int32.v :          1       0.026904       0.017149   44.25   44.25   11.51
-                              TOTAL --------- :         44       7.626290       4.766804   54.25   37.45    8.30
+                              TOTAL --------- :         44       7.556954       4.722520   58.20   32.64    9.15
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT32
@@ -625,9 +625,9 @@ INFO: PIMeval Functional Tests for UINT32
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -635,9 +635,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 704000 bytes
+                               Device to Host : 611000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 752000 bytes       0.103901 ms Estimated Runtime       0.064834 mj Estimated Energy
+                              TOTAL --------- : 659000 bytes       0.092332 ms Estimated Runtime       0.057615 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint32.v :          1       0.023808       0.015206   50.00   50.00    0.00
@@ -649,12 +649,12 @@ PIM Command Stats:
                             copy_o2o.uint32.v :          1       0.023808       0.015206   50.00   50.00    0.00
                                  div.uint32.v :          1       1.967448       1.254936   59.90   32.37    7.73
                           div_scalar.uint32.v :          1       1.611096       1.027057   49.50   39.53   10.97
-                                  eq.uint32.v :          1       0.038088       0.024301   62.51   31.25    6.24
-                           eq_scalar.uint32.v :          1       0.026952       0.017180   44.17   44.17   11.67
-                                  gt.uint32.v :          1       0.038880       0.024798   61.23   30.62    8.15
-                           gt_scalar.uint32.v :          1       0.027744       0.017677   42.91   42.91   14.19
-                                  lt.uint32.v :          1       0.038880       0.024798   61.23   30.62    8.15
-                           lt_scalar.uint32.v :          1       0.027744       0.017677   42.91   42.91   14.19
+                                  eq.uint32.v :          1       0.026532       0.016920   89.73    1.40    8.86
+                           eq_scalar.uint32.v :          1       0.015396       0.009799   77.32    2.42   20.27
+                                  gt.uint32.v :          1       0.027324       0.017417   87.13    1.36   11.51
+                           gt_scalar.uint32.v :          1       0.016188       0.010296   73.54    2.30   24.17
+                                  lt.uint32.v :          1       0.027324       0.017417   87.13    1.36   11.51
+                           lt_scalar.uint32.v :          1       0.016188       0.010296   73.54    2.30   24.17
                                  max.uint32.v :          1       0.064200       0.040953   74.17   18.54    7.29
                           max_scalar.uint32.v :          1       0.041928       0.026711   56.78   28.39   14.83
                                  min.uint32.v :          1       0.064200       0.040953   74.17   18.54    7.29
@@ -683,7 +683,7 @@ PIM Command Stats:
                          xnor_scalar.uint32.v :          1       0.026112       0.016652   45.59   45.59    8.82
                                  xor.uint32.v :          1       0.038040       0.024271   62.59   31.29    6.12
                           xor_scalar.uint32.v :          1       0.026904       0.017149   44.25   44.25   11.51
-                              TOTAL --------- :         44       7.649270       4.781619   54.44   37.62    7.94
+                              TOTAL --------- :         44       7.579934       4.737335   58.38   32.82    8.80
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for INT64
@@ -742,9 +742,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -752,9 +752,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 96000 bytes
-                               Device to Host : 1408000 bytes
+                               Device to Host : 1219000 bytes
                              Device to Device : 128000 bytes
-                              TOTAL --------- : 1504000 bytes       0.163272 ms Estimated Runtime       0.101882 mj Estimated Energy
+                              TOTAL --------- : 1315000 bytes       0.144828 ms Estimated Runtime       0.090373 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int64.v :          1       0.057276       0.036479   42.22   41.57   16.22
@@ -766,12 +766,12 @@ PIM Command Stats:
                              copy_o2o.int64.v :          1       0.047616       0.030413   50.00   50.00    0.00
                                   div.int64.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                            div_scalar.int64.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
-                                   eq.int64.v :          1       0.076104       0.048556   62.57   31.28    6.15
-                            eq_scalar.int64.v :          1       0.053832       0.034314   44.23   44.23   11.55
-                                   gt.int64.v :          1       0.077616       0.049505   61.35   30.67    7.98
-                            gt_scalar.int64.v :          1       0.055344       0.035263   43.02   43.02   13.96
-                                   lt.int64.v :          1       0.077616       0.049505   61.35   30.67    7.98
-                            lt_scalar.int64.v :          1       0.055344       0.035263   43.02   43.02   13.96
+                                   eq.int64.v :          1       0.052644       0.033572   90.45    0.71    8.84
+                            eq_scalar.int64.v :          1       0.030372       0.019330   78.39    1.22   20.39
+                                   gt.int64.v :          1       0.054156       0.034521   87.92    0.69   11.39
+                            gt_scalar.int64.v :          1       0.031884       0.020279   74.67    1.17   24.16
+                                   lt.int64.v :          1       0.054156       0.034521   87.92    0.69   11.39
+                            lt_scalar.int64.v :          1       0.031884       0.020279   74.67    1.17   24.16
                                   max.int64.v :          1       0.128280       0.081831   74.24   18.56    7.20
                            max_scalar.int64.v :          1       0.083736       0.053346   56.86   28.43   14.70
                                   min.int64.v :          1       0.128280       0.081831   74.24   18.56    7.20
@@ -800,7 +800,7 @@ PIM Command Stats:
                           xnor_scalar.int64.v :          1       0.052224       0.033305   45.59   45.59    8.82
                                   xor.int64.v :          1       0.076056       0.048526   62.61   31.30    6.09
                            xor_scalar.int64.v :          1       0.053784       0.034284   44.27   44.27   11.47
-                              TOTAL --------- :         44 48000004.786934       2.860042   47.39   32.11    6.86
+                              TOTAL --------- :         44 48000004.646174       2.770138   51.45   27.17    7.74
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for UINT64
@@ -859,9 +859,9 @@ PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_B
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -869,9 +869,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 96000 bytes
-                               Device to Host : 1408000 bytes
+                               Device to Host : 1219000 bytes
                              Device to Device : 128000 bytes
-                              TOTAL --------- : 1504000 bytes       0.222644 ms Estimated Runtime       0.138930 mj Estimated Energy
+                              TOTAL --------- : 1315000 bytes       0.197324 ms Estimated Runtime       0.123130 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint64.v :          1       0.047616       0.030413   50.00   50.00    0.00
@@ -883,12 +883,12 @@ PIM Command Stats:
                             copy_o2o.uint64.v :          1       0.047616       0.030413   50.00   50.00    0.00
                                  div.uint64.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                           div_scalar.uint64.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
-                                  eq.uint64.v :          1       0.076104       0.048556   62.57   31.28    6.15
-                           eq_scalar.uint64.v :          1       0.053832       0.034314   44.23   44.23   11.55
-                                  gt.uint64.v :          1       0.077664       0.049535   61.31   30.66    8.03
-                           gt_scalar.uint64.v :          1       0.055392       0.035293   42.98   42.98   14.04
-                                  lt.uint64.v :          1       0.077664       0.049535   61.31   30.66    8.03
-                           lt_scalar.uint64.v :          1       0.055392       0.035293   42.98   42.98   14.04
+                                  eq.uint64.v :          1       0.052644       0.033572   90.45    0.71    8.84
+                           eq_scalar.uint64.v :          1       0.030372       0.019330   78.39    1.22   20.39
+                                  gt.uint64.v :          1       0.054204       0.034551   87.85    0.69   11.47
+                           gt_scalar.uint64.v :          1       0.031932       0.020309   74.56    1.16   24.28
+                                  lt.uint64.v :          1       0.054204       0.034551   87.85    0.69   11.47
+                           lt_scalar.uint64.v :          1       0.031932       0.020309   74.56    1.16   24.28
                                  max.uint64.v :          1       0.128328       0.081861   74.21   18.55    7.24
                           max_scalar.uint64.v :          1       0.083784       0.053376   56.83   28.42   14.75
                                  min.uint64.v :          1       0.128328       0.081861   74.21   18.55    7.24
@@ -917,7 +917,7 @@ PIM Command Stats:
                          xnor_scalar.uint64.v :          1       0.052224       0.033305   45.59   45.59    8.82
                                  xor.uint64.v :          1       0.076056       0.048526   62.61   31.30    6.09
                           xor_scalar.uint64.v :          1       0.053784       0.034284   44.27   44.27   11.47
-                              TOTAL --------- :         44 48000004.778666       2.854849   47.56   32.30    6.50
+                              TOTAL --------- :         44 48000004.637906       2.764945   51.61   27.36    7.39
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP32
@@ -977,9 +977,9 @@ PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not ava
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -987,9 +987,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 512000 bytes
+                               Device to Host : 419000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 560000 bytes       0.245345 ms Estimated Runtime       0.153096 mj Estimated Energy
+                              TOTAL --------- : 467000 bytes       0.216642 ms Estimated Runtime       0.135185 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp32.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
@@ -1084,15 +1084,14 @@ PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not ava
 [PASS] FP16 pimRedMax
 PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
 [PASS] FP16 pimRedMaxRanged
-PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=copy_o2o dataType=fp16
 [PASS] FP16 pimCopyObjectToObject
 ----------------------------------------
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1100,16 +1099,16 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 256000 bytes
+                               Device to Host : 211000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 280000 bytes       0.256696 ms Estimated Runtime       0.160178 mj Estimated Energy
+                              TOTAL --------- : 235000 bytes       0.226355 ms Estimated Runtime       0.141246 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                                    add.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                             add_scalar.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                              broadcast.fp16.v :          1       0.006336       0.003959    0.00   93.94    6.06
-                              copy_o2o.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
+                              copy_o2o.fp16.v :          1       0.011904       0.007603   50.00   50.00    0.00
                                    div.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                             div_scalar.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                                     eq.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
@@ -1137,7 +1136,7 @@ PIM Command Stats:
                           shift_elem_r.fp16.v :          1       0.013058       0.000045   45.58   45.58    8.82
                                    sub.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                             sub_scalar.fp16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
-                              TOTAL --------- :         32 6167999999.458570 5999999999.404138    5.70    8.63    1.29
+                              TOTAL --------- :         32 6159999999.470474 5999999999.411741    7.26   10.20    1.29
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for BF16
@@ -1197,15 +1196,14 @@ PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not ava
 [PASS] BF16 pimRedMax
 PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
 [PASS] BF16 pimRedMaxRanged
-PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=copy_o2o dataType=bf16
 [PASS] BF16 pimCopyObjectToObject
 ----------------------------------------
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1213,16 +1211,16 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 256000 bytes
+                               Device to Host : 211000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 280000 bytes       0.268046 ms Estimated Runtime       0.167261 mj Estimated Energy
+                              TOTAL --------- : 235000 bytes       0.236068 ms Estimated Runtime       0.147307 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                                    add.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                             add_scalar.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                              broadcast.bf16.v :          1       0.006336       0.003959    0.00   93.94    6.06
-                              copy_o2o.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
+                              copy_o2o.bf16.v :          1       0.011904       0.007603   50.00   50.00    0.00
                                    div.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                             div_scalar.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                                     eq.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
@@ -1250,7 +1248,7 @@ PIM Command Stats:
                           shift_elem_r.bf16.v :          1       0.013058       0.000045   45.58   45.58    8.82
                                    sub.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                             sub_scalar.bf16.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
-                              TOTAL --------- :         32 6167999999.458570 5999999999.404138    5.70    8.63    1.29
+                              TOTAL --------- :         32 6159999999.470474 5999999999.411741    7.26   10.20    1.29
 ----------------------------------------
 ================================================================
 INFO: PIMeval Functional Tests for FP8
@@ -1310,15 +1308,14 @@ PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not ava
 [PASS] FP8 pimRedMax
 PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.
 [PASS] FP8 pimRedMaxRanged
-PIM-Warning: Unimplemented bit-serial runtime estimation for device=PIM_DEVICE_BITSIMD_V_AP cmd=copy_o2o dataType=fp8
 [PASS] FP8 pimCopyObjectToObject
 ----------------------------------------
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BITSIMD_V_AP
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1326,16 +1323,16 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 128000 bytes
+                               Device to Host : 107000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 140000 bytes       0.273722 ms Estimated Runtime       0.170803 mj Estimated Energy
+                              TOTAL --------- : 119000 bytes       0.240980 ms Estimated Runtime       0.150372 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                     abs.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                                     add.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                              add_scalar.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                               broadcast.fp8.v :          1       0.003168       0.001982    0.00   93.94    6.06
-                               copy_o2o.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
+                               copy_o2o.fp8.v :          1       0.005952       0.003802   50.00   50.00    0.00
                                     div.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                              div_scalar.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                                      eq.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
@@ -1363,7 +1360,7 @@ PIM Command Stats:
                            shift_elem_r.fp8.v :          1       0.006529       0.000023   45.58   45.58    8.82
                                     sub.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
                              sub_scalar.fp8.v :          1 8000000.000000       0.000000    0.00    0.00    0.00
-                              TOTAL --------- :         32 6167999999.429283 5999999999.402074    5.70    8.63    1.29
+                              TOTAL --------- :         32 6159999999.435235 5999999999.405875    7.26   10.20    1.29
 ----------------------------------------
 Result: COMPLETED
 PIMeval Functional Testing
@@ -1373,13 +1370,13 @@ PIM-Config: Simulator Config File: <NONE>
 PIM-Config: Memory Config File: <DEFAULT>
 PIM-Config: Memory Protocol: DDR
 PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_FULCRUM
-PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 1024, #colsPerSubarray = 256
+PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 2048, #colsPerSubarray = 256
 PIM-Config: Number of Threads = #
 PIM-Config: Load Balanced = 1
 ----------------------------------------
 PIM-Info: Aggregate every two subarrays as a single core
 PIM-Info: Created performance energy model for Fulcrum
-PIM-Info: Created PIM device with 2 cores of 2048 rows and 256 columns.
+PIM-Info: Created PIM device with 2 cores of 4096 rows and 256 columns.
 PIM-Info: Created thread pool with # threads.
 ================================================================
 INFO: PIMeval Functional Tests for INT8
@@ -1436,9 +1433,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1446,9 +1443,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 176000 bytes
+                               Device to Host : 155000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 188000 bytes       0.007421 ms Estimated Runtime       0.004631 mj Estimated Energy
+                              TOTAL --------- : 167000 bytes       0.006658 ms Estimated Runtime       0.004154 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.int8.h :          1       0.003138       0.002103    1.48    1.48   97.04
@@ -1551,9 +1548,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1561,9 +1558,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 176000 bytes
+                               Device to Host : 155000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 188000 bytes       0.014843 ms Estimated Runtime       0.009262 mj Estimated Energy
+                              TOTAL --------- : 167000 bytes       0.013315 ms Estimated Runtime       0.008309 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.uint8.h :          1       0.003138       0.002103    1.48    1.48   97.04
@@ -1666,9 +1663,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1676,9 +1673,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 352000 bytes
+                               Device to Host : 307000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 376000 bytes       0.029686 ms Estimated Runtime       0.018524 mj Estimated Energy
+                              TOTAL --------- : 331000 bytes       0.026521 ms Estimated Runtime       0.016549 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int16.h :          1       0.006183       0.004086    0.75    0.75   98.50
@@ -1781,9 +1778,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1791,9 +1788,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 352000 bytes
+                               Device to Host : 307000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 376000 bytes       0.044529 ms Estimated Runtime       0.027786 mj Estimated Energy
+                              TOTAL --------- : 331000 bytes       0.039727 ms Estimated Runtime       0.024790 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint16.h :          1       0.006183       0.004086    0.75    0.75   98.50
@@ -1896,9 +1893,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -1906,9 +1903,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 704000 bytes
+                               Device to Host : 611000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 752000 bytes       0.074215 ms Estimated Runtime       0.046310 mj Estimated Energy
+                              TOTAL --------- : 659000 bytes       0.066029 ms Estimated Runtime       0.041202 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int32.h :          1       0.012273       0.008055    0.38    0.38   99.24
@@ -2011,9 +2008,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2021,9 +2018,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 704000 bytes
+                               Device to Host : 611000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 752000 bytes       0.103901 ms Estimated Runtime       0.064834 mj Estimated Energy
+                              TOTAL --------- : 659000 bytes       0.092332 ms Estimated Runtime       0.057615 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint32.h :          1       0.012273       0.008055    0.38    0.38   99.24
@@ -2126,9 +2123,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2136,9 +2133,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 96000 bytes
-                               Device to Host : 1408000 bytes
+                               Device to Host : 1219000 bytes
                              Device to Device : 128000 bytes
-                              TOTAL --------- : 1504000 bytes       0.163272 ms Estimated Runtime       0.101882 mj Estimated Energy
+                              TOTAL --------- : 1315000 bytes       0.144828 ms Estimated Runtime       0.090373 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int64.h :          1       0.024453       0.015992    0.19    0.19   99.62
@@ -2241,9 +2238,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2251,9 +2248,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 96000 bytes
-                               Device to Host : 1408000 bytes
+                               Device to Host : 1219000 bytes
                              Device to Device : 128000 bytes
-                              TOTAL --------- : 1504000 bytes       0.222644 ms Estimated Runtime       0.138930 mj Estimated Energy
+                              TOTAL --------- : 1315000 bytes       0.197324 ms Estimated Runtime       0.123130 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint64.h :          1       0.024453       0.015992    0.19    0.19   99.62
@@ -2342,9 +2339,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2352,9 +2349,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 512000 bytes
+                               Device to Host : 419000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 560000 bytes       0.245345 ms Estimated Runtime       0.153096 mj Estimated Energy
+                              TOTAL --------- : 467000 bytes       0.216642 ms Estimated Runtime       0.135185 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp32.h :          1       0.012273       0.008055    0.38    0.38   99.24
@@ -2432,9 +2429,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2442,9 +2439,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 256000 bytes
+                               Device to Host : 211000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 280000 bytes       0.256696 ms Estimated Runtime       0.160178 mj Estimated Energy
+                              TOTAL --------- : 235000 bytes       0.226355 ms Estimated Runtime       0.141246 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp16.h :          1       0.006183       0.004254    0.75    0.75   98.50
@@ -2522,9 +2519,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2532,9 +2529,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 256000 bytes
+                               Device to Host : 211000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 280000 bytes       0.268046 ms Estimated Runtime       0.167261 mj Estimated Energy
+                              TOTAL --------- : 235000 bytes       0.236068 ms Estimated Runtime       0.147307 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.bf16.h :          1       0.006183       0.004254    0.75    0.75   98.50
@@ -2612,9 +2609,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_FULCRUM
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 2
-        Number of Rows per Core : 2048
+        Number of Rows per Core : 4096
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2622,9 +2619,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 128000 bytes
+                               Device to Host : 107000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 140000 bytes       0.273722 ms Estimated Runtime       0.170803 mj Estimated Energy
+                              TOTAL --------- : 119000 bytes       0.240980 ms Estimated Runtime       0.150372 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                     abs.fp8.h :          1       0.003138       0.002353    1.48    1.48   97.04
@@ -2669,13 +2666,13 @@ PIM-Config: Simulator Config File: <NONE>
 PIM-Config: Memory Config File: <DEFAULT>
 PIM-Config: Memory Protocol: DDR
 PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BANK_LEVEL
-PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 1024, #colsPerSubarray = 256
+PIM-Config: #ranks = 1, #banksPerRank = 1, #subarraysPerBank = 4, #rowsPerSubarray = 2048, #colsPerSubarray = 256
 PIM-Config: Number of Threads = #
 PIM-Config: Load Balanced = 1
 ----------------------------------------
 PIM-Info: Aggregate all subarrays within a bank as a single core
 PIM-Info: Created performance energy model for bank-level PIM
-PIM-Info: Created PIM device with 1 cores of 4096 rows and 256 columns.
+PIM-Info: Created PIM device with 1 cores of 8192 rows and 256 columns.
 PIM-Info: Created thread pool with # threads.
 ================================================================
 INFO: PIMeval Functional Tests for INT8
@@ -2732,9 +2729,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2742,9 +2739,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 176000 bytes
+                               Device to Host : 155000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 188000 bytes       0.007421 ms Estimated Runtime       0.004631 mj Estimated Energy
+                              TOTAL --------- : 167000 bytes       0.006658 ms Estimated Runtime       0.004154 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.int8.h :          1       0.010328       0.006613    0.45   75.34   24.21
@@ -2847,9 +2844,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2857,9 +2854,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 176000 bytes
+                               Device to Host : 155000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 188000 bytes       0.014843 ms Estimated Runtime       0.009262 mj Estimated Energy
+                              TOTAL --------- : 167000 bytes       0.013315 ms Estimated Runtime       0.008309 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.uint8.h :          1       0.010328       0.006613    0.45   75.34   24.21
@@ -2962,9 +2959,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -2972,9 +2969,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 352000 bytes
+                               Device to Host : 307000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 376000 bytes       0.029686 ms Estimated Runtime       0.018524 mj Estimated Energy
+                              TOTAL --------- : 331000 bytes       0.026521 ms Estimated Runtime       0.016549 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int16.h :          1       0.020609       0.013198    0.23   75.51   24.26
@@ -3077,9 +3074,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3087,9 +3084,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 352000 bytes
+                               Device to Host : 307000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 376000 bytes       0.044529 ms Estimated Runtime       0.027786 mj Estimated Energy
+                              TOTAL --------- : 331000 bytes       0.039727 ms Estimated Runtime       0.024790 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint16.h :          1       0.020609       0.013198    0.23   75.51   24.26
@@ -3192,9 +3189,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3202,9 +3199,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 704000 bytes
+                               Device to Host : 611000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 752000 bytes       0.074215 ms Estimated Runtime       0.046310 mj Estimated Energy
+                              TOTAL --------- : 659000 bytes       0.066029 ms Estimated Runtime       0.041202 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int32.h :          1       0.041171       0.026366    0.11   75.60   24.29
@@ -3307,9 +3304,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3317,9 +3314,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 704000 bytes
+                               Device to Host : 611000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 752000 bytes       0.103901 ms Estimated Runtime       0.064834 mj Estimated Energy
+                              TOTAL --------- : 659000 bytes       0.092332 ms Estimated Runtime       0.057615 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint32.h :          1       0.041171       0.026366    0.11   75.60   24.29
@@ -3422,9 +3419,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3432,9 +3429,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 96000 bytes
-                               Device to Host : 1408000 bytes
+                               Device to Host : 1219000 bytes
                              Device to Device : 128000 bytes
-                              TOTAL --------- : 1504000 bytes       0.163272 ms Estimated Runtime       0.101882 mj Estimated Energy
+                              TOTAL --------- : 1315000 bytes       0.144828 ms Estimated Runtime       0.090373 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                   abs.int64.h :          1       0.082296       0.052704    0.06   75.64   24.30
@@ -3537,9 +3534,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3547,9 +3544,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 96000 bytes
-                               Device to Host : 1408000 bytes
+                               Device to Host : 1219000 bytes
                              Device to Device : 128000 bytes
-                              TOTAL --------- : 1504000 bytes       0.222644 ms Estimated Runtime       0.138930 mj Estimated Energy
+                              TOTAL --------- : 1315000 bytes       0.197324 ms Estimated Runtime       0.123130 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                  abs.uint64.h :          1       0.082296       0.052704    0.06   75.64   24.30
@@ -3638,9 +3635,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3648,9 +3645,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 48000 bytes
-                               Device to Host : 512000 bytes
+                               Device to Host : 419000 bytes
                              Device to Device : 64000 bytes
-                              TOTAL --------- : 560000 bytes       0.245345 ms Estimated Runtime       0.153096 mj Estimated Energy
+                              TOTAL --------- : 467000 bytes       0.216642 ms Estimated Runtime       0.135185 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp32.h :          1       0.041171       0.026366    0.11   75.60   24.29
@@ -3728,9 +3725,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3738,9 +3735,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 256000 bytes
+                               Device to Host : 211000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 280000 bytes       0.256696 ms Estimated Runtime       0.160178 mj Estimated Energy
+                              TOTAL --------- : 235000 bytes       0.226355 ms Estimated Runtime       0.141246 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.fp16.h :          1       0.030922       0.019748    0.15   83.68   16.17
@@ -3818,9 +3815,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3828,9 +3825,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 24000 bytes
-                               Device to Host : 256000 bytes
+                               Device to Host : 211000 bytes
                              Device to Device : 32000 bytes
-                              TOTAL --------- : 280000 bytes       0.268046 ms Estimated Runtime       0.167261 mj Estimated Energy
+                              TOTAL --------- : 235000 bytes       0.236068 ms Estimated Runtime       0.147307 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                    abs.bf16.h :          1       0.030922       0.019748    0.15   83.68   16.17
@@ -3908,9 +3905,9 @@ PIM-Warning: Perf energy model is not precise for PIM command shift_elem_l
 PIM Params:
            PIM Device Type Enum : PIM_FUNCTIONAL
           PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
- Rank, Bank, Subarray, Row, Col : 1, 1, 4, 1024, 256
+ Rank, Bank, Subarray, Row, Col : 1, 1, 4, 2048, 256
             Number of PIM Cores : 1
-        Number of Rows per Core : 4096
+        Number of Rows per Core : 8192
         Number of Cols per Core : 256
                 Typical Rank BW : 25.600000 GB/s
                   Row Read (ns) : 46.500000
@@ -3918,9 +3915,9 @@ PIM Params:
                       tCCD (ns) : 3.000000
 Data Copy Stats:
                                Host to Device : 12000 bytes
-                               Device to Host : 128000 bytes
+                               Device to Host : 107000 bytes
                              Device to Device : 16000 bytes
-                              TOTAL --------- : 140000 bytes       0.273722 ms Estimated Runtime       0.170803 mj Estimated Energy
+                              TOTAL --------- : 119000 bytes       0.240980 ms Estimated Runtime       0.150372 mj Estimated Energy
 PIM Command Stats:
                                       PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)      %R      %W      %L
                                     abs.fp8.h :          1       0.025796       0.016439    0.18   90.13    9.69

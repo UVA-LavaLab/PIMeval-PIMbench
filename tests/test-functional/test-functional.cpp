@@ -16,7 +16,7 @@ void
 testFunctional::createPimDevice()
 {
   unsigned numCores = 4;
-  unsigned numRows = 1024;
+  unsigned numRows = 2048;
   unsigned numCols = 256;
 
   PimStatus status = pimCreateDevice(PIM_FUNCTIONAL, 1, 1, numCores, numRows, numCols);

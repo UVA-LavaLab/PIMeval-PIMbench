@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
         }
     }
     for(unsigned i = 0; i < num_passes; i++){
-        compare_results_obj[i] = pimAllocAssociated(src_obj[i], PIM_INT32);
+        compare_results_obj[i] = pimAllocAssociated(src_obj[i], PIM_BOOL);
         if (compare_results_obj[i] == -1) {
             std::cout << "Abort" << std::endl;
             return 1;

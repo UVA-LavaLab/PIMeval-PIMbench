@@ -407,6 +407,7 @@ pimCmdFunc1::sanityCheck() const
       case PimCmdEnum::CONVERT_TYPE:
       case PimCmdEnum::BIT_SLICE_EXTRACT:
       case PimCmdEnum::BIT_SLICE_INSERT:
+      case PimCmdEnum::COPY_O2O:
         break;
       default:
         std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
@@ -416,6 +417,15 @@ pimCmdFunc1::sanityCheck() const
   // Define command specific data type rules
   switch (m_cmdType) {
     case PimCmdEnum::CONVERT_TYPE:
+      break;
+    case PimCmdEnum::GT_SCALAR:
+    case PimCmdEnum::LT_SCALAR:
+    case PimCmdEnum::EQ_SCALAR:
+    case PimCmdEnum::NE_SCALAR:
+      if (objDest.getDataType() != PIM_BOOL) {
+        std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
+        return false;
+      }
       break;
     case PimCmdEnum::BIT_SLICE_EXTRACT: // src, destBool, bitIdx
       if (objDest.getDataType() != PIM_BOOL) {
@@ -489,7 +499,12 @@ pimCmdFunc1::computeRegion(unsigned index)
       float floatOperand = pimUtils::castBitsToType<float>(bits);
       float result = 0.0;
       if(!computeResultFP(floatOperand, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
-      objDest.setElement(elemIdx, result);
+      if (objDest.getDataType() == PIM_BOOL) {
+        bool resultBool = result > 0;
+        objDest.setElement(elemIdx, resultBool);
+      } else {
+        objDest.setElement(elemIdx, result);
+      }
     } else {
       assert(0); // todo: data type
     }
@@ -627,6 +642,15 @@ pimCmdFunc2::sanityCheck() const
   }
   // Define command specific data type rules
   switch (m_cmdType) {
+    case PimCmdEnum::GT:
+    case PimCmdEnum::LT:
+    case PimCmdEnum::EQ:
+    case PimCmdEnum::NE:
+      if (objDest.getDataType() != PIM_BOOL) {
+        std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
+        return false;
+      }
+      break;
     default:
       if (objSrc1.getDataType() != objSrc2.getDataType() || objSrc1.getDataType() != objDest.getDataType()) {
         std::printf("PIM-Error: PIM command %s does not support mixed data type\n", getName().c_str());
@@ -674,7 +698,12 @@ pimCmdFunc2::computeRegion(unsigned index)
       float floatOperand2 = pimUtils::castBitsToType<float>(operandBits2);
       float result = 0.0;
       if(!computeResultFP(floatOperand1, floatOperand2, m_cmdType, pimUtils::castBitsToType<float>(m_scalarValue), result)) return false;
-      objDest.setElement(elemIdx, result);
+      if (objDest.getDataType() == PIM_BOOL) {
+        bool resultBool = result > 0;
+        objDest.setElement(elemIdx, resultBool);
+      } else {
+        objDest.setElement(elemIdx, result);
+      }
     } else {
       assert(0); // todo: data type
     }

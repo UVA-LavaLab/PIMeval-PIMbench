@@ -12,7 +12,7 @@ Note that neighbors are defined as the block of 8 cells surrounding a cell, incl
 ## Directory Structure
 
 ```
-cpp-game-of-life/
+game-of-life/
 ├── PIM/
 │   ├── Makefile
 │   ├── game-of-life.cpp
@@ -92,7 +92,7 @@ After compiling, run the each executable with the following command that will ru
 ./game-of-life.out
 ```
 
-To see help text on all usages and how to modify any of the input parameters, use following command:
+To see help text on all usages and how to modify any of the input parameters, use the following command:
 
 ```bash
 ./game-of-life.out -h

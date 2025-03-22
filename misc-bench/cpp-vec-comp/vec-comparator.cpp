@@ -38,10 +38,16 @@ int main()
     std::cout << "Abort" << std::endl;
     return 1;
   }
+  PimObjId objBool = pimAllocAssociated(obj1, PIM_BOOL);
+  if (objBool == -1) {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
 
   std::vector<int> src1(numElements);
   std::vector<int> src2(numElements);
   std::vector<int> dest(numElements);
+  std::vector<uint8_t> destBool(numElements);
 
   // assign some initial values
   for (unsigned i = 0; i < numElements; ++i) {
@@ -61,13 +67,13 @@ int main()
     return 1;
   }
 
-  status = pimGT(obj1, obj2, obj3);
+  status = pimGT(obj1, obj2, objBool);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
 
-  status = pimCopyDeviceToHost(obj3, (void*)dest.data());
+  status = pimCopyDeviceToHost(objBool, (void*)destBool.data());
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -77,20 +83,20 @@ int main()
   bool ok = true;
   for (unsigned i = 0; i < numElements; ++i) {
     int result = (src1[i] > src2[i]) ? 1 : 0;
-    if (dest[i] != result) {
-      std::cout << "Wrong answer for greater than operator: " << src1[i] << " > " << src2[i] << " = " << dest[i] << " (expected " << result << ")" << std::endl;
+    if (destBool[i] != result) {
+      std::cout << "Wrong answer for greater than operator: " << src1[i] << " > " << src2[i] << " = " << (int)destBool[i] << " (expected " << result << ")" << std::endl;
       ok = false;
       break;
     }
   }
 
-  status = pimLT(obj1, obj2, obj3);
+  status = pimLT(obj1, obj2, objBool);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
 
-  status = pimCopyDeviceToHost(obj3, (void*)dest.data());
+  status = pimCopyDeviceToHost(objBool, (void*)destBool.data());
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -98,20 +104,20 @@ int main()
 
   for (unsigned i = 0; i < numElements; ++i) {
     int result = (src1[i] < src2[i]) ? 1 : 0;
-    if (dest[i] != result) {
-      std::cout << "Wrong answer for less than operator: " << src1[i] << " < " << src2[i] << " = " << dest[i] << " (expected " << result << ")" << std::endl;
+    if (destBool[i] != result) {
+      std::cout << "Wrong answer for less than operator: " << src1[i] << " < " << src2[i] << " = " << (int)destBool[i] << " (expected " << result << ")" << std::endl;
       ok = false;
       break;
     }
   }
 
-  status = pimEQ(obj1, obj2, obj3);
+  status = pimEQ(obj1, obj2, objBool);
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
   }
 
-  status = pimCopyDeviceToHost(obj3, (void*)dest.data());
+  status = pimCopyDeviceToHost(objBool, (void*)destBool.data());
   if (status != PIM_OK) {
     std::cout << "Abort" << std::endl;
     return 1;
@@ -119,8 +125,8 @@ int main()
 
   for (unsigned i = 0; i < numElements; ++i) {
     int result = (src1[i] == src2[i]) ? 1 : 0;
-    if (dest[i] != result) {
-      std::cout << "Wrong answer for equal operator: " << src1[i] << " == " << src2[i] << " = " << dest[i] << " (expected " << result << ")" << std::endl;
+    if (destBool[i] != result) {
+      std::cout << "Wrong answer for equal operator: " << src1[i] << " == " << src2[i] << " = " << (int)destBool[i] << " (expected " << result << ")" << std::endl;
       ok = false;
       break;
     }
@@ -174,5 +180,9 @@ int main()
     std::cout << "All correct!" << std::endl;
   }
 
+  pimFree(obj1);
+  pimFree(obj2);
+  pimFree(obj3);
+  pimFree(objBool);
   return 0;
 }

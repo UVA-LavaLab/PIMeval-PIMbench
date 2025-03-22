@@ -162,20 +162,8 @@ int main(int argc, char **argv)
   struct Params params = input_params(argc, argv);
 
   std::vector<std::vector<uint8_t>> x, y;
-
-  srand((unsigned)time(NULL));
-  x.resize(params.height);
-  for(size_t i=0; i<params.height; ++i) {
-    x[i].resize(params.width);
-    for(size_t j=0; j<params.width; ++j) {
-      x[i][j] = rand() & 1;
-    }
-  }
-
-  y.resize(x.size());
-  for(size_t i=0; i<y.size(); ++i) {
-    y[i].resize(x[0].size());
-  }
+  getMatrixBool(params.height, params.width, x);
+  y.resize(params.height, std::vector<uint8_t>(params.width, 0));
 
   auto start = std::chrono::high_resolution_clock::now();
   

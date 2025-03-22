@@ -122,11 +122,9 @@ int main(int argc, char* argv[])
   std::vector<uint8_t> x, y;
   if (params.inputFile == nullptr)
   {
-    srand((unsigned)time(NULL));
-    x.resize(params.height * params.width);
-    for(size_t i=0; i<x.size(); ++i) {
-      x[i] = rand() & 1;
-    }
+    std::vector<std::vector<uint8_t>> tmp;
+    getMatrixBool(1, params.height * params.width, tmp);
+    x = std::move(tmp[0]);
   } 
   else 
   {

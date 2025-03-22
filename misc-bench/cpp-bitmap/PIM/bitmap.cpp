@@ -87,7 +87,7 @@ void bitmap(const uint64_t numDatabaseEntries, const std::vector<uint8_t> databa
   assert(databaseObj != -1);
   PimObjId indicesCheckerObj = pimAllocAssociated(databaseObj, PIM_UINT8);
   assert(indicesCheckerObj != -1);
-  PimObjId tempObj = pimAllocAssociated(databaseObj, PIM_UINT8);
+  PimObjId tempObj = pimAllocAssociated(databaseObj, PIM_BOOL);
   assert(tempObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) database.data(), databaseObj);

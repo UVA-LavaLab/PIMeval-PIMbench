@@ -77,7 +77,7 @@ void histogram(uint64_t imgDataBytes, const std::vector<uint8_t> &imgData, std::
 {
   PimObjId imgObj = pimAlloc(PIM_ALLOC_AUTO, imgDataBytes, PIM_UINT8);
   assert(imgObj != -1);
-  PimObjId tempObj = pimAllocAssociated(imgObj, PIM_UINT8);
+  PimObjId tempObj = pimAllocAssociated(imgObj, PIM_BOOL);
   assert(tempObj != -1);
 
   PimStatus status = pimCopyHostToDevice((void *) imgData.data(), imgObj);
