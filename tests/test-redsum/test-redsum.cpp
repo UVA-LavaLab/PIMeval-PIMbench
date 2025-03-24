@@ -90,7 +90,7 @@ bool testRedSumBool(PimDeviceEnum deviceType)
   unsigned numRows = 1024;
   unsigned numCols = 8192;
 
-  uint64_t numElements = 65536;
+  uint64_t numElements = 65536 * 32; // multiply by 32 to match #bytes of UINT32 redsum for testing
   std::vector<uint8_t> src(numElements); // use uint8_t on host for bool
   std::vector<uint8_t> dest(numElements);
   uint64_t sum64 = 0;
@@ -111,7 +111,7 @@ bool testRedSumBool(PimDeviceEnum deviceType)
   // test a few iterations
   bool ok = true;
   for (int iter = 0; iter < 2; ++iter) {
-    PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_BOOL);
+    PimObjId obj = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_BOOL);  // non-associated
     assert(obj != -1);
 
     status = pimCopyHostToDevice((void*)src.data(), obj);
@@ -176,7 +176,7 @@ bool testRedSumBoolPadded(PimDeviceEnum deviceType)
   for (int iter = 0; iter < 2; ++iter) {
     PimObjId objInt = pimAlloc(PIM_ALLOC_AUTO, numElements, PIM_INT32);
     assert(objInt != -1);
-    PimObjId obj = pimAllocAssociated(objInt, PIM_BOOL);
+    PimObjId obj = pimAllocAssociated(objInt, PIM_BOOL);  // associated
     assert(obj != -1);
 
     status = pimCopyHostToDevice((void*)src.data(), obj);
