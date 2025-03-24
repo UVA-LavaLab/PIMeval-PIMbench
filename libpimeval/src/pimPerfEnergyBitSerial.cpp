@@ -139,9 +139,62 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic);
 }
 
+//! @brief  Perf energy model of bit-serial type conversion
+pimeval::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& objSrc, const pimObjInfo& objDest) const
+{
+  assert(cmdType == PimCmdEnum::CONVERT_TYPE);
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  unsigned numCores = objSrc.getNumCoreAvailable();
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msLogic = 0.0;
+
+  switch (deviceType) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    {
+      PimDataType dataTypeSrc = objSrc.getDataType();
+      PimDataType dataTypeDest = objDest.getDataType();
+      if (pimUtils::isFP(dataTypeSrc) || pimUtils::isFP(dataTypeDest)) {
+        std::cout << "PIM-Warning: Unimplemented bit-serial runtime estimation for"
+                  << " device=" << pimUtils::pimDeviceEnumToStr(m_simTarget)
+                  << " cmd=" << pimCmd::getName(cmdType, "")
+                  << " dataType=" << pimUtils::pimDataTypeEnumToStr(dataTypeSrc)
+                  << std::endl;
+        msRuntime = 1000000;
+        break;
+      }
+      unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::ACTUAL);
+      unsigned bitsPerElementDest = objDest.getBitsPerElement(PimBitWidth::ACTUAL);
+      // integer type conversion
+      unsigned numR = std::min(bitsPerElementSrc, bitsPerElementDest);
+      unsigned numW = bitsPerElementDest;
+      unsigned numL = 0;
+      msRead = numR * m_tR;
+      msWrite = numW * m_tW;
+      msLogic = numL * m_tL;
+      msRuntime = msRead + msWrite + msLogic;
+      mjEnergy = ((m_eL * numL * objSrc.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
+    default:
+      assert(0);
+  }
+  msRead *= numPass;
+  msWrite *= numPass;
+  msLogic *= numPass;
+  msRuntime *= numPass;
+  mjEnergy *= numPass;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic);
+}
+
 //! @brief  Perf energy model of bit-serial PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -158,7 +211,13 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      // handle type conversion specially
+      pimeval::perfEnergy perfEnergyBS;
+      if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+        perfEnergyBS = getPerfEnergyTypeConversion(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj, objDest);
+      } else {
+        perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      }
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
       msRead += perfEnergyBS.m_msRead;

@@ -12,7 +12,7 @@
 
 //! @brief  Perf energy model of Fulcrum for func1
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
 {
 
   // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
@@ -28,6 +28,10 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   double msALU = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+    // for type conversion, ALU parallelism is determined by the wider data type
+    bitsPerElement = std::max(bitsPerElement, objDest.getBitsPerElement(PimBitWidth::ACTUAL));
+  }
   unsigned numCores =  obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
@@ -81,6 +85,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MUL_SCALAR:
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::ABS:
+    case PimCmdEnum::CONVERT_TYPE:
     {
       msRead = m_tR;
       msWrite = m_tW;

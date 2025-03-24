@@ -12,7 +12,7 @@
 
 //! @brief  Perf energy model of bank-level PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -21,6 +21,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+    // for type conversion, ALU parallelism is determined by the wider data type
+    bitsPerElement = std::max(bitsPerElement, objDest.getBitsPerElement(PimBitWidth::ACTUAL));
+  }
   unsigned numCores = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -52,6 +56,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::BIT_SLICE_EXTRACT:
     case PimCmdEnum::BIT_SLICE_INSERT:
+    case PimCmdEnum::CONVERT_TYPE:
     {
       if (cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
         numberOfOperationPerElement *= 2; // 1 shift, 1 and

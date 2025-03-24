@@ -101,7 +101,7 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
 
 //! @brief  Perf energy model of base class for func1 (placeholder)
 pimeval::perfEnergy
-pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const
 {
   double msRuntime = 1e10;
   double mjEnergy = 999999999.9;
