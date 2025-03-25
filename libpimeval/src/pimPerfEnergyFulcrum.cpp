@@ -66,9 +66,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::BIT_SLICE_INSERT:
     {
       if (cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
-        numberOfALUOperationPerElement *= 2; // 1 shift, 1 and
+        // Assume one ALU cycle to do this for now
+        // numberOfALUOperationPerElement *= 2; // 1 shift, 1 and
       } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
-        numberOfALUOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
+        // Assume one ALU cycle to do this for now
+        // numberOfALUOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
       }
       msRead = m_tR;
       msWrite = m_tW;

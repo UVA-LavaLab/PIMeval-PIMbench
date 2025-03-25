@@ -59,9 +59,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::CONVERT_TYPE:
     {
       if (cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
-        numberOfOperationPerElement *= 2; // 1 shift, 1 and
+        // Assume on ALU cycle to do this for now
+        // numberOfOperationPerElement *= 2; // 1 shift, 1 and
       } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
-        numberOfOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
+        // Assume on ALU cycle to do this for now
+        // numberOfOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
       }
       // Refer to fulcrum documentation
       msRead = m_tR;
