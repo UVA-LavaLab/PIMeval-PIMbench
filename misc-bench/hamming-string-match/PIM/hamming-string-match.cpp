@@ -124,20 +124,6 @@ struct NeedlesTable {
   std::vector<size_t> actualToSortedNeedles;
 };
 
-// TODO: Replace insert and add logic with bool and uint PIM addition when available
-void addPimBoolToUInt32(PimObjId boolObj, PimObjId uintObj, PimObjId tmp) {
-  PimStatus status;
-  if (1 /*pimAdd int+bool*/) {
-    status = pimAdd(uintObj, boolObj, uintObj);
-    assert (status == PIM_OK);
-  } else {
-    status = pimBitSliceInsert(boolObj, tmp, 0);
-    assert (status == PIM_OK);
-    status = pimAdd(uintObj, tmp, uintObj);
-    assert (status == PIM_OK);
-  }
-}
-
 //! @brief  Precomputes a more optimal order to match keys/needles on PIM device for calculation reuse
 //! @details Instead of calling pimNEScalar multiple times for the same character, call only once per character per char index and reuse result
 //!          Orders needles within a character index to place needles with the same character next to each other
@@ -164,10 +150,9 @@ NeedlesTable stringMatchPrecomputeTable(const std::vector<std::string>& needles,
     resultTableActualToSorted[sortedToActualNeedles[needleIdx]] = needleIdx;
   }
 
-  // TODO: Remove references to tmpForConversion when mixed width PIM addition available
   // Maximize the number of needles computed each iteration
-  constexpr uint64_t verticalNonNeedleRows = 32 + 8 + 1 + 1; // tmpForConversion, haystackPim, intermediatePimBool, isHaystackNonZeroPimBool
-  constexpr uint64_t horizontalNonNeedleRows = 4; // tmpForConversion, haystackPim, intermediatePimBool, isHaystackNonZeroPimBool
+  constexpr uint64_t verticalNonNeedleRows = 8 + 1 + 1; // haystackPim, intermediatePimBool, isHaystackNonZeroPimBool
+  constexpr uint64_t horizontalNonNeedleRows = 3; // haystackPim, intermediatePimBool, isHaystackNonZeroPimBool
   constexpr uint64_t verticalHaystackCopyRows = 8; // haystackCopyPim
   constexpr uint64_t horizontalHaystackCopyRows = 1; // haystackCopyPim
   constexpr uint64_t verticalRowsPerNeedle = 32;
@@ -280,13 +265,6 @@ void hammingStringMatch(const std::vector<std::string>& needles, const std::stri
     assert(pimIndividualNeedleMismatches[i] != -1);
   }
 
-  // Used for converting PIM_BOOL into PIM_UINT32, can be removed with support for mixed width PIM addition
-  // TODO: Replace insert and add logic with bool and uint PIM addition when available
-  PimObjId tmpForConversion = pimAllocAssociated(rootObjToAssoc, PIM_UINT32);
-  assert(tmpForConversion != -1);
-  status = pimBroadcastUInt(tmpForConversion, 0);
-  assert (status == PIM_OK);
-
   // Stores the text that is being checked for the needles
   PimObjId haystackPim = pimAllocAssociated(rootObjToAssoc, PIM_UINT8);
   assert(haystackPim != -1);
@@ -365,18 +343,16 @@ void hammingStringMatch(const std::vector<std::string>& needles, const std::stri
           assert (status == PIM_OK);
         } else if(prevChar == currentChar) {
           // Reuse the previously calculated equality result in intermediatePimBool and pimAdd with the current matches
-          // status = pimAdd(pimIndividualNeedleMismatches[needleIdxPim], intermediatePimBool, pimIndividualNeedleMismatches[needleIdxPim]);
-          // assert (status == PIM_OK);
-          addPimBoolToUInt32(intermediatePimBool, pimIndividualNeedleMismatches[needleIdxPim], tmpForConversion);
+          status = pimAdd(pimIndividualNeedleMismatches[needleIdxPim], intermediatePimBool, pimIndividualNeedleMismatches[needleIdxPim]);
+          assert (status == PIM_OK);
         } else {
           // Check full text against current character
           status = pimNEScalar(haystackPim, intermediatePimBool, (uint64_t) currentChar);
           assert (status == PIM_OK);
 
           // Update the mismatch array
-          // status = pimAdd(pimIndividualNeedleMismatches[needleIdxPim], intermediatePimBool, pimIndividualNeedleMismatches[needleIdxPim]);
-          // assert (status == PIM_OK);
-          addPimBoolToUInt32(intermediatePimBool, pimIndividualNeedleMismatches[needleIdxPim], tmpForConversion);
+          status = pimAdd(pimIndividualNeedleMismatches[needleIdxPim], intermediatePimBool, pimIndividualNeedleMismatches[needleIdxPim]);
+          assert (status == PIM_OK);
         }
         prevChar = currentChar;
       }
@@ -478,8 +454,6 @@ void hammingStringMatch(const std::vector<std::string>& needles, const std::stri
     assert (status == PIM_OK);
   }
 
-  status = pimFree(tmpForConversion);
-  assert (status == PIM_OK);
   status = pimFree(haystackPim);
   assert (status == PIM_OK);
   status = pimFree(intermediatePimBool);
