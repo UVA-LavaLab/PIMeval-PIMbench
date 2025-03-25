@@ -111,7 +111,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bank-level PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;

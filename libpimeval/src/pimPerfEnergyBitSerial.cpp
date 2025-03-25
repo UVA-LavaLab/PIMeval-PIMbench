@@ -234,7 +234,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bit-serial PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
