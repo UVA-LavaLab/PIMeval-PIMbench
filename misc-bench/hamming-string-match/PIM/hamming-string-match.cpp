@@ -127,12 +127,15 @@ struct NeedlesTable {
 // TODO: Replace insert and add logic with bool and uint PIM addition when available
 void addPimBoolToUInt32(PimObjId boolObj, PimObjId uintObj, PimObjId tmp) {
   PimStatus status;
-  
-  status = pimBitSliceInsert(boolObj, tmp, 0);
-  assert (status == PIM_OK);
-
-  status = pimAdd(uintObj, tmp, uintObj);
-  assert (status == PIM_OK);
+  if (1 /*pimAdd int+bool*/) {
+    status = pimAdd(uintObj, boolObj, uintObj);
+    assert (status == PIM_OK);
+  } else {
+    status = pimBitSliceInsert(boolObj, tmp, 0);
+    assert (status == PIM_OK);
+    status = pimAdd(uintObj, tmp, uintObj);
+    assert (status == PIM_OK);
+  }
 }
 
 //! @brief  Precomputes a more optimal order to match keys/needles on PIM device for calculation reuse
