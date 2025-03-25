@@ -130,6 +130,8 @@ PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 PimStatus pimConvertType(PimObjId src, PimObjId dest);
 
 // Logic and Arithmetic Operation
+// Mixed data type extensions:
+// - pimAdd/pimSub: If src1 is an integer vector, src2 can be a Boolean vector for accumulation purposes.
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);

@@ -29,7 +29,7 @@ public:
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
 
 protected:
-  pimeval::perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const;
+  pimeval::perfEnergy getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj, const pimObjInfo& obj2) const;
   pimeval::perfEnergy getPerfEnergyTypeConversion(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& objSrc, const pimObjInfo& objDest) const;
 
   // Popcount logc Params from DRAM-CAM paper

@@ -629,35 +629,65 @@ pimCmdFunc2::sanityCheck() const
   if (!isAssociated(objSrc1, objSrc2) || !isAssociated(objSrc1, objDest)) {
     return false;
   }
-  if (objSrc1.getDataType() == PIM_BOOL || objSrc2.getDataType() == PIM_BOOL) {
-    switch (m_cmdType) {
-      case PimCmdEnum::AND:
-      case PimCmdEnum::OR:
-      case PimCmdEnum::XOR:
-      case PimCmdEnum::XNOR:
-        break;
-      default:
-        std::printf("PIM-Error: PIM command %s does not support PIM_BOOL type\n", getName().c_str());
-        return false;
-    }
-  }
   // Define command specific data type rules
+  bool isBoolSrc1Allowed = false;
+  bool isBoolSrc2Allowed = false;
+  bool isBoolDestRequired = false;
+  bool isSrc1Src2SameType = true;
+  bool isSrc1DestSameType = true;
   switch (m_cmdType) {
+    case PimCmdEnum::AND:
+    case PimCmdEnum::OR:
+    case PimCmdEnum::XOR:
+    case PimCmdEnum::XNOR:
+      isBoolSrc1Allowed = true;
+      isBoolSrc2Allowed = true;
+      break;
     case PimCmdEnum::GT:
     case PimCmdEnum::LT:
     case PimCmdEnum::EQ:
     case PimCmdEnum::NE:
-      if (objDest.getDataType() != PIM_BOOL) {
-        std::printf("PIM-Error: PIM command %s destination operand must be PIM_BOOL type\n", getName().c_str());
+      isBoolDestRequired = true;
+      isSrc1DestSameType = false;
+      break;
+    case PimCmdEnum::ADD:
+    case PimCmdEnum::SUB:
+      isBoolSrc2Allowed = true;
+      isSrc1Src2SameType = false;
+      // extra checks
+      if (pimUtils::isFP(objSrc1.getDataType()) && objSrc2.getDataType() == PIM_BOOL) {
+        std::printf("PIM-Error: PIM command %s does not support mixed FP and PIM_BOOL types\n", getName().c_str());
+        return false;
+      }
+      if (objSrc1.getDataType() != objSrc2.getDataType() && objSrc2.getDataType() != PIM_BOOL) {
+        std::printf("PIM-Error: PIM command %s can only support mixed data types if src2 is of PIM_BOOL type\n", getName().c_str());
         return false;
       }
       break;
     default:
-      if (objSrc1.getDataType() != objSrc2.getDataType() || objSrc1.getDataType() != objDest.getDataType()) {
-        std::printf("PIM-Error: PIM command %s does not support mixed data type\n", getName().c_str());
-        return false;
-      }
+      ; // pass
   }
+  if (!isBoolSrc1Allowed && objSrc1.getDataType() == PIM_BOOL) {
+    std::printf("PIM-Error: PIM command %s src1 cannot be of PIM_BOOL type\n", getName().c_str());
+    return false;
+  }
+  if (!isBoolSrc2Allowed && objSrc2.getDataType() == PIM_BOOL) {
+    std::printf("PIM-Error: PIM command %s src2 cannot be of PIM_BOOL type\n", getName().c_str());
+    return false;
+  }
+  if (isBoolDestRequired && objDest.getDataType() != PIM_BOOL) {
+    std::printf("PIM-Error: PIM command %s dest must be of PIM_BOOL type\n", getName().c_str());
+    return false;
+  }
+  if (isSrc1Src2SameType && objSrc1.getDataType() != objSrc2.getDataType()) {
+    std::printf("PIM-Error: PIM command %s src1 and src2 must be of same data type\n", getName().c_str());
+    return false;
+  }
+  if (isSrc1DestSameType && objSrc1.getDataType() != objDest.getDataType()) {
+    std::printf("PIM-Error: PIM command %s src1 and dest must be of same data type\n", getName().c_str());
+    return false;
+  }
+
   return true;
 }
 

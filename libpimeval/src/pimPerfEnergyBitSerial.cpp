@@ -15,7 +15,7 @@
 //! @brief  Get performance and energy for bit-serial PIM
 //!         BitSIMD and SIMDRAM need different fields
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj, const pimObjInfo& obj2) const
 {
   bool ok = false;
   double msRuntime = 0.0;
@@ -35,22 +35,33 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
         deviceType = PIM_DEVICE_BITSIMD_V;
       }
       // look up perf params from table
+      unsigned numR = 0, numW = 0, numL = 0;
       auto it1 = pimPerfEnergyTables::bitsimdPerfTable.find(deviceType);
       if (it1 != pimPerfEnergyTables::bitsimdPerfTable.end()) {
         auto it2 = it1->second.find(dataType);
         if (it2 != it1->second.end()) {
           auto it3 = it2->second.find(cmdType);
           if (it3 != it2->second.end()) {
-            const auto& [numR, numW, numL] = it3->second;
-            msRead += m_tR * numR;
-            msWrite += m_tW * numW;
-            msLogic += m_tL * numL;
-            msRuntime += msRead + msWrite + msLogic;;
-            mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
-            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            numR = std::get<0>(it3->second);
+            numW = std::get<1>(it3->second);
+            numL = std::get<2>(it3->second);
             ok = true;
           }
         }
+      }
+      // workaround: handle add/sub int+bool
+      if (ok) {
+        if ((cmdType == PimCmdEnum::ADD || cmdType == PimCmdEnum::SUB) && obj2.getDataType() == PIM_BOOL) {
+          numR = numR / 2 + 1;
+        }
+      }
+      if (ok) {
+        msRead += m_tR * numR;
+        msWrite += m_tW * numW;
+        msLogic += m_tL * numL;
+        msRuntime += msRead + msWrite + msLogic;
+        mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+        mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       }
       // handle bit-serial operations not in the above table
       if (!ok) {
@@ -216,7 +227,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       if (cmdType == PimCmdEnum::CONVERT_TYPE) {
         perfEnergyBS = getPerfEnergyTypeConversion(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj, objDest);
       } else {
-        perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+        perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj, objDest);
       }
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
@@ -251,7 +262,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
+      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj, objSrc2);
       msRuntime += perfEnergyBS.m_msRuntime;
       mjEnergy += perfEnergyBS.m_mjEnergy;
       msRead += perfEnergyBS.m_msRead;
@@ -317,7 +328,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           // The following does not consider the cost for data rearrangement. Ideally that should be considered.
           // TODO: for ranged reduction, `numElements` should be the #elements in the range
           unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj, obj);
           msRuntime = perfEnergyBS.m_msRuntime * levels;
           mjEnergy = perfEnergyBS.m_mjEnergy * levels;
           msRead = perfEnergyBS.m_msRead * levels;
@@ -333,7 +344,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           // The following does not consider the cost for data rearrangement. Ideally that should be considered.
           // TODO: for ranged reduction, `numElements` should be the #elements in the range
           unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj, obj);
           msRuntime = perfEnergyBS.m_msRuntime * levels;
           mjEnergy = perfEnergyBS.m_mjEnergy * levels;
           msRead = perfEnergyBS.m_msRead * levels;
