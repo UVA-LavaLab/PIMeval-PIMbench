@@ -85,7 +85,7 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void game_of_life_row(const std::list<PimObjId> &pim_board, const std::list<PimObjId> &pim_board_sums, PimObjId tmp_pim_obj, PimObjId tmp_pim_obj_2, PimObjId tmp_pim_bool, PimObjId result_obj, const bool is_start, const bool is_end) {
+void game_of_life_row(const std::list<PimObjId> &pim_board, const std::list<PimObjId> &pim_board_sums, PimObjId pim_accumulator, PimObjId tmp_pim_bool, PimObjId result_obj, const bool is_start, const bool is_end) {
   PimStatus status;
   auto it = pim_board.cbegin();
   if(!is_start) {
@@ -93,43 +93,53 @@ void game_of_life_row(const std::list<PimObjId> &pim_board, const std::list<PimO
     it++;
     it++;
   }
-  // TODO: Replace insert and add logic with bool and uint PIM addition when available
-  status = pimBitSliceInsert(*it, tmp_pim_obj_2, 0);
-  assert (status == PIM_OK);
-
-  status = pimCopyObjectToObject(tmp_pim_obj_2, tmp_pim_obj);
-  assert (status == PIM_OK);
-  it++;
-  it++;
-  status = pimBitSliceInsert(*it, tmp_pim_obj_2, 0);
-  assert (status == PIM_OK);
-
-  status = pimAdd(tmp_pim_obj, tmp_pim_obj_2, tmp_pim_obj);
-  assert (status == PIM_OK);
-
-  if(!is_start) {
-    status = pimAdd(tmp_pim_obj, pim_board_sums.front(), tmp_pim_obj);
+  const PimObjId left = *it;
+  ++it;
+  const PimObjId mid = *it;
+  ++it;
+  const PimObjId right = *it;
+  if(!is_start && !is_end) {
+    // Row is in the middle
+    status = pimAdd(pim_board_sums.back(), pim_board_sums.front(), pim_accumulator);
+    assert (status == PIM_OK);
+    status = pimAdd(pim_accumulator, left, pim_accumulator);
+    assert (status == PIM_OK);
+    status = pimAdd(pim_accumulator, right, pim_accumulator);
+    assert (status == PIM_OK);
+  } else if(!is_end) {
+    // Row is at the top
+    status = pimAdd(pim_board_sums.back(), left, pim_accumulator);
+    assert (status == PIM_OK);
+    status = pimAdd(pim_accumulator, right, pim_accumulator);
+    assert (status == PIM_OK);
+  } else if(!is_start) {
+    // Row is at the bottom
+    status = pimAdd(pim_board_sums.front(), left, pim_accumulator);
+    assert (status == PIM_OK);
+    status = pimAdd(pim_accumulator, right, pim_accumulator);
+    assert (status == PIM_OK);
+  } else {
+    // Row is at the top and bottom (there is one row)
+    status = pimConvertType(left, pim_accumulator); // TODO: Could be replaced with PIM_BOOL+PIM_BOOL=PIM_UINT8 if/when available
+    assert (status == PIM_OK);
+    status = pimAdd(pim_accumulator, right, pim_accumulator);
     assert (status == PIM_OK);
   }
-  if(!is_end) {
-    status = pimAdd(tmp_pim_obj, pim_board_sums.back(), tmp_pim_obj);
-    assert (status == PIM_OK);
-  }
 
-  status = pimEQScalar(tmp_pim_obj, result_obj, 3);
+  status = pimEQScalar(pim_accumulator, result_obj, 3);
   assert (status == PIM_OK);
 
-  status = pimEQScalar(tmp_pim_obj, tmp_pim_bool, 2);
+  status = pimEQScalar(pim_accumulator, tmp_pim_bool, 2);
   assert (status == PIM_OK);
-  it--;
-  status = pimAnd(tmp_pim_bool, *it, tmp_pim_bool);
+
+  status = pimAnd(tmp_pim_bool, mid, tmp_pim_bool);
   assert (status == PIM_OK);
 
   status = pimOr(result_obj, tmp_pim_bool, result_obj);
   assert (status == PIM_OK);
 }
 
-void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, PimObjId tmp_pim_obj_2, std::list<PimObjId> &pim_board, std::list<PimObjId>& pim_board_sums) {
+void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associate, std::list<PimObjId> &pim_board, std::list<PimObjId>& pim_board_sums) {
 
   PimObjId mid = pimAllocAssociated(to_associate, PIM_BOOL);
   assert(mid != -1);
@@ -157,26 +167,14 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
   pim_board.push_back(right);
 
   // Cache sums to reduce repeated work
-  // TODO: Replace insert and add logic with bool and uint PIM addition when available
   PimObjId sum = pimAllocAssociated(to_associate, PIM_UINT8);
   assert(mid != -1);
   
-  status = pimBitSliceInsert(left, tmp_pim_obj_2, 0);
+  status = pimConvertType(left, sum); // TODO: Could be replaced with PIM_BOOL+PIM_BOOL=PIM_UINT8 if/when available
   assert (status == PIM_OK);
-
-  status = pimCopyObjectToObject(tmp_pim_obj_2, sum);
+  status = pimAdd(sum, mid, sum);
   assert (status == PIM_OK);
-
-  status = pimBitSliceInsert(mid, tmp_pim_obj_2, 0);
-  assert (status == PIM_OK);
-
-  status = pimAdd(sum, tmp_pim_obj_2, sum);
-  assert (status == PIM_OK);
-
-  status = pimBitSliceInsert(right, tmp_pim_obj_2, 0);
-  assert (status == PIM_OK);
-
-  status = pimAdd(sum, tmp_pim_obj_2, sum);
+  status = pimAdd(sum, right, sum);
   assert (status == PIM_OK);
 
   pim_board_sums.push_back(sum);
@@ -191,13 +189,6 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
   PimObjId tmp_pim_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_UINT8);
   assert(tmp_pim_obj != -1);
 
-  // tmp_pim_obj_2 is used for adding bools - bools must be converted into UINT8 via splicing before addition
-  // TODO: Replace insert and add logic with bool and uint PIM addition when available
-  PimObjId tmp_pim_obj_2 = pimAllocAssociated(tmp_pim_obj, PIM_UINT8);
-  assert(tmp_pim_obj_2 != -1);
-  status = pimBroadcastUInt(tmp_pim_obj_2, 0);
-  assert (status == PIM_OK);
-
   PimObjId tmp_pim_bool = pimAllocAssociated(tmp_pim_obj, PIM_BOOL);
   assert(tmp_pim_bool != -1);
 
@@ -205,16 +196,16 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
   std::list<PimObjId> pim_board;
   std::list<PimObjId> pim_board_sums;
 
-  add_vector_to_grid(src_host[0], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
+  add_vector_to_grid(src_host[0], tmp_pim_obj, pim_board, pim_board_sums);
   if(height > 1) {
-    add_vector_to_grid(src_host[1], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
+    add_vector_to_grid(src_host[1], tmp_pim_obj, pim_board, pim_board_sums);
   }
 
   PimObjId result_object = pimAllocAssociated(tmp_pim_obj, PIM_BOOL);
   assert(result_object != -1);
 
   for(size_t i=0; i<height; ++i) {
-    game_of_life_row(pim_board, pim_board_sums, tmp_pim_obj, tmp_pim_obj_2, tmp_pim_bool, result_object, i==0, i+1==height);
+    game_of_life_row(pim_board, pim_board_sums, tmp_pim_obj, tmp_pim_bool, result_object, i==0, i+1==height);
     status = pimCopyDeviceToHost(result_object, dst_host[i].data());
     assert (status == PIM_OK);
     if(i!=0) {
@@ -228,13 +219,11 @@ void game_of_life(const std::vector<std::vector<uint8_t>> &src_host, std::vector
       pim_board_sums.pop_front();
     }
     if(i+2<height) {
-      add_vector_to_grid(src_host[i+2], tmp_pim_obj, tmp_pim_obj_2, pim_board, pim_board_sums);
+      add_vector_to_grid(src_host[i+2], tmp_pim_obj, pim_board, pim_board_sums);
     }
   }
 
   status = pimFree(tmp_pim_obj);
-  assert (status == PIM_OK);
-  status = pimFree(tmp_pim_obj_2);
   assert (status == PIM_OK);
   status = pimFree(tmp_pim_bool);
   assert (status == PIM_OK);
