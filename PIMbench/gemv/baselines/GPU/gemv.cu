@@ -10,15 +10,15 @@
 #include <iostream>
 #include <cublas_v2.h>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 #define TOLERANCE 200.0f
 
 using namespace std;
 
-vector<int32_t> A;
-vector<int32_t> B;
-vector<int32_t> C;
+vector<float> A;
+vector<float> B;
+vector<float> C;
 
 // Params ---------------------------------------------------------------------
 typedef struct Params

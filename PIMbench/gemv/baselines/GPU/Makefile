@@ -20,9 +20,12 @@ CXXFLAGS := -std=c++17
 # Default target
 all: $(EXEC)
 
+# Dependancy
+DEP := ../../../../util/
+
 # Rule to build the target executable
 $(EXEC): $(SOURCES)
-	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
+	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I$(DEP) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 
 # Rule to clean the project
 clean:
