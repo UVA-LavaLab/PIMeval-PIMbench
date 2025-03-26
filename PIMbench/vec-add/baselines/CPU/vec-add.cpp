@@ -10,7 +10,7 @@
 #include <getopt.h>
 #include <chrono>
 #include <omp.h>
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 // Global Vectors
 vector<int32_t> A;

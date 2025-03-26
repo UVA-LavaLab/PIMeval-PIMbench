@@ -11,7 +11,7 @@
 using namespace std;
 
 #define WARMUP 2
-#define MAX_NUMBER 1024
+#define MAX_NUMBER 102
 
 /**
  * @brief Initializes a vector with random values.
@@ -27,12 +27,9 @@ void getVector(uint64_t vectorSize, std::vector<T>& dataVector) {
     // Resize the vector to the specified size
     dataVector.resize(vectorSize);
 
-    // Seed the random number generator with a fixed seed for reproducibility
-    srand(8746219);
-
     #pragma omp parallel for
     for (uint64_t i = 0; i < vectorSize; ++i) {
-        dataVector[i] = static_cast<T>(rand() % MAX_NUMBER);
+        dataVector[i] = static_cast<T>(i % MAX_NUMBER);
     }
 }
 
@@ -50,16 +47,13 @@ void getVector(uint64_t vectorSize, std::vector<T>& dataVector) {
 template <typename T>
 void getMatrix(uint64_t numRows, uint64_t numCols, vector<vector<T>> &matrix) {
 
-    // Seed the random number generator with a fixed seed for reproducibility
-    srand(8746219);
-
     // Resize the matrix to the specified number of rows and columns
     matrix.resize(numRows, vector<T>(numCols));
 
     #pragma omp parallel for
     for (uint64_t row = 0; row < numRows; ++row) {
         for (uint64_t col = 0; col < numCols; ++col) {
-            matrix[row][col] = rand() % MAX_NUMBER;
+            matrix[row][col] = static_cast<T>(row*col % MAX_NUMBER);
         }
     }
 }
