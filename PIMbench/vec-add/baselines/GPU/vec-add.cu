@@ -9,7 +9,7 @@
 #include <math.h>
 #include <iostream>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 vector<int> A;
 vector<int> B;
@@ -76,15 +76,17 @@ int main(int argc, char *argv[])
     // Parse input parameters
     Params params = parseParams(argc, argv);
     uint64_t vectorSize = params.vectorSize;
-    getVector<int32_t>(vectorSize, A);
-    getVector<int32_t>(vectorSize, B);
-    C.resize(vectorSize);
-    std::cout << "Running vector addition for GPU on vector of size: " << vectorSize << std::endl;
     int *x, *y, *z;
     int blockSize = 1024;
     int numBlock = (vectorSize + blockSize - 1) / blockSize;
 
     int n_pad = numBlock * blockSize;
+
+    getVector<int32_t>(n_pad, A);
+    getVector<int32_t>(n_pad, B);
+    C.resize(n_pad);
+    std::cout << "Running vector addition for GPU on vector of size: " << vectorSize << std::endl;
+
     cudaError_t errorCode;
 
     errorCode = cudaMalloc(&x, n_pad * sizeof(int));

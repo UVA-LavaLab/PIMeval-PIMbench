@@ -14,7 +14,7 @@
 #include <chrono>
 #include <omp.h>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 // Params ---------------------------------------------------------------------
 typedef struct Params

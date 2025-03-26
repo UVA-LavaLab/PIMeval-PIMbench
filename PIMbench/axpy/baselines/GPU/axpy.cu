@@ -10,7 +10,7 @@
 #include <iostream>
 #include <cublas_v2.h>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 using namespace std;
 
