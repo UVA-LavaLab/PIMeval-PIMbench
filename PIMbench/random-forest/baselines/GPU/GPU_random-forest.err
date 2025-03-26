@@ -1,0 +1,23 @@
+
+[notice] A new release of pip is available: 24.0 -> 25.0.1
+[notice] To update, run: pip install --upgrade pip
+  WARNING: The script f2py is installed in '/u/kmd2zjw/.local/bin' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+
+[notice] A new release of pip is available: 24.0 -> 25.0.1
+[notice] To update, run: pip install --upgrade pip
+/opt/conda/lib/python3.12/site-packages/cuml/internals/api_decorators.py:368: UserWarning: For reproducible results in Random Forest Classifier or for almost reproducible results in Random Forest Regressor, n_streams=1 is recommended. If n_streams is > 1, results may vary due to stream/thread timing differences, even when random_state is set
+  return init_func(self, *args, **kwargs)
+Traceback (most recent call last):
+  File "/u/kmd2zjw/pim_research_project/PIMeval-PIMbench/PIMbench/random-forest/baselines/GPU/test_model.py", line 60, in <module>
+    leaf_counts = [estimator.get_n_leaves() for estimator in rf_model.estimators_]
+                                                             ^^^^^^^^^^^^^^^^^^^^
+  File "base.pyx", line 889, in cuml.internals.base.UniversalBase.__getattr__
+  File "base.pyx", line 858, in cuml.internals.base.UniversalBase.__getattr__
+  File "base.pyx", line 398, in cuml.internals.base.Base.__getattr__
+AttributeError: estimators_. Did you mean: 'n_estimators'?
+Exception ignored in: <cyfunction RandomForestClassifier.__del__ at 0x148e72ebb100>
+Traceback (most recent call last):
+  File "randomforestclassifier.pyx", line 352, in cuml.ensemble.randomforestclassifier.RandomForestClassifier.__del__
+  File "randomforestclassifier.pyx", line 368, in cuml.ensemble.randomforestclassifier.RandomForestClassifier._reset_forest_data
+AttributeError: 'NoneType' object has no attribute 'free_treelite_model'
