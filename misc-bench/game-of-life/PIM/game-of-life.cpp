@@ -120,9 +120,7 @@ void game_of_life_row(const std::list<PimObjId> &pim_board, const std::list<PimO
     assert (status == PIM_OK);
   } else {
     // Row is at the top and bottom (there is one row)
-    status = pimConvertType(left, pim_accumulator); // TODO: Could be replaced with PIM_BOOL+PIM_BOOL=PIM_UINT8 if/when available
-    assert (status == PIM_OK);
-    status = pimAdd(pim_accumulator, right, pim_accumulator);
+    status = pimAdd(left, right, pim_accumulator); // bool + bool = uint8
     assert (status == PIM_OK);
   }
 
@@ -168,13 +166,11 @@ void add_vector_to_grid(const std::vector<uint8_t> &to_add, PimObjId to_associat
 
   // Cache sums to reduce repeated work
   PimObjId sum = pimAllocAssociated(to_associate, PIM_UINT8);
-  assert(mid != -1);
-  
-  status = pimConvertType(left, sum); // TODO: Could be replaced with PIM_BOOL+PIM_BOOL=PIM_UINT8 if/when available
+  assert(sum != -1);
+
+  status = pimAdd(left, mid, sum); // bool + bool = uint8
   assert (status == PIM_OK);
-  status = pimAdd(sum, mid, sum);
-  assert (status == PIM_OK);
-  status = pimAdd(sum, right, sum);
+  status = pimAdd(sum, right, sum); // uint8 + bool = uint8
   assert (status == PIM_OK);
 
   pim_board_sums.push_back(sum);
