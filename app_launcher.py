@@ -121,7 +121,11 @@ def main():
     print("Running executable:", args.executable)
     print("----------------------------------------")
     try:
-        os.execvp(args.executable, [args.executable] + unknown_args)
+        # Ensure the executable has a valid prefix if it's a relative path
+        executable_path = args.executable
+        if not os.path.isabs(executable_path) and not executable_path.startswith("./"):
+            executable_path = "./" + executable_path
+        os.execvp(executable_path, [executable_path] + unknown_args)
     except OSError as e:
         print("Execution failed:", e)
         sys.exit(1)
