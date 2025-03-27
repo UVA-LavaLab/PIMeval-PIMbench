@@ -109,6 +109,20 @@ bool testMixedTypes(PimDeviceEnum deviceType)
     }
   }
 
+  // bool + bool = int
+  status = pimBroadcastInt(objDest, 0); assert(status == PIM_OK);
+  status = pimLT(objSrc1, objSrc2, objBool1); assert(status == PIM_OK);
+  status = pimNE(objSrc1, objSrc2, objBool2); assert(status == PIM_OK);
+  status = pimAdd(objBool1, objBool2, objDest); assert(status == PIM_OK);
+  status = pimCopyDeviceToHost(objDest, (void*)dest.data()); assert(status == PIM_OK);
+  for (uint64_t i = 0; i < numElements; ++i) {
+    int expected = (src1[i] < src2[i] ? 1 : 0) + (src1[i] != src2[i] ? 1 : 0);
+    if (dest[i] != expected) {
+      ok = false;
+      std::printf("Error: bool + bool: src1 0x%x, src2 0x%x, dest 0x%x, expected 0x%x\n", src1[i], src2[i], dest[i], expected);
+    }
+  }
+
   pimFree(objSrc1);
   pimFree(objSrc2);
   pimFree(objSrc3);
