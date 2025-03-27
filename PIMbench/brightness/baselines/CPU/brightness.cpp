@@ -14,11 +14,8 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <ctype.h>
 #include <bits/stdc++.h>
 #include <omp.h>
-
-#include "../../../utilBaselines.h"
 
 #define MINCOLORVALUE 0 // Sets the max value that any color channel can be in a given pixel
 #define MAXCOLORVALUE 255 // Sets the max value that any color channel can be in a given pixel 
