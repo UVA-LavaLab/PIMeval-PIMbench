@@ -25,12 +25,11 @@ using namespace std;
 
 void getVector(uint64_t vectorLength, std::vector<int> &srcVector)
 {
-  srand((unsigned)time(NULL));
   srcVector.resize(vectorLength);
 #pragma omp parallel for
   for (uint64_t i = 0; i < vectorLength; ++i)
   {
-    srcVector[i] = rand() % MAX_NUMBER;
+    srcVector[i] = i % MAX_NUMBER;
   }
 }
 
@@ -53,14 +52,13 @@ void getVectorFP32(uint64_t vectorLength, std::vector<float> &srcVector, bool no
 
 void getMatrix(int row, int column, int padding, std::vector<std::vector<int>> &inputMatrix)
 {
-  srand((unsigned)time(NULL));
   inputMatrix.resize(row + 2 * padding, std::vector<int>(column + 2 * padding, 0));
 #pragma omp parallel for
   for (int i = padding; i < row + padding; ++i)
   {
     for (int j = padding; j < column + padding; ++j)
     {
-      inputMatrix[i][j] = rand() % MAX_NUMBER;
+      inputMatrix[i][j] = i*j % MAX_NUMBER;
     }
   }
 }
