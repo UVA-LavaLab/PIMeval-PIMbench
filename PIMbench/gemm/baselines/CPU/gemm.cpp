@@ -16,7 +16,7 @@
 #include <omp.h>
 #include <iomanip>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 vector<double> A;
 vector<double> B;
