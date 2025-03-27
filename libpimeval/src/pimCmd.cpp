@@ -654,8 +654,12 @@ pimCmdFunc2::sanityCheck() const
     case PimCmdEnum::SUB:
       isBoolSrc2Allowed = true;
       isSrc1Src2SameType = false;
+      if (m_cmdType == PimCmdEnum::ADD && objSrc2.getDataType() == PIM_BOOL) {
+        isBoolSrc1Allowed = true;  // support pimAdd bool + bool = int
+        isSrc1DestSameType = false;
+      }
       // extra checks
-      if (pimUtils::isFP(objSrc1.getDataType()) && objSrc2.getDataType() == PIM_BOOL) {
+      if ((pimUtils::isFP(objSrc1.getDataType()) || pimUtils::isFP(objDest.getDataType())) && objSrc2.getDataType() == PIM_BOOL) {
         std::printf("PIM-Error: PIM command %s does not support mixed FP and PIM_BOOL types\n", getName().c_str());
         return false;
       }
