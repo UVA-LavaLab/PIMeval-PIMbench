@@ -10,13 +10,15 @@ EXEC := lr.out
 # Source files
 SRC_FILES := $(wildcard *.cpp)
 
+# Dependancy
+DEP := ../../../../util/
 
 .PHONY: all clean
 
 all: $(EXEC)
 
 $(EXEC): $(SRC_FILES) |
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -I$(DEP) -o $@ $^
 
 clean:
 	rm -rf $(EXEC)

@@ -16,8 +16,6 @@
 #include <thrust/transform.h>
 #include <thrust/functional.h>
 
-#include "../../../utilBaselines.h"
-
 #define MINCOLORVALUE 0 // Sets the max value that any color channel can be in a given pixel
 #define MAXCOLORVALUE 255 // Sets the max value that any color channel can be in a given pixel 
 

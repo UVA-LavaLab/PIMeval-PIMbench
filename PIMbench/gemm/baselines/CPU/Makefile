@@ -11,13 +11,15 @@ EXEC := gemm.out
 # Source files
 SRC_FILES := $(wildcard *.cpp)
 
+# Dependancy
+DEP := ../../../../util/
 
 .PHONY: all clean
 
 all: $(EXEC)
 
 $(EXEC): $(SRC_FILES) |
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -I$(DEP) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -rf $(EXEC)

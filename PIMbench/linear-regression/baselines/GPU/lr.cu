@@ -9,7 +9,7 @@
 #include <math.h>
 #include <iostream>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 #define BLOCK_SIZE 512
 

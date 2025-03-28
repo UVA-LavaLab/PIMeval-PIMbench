@@ -19,7 +19,6 @@
 #include <assert.h>
 #include <stdint.h>
 #include <iostream>
-#include <cmath>
 #include <unordered_map>
 #include <chrono>
 #include <vector>
@@ -27,7 +26,7 @@
 #include <float.h>
 #include <limits.h>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 using namespace std;
 

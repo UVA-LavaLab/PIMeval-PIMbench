@@ -11,7 +11,6 @@
 #include <fcntl.h>
 
 #include <cub/cub.cuh>
-#include "../../../utilBaselines.h"
  
 using namespace std;
 
