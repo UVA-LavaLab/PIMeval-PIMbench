@@ -129,6 +129,7 @@ pimStatsMgr::showCmdStats() const
   double totalMsRead = 0.0;
   double totalMsWrite = 0.0;
   double totalMsCompute = 0.0;
+  uint64_t totalOp = 0;
   for (const auto& it : m_cmdPerf) {
     double cmdRuntime = it.second.second.m_msRuntime;
     double percentRead = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msRead * 100 / cmdRuntime);
@@ -141,9 +142,11 @@ pimStatsMgr::showCmdStats() const
     totalMsRead += it.second.first * percentRead;
     totalMsWrite += it.second.first * percentWrite;
     totalMsCompute += it.second.first * percentCompute;
+    totalOp += it.second.second.m_totalOP;
   }
   std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
-
+  double totalPower = totalMjEnergy / totalMsRuntime;
+  std::printf("\nPerformance Per Watt: %7.2f OPS/W\n", totalOp*1.0/totalPower);
   // analyze micro-ops
   int numR = 0;
   int numW = 0;
@@ -192,6 +195,7 @@ pimStatsMgr::recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEner
   item.second.m_msRead += mPerfEnergy.m_msRead;
   item.second.m_msWrite += mPerfEnergy.m_msWrite;
   item.second.m_msCompute += mPerfEnergy.m_msCompute;
+  item.second.m_totalOP += mPerfEnergy.m_totalOP;
 }
 
 //! @brief  Record estimated runtime and energy of data copy
