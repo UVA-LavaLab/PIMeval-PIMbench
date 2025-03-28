@@ -15,12 +15,19 @@
 //! @brief  Get performance and energy for bit-serial PIM
 //!         BitSIMD and SIMDRAM need different fields
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, PimDataType dataType, unsigned bitsPerElement, unsigned numPass, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdEnum cmdType, unsigned numPass, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
 {
   bool ok = false;
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
-  unsigned numCores = obj.getNumCoreAvailable();
+  unsigned numCores = objSrc1.getNumCoreAvailable();
+  unsigned bitsPerElement = objSrc1.getBitsPerElement(PimBitWidth::ACTUAL);
+  PimDataType dataType = objSrc1.getDataType();
+  // workaround: special handling for pimAdd bool + bool = int
+  if (cmdType == PimCmdEnum::ADD) {
+    bitsPerElement = objDest.getBitsPerElement(PimBitWidth::ACTUAL);
+    dataType = objDest.getDataType();
+  }
   double msRead = 0.0;
   double msWrite = 0.0;
   double msLogic = 0.0;
@@ -35,26 +42,57 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
         deviceType = PIM_DEVICE_BITSIMD_V;
       }
       // look up perf params from table
+      unsigned numR = 0, numW = 0, numL = 0;
       auto it1 = pimPerfEnergyTables::bitsimdPerfTable.find(deviceType);
       if (it1 != pimPerfEnergyTables::bitsimdPerfTable.end()) {
         auto it2 = it1->second.find(dataType);
         if (it2 != it1->second.end()) {
           auto it3 = it2->second.find(cmdType);
           if (it3 != it2->second.end()) {
-            const auto& [numR, numW, numL] = it3->second;
-            msRead += m_tR * numR;
-            msWrite += m_tW * numW;
-            msLogic += m_tL * numL;
-            msRuntime += msRead + msWrite + msLogic;;
-            mjEnergy += ((m_eL * numL * obj.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
-            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            numR = std::get<0>(it3->second);
+            numW = std::get<1>(it3->second);
+            numL = std::get<2>(it3->second);
             ok = true;
           }
         }
       }
+      // workaround: adjust for add/sub mixed data type cases
+      if (ok) {
+        // pimAdd: int + bool = int, bool + bool = int
+        // pimSub: int - bool = int
+        if (cmdType == PimCmdEnum::ADD || cmdType == PimCmdEnum::SUB) {
+          if (pimUtils::isSigned(dataType) || pimUtils::isUnsigned(dataType)) {
+            unsigned numBitsSrc1 = pimUtils::getNumBitsOfDataType(objSrc1.getDataType(), PimBitWidth::ACTUAL);
+            unsigned numBitsSrc2 = pimUtils::getNumBitsOfDataType(objSrc2.getDataType(), PimBitWidth::ACTUAL);
+            numR = numBitsSrc1 + numBitsSrc2;
+          }
+        }
+      }
+      if (ok) {
+        msRead += m_tR * numR;
+        msWrite += m_tW * numW;
+        msLogic += m_tL * numL;
+        msRuntime += msRead + msWrite + msLogic;
+        mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+        mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      }
       // handle bit-serial operations not in the above table
       if (!ok) {
         switch (cmdType) {
+          case PimCmdEnum::COPY_O2O:
+          {
+            unsigned numR = bitsPerElement;
+            unsigned numW = bitsPerElement;
+            unsigned numL = 0;
+            msRead += numR * m_tR;
+            msWrite += numW * m_tW;
+            msLogic += numL * m_tL;
+            msRuntime += msRead + msWrite + msLogic;
+            mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            ok = true;
+            break;
+          }
           case PimCmdEnum::BIT_SLICE_EXTRACT:
           case PimCmdEnum::BIT_SLICE_INSERT:
             // each bit-slice extract/insert operation takes 1 row read and 1 row write
@@ -65,6 +103,27 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
             ok = true;
             break;
+          case PimCmdEnum::COND_BROADCAST:
+          {
+            // bit-serial approach:
+            // read the bool condition row, and move it to a bit register
+            // for each row of dest:
+            //   save the scalar value bit into a bit register
+            //   read the row
+            //   select between existing value and scalar value (more efficient with SEL instruction)
+            //   write the row
+            unsigned numR = 1 + bitsPerElement;
+            unsigned numW = bitsPerElement;
+            unsigned numL = 1 + 2 * bitsPerElement; // mov, (set, sel)
+            msRead += numR * m_tR;
+            msWrite += numW * m_tW;
+            msLogic += numL * m_tL;
+            msRuntime += msRead + msWrite + msLogic;
+            mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            ok = true;
+            break;
+          }
           case PimCmdEnum::SHIFT_BITS_L:
           case PimCmdEnum::SHIFT_BITS_R:
             // handle bit-shift specially
@@ -104,72 +163,105 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic);
 }
 
-//! @brief  Perf energy model of bit-serial PIM for func1
+//! @brief  Perf energy model of bit-serial type conversion
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const
 {
+  assert(cmdType == PimCmdEnum::CONVERT_TYPE);
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
+  unsigned numCores = objSrc.getNumCoreAvailable();
+  unsigned numPass = objSrc.getMaxNumRegionsPerCore();
   double msRead = 0.0;
   double msWrite = 0.0;
-  double msCompute = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
-  PimDataType dataType = obj.getDataType();
+  double msLogic = 0.0;
 
+  switch (deviceType) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    {
+      PimDataType dataTypeSrc = objSrc.getDataType();
+      PimDataType dataTypeDest = objDest.getDataType();
+      if (pimUtils::isFP(dataTypeSrc) || pimUtils::isFP(dataTypeDest)) {
+        std::cout << "PIM-Warning: Unimplemented bit-serial runtime estimation for"
+                  << " device=" << pimUtils::pimDeviceEnumToStr(m_simTarget)
+                  << " cmd=" << pimCmd::getName(cmdType, "")
+                  << " dataType=" << pimUtils::pimDataTypeEnumToStr(dataTypeSrc)
+                  << std::endl;
+        msRuntime = 1000000;
+        break;
+      }
+      unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::ACTUAL);
+      unsigned bitsPerElementDest = objDest.getBitsPerElement(PimBitWidth::ACTUAL);
+      // integer type conversion
+      unsigned numR = std::min(bitsPerElementSrc, bitsPerElementDest);
+      unsigned numW = bitsPerElementDest;
+      unsigned numL = 0;
+      msRead = numR * m_tR;
+      msWrite = numW * m_tW;
+      msLogic = numL * m_tL;
+      msRuntime = msRead + msWrite + msLogic;
+      mjEnergy = ((m_eL * numL * objSrc.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      break;
+    }
+    default:
+      assert(0);
+  }
+  msRead *= numPass;
+  msWrite *= numPass;
+  msLogic *= numPass;
+  msRuntime *= numPass;
+  mjEnergy *= numPass;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic);
+}
+
+//! @brief  Perf energy model of bit-serial PIM for func1
+pimeval::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const
+{
+  pimeval::perfEnergy perf;
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
-      msRuntime += perfEnergyBS.m_msRuntime;
-      mjEnergy += perfEnergyBS.m_mjEnergy;
-      msRead += perfEnergyBS.m_msRead;
-      msWrite += perfEnergyBS.m_msWrite;
-      msCompute += perfEnergyBS.m_msCompute;
+      // handle type conversion specially
+      if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+        perf = getPerfEnergyTypeConversion(m_simTarget, cmdType, objSrc, objDest);
+      } else {
+        unsigned numPass = objSrc.getMaxNumRegionsPerCore();
+        perf = getPerfEnergyBitSerial(m_simTarget, cmdType, numPass, objSrc, objSrc, objDest);
+      }
       break;
     }
     default:
       assert(0);
   }
-
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  return perf;
 }
 
 //! @brief  Perf energy model of bit-serial PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
 {
-  double msRuntime = 0.0;
-  double mjEnergy = 0.0;
-  double msRead = 0.0;
-  double msWrite = 0.0;
-  double msCompute = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
-  PimDataType dataType = obj.getDataType();
-
+  pimeval::perfEnergy perf;
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, numPass, obj);
-      msRuntime += perfEnergyBS.m_msRuntime;
-      mjEnergy += perfEnergyBS.m_mjEnergy;
-      msRead += perfEnergyBS.m_msRead;
-      msWrite += perfEnergyBS.m_msWrite;
-      msCompute += perfEnergyBS.m_msCompute;
+      unsigned numPass = objSrc1.getMaxNumRegionsPerCore();
+      perf = getPerfEnergyBitSerial(m_simTarget, cmdType, numPass, objSrc1, objSrc2, objDest);
       break;
     }
     default:
       assert(0);
   }
-  
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  return perf;
 }
 
 //! @brief  Perf energy model of bit-serial PIM for reduction sum
@@ -223,7 +315,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           // The following does not consider the cost for data rearrangement. Ideally that should be considered.
           // TODO: for ranged reduction, `numElements` should be the #elements in the range
           unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, (std::ceil(numPass*1.0/2)), obj, obj, obj);
           msRuntime = perfEnergyBS.m_msRuntime * levels;
           mjEnergy = perfEnergyBS.m_mjEnergy * levels;
           msRead = perfEnergyBS.m_msRead * levels;
@@ -239,7 +331,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           // The following does not consider the cost for data rearrangement. Ideally that should be considered.
           // TODO: for ranged reduction, `numElements` should be the #elements in the range
           unsigned levels = static_cast<unsigned>(std::ceil(std::log2(numElements))); // Tree depth
-          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, dataType, bitsPerElement, (std::ceil(numPass*1.0/2)), obj);
+          pimeval::perfEnergy perfEnergyBS = getPerfEnergyBitSerial(m_simTarget, cmdType, (std::ceil(numPass*1.0/2)), obj, obj, obj);
           msRuntime = perfEnergyBS.m_msRuntime * levels;
           mjEnergy = perfEnergyBS.m_mjEnergy * levels;
           msRead = perfEnergyBS.m_msRead * levels;

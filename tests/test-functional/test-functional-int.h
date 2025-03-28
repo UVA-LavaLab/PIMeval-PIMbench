@@ -18,6 +18,7 @@
 #include <bitset>
 #include <type_traits>
 #include <cstdlib>
+#include <unordered_set>
 
 
 //! @brief  Functional tests for PIM integer operations
@@ -38,6 +39,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
   std::vector<T> vecSrc2 = getRandInt<T>(numElements);
   std::vector<T> vecSrc2nz = getRandInt<T>(numElements, false/*allowZero*/); // non-zero for div
   std::vector<T> vecDest(numElements);
+  std::vector<uint8_t> vecDestBool(numElements);
 
   // Create a few equal cases for pimEQ
   vecSrc2[100] = vecSrc1[100];
@@ -61,6 +63,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
   PimObjId objSrc2 = pimAllocAssociated(objSrc1, dataType);
   PimObjId objSrc2nz = pimAllocAssociated(objSrc1, dataType);
   PimObjId objDest = pimAllocAssociated(objSrc1, dataType);
+  PimObjId objDestBool = pimAllocAssociated(objSrc1, PIM_BOOL);
 
   // Copy src vectors from host to PIM
   PimStatus status = PIM_OK;
@@ -119,6 +122,11 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       { 43, "pimCopyObjectToObject"  },
   };
 
+  const std::unordered_set<std::string> cmpAPIs = {
+    "pimGT", "pimLT", "pimEQ",
+    "pimGTScalar", "pimLTScalar", "pimEQScalar",
+  };
+
   // Running tests
   const int testOnly = -1; // set to a testId to debug it locally. please keep default as -1
   const int maxErrorToShow = 10; // max number of errors to show when an operation failed
@@ -148,9 +156,9 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       case  6: status = pimOr                   (objSrc1, objSrc2, objDest);            break;
       case  7: status = pimXor                  (objSrc1, objSrc2, objDest);            break;
       case  8: status = pimXnor                 (objSrc1, objSrc2, objDest);            break;
-      case  9: status = pimGT                   (objSrc1, objSrc2, objDest);            break;
-      case 10: status = pimLT                   (objSrc1, objSrc2, objDest);            break;
-      case 11: status = pimEQ                   (objSrc1, objSrc2, objDest);            break;
+      case  9: status = pimGT                   (objSrc1, objSrc2, objDestBool);        break;
+      case 10: status = pimLT                   (objSrc1, objSrc2, objDestBool);        break;
+      case 11: status = pimEQ                   (objSrc1, objSrc2, objDestBool);        break;
       case 12: status = pimMin                  (objSrc1, objSrc2, objDest);            break;
       case 13: status = pimMax                  (objSrc1, objSrc2, objDest);            break;
       case 14: status = pimAddScalar            (objSrc1, objDest, scalarVal);          break;
@@ -161,9 +169,9 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       case 19: status = pimOrScalar             (objSrc1, objDest, scalarVal);          break;
       case 20: status = pimXorScalar            (objSrc1, objDest, scalarVal);          break;
       case 21: status = pimXnorScalar           (objSrc1, objDest, scalarVal);          break;
-      case 22: status = pimGTScalar             (objSrc1, objDest, scalarVal);          break;
-      case 23: status = pimLTScalar             (objSrc1, objDest, scalarVal);          break;
-      case 24: status = pimEQScalar             (objSrc1, objDest, scalarVal);          break;
+      case 22: status = pimGTScalar             (objSrc1, objDestBool, scalarVal);      break;
+      case 23: status = pimLTScalar             (objSrc1, objDestBool, scalarVal);      break;
+      case 24: status = pimEQScalar             (objSrc1, objDestBool, scalarVal);      break;
       case 25: status = pimMinScalar            (objSrc1, objDest, scalarVal);          break;
       case 26: status = pimMaxScalar            (objSrc1, objDest, scalarVal);          break;
       case 27: status = pimScaledAdd            (objSrc1, objSrc2, objDest, scalarVal); break;
@@ -189,8 +197,13 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
 
     // Copy results from PIM to host
     // Always copy although objDest is not used for reduction sum
-    status = pimCopyDeviceToHost(objDest, (void *)vecDest.data());
-    assert(status == PIM_OK);
+    if (cmpAPIs.find(testName) != cmpAPIs.end()) {
+      status = pimCopyDeviceToHost(objDestBool, (void *)vecDestBool.data());
+      assert(status == PIM_OK);
+    } else {
+      status = pimCopyDeviceToHost(objDest, (void *)vecDest.data());
+      assert(status == PIM_OK);
+    }
 
     // Skip result verification in analysis mode
     if (pimIsAnalysisMode()) {
@@ -225,6 +238,33 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
       }
       assert(static_cast<int64_t>(sumInt) == sumIntExpected);
       std::cout << "[PASS] " << category << " " << testName << std::endl;
+    } else if (cmpAPIs.find(testName) != cmpAPIs.end()) {
+      int numError = 0;
+      for (unsigned i = 0; i < numElements; ++i) {
+        uint8_t expected = 0;
+        T val = static_cast<T>(scalarVal);
+        switch (testId) {
+          case  9: expected = (vecSrc1[i] > vecSrc2[i] ? 1 : 0);    break; // pimGT
+          case 10: expected = (vecSrc1[i] < vecSrc2[i] ? 1 : 0);    break; // pimLT
+          case 11: expected = (vecSrc1[i] == vecSrc2[i] ? 1 : 0);   break; // pimEQ
+          case 22: expected = (vecSrc1[i] > val ? 1 : 0);           break; // pimGTScalar
+          case 23: expected = (vecSrc1[i] < val ? 1 : 0);           break; // pimLTScalar
+          case 24: expected = (vecSrc1[i] == val ? 1 : 0);          break; // pimEQScalar
+          default: assert(0);
+        }
+        if (vecDestBool[i] != expected) {
+          if (numError < maxErrorToShow) {
+            std::cout << "Error: Index = " << i << " Result = " << vecDestBool[i] << " Expected = " << expected << std::endl;
+          }
+          ++numError;
+        }
+      }
+      if (numError > 0) {
+        std::cout << "[FAIL] " << category << " " << testName << " -- #error = " << numError << std::endl;
+        assert(numError == 0);
+      } else {
+        std::cout << "[PASS] " << category << " " << testName << std::endl;
+      }
     } else {
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
@@ -241,9 +281,6 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
           case  6: expected = vecSrc1[i] | vecSrc2[i];              break; // pimOr
           case  7: expected = vecSrc1[i] ^ vecSrc2[i];              break; // pimXor
           case  8: expected = ~(vecSrc1[i] ^ vecSrc2[i]);           break; // pimXnor
-          case  9: expected = (vecSrc1[i] > vecSrc2[i] ? 1 : 0);    break; // pimGT
-          case 10: expected = (vecSrc1[i] < vecSrc2[i] ? 1 : 0);    break; // pimLT
-          case 11: expected = (vecSrc1[i] == vecSrc2[i] ? 1 : 0);   break; // pimEQ
           case 12: expected = std::min(vecSrc1[i], vecSrc2[i]);     break; // pimMin
           case 13: expected = std::max(vecSrc1[i], vecSrc2[i]);     break; // pimMax
           case 14: expected = vecSrc1[i] + val;                     break; // pimAddScalar
@@ -254,9 +291,6 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
           case 19: expected = vecSrc1[i] | val;                     break; // pimOrScalar
           case 20: expected = vecSrc1[i] ^ val;                     break; // pimXorScalar
           case 21: expected = ~(vecSrc1[i] ^ val);                  break; // pimXnorScalar
-          case 22: expected = (vecSrc1[i] > val ? 1 : 0);           break; // pimGTScalar
-          case 23: expected = (vecSrc1[i] < val ? 1 : 0);           break; // pimLTScalar
-          case 24: expected = (vecSrc1[i] == val ? 1 : 0);          break; // pimEQScalar
           case 25: expected = std::min(vecSrc1[i], val);            break; // pimMinScalar
           case 26: expected = std::max(vecSrc1[i], val);            break; // pimMaxScalar
           case 27: expected = (vecSrc1[i] * val) + vecSrc2[i];      break; // pimScaledAdd
@@ -280,7 +314,7 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
         }
         if (vecDest[i] != expected) {
           if (numError < maxErrorToShow) {
-          std::cout << "Error: Index = " << i << " Result = " << vecDest[i] << " Expected = " << expected << std::endl;
+            std::cout << "Error: Index = " << i << " Result = " << vecDest[i] << " Expected = " << expected << std::endl;
           }
           ++numError;
         }
@@ -303,6 +337,8 @@ testFunctional::testInt(const std::string& category, PimDataType dataType)
   status = pimFree(objSrc2nz);
   assert(status == PIM_OK);
   status = pimFree(objDest);
+  assert(status == PIM_OK);
+  status = pimFree(objDestBool);
   assert(status == PIM_OK);
 
   return true;
