@@ -31,6 +31,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   double msRead = 0.0;
   double msWrite = 0.0;
   double msLogic = 0.0;
+  uint64_t totalOp = 0;
 
   switch (deviceType) {
     case PIM_DEVICE_BITSIMD_V:
@@ -72,6 +73,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
         msRead += m_tR * numR;
         msWrite += m_tW * numW;
         msLogic += m_tL * numL;
+        totalOp += numL;
         msRuntime += msRead + msWrite + msLogic;
         mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
         mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -118,6 +120,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             msRead += numR * m_tR;
             msWrite += numW * m_tW;
             msLogic += numL * m_tL;
+            totalOp += numL;
             msRuntime += msRead + msWrite + msLogic;
             mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -131,6 +134,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             msWrite += m_tW * bitsPerElement;
             msLogic += m_tL;
             msRuntime += msRead + msWrite + msLogic;
+            ++totalOp;
             ok = true;
             break;
           default:
@@ -160,7 +164,8 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   msLogic *= numPass;
   msRuntime *= numPass;
   mjEnergy *= numPass;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic);
+  totalOp *= numPass*numCores;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic, totalOp);
 }
 
 //! @brief  Perf energy model of bit-serial type conversion
@@ -175,6 +180,7 @@ pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, Pi
   double msRead = 0.0;
   double msWrite = 0.0;
   double msLogic = 0.0;
+  uint64_t totalOp = 0;
 
   switch (deviceType) {
     case PIM_DEVICE_BITSIMD_V:
@@ -201,6 +207,7 @@ pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, Pi
       msRead = numR * m_tR;
       msWrite = numW * m_tW;
       msLogic = numL * m_tL;
+      totalOp += numL;
       msRuntime = msRead + msWrite + msLogic;
       mjEnergy = ((m_eL * numL * objSrc.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -214,7 +221,8 @@ pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, Pi
   msLogic *= numPass;
   msRuntime *= numPass;
   mjEnergy *= numPass;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic);
+  totalOp *= numPass*numCores;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic, totalOp);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for func1
@@ -273,6 +281,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
+  uint64_t totalOp = 0;
   PimDataType dataType = obj.getDataType();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   uint64_t numElements = obj.getNumElements();
@@ -369,7 +378,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
       assert(0);
   }
   
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for broadcast
@@ -385,6 +394,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
+  uint64_t totalOp = 0;
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
     case PIM_DEVICE_BITSIMD_V_AP:
@@ -393,6 +403,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       msRead = 0;
       msWrite = m_tW * bitsPerElement * numPass;
       msCompute = m_tL * bitsPerElement * numPass;
+      totalOp += bitsPerElement * numPass * numCore;
       msRuntime = msRead + msWrite + msCompute;
       mjEnergy = m_eAP * numCore * numPass ;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -420,7 +431,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       assert(0);
   }
   
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
 //! @brief  Perf energy model of bit-serial PIM for rotate
@@ -432,9 +443,11 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
+  uint64_t totalOp = 0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
+  unsigned numCore = obj.getNumCoreAvailable();
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
@@ -446,6 +459,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
       msRead = m_tR * bitsPerElement * numPass;
       msWrite = m_tW * bitsPerElement * numPass;
       msCompute = 3 * m_tL * bitsPerElement * numPass;
+      totalOp += 3 * bitsPerElement * numPass * numCore;
       msRuntime = msRead + msWrite + msCompute;
       mjEnergy = (m_eAP + 3 * m_eL) * bitsPerElement * numPass; // for one pass
       msRuntime += 2 * perfEnergyBT.m_msRuntime;
@@ -470,6 +484,6 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
       assert(0);
   }
   
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
