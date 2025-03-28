@@ -16,7 +16,7 @@ EXEC := hamming-data-generator.out
 SRC_FILES := hamming-data-generator.cpp
 
 # Dependencies
-DEPS := ./../../../util/utilStringMatch.h
+HEADER_DEPS := ./../../../util/utilStringMatch.h
 
 # make USE_OPENMP=1
 USE_OPENMP ?= 0
@@ -28,8 +28,9 @@ endif
 
 all: $(EXEC)
 
-$(EXEC): $(SRC_FILES) $(DEPS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+# Note: Need to avoid feeding .h files to clang command line
+$(EXEC): $(SRC_FILES) $(HEADER_DEPS)
+	$(CXX) $(CXXFLAGS) -o $@ $(SRC_FILES)
 
 clean:
 	rm -rf $(EXEC)

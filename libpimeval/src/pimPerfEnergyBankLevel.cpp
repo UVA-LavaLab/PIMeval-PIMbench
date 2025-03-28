@@ -12,7 +12,7 @@
 
 //! @brief  Perf energy model of bank-level PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -21,6 +21,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   double msCompute = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+    // for type conversion, ALU parallelism is determined by the wider data type
+    bitsPerElement = std::max(bitsPerElement, objDest.getBitsPerElement(PimBitWidth::ACTUAL));
+  }
   unsigned numCores = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
@@ -52,11 +56,14 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::BIT_SLICE_EXTRACT:
     case PimCmdEnum::BIT_SLICE_INSERT:
+    case PimCmdEnum::CONVERT_TYPE:
     {
       if (cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
-        numberOfOperationPerElement *= 2; // 1 shift, 1 and
+        // Assume on ALU cycle to do this for now
+        // numberOfOperationPerElement *= 2; // 1 shift, 1 and
       } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
-        numberOfOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
+        // Assume on ALU cycle to do this for now
+        // numberOfOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
       }
       // Refer to fulcrum documentation
       msRead = m_tR;
@@ -104,7 +111,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bank-level PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -177,6 +184,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
+    case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
     {
       msRead = ((2 * m_tR) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((2 * m_tR) + (minGDLItr * m_tGDL));
       msWrite = (m_tW + (maxGDLItr * m_tGDL)) * (numPass - 1) + (m_tW + (minGDLItr * m_tGDL));

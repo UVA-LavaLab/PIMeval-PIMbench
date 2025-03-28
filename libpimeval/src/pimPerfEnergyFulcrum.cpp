@@ -12,7 +12,7 @@
 
 //! @brief  Perf energy model of Fulcrum for func1
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
 {
 
   // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
@@ -28,6 +28,10 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   double msALU = 0.0;
   unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+    // for type conversion, ALU parallelism is determined by the wider data type
+    bitsPerElement = std::max(bitsPerElement, objDest.getBitsPerElement(PimBitWidth::ACTUAL));
+  }
   unsigned numCores =  obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
@@ -62,9 +66,11 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::BIT_SLICE_INSERT:
     {
       if (cmdType == PimCmdEnum::BIT_SLICE_EXTRACT) {
-        numberOfALUOperationPerElement *= 2; // 1 shift, 1 and
+        // Assume one ALU cycle to do this for now
+        // numberOfALUOperationPerElement *= 2; // 1 shift, 1 and
       } else if (cmdType == PimCmdEnum::BIT_SLICE_INSERT) {
-        numberOfALUOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
+        // Assume one ALU cycle to do this for now
+        // numberOfALUOperationPerElement *= 5; // 2 shifts, 1 not, 1 and, 1 or
       }
       msRead = m_tR;
       msWrite = m_tW;
@@ -81,6 +87,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MUL_SCALAR:
     case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::ABS:
+    case PimCmdEnum::CONVERT_TYPE:
     {
       msRead = m_tR;
       msWrite = m_tW;
@@ -123,7 +130,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
 
 //! @brief  Perf energy model of Fulcrum for func2
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -188,6 +195,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
+    case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
     {
       msRead = 2 * m_tR * numPass;
       msWrite = m_tW * numPass;
