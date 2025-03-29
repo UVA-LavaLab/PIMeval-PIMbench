@@ -76,8 +76,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += (m_eR * maxGDLItr * (numPass-1) + (m_eR * minGDLItr));
       mjEnergy += (m_eW * maxGDLItr * (numPass-1) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp += (numberOfOperationPerElement * maxElementsPerRegion * (numPass - 1)) + (numberOfOperationPerElement * minElementPerRegion);
-      totalOp *= numCores * m_simdUnit;
+      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCores;
       break;
     }
     case PimCmdEnum::AND_SCALAR:
@@ -102,8 +101,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += (m_eR * maxGDLItr * (numPass-1) + (m_eR * minGDLItr));
       mjEnergy += (m_eW * maxGDLItr * (numPass-1) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp += (numberOfOperationPerElement * maxElementsPerRegion * (numPass - 1)) + (numberOfOperationPerElement * minElementPerRegion);
-      totalOp *= numCores * m_simdUnit;
+      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCores;
       break;
     }
     default:
@@ -150,8 +148,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += ((m_eR * 2 * maxGDLItr * (numPass-1)) + (m_eR * 2 * minGDLItr));
       mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp += (numberOfOperationPerElement * maxElementsPerRegion * (numPass - 1)) + (numberOfOperationPerElement * minElementPerRegion);
-      totalOp *= numCoresUsed * m_simdUnit;
+      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCoresUsed;
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -179,8 +176,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr));
       mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp += (numberOfOperationPerElement * 2 * maxElementsPerRegion * (numPass - 1)) + (numberOfOperationPerElement * 2 * minElementPerRegion);
-      totalOp *= numCoresUsed * m_simdUnit;
+      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCoresUsed * 2;
       break;
     }
     case PimCmdEnum::AND:
@@ -204,15 +200,13 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += ((m_eR * 2 * maxGDLItr * (numPass-1)) + (m_eR * 2 * minGDLItr));
       mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp += (numberOfOperationPerElement * maxElementsPerRegion * (numPass - 1)) + (numberOfOperationPerElement * minElementPerRegion);
-      totalOp *= numCoresUsed * m_simdUnit;
+      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCoresUsed;
       break;
     }
     default:
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;
   }
-
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
@@ -257,8 +251,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
       mjEnergy += aggregateMs * cpuTDP;
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp += (numberOfOperationPerElement * maxElementsPerRegion * (numPass - 1)) + (numberOfOperationPerElement * minElementPerRegion);
-      totalOp *= numCore * m_simdUnit;
+      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCore;
       break;
     }
     default:
@@ -317,6 +310,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
   // TODO: separate bank level and GDL
   // TODO: energy unimplemented
+  // TODO: perf per watt
   msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
   msRuntime *= numPass;
   mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
