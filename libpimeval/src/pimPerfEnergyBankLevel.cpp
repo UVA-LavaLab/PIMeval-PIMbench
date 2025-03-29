@@ -76,7 +76,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += (m_eR * maxGDLItr * (numPass-1) + (m_eR * minGDLItr));
       mjEnergy += (m_eW * maxGDLItr * (numPass-1) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCores;
+      totalOp = obj.getNumElements();
       break;
     }
     case PimCmdEnum::AND_SCALAR:
@@ -101,7 +101,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += (m_eR * maxGDLItr * (numPass-1) + (m_eR * minGDLItr));
       mjEnergy += (m_eW * maxGDLItr * (numPass-1) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCores;
+      totalOp = obj.getNumElements();
       break;
     }
     default:
@@ -148,7 +148,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += ((m_eR * 2 * maxGDLItr * (numPass-1)) + (m_eR * 2 * minGDLItr));
       mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCoresUsed;
+      totalOp = obj.getNumElements();
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -176,7 +176,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr));
       mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCoresUsed * 2;
+      totalOp = obj.getNumElements() * 2;
       break;
     }
     case PimCmdEnum::AND:
@@ -200,7 +200,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += ((m_eR * 2 * maxGDLItr * (numPass-1)) + (m_eR * 2 * minGDLItr));
       mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCoresUsed;
+      totalOp = obj.getNumElements();
       break;
     }
     default:
