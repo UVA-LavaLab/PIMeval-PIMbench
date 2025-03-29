@@ -89,6 +89,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             msRead += numR * m_tR;
             msWrite += numW * m_tW;
             msLogic += numL * m_tL;
+            totalOp += numL;
             msRuntime += msRead + msWrite + msLogic;
             mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -134,7 +135,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             msWrite += m_tW * bitsPerElement;
             msLogic += m_tL;
             msRuntime += msRead + msWrite + msLogic;
-            ++totalOp;
+            totalOp += 1;;
             ok = true;
             break;
           default:
@@ -164,7 +165,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   msLogic *= numPass;
   msRuntime *= numPass;
   mjEnergy *= numPass;
-  totalOp *= numPass*numCores;
+  totalOp *= numPass * numCores;
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic, totalOp);
 }
 
@@ -221,7 +222,7 @@ pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, Pi
   msLogic *= numPass;
   msRuntime *= numPass;
   mjEnergy *= numPass;
-  totalOp *= numPass*numCores;
+  totalOp *= numPass * numCores;
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msLogic, totalOp);
 }
 
@@ -314,6 +315,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           msRuntime += msRead + msWrite + msCompute;
           mjEnergy += aggregateMs * cpuTDP;
           mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+          totalOp += (numPclPerCore * bitsPerElement * numPass * numCore);
           break;
         }
         case PimCmdEnum::REDMIN:
@@ -330,6 +332,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           msRead = perfEnergyBS.m_msRead * levels;
           msWrite = perfEnergyBS.m_msWrite * levels;
           msCompute = perfEnergyBS.m_msCompute * levels;
+          totalOp += perfEnergyBS.m_totalOp * levels;
           break;
         }
         case PimCmdEnum::REDMAX:
@@ -346,6 +349,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           msRead = perfEnergyBS.m_msRead * levels;
           msWrite = perfEnergyBS.m_msWrite * levels;
           msCompute = perfEnergyBS.m_msCompute * levels;
+          totalOp += perfEnergyBS.m_totalOp * levels;
           break;
         }
         default:
@@ -403,7 +407,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       msRead = 0;
       msWrite = m_tW * bitsPerElement * numPass;
       msCompute = m_tL * bitsPerElement * numPass;
-      totalOp += bitsPerElement * numPass * numCore;
+      totalOp = bitsPerElement * numPass * numCore;
       msRuntime = msRead + msWrite + msCompute;
       mjEnergy = m_eAP * numCore * numPass ;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -474,6 +478,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
       // TODO: separate bank level and GDL
       // TODO: energy unimplemented
       // TODO: R,W,L calcutation
+      // TOD): total Op uinimplemented
       msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
       msRuntime *= numPass;
       mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
