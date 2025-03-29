@@ -12,7 +12,6 @@ EXEC := gemv.out
 
 # Source files
 SOURCES := gemv.cu
-UTIL_DIR := ../../../../util
 
 # Compiler flags
 CFLAGS := -O3
