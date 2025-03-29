@@ -145,7 +145,7 @@ pimStatsMgr::showCmdStats() const
     totalOp += it.second.second.m_totalOp;
   }
   std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
-  std::printf("\nPerformance Per Watt: %7.2f GOPS/W\n", totalOp*1.0/totalMjEnergy /1000000);
+  std::printf("\nPerformance Per Watt: %14f GOPS/W\n", totalOp * 1.0 / totalMjEnergy * 1e-6);
   // analyze micro-ops
   int numR = 0;
   int numW = 0;
