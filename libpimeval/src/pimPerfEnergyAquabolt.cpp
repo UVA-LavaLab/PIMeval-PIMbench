@@ -45,6 +45,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
       msRuntime += m_tR + m_tW + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
       mjEnergy = (m_eAP * 2 + (m_eR * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
       break;
     }
     case PimCmdEnum::POPCOUNT:
@@ -100,6 +101,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
       msRuntime += (2 * m_tR + m_tW + (minGDLItr * numberOfOperationPerElement * aquaboltCoreCycle));
       mjEnergy = ((m_eAP * 3) + (m_eR * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
       break;
     }
     case PimCmdEnum::SCALED_ADD:
@@ -126,6 +128,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_aquaboltArithmeticEnergy * numCoresUsed;
       mjEnergy *= numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements() * 2;
       break;
     }
     case PimCmdEnum::DIV:
@@ -181,6 +184,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
       msRuntime += aggregateMs;
       mjEnergy += aggregateMs * cpuTDP;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
       break;
     }
     case PimCmdEnum::REDMIN:
