@@ -41,8 +41,10 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
     { 
-      msRuntime = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
-      msRuntime += m_tR + m_tW + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
+      msRead = m_tR;
+      msWrite = m_tW;
+      msCompute = (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) + ((maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1));
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = (m_eAP * 2 + (m_eR * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       totalOp = obj.getNumElements();
@@ -97,8 +99,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::MUL:
     {
       unsigned numberOfOperationPerElement = std::ceil(bitsPerElement * 1.0 / m_aquaboltFPUBitWidth);
-      msRuntime = (2 * m_tR + m_tW + (maxGDLItr * numberOfOperationPerElement * aquaboltCoreCycle)) * (numPass - 1);
-      msRuntime += (2 * m_tR + m_tW + (minGDLItr * numberOfOperationPerElement * aquaboltCoreCycle));
+      msRead = 2 * m_tR * numPass;
+      msWrite = m_tW * numPass;
+      msCompute = (maxGDLItr * numberOfOperationPerElement * aquaboltCoreCycle) * (numPass - 1);
+      msCompute += (minGDLItr * numberOfOperationPerElement * aquaboltCoreCycle);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = ((m_eAP * 3) + (m_eR * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * numPass;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       totalOp = obj.getNumElements();
@@ -121,9 +126,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
        * As a result, only one read operation is necessary for the entire pass.
       */
       unsigned numberOfOperationPerElement = std::ceil(bitsPerElement * 1.0 / m_aquaboltFPUBitWidth) * 2; // multiplying by 2 as one addition and one multiplication is needed
-      msRuntime = m_tR + m_tW;
-      msRuntime += (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
-      msRuntime += (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
+      msRead = m_tR;
+      msWrite = m_tW;
+      msCompute = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
+      msCompute += (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
       mjEnergy = ((m_eAP * 3) + (m_eR * 3 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
       mjEnergy += maxElementsPerRegion * numberOfOperationPerElement * m_aquaboltArithmeticEnergy * numCoresUsed;
       mjEnergy *= numPass;
@@ -175,8 +182,10 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
     case PimCmdEnum::REDSUM:
     case PimCmdEnum::REDSUM_RANGE:
     {
-      msRuntime = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
-      msRuntime += (m_tR + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement));
+      msRead = m_tR;
+      msCompute = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
+      msCompute += (m_tR + (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement));
+      msRuntime = msRead + msWrite + msCompute;
       // Refer to fulcrum documentation
       mjEnergy = (m_eAP + (m_eR + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numPass * numCore;
       // reduction for all regions
@@ -217,8 +226,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimOb
   unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
-  msRuntime = (m_tW + maxGDLItr * m_tGDL) * (numPass - 1);
-  msRuntime *= (m_tW + minGDLItr * m_tGDL);
+  msWrite = (m_tW + maxGDLItr * m_tGDL) * (numPass - 1);
+  msWrite += (m_tW + minGDLItr * m_tGDL);
+  msRuntime = msRead + msWrite + msCompute;
   mjEnergy = (m_eAP + m_eR * maxGDLItr) * numPass * numCore;
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
