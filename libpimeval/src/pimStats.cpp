@@ -135,7 +135,9 @@ pimStatsMgr::showCmdStats() const
     double percentRead = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msRead * 100 / cmdRuntime);
     double percentWrite = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msWrite * 100 / cmdRuntime);
     double percentCompute = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msCompute * 100 / cmdRuntime);
-    std::printf(" %44s : %10d %14f %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, it.second.second.m_totalOp * 1.0 / it.second.second.m_mjEnergy * 1e-6, percentRead, percentWrite, percentCompute);
+    double cmdEnergy = it.second.second.m_mjEnergy;
+    double perfWatt = cmdEnergy == 0.0 ? 0.0 : (it.second.second.m_totalOp * 1.0 / cmdEnergy * 1e-6);
+    std::printf(" %44s : %10d %14f %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, perfWatt, percentRead, percentWrite, percentCompute);
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
     totalMjEnergy += it.second.second.m_mjEnergy;
