@@ -122,7 +122,7 @@ void
 pimStatsMgr::showCmdStats() const
 {
   std::printf("PIM Command Stats:\n");
-  std::printf(" %44s : %10s %14s %14s %7s %7s %7s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "%R", "%W", "%L");
+  std::printf(" %44s : %10s %14s %14s %14s %7s %7s %7s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "GOPS/W", "%R", "%W", "%L");
   int totalCmd = 0;
   double totalMsRuntime = 0.0;
   double totalMjEnergy = 0.0;
@@ -135,7 +135,7 @@ pimStatsMgr::showCmdStats() const
     double percentRead = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msRead * 100 / cmdRuntime);
     double percentWrite = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msWrite * 100 / cmdRuntime);
     double percentCompute = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msCompute * 100 / cmdRuntime);
-    std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, percentRead, percentWrite, percentCompute);
+    std::printf(" %44s : %10d %14f %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, it.second.second.m_totalOp * 1.0 / it.second.second.m_mjEnergy * 1e-6, percentRead, percentWrite, percentCompute);
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
     totalMjEnergy += it.second.second.m_mjEnergy;
@@ -144,8 +144,7 @@ pimStatsMgr::showCmdStats() const
     totalMsCompute += it.second.first * percentCompute;
     totalOp += it.second.second.m_totalOp;
   }
-  std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
-  std::printf("\nPerformance Per Watt: %14f GOPS/W\n", totalOp * 1.0 / totalMjEnergy * 1e-6);
+  std::printf(" %44s : %10d %14f %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalOp * 1.0 / totalMjEnergy * 1e-6), (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
   // analyze micro-ops
   int numR = 0;
   int numW = 0;

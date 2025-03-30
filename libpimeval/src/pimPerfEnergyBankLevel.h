@@ -31,7 +31,7 @@ public:
 protected:
   double m_blimpCoreLatency = 0.000005; // ms; 200 MHz. Reference: BLIMP paper
   unsigned m_blimpCoreBitWidth = m_GDLWidth;
-  unsigned m_simdUnitCount = m_blimpCoreBitWidth/32; // 32-bit SIMD unit
+  unsigned m_simdUnitCount = m_blimpCoreBitWidth / 32; // 32-bit SIMD unit
   // Following values are taken from fulcrum paper as BLIMP paper does not model energy
   double m_blimpArithmeticEnergy = 0.0000000004992329586 * m_simdUnitCount; // mJ
   double m_blimpLogicalEnergy = 0.0000000001467846411 * m_simdUnitCount; // mJ

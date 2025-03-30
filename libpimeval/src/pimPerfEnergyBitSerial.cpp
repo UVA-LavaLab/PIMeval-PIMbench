@@ -83,6 +83,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
         switch (cmdType) {
           case PimCmdEnum::COPY_O2O:
           {
+            //total OP is zero
             unsigned numR = bitsPerElement;
             unsigned numW = bitsPerElement;
             unsigned numL = 0;
@@ -103,6 +104,7 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             msRuntime += msRead + msWrite;
             mjEnergy += (m_eAP + m_eAP) * numCores;
             mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            totalOp += objSrc1.getNumElements();
             ok = true;
             break;
           case PimCmdEnum::COND_BROADCAST:
@@ -406,7 +408,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       msRead = 0;
       msWrite = m_tW * bitsPerElement * numPass;
       msCompute = m_tL * bitsPerElement * numPass;
-      totalOp = bitsPerElement * obj.getNumElements();
+      totalOp = obj.getNumElements();
       msRuntime = msRead + msWrite + msCompute;
       mjEnergy = m_eAP * numCore * numPass ;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
