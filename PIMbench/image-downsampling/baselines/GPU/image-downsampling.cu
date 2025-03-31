@@ -17,9 +17,9 @@ using namespace std;
 
 typedef struct Params
 {
-  char *inputFile;
+  const char *inputFile;
+  const char *outputFile;
   bool shouldVerify;
-  char *outputFile;
 } Params;
 
 void usage()
@@ -36,9 +36,9 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.inputFile = (char*) "../../Dataset/input_1.bmp";
-  p.shouldVerify = false;
+  p.inputFile = "../../Dataset/input_1.bmp";
   p.outputFile = nullptr;
+  p.shouldVerify = false;
 
   int opt;
   while ((opt = getopt(argc, argv, "h:i:v:o:")) >= 0)
