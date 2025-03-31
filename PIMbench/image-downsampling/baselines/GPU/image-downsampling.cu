@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <cstdlib>
+#include <cstdio>
 #include <sys/stat.h>
 
 using namespace std;
