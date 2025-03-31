@@ -1,5 +1,5 @@
 /* File:     image-downsampling.cu
- * Purpose:  Implement brightness on a gpu using Thrust
+ * Purpose:  Implement image downsampling on a gpu
  *
  */
 
@@ -15,7 +15,6 @@ using namespace std;
 
 typedef struct Params
 {
-  char *configFile;
   char *inputFile;
   bool shouldVerify;
   char *outputFile;
@@ -26,7 +25,6 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./image-downsampling.out [options]"
           "\n"
-          "\n    -c    dramsim config file"
           "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n    -o    output file for downsampled image (default=no output)"
@@ -36,22 +34,18 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.configFile = nullptr;
   p.inputFile = (char*) "../../Dataset/input_1.bmp";
   p.shouldVerify = false;
   p.outputFile = nullptr;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:c:i:v:o:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:i:v:o:")) >= 0)
   {
     switch (opt)
     {
     case 'h':
       usage();
       exit(0);
-      break;
-    case 'c':
-      p.configFile = optarg;
       break;
     case 'i':
       p.inputFile = optarg;
