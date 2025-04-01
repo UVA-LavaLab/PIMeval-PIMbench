@@ -268,54 +268,46 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   PimObjId runningSum = pimAllocAssociated(resultPim, PIM_FP32);
   assert(runningSum != -1);
 
+  std::list<PimObjId> rowsInSum;
+  rowsInSum.push_back(sumStencilRow(srcHost[0], stencilWidth, numLeft, resultPim));
+  rowsInSum.push_back(sumStencilRow(srcHost[1], stencilWidth, numLeft, resultPim));
+  status = pimAdd(rowsInSum.front(), rowsInSum.back(), runningSum);
+  assert (status == PIM_OK);
 
-  // PimObjId tempPim = pimAllocAssociated(resultPim, PIM_FP32);
-  // assert(tempPim != -1);
+  for(uint64_t i=2; i<stencilHeight-1; ++i) {
+    rowsInSum.push_back(sumStencilRow(srcHost[i], stencilWidth, numLeft, resultPim));
+    status = pimAdd(runningSum, rowsInSum.back(), runningSum);
+    assert (status == PIM_OK);
+  }
 
-  // std::list<std::vector<PimObjId>> shiftedRows;
+  uint64_t nextRowToAdd = stencilHeight-1;
 
-  // for(uint64_t i=0; i<stencilHeight-1; ++i) {
-  //   shiftedRows.push_back(createShiftedStencilRows(srcHost[i], stencilWidth, numLeft, resultPim));
-  // }
+  for(uint64_t row=numAbove; row<gridHeight-numBelow; ++row) {
+    rowsInSum.push_back(sumStencilRow(srcHost[nextRowToAdd], stencilWidth, numLeft, resultPim));
+    status = pimAdd(runningSum, rowsInSum.back(), runningSum);
+    assert (status == PIM_OK);
+    ++nextRowToAdd;
 
-  // uint64_t nextRowToAdd = stencilHeight-1;
+    status = pimMulScalar(runningSum, resultPim, stencilAreaToMultiply);
+    assert (status == PIM_OK);
 
-  // for(uint64_t row=numAbove; row<gridHeight-numBelow; ++row) {
-  //   shiftedRows.push_back(createShiftedStencilRows(srcHost[nextRowToAdd], stencilWidth, numLeft, resultPim));
-  //   ++nextRowToAdd;
-
-  //   uint64_t stencilY = 0;
-  //   for(std::vector<PimObjId> &shiftedRow : shiftedRows) {
-  //     for(uint64_t stencilX = 0; stencilX < stencilWidth; ++stencilX) {
-  //       if(stencilY == 0 && stencilX == 0) {
-  //         status = pimMulScalar(shiftedRow[stencilX], resultPim, stencilPatternConverted[stencilY][stencilX]);
-  //         assert (status == PIM_OK);
-  //       } else {
-  //         status = pimMulScalar(shiftedRow[stencilX], tempPim, stencilPatternConverted[stencilY][stencilX]);
-  //         assert (status == PIM_OK);
-
-  //         status = pimAdd(resultPim, tempPim, resultPim);
-  //         assert (status == PIM_OK);
-  //       }
-  //     }
-  //     ++stencilY;
-  //   }
-
-  //   status = pimCopyDeviceToHost(resultPim, (void *) dstHost[row].data());
-  //   assert (status == PIM_OK);
+    status = pimCopyDeviceToHost(resultPim, (void *) dstHost[row].data());
+    assert (status == PIM_OK);
     
-  //   for(PimObjId objToFree : shiftedRows.front()) {
-  //     pimFree(objToFree);
-  //   }
-  //   shiftedRows.pop_front();
-  // }
+    if(row+1<gridHeight-numBelow) {
+      status = pimSub(runningSum, rowsInSum.front(), runningSum);
+      assert (status == PIM_OK);
+      status = pimFree(rowsInSum.front());
+      assert (status == PIM_OK);
+      rowsInSum.pop_front();
+    }
+  }
 
-  // while(!shiftedRows.empty()) {
-  //   for(PimObjId objToFree : shiftedRows.front()) {
-  //     pimFree(objToFree);
-  //   }
-  //   shiftedRows.pop_front();
-  // }
+  while(!rowsInSum.empty()) {
+    status = pimFree(rowsInSum.front());
+    assert (status == PIM_OK);
+    rowsInSum.pop_front();
+  }
 }
 
 int main(int argc, char* argv[])
@@ -327,7 +319,7 @@ int main(int argc, char* argv[])
   std::cout << "Num Above: " << params.numAbove << ", Num Left: " << params.numLeft << std::endl;
 
   std::vector<std::vector<float>> x, y;
-  std::vector<std::vector<float>> stencilPattern;
+
   if (params.inputFile == nullptr)
   {
     // Fill in random grid
@@ -349,26 +341,6 @@ int main(int argc, char* argv[])
         }
       }
     }
-
-    // Fill in random stencil pattern
-    stencilPattern.resize(params.stencilHeight);
-    for(size_t i=0; i<stencilPattern.size(); ++i) {
-      stencilPattern[i].resize(params.stencilWidth);
-    }
-
-    #pragma omp parallel
-    {
-      std::random_device rd;
-      std::mt19937 gen(rd());
-      std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-      
-      #pragma omp for
-      for(size_t i=0; i<params.stencilHeight; ++i) {
-        for(size_t j=0; j<params.stencilWidth; ++j) {
-          stencilPattern[i][j] = dist(gen);
-        }
-      }
-    }
   } 
   else 
   {
@@ -381,13 +353,13 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
   y.resize(x.size());
   for(size_t i=0; i<y.size(); ++i) {
     y[i].resize(x[0].size());
   }
 
-  stencil(x, y, stencilPattern, params.numLeft, params.numAbove);
+  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
+  stencil(x, y, params.stencilWidth, params.stencilHeight, params.numLeft, params.numAbove);
 
   if (params.shouldVerify) 
   {
@@ -399,20 +371,25 @@ int main(int argc, char* argv[])
     const uint64_t startX = params.numLeft;
     const uint64_t endX = params.gridWidth - (params.stencilWidth - params.numLeft - 1);
 
+    std::cout << std::fixed << std::setprecision(10);
+
     #pragma omp parallel for collapse(2)
     for(uint64_t gridY=startY; gridY<endY; ++gridY) {
       for(uint64_t gridX=startX; gridX<endX; ++gridX) {
         float resCPU = 0.0f;
         for(uint64_t stencilY=0; stencilY<params.stencilHeight; ++stencilY) {
           for(uint64_t stencilX=0; stencilX<params.stencilWidth; ++stencilX) {
-            resCPU += stencilPattern[stencilY][stencilX] * x[gridY + stencilY - params.numAbove][gridX + stencilX - params.numLeft];
+            resCPU += x[gridY + stencilY - params.numAbove][gridX + stencilX - params.numLeft];
           }
         }
-        if (resCPU != y[gridY][gridX])
+        resCPU *= 1.0f / (static_cast<float>(params.stencilWidth * params.stencilHeight));
+
+        constexpr float acceptableDelta = 0.1f;
+        if (std::abs(resCPU - y[gridY][gridX]) > acceptableDelta)
         {
           #pragma omp critical
           {
-            std::cout << "Wrong answer: " << y[gridY][gridX] << " (expected " << resCPU << ")" << std::endl;
+            std::cout << "Wrong answer: " << y[gridY][gridX] << " (expected " << resCPU << ") at position (" << gridX << ", " << gridY << ")" << std::endl;
             ok = false;
           }
         }
