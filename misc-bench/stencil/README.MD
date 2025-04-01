@@ -83,7 +83,7 @@ make
 
 ### Running the Executable
 
-After compiling, run the each executable with the following command that will run it for default parameters:
+After compiling, run each executable with the following command that will run it for default parameters:
 
 ```bash
 ./stencil.out
