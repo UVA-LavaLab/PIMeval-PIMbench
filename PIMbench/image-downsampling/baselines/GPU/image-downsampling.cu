@@ -187,7 +187,7 @@ std::vector<uint8_t> avg_gpu(std::vector<uint8_t> img) {
     char* pixels_in = (char*) img.data() + avg_out.data_offset;
 
 
-    dim3 dimBlock (1024 , 1 , 1);
+    dim3 dimBlock (128 , 1 , 1);
     dim3 dimGrid (( avg_out.new_width + dimBlock.x - 1) / dimBlock.x , ( avg_out.new_height + dimBlock.y - 1 ) / dimBlock.y, 1);
 
     char* new_pixels_gpu_average;
