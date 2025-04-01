@@ -367,18 +367,28 @@ int main(int argc, char* argv[])
   if(params.shouldVerify) {
     vector<uint8_t> cpu_averaged = avg_cpu(img);
 
-    if (cpu_averaged.size() !=gpu_averaged.size()) {
+    if (cpu_averaged.size() != gpu_averaged.size()) {
       cout << "Average kernel fail, sizes do not match" << endl;
       return 1;
     }
-    for (size_t i = 0; i < cpu_averaged.size(); ++i) {
-      if (cpu_averaged[i] != gpu_averaged[i]) {
-        cout << "Average kernel mismatch at byte " << i << endl;
-        return 1;
+
+    // verify result
+    bool ok = true;
+    #pragma omp parallel for
+    for (uint64_t i = 0; i < cpu_averaged.size(); ++i)
+    {
+      if (cpu_averaged[i] != gpu_averaged[i])
+      {
+        #pragma omp critical
+        {
+          std::cerr << "Wrong answer: " << unsigned(gpu_averaged[i]) << " (expected " << unsigned(cpu_averaged[i]) << "), at byte " << i << std::endl;
+          ok = false;
+        }
       }
     }
-
-    cout << "GPU Result matches CPU result" << endl;
+    if(ok) {
+      std::cout << "Correct for image downsampling!" << std::endl;
+    }
   }
 }
 
