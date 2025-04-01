@@ -168,7 +168,7 @@ PimObjId sumStencilRow(const std::vector<float> &src, const uint64_t stencilWidt
 
   const uint64_t numRight = stencilWidth - numLeft - 1;
 
-  if(numLeft == 0 || numRight == 0) {
+  if(numLeft == 0 && numRight == 0) {
     return mid;
   }
 
