@@ -522,6 +522,19 @@ protected:
   std::vector<uint64_t> m_regionBoundary;
 };
 
+//! @class  pimCmdFuse
+//! @brief  Pim CMD: PIM API Fusion
+class pimCmdFuse : public pimCmd
+{
+public:
+  pimCmdFuse(PimProg prog) : pimCmd(PimCmdEnum::NOOP), m_prog(prog) {}
+  virtual ~pimCmdFuse() {}
+  virtual bool execute() override;
+  virtual bool updateStats() const override;
+private:
+  PimProg m_prog;
+};
+
 //! @class  pimCmdReadRowToSa
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA
 class pimCmdReadRowToSa : public pimCmd

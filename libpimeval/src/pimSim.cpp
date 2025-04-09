@@ -875,6 +875,15 @@ pimSim::pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
 }
 
 bool
+pimSim::pimFuse(PimProg prog)
+{
+  pimPerfMon perfMon("pimFuse");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFuse>(prog);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
 pimSim::pimOpReadRowToSa(PimObjId objId, unsigned ofst)
 {
   pimPerfMon perfMon("pimOpReadRowToSa");
