@@ -4,16 +4,20 @@
  */
 
 #include <stdio.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
+#include <nvml.h>
+#include <chrono>
+#include <thread>
 
 #include "utilBaselines.h"
 
-vector<int> A;
-vector<int> B;
-vector<int> C;
+vector<float> A;
+vector<float> B;
+vector<float> C;
 
 using namespace std;
 
@@ -65,7 +69,7 @@ Params parseParams(int argc, char **argv)
     return params;
 }
 
-__global__ void vecAdd(int* x, int* y, int* z)
+__global__ void vecAdd(float* x, float* y, float* z)
 {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     z[index] = x[index] + y[index];
@@ -76,46 +80,46 @@ int main(int argc, char *argv[])
     // Parse input parameters
     Params params = parseParams(argc, argv);
     uint64_t vectorSize = params.vectorSize;
-    int *x, *y, *z;
+    float *x, *y, *z;
     int blockSize = 1024;
-    int numBlock = (vectorSize + blockSize - 1) / blockSize;
+    u_int64_t numBlock = (vectorSize + blockSize - 1) / blockSize;
 
-    int n_pad = numBlock * blockSize;
+    uint64_t n_pad = numBlock * blockSize;
 
-    getVector<int32_t>(n_pad, A);
-    getVector<int32_t>(n_pad, B);
+    getVector<float>(n_pad, A);
+    getVector<float>(n_pad, B);
     C.resize(n_pad);
     std::cout << "Running vector addition for GPU on vector of size: " << vectorSize << std::endl;
 
     cudaError_t errorCode;
 
-    errorCode = cudaMalloc(&x, n_pad * sizeof(int));
+    errorCode = cudaMalloc(&x, n_pad * sizeof(float));
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
-    errorCode = cudaMalloc(&y, n_pad * sizeof(int));
+    errorCode = cudaMalloc(&y, n_pad * sizeof(float));
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
-    errorCode = cudaMalloc(&z, n_pad * sizeof(int));
-    if (errorCode != cudaSuccess)
-    {
-        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-        exit(1);
-    }
-
-    errorCode = cudaMemcpy(x, A.data(), n_pad * sizeof(int), cudaMemcpyHostToDevice);
+    errorCode = cudaMalloc(&z, n_pad * sizeof(float));
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
 
-    errorCode = cudaMemcpy(y, B.data(), n_pad * sizeof(int), cudaMemcpyHostToDevice);
+    errorCode = cudaMemcpy(x, A.data(), vectorSize * sizeof(float), cudaMemcpyHostToDevice);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    errorCode = cudaMemcpy(y, B.data(), vectorSize * sizeof(float), cudaMemcpyHostToDevice);
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
@@ -124,11 +128,37 @@ int main(int argc, char *argv[])
 
     std::cout << "Launching CUDA Kernel." << std::endl;
 
-    // Event creation
+    // CUDA Event Timing
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     float timeElapsed = 0;
+
+    // **Get active CUDA device**
+    int cudaDevice;
+    errorCode = cudaGetDevice(&cudaDevice);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    nvmlReturn_t result;
+    nvmlDevice_t device;
+    result = nvmlInit();
+    if (result != NVML_SUCCESS) {
+        std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result) << std::endl;
+        return 1;
+    }
+
+    result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
+    if (result != NVML_SUCCESS) {
+        std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result) << std::endl;
+        return 1;
+    }
+    
+    // Vector for power sampling
+    std::vector<unsigned> powerSamples;
 
     // Start timer
     cudaEventRecord(start, 0);
@@ -143,21 +173,44 @@ int main(int argc, char *argv[])
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
+    
+    while (true) {
+        unsigned tempPower;
+        if (nvmlDeviceGetPowerUsage(device, &tempPower) == NVML_SUCCESS) {
+            powerSamples.push_back(tempPower);
+        }
+        if (cudaEventQuery(stop) == cudaSuccess) {
+            break;
+        }
+    }
 
     // End timer
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&timeElapsed, start, stop);
 
+    double totalPower = 0;
+    for (size_t i = 0; i < powerSamples.size(); ++i) {
+        totalPower += powerSamples[i];
+    }
+
+    double avgPower_mW = totalPower / powerSamples.size();  // Average power in mW
+
+    // **Compute Energy in milliJoules (mJ)**
+    float energy_mJ = avgPower_mW * timeElapsed / 1000;
+
     printf("Execution time of vector addition = %f ms\n", timeElapsed);
-    errorCode = cudaMemcpy(C.data(), z, vectorSize * sizeof(int), cudaMemcpyDeviceToHost);
+    printf("Average Power = %f mW\n", avgPower_mW);
+    printf("Energy Consumption = %f mJ\n", energy_mJ);
+
+    errorCode = cudaMemcpy(C.data(), z, vectorSize * sizeof(float), cudaMemcpyDeviceToHost);
     if (errorCode != cudaSuccess)
     {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
     }
 
-    for (int i = 0; i < vectorSize; i++)
+    for (uint64_t i = 0; i < vectorSize; i++)
     {
         if (C[i] != A[i] + B[i])
         {
@@ -170,6 +223,8 @@ int main(int argc, char *argv[])
     cudaFree(x);
     cudaFree(y);
     cudaFree(z);
+
+    nvmlShutdown();
 
     return 0;
 } /* main */

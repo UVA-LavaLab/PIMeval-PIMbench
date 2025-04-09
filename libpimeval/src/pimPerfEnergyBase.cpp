@@ -10,6 +10,7 @@
 #include "pimPerfEnergyFulcrum.h"
 #include "pimPerfEnergyBankLevel.h"
 #include "pimPerfEnergyAquabolt.h"
+#include <cstdint>
 #include <iostream>
 
 
@@ -65,10 +66,12 @@ pimPerfEnergyBase::pimPerfEnergyBase(const pimPerfEnergyModelParams& params)
 pimeval::perfEnergy
 pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const
 {
+  //TODO: fine grain perf-energy modeling 
   double mjEnergy = 0.0;
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
+  uint64_t mTotalOP = 0;
   double msRuntime = static_cast<double>(numBytes) / (m_typicalRankBW * m_numRanks * 1024 * 1024 * 1024 / 1000);
   switch (cmdType) {
     case PimCmdEnum::COPY_H2D:
@@ -96,7 +99,7 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
       break;
     }
   }
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 
 //! @brief  Perf energy model of base class for func1 (placeholder)
@@ -108,7 +111,8 @@ pimPerfEnergyBase::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& o
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 
 //! @brief  Perf energy model of base class for func2 (placeholder)
@@ -120,7 +124,8 @@ pimPerfEnergyBase::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& o
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 
 //! @brief  Perf energy model of base class for reduction sum (placeholder)
@@ -132,7 +137,8 @@ pimPerfEnergyBase::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInf
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 
 //! @brief  Perf energy model of base class for broadcast (placeholder)
@@ -144,7 +150,8 @@ pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInf
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 
 //! @brief  Perf energy model of base class for rotate (placeholder)
@@ -156,6 +163,7 @@ pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& 
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute);
+  uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 

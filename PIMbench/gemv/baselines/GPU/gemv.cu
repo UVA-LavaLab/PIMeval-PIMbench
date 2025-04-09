@@ -3,12 +3,15 @@
  *
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
-#include <iostream>
+#include <chrono>
 #include <cublas_v2.h>
+#include <iostream>
+#include <math.h>
+#include <nvml.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <thread>
+#include <unistd.h>
 
 #include "utilBaselines.h"
 
@@ -21,34 +24,30 @@ vector<float> B;
 vector<float> C;
 
 // Params ---------------------------------------------------------------------
-typedef struct Params
-{
+typedef struct Params {
   uint64_t row, column;
   bool shouldVerify;
 } Params;
 
-void usage()
-{
-  fprintf(stderr,
-          "\nUsage:  ./gemv.out [options]"
-          "\n"
-          "\n    -r    row size (default=16384)"
-          "\n    -c    column size (default=16384)"
-          "\n    -v    t = verifies PIM output with host output. (default=false)"
-          "\n");
+void usage() {
+  fprintf(
+      stderr,
+      "\nUsage:  ./gemv.out [options]"
+      "\n"
+      "\n    -r    row size (default=16384)"
+      "\n    -c    column size (default=16384)"
+      "\n    -v    t = verifies PIM output with host output. (default=false)"
+      "\n");
 }
 
-struct Params input_params(int argc, char **argv)
-{
+struct Params input_params(int argc, char **argv) {
   struct Params p;
   p.row = 16384;
   p.column = 16384;
 
   int opt;
-  while ((opt = getopt(argc, argv, ":r:c:h:v:")) >= 0)
-  {
-    switch (opt)
-    {
+  while ((opt = getopt(argc, argv, ":r:c:h:v:")) >= 0) {
+    switch (opt) {
     case 'h':
       usage();
       exit(0);
@@ -71,8 +70,7 @@ struct Params input_params(int argc, char **argv)
   return p;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   struct Params p = input_params(argc, argv);
 
   uint64_t row = p.row, col = p.column;
@@ -80,39 +78,38 @@ int main(int argc, char *argv[])
   getVector(col, B);
   C.resize(row);
 
+  std::cout << "Starting GEMV For: " << row << " X " << col << std::endl;
+
   float *x, *y, *z;
 
   cudaError_t errorCode;
 
   errorCode = cudaMalloc((void **)&x, row * col * sizeof(int32_t));
-  if (errorCode != cudaSuccess)
-  {
+  if (errorCode != cudaSuccess) {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
   errorCode = cudaMalloc((void **)&y, col * sizeof(int32_t));
-  if (errorCode != cudaSuccess)
-  {
+  if (errorCode != cudaSuccess) {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
   errorCode = cudaMalloc((void **)&z, row * sizeof(int32_t));
-  if (errorCode != cudaSuccess)
-  {
+  if (errorCode != cudaSuccess) {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
 
-  errorCode = cudaMemcpy(x, A.data(), row * col * sizeof(float), cudaMemcpyHostToDevice);
-  if (errorCode != cudaSuccess)
-  {
+  errorCode = cudaMemcpy(x, A.data(), row * col * sizeof(float),
+                         cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess) {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
 
-  errorCode = cudaMemcpy(y, B.data(), col * sizeof(float), cudaMemcpyHostToDevice);
-  if (errorCode != cudaSuccess)
-  {
+  errorCode =
+      cudaMemcpy(y, B.data(), col * sizeof(float), cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess) {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
@@ -121,11 +118,36 @@ int main(int argc, char *argv[])
   const float beta = 0.0;
   cublasHandle_t handle;
   cublasStatus_t status = cublasCreate(&handle);
-  if (status != CUBLAS_STATUS_SUCCESS)
-  {
+  if (status != CUBLAS_STATUS_SUCCESS) {
     std::cerr << "CUBLAS initialization failed\n";
     exit(1);
   }
+
+  // **Get active CUDA device**
+  int cudaDevice;
+  errorCode = cudaGetDevice(&cudaDevice);
+  if (errorCode != cudaSuccess) {
+    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+    exit(1);
+  }
+  nvmlReturn_t result;
+  nvmlDevice_t device;
+  result = nvmlInit();
+  if (result != NVML_SUCCESS) {
+    std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result)
+              << std::endl;
+    return 1;
+  }
+
+  result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
+  if (result != NVML_SUCCESS) {
+    std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result)
+              << std::endl;
+    return 1;
+  }
+
+  // Variables for power sampling
+  std::vector<unsigned int> powerSamples;
 
   // Event creation
   cudaEvent_t start, stop;
@@ -135,20 +157,29 @@ int main(int argc, char *argv[])
 
   // Start timer
   cudaEventRecord(start, 0);
+
   /* Kernel Call */
-  status = cublasSgemv(handle, CUBLAS_OP_N, row, col, &alpha, x, row, y, 1, &beta, z, 1);
-  if (status != CUBLAS_STATUS_SUCCESS)
-  {
+  status = cublasSgemv(handle, CUBLAS_OP_N, row, col, &alpha, x, row, y, 1,
+                       &beta, z, 1);
+  if (status != CUBLAS_STATUS_SUCCESS) {
     std::cerr << "CUBLAS SGEMV failed\n";
     exit(1);
   }
-
   // Check for kernel launch errors
   errorCode = cudaGetLastError();
-  if (errorCode != cudaSuccess)
-  {
+  if (errorCode != cudaSuccess) {
     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
     exit(1);
+  }
+
+  while (true) {
+    unsigned int power;
+    if (nvmlDeviceGetPowerUsage(device, &power) == NVML_SUCCESS) {
+      powerSamples.push_back(power);
+    }
+    if (cudaEventQuery(stop) == cudaSuccess) {
+      break;
+    }
   }
 
   // End timer
@@ -156,28 +187,37 @@ int main(int argc, char *argv[])
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&timeElapsed, start, stop);
 
-  printf("Execution time = %f ms\n", timeElapsed);
+  double totalPower = 0;
+  for (size_t i = 0; i < powerSamples.size(); ++i) {
+    totalPower += powerSamples[i]; // Convert mW to W * time
+  }
+
+  float avgPower_mW = totalPower / powerSamples.size(); // Average power in mW
+
+  // **Compute Energy in milliJoules (mJ)**
+  float energy_mJ = avgPower_mW * timeElapsed / 1000;
+
+  printf("Execution time of gemv = %f ms\n", timeElapsed);
+  printf("Average Power = %f mW\n", avgPower_mW);
+  printf("Energy Consumption = %f mJ\n", energy_mJ);
 
   errorCode = cudaMemcpy(C.data(), z, row * sizeof(int32_t), cudaMemcpyDeviceToHost);
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error Copy from host to device: " << cudaGetErrorString(errorCode) << "\n";
+  if (errorCode != cudaSuccess) {
+    cerr << "Cuda Error Copy from host to device: "
+         << cudaGetErrorString(errorCode) << "\n";
     exit(1);
   }
 
-  if (p.shouldVerify)
-  {
+  if (p.shouldVerify) {
     cout.precision(0);
-    for (int i = 0; i < row; ++i)
-    {
+    for (int i = 0; i < row; ++i) {
       int32_t sum = 0;
-      for (int j = 0; j < col; ++j)
-      {
+      for (int j = 0; j < col; ++j) {
         sum += A[i + j * row] * B[j];
       }
-      if (abs(C[i] - sum) > TOLERANCE)
-      {
-        cout << fixed << "Multiplication failed at index: " << i << "\t" << C[i] << "\t" << sum << endl;
+      if (abs(C[i] - sum) > TOLERANCE) {
+        cout << fixed << "Multiplication failed at index: " << i << "\t" << C[i]
+             << "\t" << sum << endl;
         break;
       }
     }

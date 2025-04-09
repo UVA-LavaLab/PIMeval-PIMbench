@@ -122,28 +122,31 @@ void
 pimStatsMgr::showCmdStats() const
 {
   std::printf("PIM Command Stats:\n");
-  std::printf(" %44s : %10s %14s %14s %7s %7s %7s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "%R", "%W", "%L");
+  std::printf(" %44s : %10s %14s %14s %14s %7s %7s %7s\n", "PIM-CMD", "CNT", "Runtime(ms)", "Energy(mJ)", "GOPS/W", "%R", "%W", "%L");
   int totalCmd = 0;
   double totalMsRuntime = 0.0;
   double totalMjEnergy = 0.0;
   double totalMsRead = 0.0;
   double totalMsWrite = 0.0;
   double totalMsCompute = 0.0;
+  uint64_t totalOp = 0;
   for (const auto& it : m_cmdPerf) {
     double cmdRuntime = it.second.second.m_msRuntime;
     double percentRead = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msRead * 100 / cmdRuntime);
     double percentWrite = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msWrite * 100 / cmdRuntime);
     double percentCompute = cmdRuntime == 0.0 ? 0.0 : (it.second.second.m_msCompute * 100 / cmdRuntime);
-    std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, percentRead, percentWrite, percentCompute);
+    double cmdEnergy = it.second.second.m_mjEnergy;
+    double perfWatt = cmdEnergy == 0.0 ? 0.0 : (it.second.second.m_totalOp * 1.0 / cmdEnergy * 1e-6);
+    std::printf(" %44s : %10d %14f %14f %14f %7.2f %7.2f %7.2f\n", it.first.c_str(), it.second.first, it.second.second.m_msRuntime, it.second.second.m_mjEnergy, perfWatt, percentRead, percentWrite, percentCompute);
     totalCmd += it.second.first;
     totalMsRuntime += it.second.second.m_msRuntime;
     totalMjEnergy += it.second.second.m_mjEnergy;
     totalMsRead += it.second.first * percentRead;
     totalMsWrite += it.second.first * percentWrite;
     totalMsCompute += it.second.first * percentCompute;
+    totalOp += it.second.second.m_totalOp;
   }
-  std::printf(" %44s : %10d %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
-
+  std::printf(" %44s : %10d %14f %14f %14f %7.2f %7.2f %7.2f\n", "TOTAL ---------", totalCmd, totalMsRuntime, totalMjEnergy, (totalOp * 1.0 / totalMjEnergy * 1e-6), (totalMsRead / totalCmd), (totalMsWrite / totalCmd), (totalMsCompute / totalCmd) );
   // analyze micro-ops
   int numR = 0;
   int numW = 0;
@@ -192,6 +195,7 @@ pimStatsMgr::recordCmd(const std::string& cmdName, pimeval::perfEnergy mPerfEner
   item.second.m_msRead += mPerfEnergy.m_msRead;
   item.second.m_msWrite += mPerfEnergy.m_msWrite;
   item.second.m_msCompute += mPerfEnergy.m_msCompute;
+  item.second.m_totalOp += mPerfEnergy.m_totalOp;
 }
 
 //! @brief  Record estimated runtime and energy of data copy
