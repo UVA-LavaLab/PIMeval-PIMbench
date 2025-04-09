@@ -10,32 +10,22 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 import numpy as np
 
+def train_model(X_train, y_train, num_trees, dt_height):
+    # train the model on the CPU, since this time isn't taken into account for evaluation 
+    print(f"[INFO] Started training Random Forest with {num_trees} trees, each with height {dt_height}") 
 
-def train_cpu(X_train, y_train, num_trees, dt_height):
-    print(f"[INFO] Started training Random Forest on CPU with {num_trees} trees, each with height {dt_height}")    
-    # train a single decision tree
-    base_tree = DecisionTreeClassifier(
-        max_depth=None,
+    rf_model = RandomForestClassifier(
+        n_estimators=num_trees,
         max_leaf_nodes=2**dt_height,
         min_samples_split=2,
         min_samples_leaf=1,
         criterion="gini",
-        splitter="random", 
         random_state=42
     )
 
-    base_tree.fit(X_train, y_train)
+    rf_model.fit(X_train, y_train)
 
-    # put the same DT into the random forest to ensure consistency
-    rf_model = RandomForestClassifier(n_estimators=num_trees, random_state=42)
-
-    # Manually set missing attributes required by scikit-learn
-    rf_model.n_classes_ = len(np.unique(y_train))
-    rf_model.classes_ = np.unique(y_train)
-    rf_model.n_outputs_ = 1
-
-    rf_model.estimators_ = [copy.deepcopy(base_tree) for _ in range(num_trees)]
-    print("[INFO] Finished training Random Forest on CPU")  
+    print("[INFO] Finished training Random Forest")
     return rf_model
 
 def eval_cpu(model, input_sample):
@@ -55,35 +45,24 @@ def eval_cpu(model, input_sample):
     else:
         print(f"FAIL: Some trees do not have exactly {num_leaf_nodes} leaf nodes.")
 
-
-def train_gpu(X_train, y_train, num_trees, dt_height):
-    print(f"[INFO] Started training Random Forest on GPU with {num_trees} trees, each with height {dt_height}")   
-    rf_model = cuRF(
-        n_estimators=num_trees,
-        max_leaves=2**dt_height,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features=1.0,
-        random_state=42
-    )
-
-    rf_model.fit(X_train, y_train)
-    print("[INFO] Finished training Random Forest on GPU") 
-    return rf_model
-
 def eval_gpu(model, input_sample):
+    import cupy as cp
+
     single_gpu_sample = cp.asarray(input_sample)  # move sample to GPU
     start = cp.cuda.Event()
     end = cp.cuda.Event()
 
     start.record()
 
-    single_prediction = rf_model.predict(single_sample)
+    single_prediction = model.predict(
+        single_gpu_sample
+    )
     end.record()
     end.synchronize()
 
     elapsed_ms = cp.cuda.get_elapsed_time(start, end)
     print(f"Inference Execution Time: {elapsed_ms:.4f} ms")
+
 
 
 def main(args):
@@ -102,15 +81,18 @@ def main(args):
     X_train = X_train + np.random.normal(0, 0.99, X_train.shape)
     single_sample = X_test[0].reshape(1, -1)  # sample 1 input for evaluation
     
+    # train the same sklearn model for both CPU and GPU inference
+    rf_model = train_model(X_train, y_train, args.num_trees, args.dt_height)
+    
     if args.cuda:
-        from cuml.ensemble import RandomForestClassifier as cuRF
-        import cupy as cp
-        
-        rf_model = train_gpu(X_train, y_train, args.num_trees, args.dt_height)
-        eval_gpu(rf_model, single_sample)
+        from cuml import ForestInference
+        fil_model = ForestInference.load_from_sklearn(
+            rf_model,
+            output_class=True,
+        )
+        eval_gpu(fil_model, single_sample)
     else:
         # if cuda not set, train and eval on CPU
-        rf_model = train_cpu(X_train, y_train, args.num_trees, args.dt_height)
         eval_cpu(rf_model, single_sample)
         
 

@@ -10,13 +10,9 @@
 #SBATCH -p gpu 
 
 module load apptainer 
-module load rapidsai/24.06
+module load rapidsai/24.06  # if running on cs, will need to build the image locally first
 
 nvidia-smi
-
-#module load gcccore/13.3.0
-#module load python/3.12.3
-#module load cuda/12.2.0
 
 echo "done with module"
 
