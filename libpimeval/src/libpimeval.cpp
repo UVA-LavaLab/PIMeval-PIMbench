@@ -531,6 +531,14 @@ pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Execute fused PIM APIs
+PimStatus
+pimFuse(PimProg prog)
+{
+  bool ok = pimSim::get()->pimFuse(prog);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  BitSIMD-V: Read a row to SA
 PimStatus
 pimOpReadRowToSa(PimObjId src, unsigned ofst)

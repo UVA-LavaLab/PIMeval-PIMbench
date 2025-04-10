@@ -125,6 +125,9 @@ public:
   bool pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
   bool pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+  // PIM API Fusion
+  bool pimFuse(PimProg prog);
+
   // BitSIMD-V micro ops
   bool pimOpReadRowToSa(PimObjId src, unsigned ofst);
   bool pimOpWriteSaToRow(PimObjId src, unsigned ofst);
