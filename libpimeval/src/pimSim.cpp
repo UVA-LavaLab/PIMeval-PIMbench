@@ -6,6 +6,7 @@
 
 #include "pimSim.h"
 #include "pimCmd.h"
+#include "pimCmdFuse.h"
 #include "pimParamsDram.h"
 #include "pimStats.h"
 #include "pimUtils.h"
