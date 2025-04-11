@@ -128,53 +128,6 @@ int main(int argc, char *argv[])
 
     std::cout << "Launching CUDA Kernel." << std::endl;
 
-    // // CUDA Event Timing
-    // cudaEvent_t start, stop;
-    // cudaEventCreate(&start);
-    // cudaEventCreate(&stop);
-    // float timeElapsed = 0;
-
-    // // **Get active CUDA device**
-    // int cudaDevice;
-    // errorCode = cudaGetDevice(&cudaDevice);
-    // if (errorCode != cudaSuccess)
-    // {
-    //     cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    //     exit(1);
-    // }
-
-    // nvmlReturn_t result;
-    // nvmlDevice_t device;
-    // result = nvmlInit();
-    // if (result != NVML_SUCCESS) {
-    //     std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result) << std::endl;
-    //     return 1;
-    // }
-
-    // result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
-    // if (result != NVML_SUCCESS) {
-    //     std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result) << std::endl;
-    //     return 1;
-    // }
-    
-    // // Vector for power sampling
-    // std::vector<unsigned> powerSamples;
-    // bool donePolling = false;
-    // // Start timer
-    // cudaEventRecord(start, 0);
-
-    // /* Kernel Call */
-    // std::thread powerPoller([&]() {
-    // while (true) {
-    //     unsigned tempPower;
-    //     if (nvmlDeviceGetPowerUsage(device, &tempPower) == NVML_SUCCESS) {
-    //         powerSamples.push_back(tempPower);
-    //     }
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(1)); // optional: to avoid hammering NVML
-    //     if (donePolling) break;
-    // }
-    // });
-
     auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
         vecAdd<<<numBlock, blockSize>>>(x, y, z);
         cudaDeviceSynchronize(); // ensure all are done
@@ -188,34 +141,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    // while (true) {
-    //     unsigned tempPower;
-    //     if (nvmlDeviceGetPowerUsage(device, &tempPower) == NVML_SUCCESS) {
-    //         powerSamples.push_back(tempPower);
-    //     }
-    //     if (cudaEventQuery(stop) == cudaSuccess) {
-    //         break;
-    //     }
-    // }
-
-    // End timer
-    // cudaEventRecord(stop, 0);
-    // cudaEventSynchronize(stop);
-    // cudaEventElapsedTime(&timeElapsed, start, stop);
-    // donePolling = true;
-    // powerPoller.join();
-
-    // double totalPower = 0;
-    // for (size_t i = 0; i < powerSamples.size(); ++i) {
-    //     totalPower += powerSamples[i];
-    //     std::cout << "total Power: " << totalPower << "\t";
-    // }
-
-    // double avgPower_mW = totalPower / powerSamples.size();  // Average power in mW
-
-    // // **Compute Energy in milliJoules (mJ)**
-    // float energy_mJ = avgPower_mW * timeElapsed / 1000;
-
     printf("\nExecution time of vector addition = %f ms\n", timeElapsed);
     printf("Average Power = %f mW\n", avgPower);
     printf("Energy Consumption = %f mJ\n", energy);
@@ -227,14 +152,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // for (uint64_t i = 0; i < vectorSize; i++)
-    // {
-    //     if (C[i] != A[i] + B[i])
-    //     {
-    //         cout << "Addition failed at index: " << i << " value: " << z[i] << endl;
-    //         break;
-    //     }
-    // }
+    for (uint64_t i = 0; i < vectorSize; i++)
+    {
+        if (C[i] != A[i] + B[i])
+        {
+            cout << "Addition failed at index: " << i << " value: " << z[i] << endl;
+            break;
+        }
+    }
 
     /* Free memory */
     cudaFree(x);
