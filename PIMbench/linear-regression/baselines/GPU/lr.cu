@@ -268,73 +268,18 @@ int main(int argc, char *argv[]) {
 
   cout << "Num Block: " << numBlock << "\tn_pad: " << n_pad << "\n";
 
-  // Start timer
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  float timeElapsed = 0;
-  // **Get active CUDA device**
-  int cudaDevice;
-  errorCode = cudaGetDevice(&cudaDevice);
-  if (errorCode != cudaSuccess) {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+    /* Kernel Call */
+    LR<<<numBlock, BLOCK_SIZE>>>(dataPoints_d, SX, SY, SXX, SYY, SXY, n_pad, n);
+    cudaDeviceSynchronize();
+    LR_Wrap<<<1, BLOCK_SIZE>>>(SX, SY, SXX, SYY, SXY, numBlock);
+    cudaDeviceSynchronize();
+  });
 
-  nvmlReturn_t result;
-  nvmlDevice_t device;
-  result = nvmlInit();
-  if (result != NVML_SUCCESS) {
-    std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result)
-              << std::endl;
-    return 1;
-  }
 
-  result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
-  if (result != NVML_SUCCESS) {
-    std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result)
-              << std::endl;
-    return 1;
-  }
-
-  // Vector for power sampling
-  std::vector<unsigned> powerSamples;
-
-  cudaEventRecord(start, 0);
-
-  /* Kernel Call */
-  LR<<<numBlock, BLOCK_SIZE>>>(dataPoints_d, SX, SY, SXX, SYY, SXY, n_pad, n);
-  LR_Wrap<<<1, BLOCK_SIZE>>>(SX, SY, SXX, SYY, SXY, numBlock);
-  while (true) {
-    unsigned tempPower;
-    if (nvmlDeviceGetPowerUsage(device, &tempPower) == NVML_SUCCESS) {
-      powerSamples.push_back(tempPower);
-    }
-    if (cudaEventQuery(stop) == cudaSuccess) {
-      break;
-    }
-  }
-  cudaDeviceSynchronize();
-
-  // End timer
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
-  double totalPower = 0;
-  for (size_t i = 0; i < powerSamples.size(); ++i) {
-    totalPower += powerSamples[i];
-  }
-
-  printf("Total Power: %lu\n\n\n", totalPower);
-
-  double avgPower_mW = totalPower / powerSamples.size(); // Average power in mW
-
-  // **Compute Energy in milliJoules (mJ)**
-  float energy_mJ = avgPower_mW * timeElapsed / 1000;
-
-  printf("Execution time = %f ms\n", timeElapsed);
-  printf("Average Power = %f mW\n", avgPower_mW);
-  printf("Energy Consumption = %f mJ\n", energy_mJ);
+  printf("Execution time for Linear Regression = %f ms\n", timeElapsed);
+  printf("Average Power = %f mW\n", avgPower);
+  printf("Energy Consumption = %f mJ\n", energy);
 
   // Calculate slope and intercept
   int32_t SX_host, SY_host, SXX_host, SXY_host;
