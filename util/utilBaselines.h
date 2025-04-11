@@ -160,7 +160,8 @@ std::tuple<double, double, double> measureCUDAPowerAndElapsedTime(std::function<
     // Clean up CUDA events
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
-
+    nvmlShutdown();
+    
     // Compute average power
     double avgPower = 0.0;
     for (auto p : powerSamples) avgPower += p;

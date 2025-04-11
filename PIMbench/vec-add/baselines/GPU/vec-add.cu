@@ -166,7 +166,5 @@ int main(int argc, char *argv[])
     cudaFree(y);
     cudaFree(z);
 
-    nvmlShutdown();
-
     return 0;
 } /* main */
