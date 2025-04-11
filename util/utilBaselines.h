@@ -56,7 +56,7 @@ void getMatrix(uint64_t numRows, uint64_t numCols, vector<vector<T>> &matrix) {
     #pragma omp parallel for
     for (uint64_t row = 0; row < numRows; ++row) {
         for (uint64_t col = 0; col < numCols; ++col) {
-            matrix[row][col] = static_cast<T>(row*col % MAX_NUMBER);
+            matrix[row][col] = static_cast<T>((row + 1) % MAX_NUMBER);
         }
     }
 }

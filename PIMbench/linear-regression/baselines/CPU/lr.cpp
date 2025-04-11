@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
       SXY += dataPoints[i][0] * dataPoints[i][1];
     }
 
+    cout << n << "\tSX: " << SX << "\tSY: " << SY << "\tSXX: " << SXX << "\tSXY: " << SXY << "\n\n\n";
     // Calculate slope and intercept
     slope = (n * SXY - SX * SY) / (n * SXX - SX * SX);
     intercept = (SY - slope * SX) / n;
