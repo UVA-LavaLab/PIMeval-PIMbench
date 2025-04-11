@@ -110,49 +110,15 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  // **Get active CUDA device**
-  int cudaDevice;
-  errorCode = cudaGetDevice(&cudaDevice);
-  if (errorCode != cudaSuccess) {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
-  nvmlReturn_t result;
-  nvmlDevice_t device;
-  result = nvmlInit();
-  if (result != NVML_SUCCESS) {
-    std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result)
-              << std::endl;
-    return 1;
-  }
-
-  result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
-  if (result != NVML_SUCCESS) {
-    std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result)
-              << std::endl;
-    return 1;
-  }
-
-  // Variables for power sampling
-  std::vector<unsigned int> powerSamples;
-
-  // Event creation
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  float timeElapsed = 0;
-
-  // Start timer
-  cudaEventRecord(start, 0);
-  /* Kernel Call */
-  status = cublasSaxpy(handle, vector_size, &a, x, 1, y, 1);
-
-  if (status != CUBLAS_STATUS_SUCCESS)
-  {
-    std::cerr << "CUBLAS SGEMV failed\n";
-    exit(1);
-  }
-
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+    /* Kernel Call */
+    status = cublasSaxpy(handle, vector_size, &a, x, 1, y, 1);
+    if (status != CUBLAS_STATUS_SUCCESS)
+    {
+      std::cerr << "CUBLAS SGEMV failed\n";
+      exit(1);
+    }
+  });
   // Check for kernel launch errors
   errorCode = cudaGetLastError();
   if (errorCode != cudaSuccess)
@@ -161,34 +127,9 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  while (true) {
-    unsigned int power;
-    if (nvmlDeviceGetPowerUsage(device, &power) == NVML_SUCCESS) {
-      powerSamples.push_back(power);
-    }
-    if (cudaEventQuery(stop) == cudaSuccess) {
-      break;
-    }
-  }
-
-  // End timer
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
-
-  double totalPower = 0;
-  for (size_t i = 0; i < powerSamples.size(); ++i) {
-    totalPower += powerSamples[i]; // Convert mW to W * time
-  }
-
-  float avgPower_mW = totalPower / powerSamples.size(); // Average power in mW
-
-  // **Compute Energy in milliJoules (mJ)**
-  float energy_mJ = avgPower_mW * timeElapsed / 1000;
-
   printf("Execution time for AXPY = %f ms\n", timeElapsed);
-  printf("Average Power = %f mW\n", avgPower_mW);
-  printf("Energy Consumption = %f mJ\n", energy_mJ);
+  printf("Average Power = %f mW\n", avgPower);
+  printf("Energy Consumption = %f mJ\n", energy);
 
   vector<int32_t> C(vector_size);
   errorCode = cudaMemcpy(C.data(), y, vector_size * sizeof(int32_t), cudaMemcpyDeviceToHost);

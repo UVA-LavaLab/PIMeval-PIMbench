@@ -11,6 +11,7 @@
 #include <fcntl.h>
 
 #include <cub/cub.cuh>
+#include "utilBaselines.h"
  
 using namespace std;
 
@@ -174,46 +175,35 @@ int main(int argc, char *argv[])
 
   std::cout << "Launching CUDA Kernel." << std::endl;
 
-  // Event creation
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  float timeElapsed = 0;
-
-  // Start timer
-  cudaEventRecord(start, 0);
-
-  // Included as essential part in determing the temporary storage size for Histogram algorithm
-  errorCode = cub::DeviceHistogram::MultiHistogramEven<NUMCHANNELS + 1, NUMCHANNELS>(d_temp_storage, temp_storage_bytes,
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+    // Included as essential part in determing the temporary storage size for Histogram algorithm
+    errorCode = cub::DeviceHistogram::MultiHistogramEven<NUMCHANNELS + 1, NUMCHANNELS>(d_temp_storage, temp_storage_bytes,
                         d_samples, d_histogram, num_levels, lower_level, upper_level, num_samples);
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
+    if (errorCode != cudaSuccess)
+    {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+    }
+    errorCode = cudaMalloc(&d_temp_storage, temp_storage_bytes);
+    if (errorCode != cudaSuccess)
+    {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+    }
+    /* Kernel Call */
+    errorCode = cub::DeviceHistogram::MultiHistogramEven<NUMCHANNELS + 1, NUMCHANNELS>(d_temp_storage, temp_storage_bytes,
+    d_samples, d_histogram, num_levels, lower_level, upper_level, num_samples);
+    if (errorCode != cudaSuccess)
+    {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+    }
+    cudaDeviceSynchronize(); // ensure all are done
+  });
 
-  errorCode = cudaMalloc(&d_temp_storage, temp_storage_bytes);
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
-
-  /* Kernel Call */
-  errorCode = cub::DeviceHistogram::MultiHistogramEven<NUMCHANNELS + 1, NUMCHANNELS>(d_temp_storage, temp_storage_bytes,
-  d_samples, d_histogram, num_levels, lower_level, upper_level, num_samples);
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
-
-  // End timer
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
-
-  printf("Execution time = %f ms\n", timeElapsed);
+  printf("Execution time for histogram = %f ms\n", timeElapsed);
+  printf("Average Power = %f mW\n", avgPower);
+  printf("Energy Consumption = %f mJ\n", energy);
 
   for (int i = 0; i < NUMCHANNELS; ++i) 
   {
@@ -275,8 +265,6 @@ int main(int argc, char *argv[])
   /* Free memory */
   cudaFree(d_samples); 
   cudaFree(d_temp_storage);
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
 
   for (int i = 0; i < NUMCHANNELS; ++i) 
   {

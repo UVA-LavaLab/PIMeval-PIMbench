@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <chrono>
 
-#include "../../../utilBaselines.h"
+#include "../../../../util/utilBaselines.h"
 
 #define NUMBINS 256 // RGB values at any given pixel can be a value 0 to 255 (inclusive)
 #define NUMCHANNELS 3 // Red, greenCount, and blueCount color channels

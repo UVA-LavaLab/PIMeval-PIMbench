@@ -301,7 +301,7 @@ int main(int argc, char **argv)
 {
   struct Params p = input_params(argc, argv);
 
-  int k = p.k, number_of_elements = p.numPoints, dim = p.dimension, number_of_iterations = p.maxItr;
+  int k = p.k, number_of_elements = p.numPoints, number_of_iterations = p.maxItr;
 
   std::vector<int32_t> h_x (number_of_elements);
   std::vector<int32_t> h_y (number_of_elements);
@@ -318,7 +318,7 @@ int main(int argc, char **argv)
   const int threads = 1024;
   const int blocks = (number_of_elements + threads - 1) / threads;
 
-  std::cerr << "Processing " << number_of_elements << " points on " << blocks
+  std::cout << "Processing " << number_of_elements << " points on " << blocks
             << " blocks x " << threads << " threads" << std::endl;
 
   // * 3 for x, y and counts.
@@ -344,48 +344,33 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  float timeElapsed = 0;
-  // Start timer
-  cudaEventRecord(start, 0);
-  for (size_t iteration = 0; iteration < number_of_iterations; ++iteration)
-  {
-    fine_reduce<<<blocks, threads, fine_shared_memory>>>(d_data.x,
-                                                         d_data.y,
-                                                         d_data.size,
-                                                         d_means.x,
-                                                         d_means.y,
-                                                         d_sums.x,
-                                                         d_sums.y,
-                                                         k,
-                                                         d_counts);
-    errorCode = cudaDeviceSynchronize();
-    if (errorCode != cudaSuccess)
-    {
-      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-      exit(1);
-    } 
+  std::cout << "Launching CUDA Kernel." << std::endl;
 
-    coarse_reduce<<<1, k * blocks, coarse_shared_memory>>>(d_means.x,
-                                                           d_means.y,
-                                                           d_sums.x,
-                                                           d_sums.y,
-                                                           k,
-                                                           d_counts);
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+    for (size_t iteration = 0; iteration < number_of_iterations; ++iteration) {
+      fine_reduce<<<blocks, threads, fine_shared_memory>>>(
+          d_data.x, d_data.y, d_data.size, d_means.x, d_means.y, d_sums.x,
+          d_sums.y, k, d_counts);
+      errorCode = cudaDeviceSynchronize();
+      if (errorCode != cudaSuccess) {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+      }
 
-    errorCode = cudaDeviceSynchronize();
-    if (errorCode != cudaSuccess)
-    {
-      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-      exit(1);
+      coarse_reduce<<<1, k * blocks, coarse_shared_memory>>>(
+          d_means.x, d_means.y, d_sums.x, d_sums.y, k, d_counts);
+
+      errorCode = cudaDeviceSynchronize();
+      if (errorCode != cudaSuccess) {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+      }
     }
-  }
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
-  printf("Execution time = %f ms\n", timeElapsed);
+  });
+
+  printf("Execution time Kmeans = %f ms\n", timeElapsed);
+  printf("Average Power = %f mW\n", avgPower);
+  printf("Energy Consumption = %f mJ\n", energy);
 
   cudaFree(d_counts);
 
