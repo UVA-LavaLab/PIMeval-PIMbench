@@ -24,7 +24,7 @@ all: $(EXEC)
 
 # Rule to build the target executable
 $(EXEC): $(SOURCES)
-	$(NVCC) $(SOURCES) -I$(CUDA_INCLUDE) -I$(DEP) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
+	$(NVCC) $(SOURCES) -DENABLE_CUDA -I$(CUDA_INCLUDE) -I$(DEP) $(ARCH_FLAG) -L$(CUDA_LIB_DIR) $(CUDA_LIB) $(FOPENMP) $(CFLAGS) $(CXXFLAGS) -o $(EXEC)
 
 # Rule to clean the project
 clean:

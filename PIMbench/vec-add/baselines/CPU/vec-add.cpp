@@ -13,15 +13,15 @@
 #include "utilBaselines.h"
 
 // Global Vectors
-vector<int32_t> A;
-vector<int32_t> B;
-vector<int32_t> C;
+vector<int32_t> a;
+vector<int32_t> b;
+vector<int32_t> c;
 
 /**
  * @brief CPU vector addition kernel
  * @param numElements Number of elements in the vectors
  */
-static void vectorAddition(uint64_t numElements)
+static void vectorAddition(uint64_t numElements,  int* __restrict A, int* __restrict B, int* __restrict C)
 {
 #pragma omp parallel for
     for (uint64_t i = 0; i < numElements; i++)
@@ -88,17 +88,17 @@ int main(int argc, char **argv)
     uint64_t vectorSize = params.vectorSize;
     std::cout << "Running vector addition for CPU on vector of size: " << vectorSize << std::endl;
 
-    C.resize(vectorSize);
+    c.resize(vectorSize);
 
     // Initialize vectors
-    getVector<int32_t>(vectorSize, A);
-    getVector<int32_t>(vectorSize, B);
+    getVector<int32_t>(vectorSize, a);
+    getVector<int32_t>(vectorSize, b);
     std::cout << "Vector Initialization done!" << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < WARMUP; ++i)
     {
-        vectorAddition(vectorSize);
+        vectorAddition(vectorSize, a.data(), b.data(), c.data());
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, milli> elapsedTime = (end - start) / WARMUP;
