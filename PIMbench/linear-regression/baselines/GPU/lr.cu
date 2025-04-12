@@ -314,6 +314,6 @@ int main(int argc, char *argv[]) {
   cudaFree(SYY);
   cudaFree(SXY);
   cudaFree(dataPoints_d);
-
+  free(dataPoints_h);
   return 0;
 }

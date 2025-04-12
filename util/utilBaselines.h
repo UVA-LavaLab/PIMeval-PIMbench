@@ -17,7 +17,7 @@
 
 using namespace std;
 
-#define WARMUP 2
+#define WARMUP 4
 #define MAX_NUMBER 102
 
 #if defined(ENABLE_CUDA)

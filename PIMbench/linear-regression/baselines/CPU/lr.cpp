@@ -75,8 +75,9 @@ int main(int argc, char *argv[])
 
   uint64_t n = params.dataSize;
 
-  vector<vector<int32_t>> dataPoints;
-  getMatrix(n, 2, dataPoints);
+  vector<int32_t> dataPointsX, dataPointsY;
+  getVector(n, dataPointsX);
+  getVector(n, dataPointsY);
   cout << "Done initializing data\n";
 
   double slope, intercept;
@@ -84,19 +85,16 @@ int main(int argc, char *argv[])
   auto start = std::chrono::high_resolution_clock::now();
   for (int32_t w = 0; w < WARMUP; w++) 
   {
-    double SX = 0, SY = 0, SXX = 0, SYY = 0, SXY = 0;
+    double SX = 0, SY = 0, SXX = 0, SXY = 0;
     
-    #pragma omp parallel for reduction(+ : SX, SXX, SY, SYY, SXY)
+    #pragma omp parallel for simd reduction(+ : SX, SXX, SY, SXY)
     for (uint64_t i = 0; i < n; i++)
     {
-      SX += dataPoints[i][0];
-      SXX += dataPoints[i][0] * dataPoints[i][0];
-      SY += dataPoints[i][1];
-      SYY += dataPoints[i][1] * dataPoints[i][1];
-      SXY += dataPoints[i][0] * dataPoints[i][1];
+      SX += dataPointsX[i];
+      SXX += dataPointsX[i] * dataPointsX[i];
+      SY += dataPointsY[i];
+      SXY += dataPointsX[i] * dataPointsX[i];
     }
-
-    cout << n << "\tSX: " << SX << "\tSY: " << SY << "\tSXX: " << SXX << "\tSXY: " << SXY << "\n\n\n";
     // Calculate slope and intercept
     slope = (n * SXY - SX * SY) / (n * SXX - SX * SX);
     intercept = (SY - slope * SX) / n;
