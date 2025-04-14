@@ -11,7 +11,7 @@ SRC_FILES := $(wildcard *.cpp)
 DEP := ../../../../util/
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
+CXXFLAGS := -Wall -Wextra -march=native -Werror -std=c++17 -O3 -fopenmp
 
 .PHONY: all clean
 

@@ -5,16 +5,100 @@
 #include <vector>
 #include <cstdlib>
 #include <iomanip>
+#include <thread>
+#include <cstdint>
+#include <random>
+#include <functional>
+#include <chrono>
+#include <tuple>
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
-#include <cstdint>
-#include <random>
 
 using namespace std;
 
-#define WARMUP 2
+#define WARMUP 4
 #define MAX_NUMBER 102
+
+#if defined(ENABLE_CUDA)
+#include <cuda_runtime.h>
+#include <nvml.h>
+std::tuple<double, double, double> measureCUDAPowerAndElapsedTime(std::function<void()> kernelLaunch)
+{
+    nvmlReturn_t result;
+    nvmlDevice_t device;
+    cudaEvent_t start, stop;
+
+    std::vector<unsigned> powerSamples;
+    bool donePolling = false;
+
+    int cudaDevice;
+    cudaError_t errorCode = cudaGetDevice(&cudaDevice);
+    if (errorCode != cudaSuccess)
+    {
+        cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+        exit(1);
+    }
+
+    // Initialize NVML
+    result = nvmlInit();
+    if (result != NVML_SUCCESS) {
+        std::cerr << "Failed to initialize NVML: " << nvmlErrorString(result) << std::endl;
+        return { 0.0, 0.0, 0.0 };
+    }
+
+    result = nvmlDeviceGetHandleByIndex(cudaDevice, &device);
+    if (result != NVML_SUCCESS) {
+        std::cerr << "Failed to get GPU handle: " << nvmlErrorString(result) << std::endl;
+        return { 0.0, 0.0, 0.0 };
+    }
+
+    // Start CUDA event timer
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
+
+    // Launch power polling in background
+    std::thread powerPoller([&]() {
+        while (!donePolling) {
+            unsigned tempPower = 0;
+            if (nvmlDeviceGetPowerUsage(device, &tempPower) == NVML_SUCCESS) {
+                powerSamples.push_back(tempPower);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    });
+
+    // Launch kernel(s)
+    kernelLaunch();
+
+    // Wait for kernel completion
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+
+    donePolling = true;
+    powerPoller.join();
+
+    // Measure kernel time
+    float elapsedTimeMs = 0;
+    cudaEventElapsedTime(&elapsedTimeMs, start, stop); // ms
+
+    // Clean up CUDA events
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+    nvmlShutdown();
+    
+    // Compute average power
+    double avgPower = 0.0;
+    for (auto p : powerSamples) avgPower += p;
+    if (!powerSamples.empty()) avgPower /= powerSamples.size(); // in mW
+    std::cout << "Power Sample Collected: " << powerSamples.size() << std::endl;
+    // Convert to energy in mJ
+    double energy = avgPower * (elapsedTimeMs / 1000.0); // mW × s = mJ
+
+    return { elapsedTimeMs, avgPower, energy };
+}
+#endif
 
 /**
  * @brief Initializes a vector with random values.
@@ -56,7 +140,7 @@ void getMatrix(uint64_t numRows, uint64_t numCols, vector<vector<T>> &matrix) {
     #pragma omp parallel for
     for (uint64_t row = 0; row < numRows; ++row) {
         for (uint64_t col = 0; col < numCols; ++col) {
-            matrix[row][col] = static_cast<T>(row*col % MAX_NUMBER);
+            matrix[row][col] = static_cast<T>((row + 1) % MAX_NUMBER);
         }
     }
 }

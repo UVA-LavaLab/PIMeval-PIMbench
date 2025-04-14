@@ -2,7 +2,7 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
+CXXFLAGS := -Wall -Wextra -Werror -march=native -std=c++17 -O3 -fopenmp
 
 # Executable name
 EXEC := axpy.out
