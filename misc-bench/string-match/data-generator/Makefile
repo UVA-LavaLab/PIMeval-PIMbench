@@ -7,13 +7,16 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -Wno-unknown-pragmas
+CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -Wno-unknown-pragmas -I./../../../util
 
 # Executable name
 EXEC := data-generator.out
 
 # Source files
 SRC_FILES := data-generator.cpp
+
+# Dependencies
+HEADER_DEPS := ./../../../util/utilStringMatch.h
 
 # make USE_OPENMP=1
 USE_OPENMP ?= 0
@@ -25,8 +28,9 @@ endif
 
 all: $(EXEC)
 
-$(EXEC): $(SRC_FILES) |
-	$(CXX) $(CXXFLAGS) -o $@ $^
+# Note: Need to avoid feeding .h files to clang command line
+$(EXEC): $(SRC_FILES) $(HEADER_DEPS)
+	$(CXX) $(CXXFLAGS) -o $@ $(SRC_FILES)
 
 clean:
 	rm -rf $(EXEC)

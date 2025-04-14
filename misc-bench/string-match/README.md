@@ -17,8 +17,6 @@ For example:
 
 ```
 string-match/
-├── include/
-│   ├── string-match-utils.h
 ├── PIM/
 │   ├── Makefile
 │   ├── string-match.cpp
@@ -70,7 +68,7 @@ The GPU variant leverages the [PFAC](https://github.com/pfac-lib/PFAC/) library.
 
 ### PIM Implementation
 
-The PIM variant is implemented using C++ with some simlation speedup from OpenMP. Three different PIM architectures can be tested with this.
+The PIM variant is implemented using C++ with some simulation speedup from OpenMP. Three different PIM architectures can be tested with this.
 
 ## String Matching Inputs
 
@@ -166,7 +164,7 @@ After compiling, run each executable with the following command (Must be run in 
 ./string-match.out -k <keys file> -t <text file>
 ```
 
-To see help text on all usages and how to modify any of the input parameters, use following command:
+To see help text on all usages and how to modify any of the input parameters, use the following command:
 
 ```bash
 ./string-match.out -h

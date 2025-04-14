@@ -9,8 +9,9 @@
 #include <math.h>
 #include <iostream>
 #include <cublas_v2.h>
+#include <nvml.h>
 
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 
 using namespace std;
 
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
   const float a = rand() % 5;
 
   float *x, *y;
-
+  std::cout << "Running axpy on vector of size: " << vector_size << std::endl;
   cudaError_t errorCode;
 
   errorCode = cudaMalloc((void **)&x, vector_size * sizeof(int32_t));
@@ -109,23 +110,15 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  // Event creation
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  float timeElapsed = 0;
-
-  // Start timer
-  cudaEventRecord(start, 0);
-  /* Kernel Call */
-  status = cublasSaxpy(handle, vector_size, &a, x, 1, y, 1);
-
-  if (status != CUBLAS_STATUS_SUCCESS)
-  {
-    std::cerr << "CUBLAS SGEMV failed\n";
-    exit(1);
-  }
-
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+    /* Kernel Call */
+    status = cublasSaxpy(handle, vector_size, &a, x, 1, y, 1);
+    if (status != CUBLAS_STATUS_SUCCESS)
+    {
+      std::cerr << "CUBLAS SGEMV failed\n";
+      exit(1);
+    }
+  });
   // Check for kernel launch errors
   errorCode = cudaGetLastError();
   if (errorCode != cudaSuccess)
@@ -134,12 +127,9 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  // End timer
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
-
-  printf("Execution time = %f ms\n", timeElapsed);
+  printf("Execution time for AXPY = %f ms\n", timeElapsed);
+  printf("Average Power = %f mW\n", avgPower);
+  printf("Energy Consumption = %f mJ\n", energy);
 
   vector<int32_t> C(vector_size);
   errorCode = cudaMemcpy(C.data(), y, vector_size * sizeof(int32_t), cudaMemcpyDeviceToHost);

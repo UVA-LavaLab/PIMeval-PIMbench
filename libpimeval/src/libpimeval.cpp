@@ -414,6 +414,54 @@ pimPopCount(PimObjId src, PimObjId dest)
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  Extract a bit slice from a data vector. Dest must be BOOL type
+PimStatus
+pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx)
+{
+  bool ok = pimSim::get()->pimBitSliceExtract(src, destBool, bitIdx);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Insert a bit slice to a data vector. Src must be BOOL type
+PimStatus
+pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx)
+{
+  bool ok = pimSim::get()->pimBitSliceInsert(srcBool, dest, bitIdx);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Conditional copy: dest[i] = cond ? src[i] : dest[i]
+PimStatus
+pimCondCopy(PimObjId condBool, PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCondCopy(condBool, src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Conditional broadcast: dest[i] = cond ? scalar : dest[i]
+PimStatus
+pimCondBroadcast(PimObjId condBool, uint64_t scalarBits, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCondBroadcast(condBool, scalarBits, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Conditional select: dest[i] = cond ? src1[i] : src2[i]
+PimStatus
+pimCondSelect(PimObjId condBool, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimCondSelect(condBool, src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  Conditional select scalar: dest[i] = cond ? src1[i] : scalar
+PimStatus
+pimCondSelectScalar(PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimObjId dest)
+ {
+  bool ok = pimSim::get()->pimCondSelectScalar(condBool, src1, scalarBits, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+ }
+
 // Implementation of min reduction
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
     bool ok = pimSim::get()->pimRedMin(src, min, idxBegin, idxEnd);

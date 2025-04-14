@@ -36,12 +36,12 @@ public:
   virtual double getNsTCAS() const = 0;
   virtual double getNsAAP() const = 0;
   virtual double getTypicalRankBW() const = 0;
-  virtual double getPjRowRead() const = 0;
+  virtual double getPjActPre() const = 0;
   virtual double getPjLogic() const = 0;
   virtual double getMwIDD2N() const = 0;
   virtual double getMwIDD3N() const = 0;
-  virtual double getMwRead() const = 0;
-  virtual double getMwWrite() const = 0;
+  virtual double getPjRead() const = 0;
+  virtual double getPjWrite() const = 0;
 };
 
 #endif

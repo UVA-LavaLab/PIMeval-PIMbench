@@ -170,6 +170,12 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     std::cout << "Abort" << std::endl;
     return;
   }
+  PimObjId tempBool = pimAllocAssociated(resultObjectList[0], PIM_BOOL);
+  if (tempObj == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
 
   for (int itr = 0; itr < iteration; ++itr)
   {
@@ -238,7 +244,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       {
         std::cout << "Abort" << std::endl;
       }
-      status = pimEQ(resultObjectList[0], tempObj, resultObjectList[0]);
+      status = pimEQ(resultObjectList[0], tempObj, tempBool);
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -246,7 +252,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
       }
       int64_t totalNeighbors = 0;
 
-      status = pimRedSum(resultObjectList[0], static_cast<void*>(&totalNeighbors));
+      status = pimRedSum(tempBool, static_cast<void*>(&totalNeighbors));
       if (status != PIM_OK)
       {
         std::cout << "Abort" << std::endl;
@@ -312,15 +318,17 @@ int main(int argc, char *argv[])
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running KMeans for PIM on number of points: " << params.numPoints << "\n";
   // row = dimension, col = number of datapoints. this is done to simplify data movement.
-  std::vector<std::vector<int>> dataPoints;
-  if (params.inputFile == nullptr)
-  {
-    getMatrix(params.dimension, params.numPoints, 0, dataPoints);
-  }
-  else
-  {
-    std::cout << "Reading from input file is not implemented yet." << std::endl;
-    return 1;
+  std::vector<std::vector<int>> dataPoints (params.dimension, std::vector<int>(params.numPoints, 2));
+  if (params.shouldVerify) {
+    if (params.inputFile == nullptr)
+    {
+      getMatrix(params.dimension, params.numPoints, 0, dataPoints);
+    }
+    else
+    {
+      std::cout << "Reading from input file is not implemented yet." << std::endl;
+      return 1;
+    }
   }
 
   if (!createDevice(params.configFile))

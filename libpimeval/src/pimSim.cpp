@@ -671,7 +671,7 @@ bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxE
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, min, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedMin does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -720,7 +720,7 @@ bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxE
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, max, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedMax does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -744,6 +744,7 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
     case PimDataType::PIM_INT64:
       cmd = std::make_unique<pimCmdReduction<int64_t>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
+    case PimDataType::PIM_BOOL:
     case PimDataType::PIM_UINT8:
     case PimDataType::PIM_UINT16:
     case PimDataType::PIM_UINT32:
@@ -757,9 +758,65 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedSum does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
+  return m_device->executeCmd(std::move(cmd));
+}
+
+//! @brief  Extract a bit slice from a data vector. Dest must be BOOL type
+bool
+pimSim::pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx)
+{
+  pimPerfMon perfMon("pimBitSliceExtract");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::BIT_SLICE_EXTRACT, src, destBool, bitIdx);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+//! @brief  Insert a bit slice to a data vector. Src must be BOOL type
+bool
+pimSim::pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx)
+{
+  pimPerfMon perfMon("pimBitSliceInsert");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::BIT_SLICE_INSERT, srcBool, dest, bitIdx);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondCopy(PimObjId condBool, PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondCopy");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_COPY, condBool, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondBroadcast(PimObjId condBool, uint64_t scalarBits, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondBroadcast");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_BROADCAST, condBool, scalarBits, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondSelect(PimObjId condBool, PimObjId src1, PimObjId src2, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondSelect");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_SELECT, condBool, src1, src2, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimCondSelectScalar(PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimObjId dest)
+{
+  pimPerfMon perfMon("pimCondSelectScalar");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdCond>(PimCmdEnum::COND_SELECT_SCALAR, condBool, src1, scalarBits, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 

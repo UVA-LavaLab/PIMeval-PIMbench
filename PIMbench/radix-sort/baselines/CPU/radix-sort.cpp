@@ -14,7 +14,6 @@
 #include <climits>
 #include <omp.h>
 
-#include "../../../utilBaselines.h"
 #include <iomanip>
 
 using namespace std;
@@ -23,11 +22,9 @@ void initVector(uint64_t vectorSize, vector<int32_t>& vectorPoints)
 {
     vectorPoints.resize(vectorSize);
     // Using a fixed seed instead of time for reproducibility
-    //srand((unsigned)time(NULL));
-    srand(8746219);
     for (uint64_t i = 0; i < vectorSize; i++)
     {
-        vectorPoints[i] = rand() % INT32_MAX;
+        vectorPoints[i] = i % INT32_MAX;
     }
 }
 
@@ -125,16 +122,13 @@ int main(int argc, char *argv[])
     cout << "Done initializing data\n";
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (int32_t w = 0; w < WARMUP; w++)
+    for (int32_t w = 0; w < 2; w++)
     {
         radixSort(dataArray, sortedArray);
     }
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsedTime = (end - start)/WARMUP;
+    std::chrono::duration<double, std::milli> elapsedTime = (end - start)/2;
     cout << "Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << endl;
-    // cout << "Original Array:\n";
-    // printArray(dataArray);
-    // cout << "\n\nSorted array:\n";
-    // printArray(sortedArray);
+    
     return 0;
 } /* main */

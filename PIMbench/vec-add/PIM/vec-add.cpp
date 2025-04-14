@@ -126,13 +126,16 @@ int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
   std::cout << "Running Vector Add on PIM for vector length: " << params.vectorLength << "\n\n";
-  std::vector<int> src1, src2, dst;
-  if (params.inputFile == nullptr)
-  {
-    getVector(params.vectorLength, src1);
-    getVector(params.vectorLength, src2);
-  } else {
-    //TODO: Read from files
+  std::vector<int> src1(params.vectorLength, 1), src2(params.vectorLength, 2), dst;
+  if (params.shouldVerify) {  
+    if (params.inputFile == nullptr)
+    {
+      getVector(params.vectorLength, src1);
+      getVector(params.vectorLength, src2);
+    } else {
+      std::cout << "Reading from input file is not implemented yet." << std::endl;
+      return 1;
+    }
   }
   if (!createDevice(params.configFile)) return 1;
   //TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.

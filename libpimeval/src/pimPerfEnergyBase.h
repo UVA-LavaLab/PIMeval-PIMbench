@@ -11,6 +11,7 @@
 #include "pimParamsDram.h"             // for pimParamsDram
 #include "pimCmd.h"                    // for PimCmdEnum
 #include "pimResMgr.h"                 // for pimObjInfo
+#include <cstdint>
 #include <memory>                      // for std::unique_ptr
 
 
@@ -18,11 +19,15 @@ namespace pimeval {
   class perfEnergy
   {
     public:
-      perfEnergy() : m_msRuntime(0.0), m_mjEnergy(0.0) {}
-      perfEnergy(double msRuntime, double mjEnergy) : m_msRuntime(msRuntime), m_mjEnergy(mjEnergy) {}
+      perfEnergy() : m_msRuntime(0.0), m_mjEnergy(0.0), m_msRead(0.0), m_msWrite(0.0), m_msCompute(0.0), m_totalOp(0) {}
+      perfEnergy(double msRuntime, double mjEnergy, double msRead, double msWrite, double msCompute, uint64_t totalOp) : m_msRuntime(msRuntime), m_mjEnergy(mjEnergy), m_msRead(msRead), m_msWrite(msWrite), m_msCompute(msCompute), m_totalOp(totalOp)  {}
 
       double m_msRuntime;
       double m_mjEnergy;
+      double m_msRead;
+      double m_msWrite;
+      double m_msCompute;
+      uint64_t m_totalOp;
   };
 }
 
@@ -61,8 +66,8 @@ public:
   virtual ~pimPerfEnergyBase() {}
 
   virtual pimeval::perfEnergy getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const;
-  virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  virtual pimeval::perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj) const;
+  virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const;
+  virtual pimeval::perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const;
   virtual pimeval::perfEnergy getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
   virtual pimeval::perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
@@ -84,11 +89,10 @@ protected:
 
   double m_eAP; // Row read(ACT) energy in mJ microjoule
   double m_eL; // Logic energy in mJ microjoule
-  double m_eR; // Read data from PIM
-  double m_eW; // Write data to PIM
+  double m_eR; // local row buffer to global row buffer
+  double m_eW; // global row buffer to local row buffer
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
-  double m_eGDL = 0.0000102; // CAS energy in mJ
 };
 
 #endif
