@@ -253,7 +253,6 @@ private:
   bool m_isDualContactRef = false;
   pimDevice* m_device = nullptr; // for accessing simulated memory
   bool m_isLoadBalanced = true;
-  unsigned m_numBankPerRank = 0;
 };
 
 
