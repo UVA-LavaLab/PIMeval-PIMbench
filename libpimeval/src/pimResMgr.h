@@ -207,7 +207,6 @@ public:
   unsigned getNumCoreAvailable() const { return m_numCoreAvailable; }
   unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
   unsigned getNumColsPerElem() const { return m_numColsPerElem; }
-  unsigned getNumBankPerRank() const { return m_numBankPerRank;}
 
   void print() const;
 
