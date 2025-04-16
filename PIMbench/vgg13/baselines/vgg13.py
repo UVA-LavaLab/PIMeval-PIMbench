@@ -9,8 +9,9 @@ from PIL import Image
 
 # Load and preprocess a batch of images from a given list of file paths
 def load_images(image_paths, batch_size):
-    print(f"[INFO] Loading images from: {image_paths}")
-    
+    # print(f"[INFO] Loading images from: {image_paths}")
+    print(f"[INFO] Loading images")
+
     preprocess = transforms.Compose([
         transforms.Resize(256),           # Resize the image to 256x256 pixels
         transforms.CenterCrop(224),       # Crop the center 224x224 pixels of the image
@@ -73,12 +74,19 @@ def process_directory(directory, model, categories, device, batch_size):
     total_images = 0  # Total number of images processed
 
     # Iterate through all files in the directory    
-    image_paths = []
+    image_paths_raw = []
     for image_name in os.listdir(directory):
         image_path = os.path.join(directory, image_name)
         if image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-            image_paths.append(image_path)
+            image_paths_raw.append(image_path)
     
+    # Repeat images if needed to match batch_size
+    image_paths = []
+    while len(image_paths) < batch_size:
+        image_paths.extend(image_paths_raw)
+
+    image_paths = image_paths[:batch_size]
+
     # Warm-up iterations to allow the GPU to complete any initialization steps (data movement) and optimize its execution pipeline
     if device.type == 'cuda':
         for i in range(0, len(image_paths[:batch_size]), batch_size):
@@ -101,16 +109,8 @@ def process_directory(directory, model, categories, device, batch_size):
         total_time += elapsed_time  # Record the time taken for inference
         total_images += len(batch_paths)
 
-        # Get the top 5 predictions        
-        for j in range(len(batch_paths)):
-            print(f"Results for image {os.path.basename(batch_paths[j])}:")
-            top5_prob, top5_catid = torch.topk(probabilities[j], 5)
-            for k in range(top5_prob.size(0)):
-                print(f"  {categories[top5_catid[k]]}: {top5_prob[k].item():.4f}")
-            print()
-
-    avg_time_per_image = total_time / total_images if total_images else 0
-    print(f"Average execution time per image: {avg_time_per_image * 1000:.4f} ms")
+    print(f"Total Images: {total_images}")
+    print(f"Execution time: {total_time * 1000:.4f} ms")
 
 # Main function to handle command line arguments, load the model, and process images
 def main(args):

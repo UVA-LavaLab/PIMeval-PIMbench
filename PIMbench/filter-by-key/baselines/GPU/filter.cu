@@ -46,6 +46,7 @@
 #include <cub/device/device_select.cuh>
 
 #include "./include/test_util.h"
+#include "utilBaselines.h"
 
 using namespace cub;
 
@@ -218,22 +219,10 @@ int main(int argc, char** argv)
     CubDebugExit(DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected_out, num_items, select_op));
     CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
-    // Event creation
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float timeElapsed = 0;
-
-    // Start timer
-    cudaEventRecord(start, 0);
-
-    // Run
-    CubDebugExit(DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected_out, num_items, select_op));
-
-    // End timer
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&timeElapsed, start, stop);
+    auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+        // Run
+        CubDebugExit(DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected_out, num_items, select_op));
+    });
 
     // Check for correctness (and display results, if specified)
     int compare = CompareDeviceResults(h_reference, d_out, num_selected, true, g_verbose);
@@ -242,7 +231,9 @@ int main(int argc, char** argv)
     printf("\t Count %s ", compare ? "FAIL" : "PASS\n");
     AssertEquals(0, compare);
 
-    printf("Execution time = %f ms\n", timeElapsed);
+    printf("\nExecution time of filter by key = %f ms\n", timeElapsed);
+    printf("Average Power = %f mW\n", avgPower);
+    printf("Energy Consumption = %f mJ\n", energy);
 
     // Cleanup
     if (h_in) delete[] h_in;

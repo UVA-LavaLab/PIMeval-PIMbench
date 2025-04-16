@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <sys/stat.h>
+#include "utilBaselines.h"
 
 using namespace std;
 
@@ -218,27 +219,19 @@ std::vector<uint8_t> avg_gpu(std::vector<uint8_t> img) {
         exit(1);
     }
 
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float timeElapsed = 0;
-
-    cudaEventRecord(start, 0);
-
-    imgDSAverage<<<dimGrid, dimBlock>>>(old_pixels_gpu, new_pixels_gpu_average, avg_out.new_height, avg_out.new_width, avg_out.scanline_size, avg_out.new_scanline_size, avg_out.new_pixel_data_width);
-    
-    errorCode = cudaGetLastError();
-    if (errorCode != cudaSuccess)
-    {
+    auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+      imgDSAverage<<<dimGrid, dimBlock>>>(old_pixels_gpu, new_pixels_gpu_average, avg_out.new_height, avg_out.new_width, avg_out.scanline_size, avg_out.new_scanline_size, avg_out.new_pixel_data_width);
+      errorCode = cudaGetLastError();
+      if (errorCode != cudaSuccess)
+      {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
-    }
+      }
+    });
 
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&timeElapsed, start, stop);
-
-    printf("Execution time of image downsampling = %f ms\n", timeElapsed);
+    printf("\nExecution time of Image Downsampling = %f ms\n", timeElapsed);
+    printf("Average Power = %f mW\n", avgPower);
+    printf("Energy Consumption = %f mJ\n", energy);
 
     errorCode = cudaMemcpy(pixels_out_averaged, new_pixels_gpu_average, new_pixels_size, cudaMemcpyDeviceToHost);
     if (errorCode != cudaSuccess)

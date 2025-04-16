@@ -24,7 +24,7 @@
 using namespace std;
 
 #include <omp.h>
-#include "../../../utilBaselines.h"
+#include "utilBaselines.h"
 #include <cfloat>
 
 vector<vector<int>> dataPoints;

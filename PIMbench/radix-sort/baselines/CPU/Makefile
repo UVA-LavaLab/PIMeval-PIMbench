@@ -2,7 +2,7 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
+CXXFLAGS := -Wall -Wextra -march=native -Werror -std=c++17 -O3 -fopenmp
 
 # Executable name
 EXEC := radix-sort.out
