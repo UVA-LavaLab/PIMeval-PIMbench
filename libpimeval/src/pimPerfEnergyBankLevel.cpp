@@ -174,12 +174,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       msWrite = (m_tW + (maxGDLItr * m_tGDL)) * (numPass - 1) + (m_tW + (minGDLItr * m_tGDL));
       msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2 * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * 2);
       msRuntime = msRead + msWrite + msCompute;
-      mjRead = m_eAP * numCoresUsed * (numPass - 1);
-      mjRead += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
-      mjWrite = m_eAP * numCoresUsed * (numPass - 1);
-      mjWrite += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr)) * numBankPerChip;
-      mjCompute = (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement * 2) * numCoresUsed * (numPass - 1);
-      mjCompute += (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement * 2) * numCoresUsed;
       mjEnergy = ((m_eAP * 2) + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement * 2)) * numCoresUsed * (numPass - 1);
       mjEnergy += ((m_eAP * 2) + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement * 2)) * numCoresUsed;
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
