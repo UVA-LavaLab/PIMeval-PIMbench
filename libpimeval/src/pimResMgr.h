@@ -207,6 +207,7 @@ public:
   unsigned getNumCoreAvailable() const { return m_numCoreAvailable; }
   unsigned getMaxElementsPerRegion() const { return m_maxElementsPerRegion; }
   unsigned getNumColsPerElem() const { return m_numColsPerElem; }
+  unsigned getNumBankPerRank() const { return m_numBankPerRank;}
 
   void print() const;
 
@@ -253,6 +254,7 @@ private:
   bool m_isDualContactRef = false;
   pimDevice* m_device = nullptr; // for accessing simulated memory
   bool m_isLoadBalanced = true;
+  unsigned m_numBankPerRank = 0;
 };
 
 

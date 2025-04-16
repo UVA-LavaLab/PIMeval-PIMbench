@@ -52,6 +52,7 @@ pimObjInfo::finalize()
   m_numCoresUsed = coreIdCnt.size();
   m_numCoreAvailable = m_device->getNumCores();
   m_isLoadBalanced = m_device->getConfig().isLoadBalanced();
+  m_numBankPerRank = m_device->getNumBankPerRank();
 
   const pimRegion& region = m_regions[0];
   m_maxElementsPerRegion = (uint64_t)region.getNumAllocRows() * region.getNumAllocCols() / m_bitsPerElementPadded;
