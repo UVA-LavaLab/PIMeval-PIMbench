@@ -225,7 +225,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
-  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+  double cpuTDP = 225; // W; AMD EPYC 9124 16 core
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   // How many iteration require to read / write max elements per region
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth) - 1;
@@ -243,9 +243,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     {
       // How many iteration require to read / write max elements per region
       double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
-      msRead = m_tR + m_tGDL;
+      msRead = m_tR;
       // reduction for all regions assuming 16 core AMD EPYC 9124
-      double aggregateMs = static_cast<double>(numCore) / (3200000 * 16);
+      double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
       msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement) + aggregateMs;
       msRuntime = msRead + msWrite + msCompute;
 
@@ -255,7 +255,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
       mjEnergy += aggregateMs * cpuTDP;
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = ((maxElementsPerRegion * (numPass - 1)) + minElementPerRegion) * numCore;
+      totalOp = obj.getNumElements();
       break;
     }
     default:
