@@ -179,6 +179,15 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
   status = pimAdd(mid, shiftBackup, pimRowSum);
   assert (status == PIM_OK);
 
+  // status = pimShiftElementsLeft(shiftBackup);
+  // assert (status == PIM_OK);
+
+  // status = pimShiftElementsLeft(shiftBackup);
+  // assert (status == PIM_OK);
+
+  // status = pimAdd(pimRowSum, shiftBackup, pimRowSum);
+  // assert (status == PIM_OK);
+
   for(uint64_t shiftIter=1; shiftIter<radius; ++shiftIter) {
     status = pimShiftElementsRight(shiftBackup);
     assert (status == PIM_OK);
@@ -199,6 +208,17 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
   }
 }
 
+void print_pim(PimObjId obj, uint64_t len) {
+  std::vector<float> vec(len);
+  PimStatus status = pimCopyDeviceToHost(obj, (void*) vec.data());
+  assert (status == PIM_OK);
+
+  for(float f : vec) {
+    std::cout << f << ", ";
+  }
+  std::cout << std::endl;
+}
+
 void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::vector<PimObjId>& rowsInSumCircularQueue, PimObjId tmpPim, PimObjId runningSum, const uint64_t stencilAreaToMultiplyPim, const uint64_t radius) {
   PimStatus status;
   uint64_t circularQueueTop = 0;
@@ -210,7 +230,7 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
   ++circularQueueTop;
   status = pimAdd(rowsInSumCircularQueue[0], rowsInSumCircularQueue[1], runningSum);
   assert (status == PIM_OK);
-
+  // std::cout << "radius " << radius;
   for(uint64_t i=2; i<2*radius; ++i) {
     sumStencilRow(workingPimMemory[i], rowsInSumCircularQueue[circularQueueTop], tmpPim, radius);
     status = pimAdd(runningSum, rowsInSumCircularQueue[i], runningSum);
@@ -224,6 +244,10 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
     // rowsInSum.push_back(sumStencilRow(srcHost[nextRowToAdd], stencilWidth, numLeft, resultPim));
     sumStencilRow(workingPimMemory[nextRowToAdd], rowsInSumCircularQueue[circularQueueTop], tmpPim, radius);
     status = pimAdd(runningSum, rowsInSumCircularQueue[circularQueueTop], runningSum);
+    // std::cout << "row: " << row << ", added from queue: ";
+    // print_pim(rowsInSumCircularQueue[circularQueueTop], 10);
+    // std::cout << "running sum: ";
+    // print_pim(runningSum, 10);
     assert (status == PIM_OK);
     circularQueueTop = (1+circularQueueTop) % rowsInSumCircularQueue.size();
     ++nextRowToAdd;
@@ -253,6 +277,7 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   assert(!srcHost[0].empty());
   assert(srcHost.size() == dstHost.size());
   assert(srcHost[0].size() == dstHost[0].size());
+  // assert(srcHost.size() <= 20);
 
   const uint64_t gridHeight = srcHost.size();
   const uint64_t gridWidth = srcHost[0].size();
@@ -281,6 +306,20 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
     assert(workingPimMemory[i] != -1);
   }
 
+  // uint64_t workingPimMemoryIdx = 0;
+  // for(uint64_t srcHostRow = 0; srcHostRow < srcHost.size(); ++srcHostRow) {
+  //   status = pimCopyHostToDevice((void*) srcHost[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
+  //   assert (status == PIM_OK);
+  //   ++workingPimMemoryIdx;
+  // }
+  // computeStencilChunkIteration(workingPimMemory, rowsInSumCircularQueue, tmpPim, runningSum, stencilAreaToMultiplyPim, radius);
+  // workingPimMemoryIdx = 1;
+  // for(uint64_t srcHostRow = 1; srcHostRow < srcHost.size()-1; ++srcHostRow) {
+  //   status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
+  //   assert (status == PIM_OK);
+  //   ++workingPimMemoryIdx;
+  // }
+
   // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
   const uint64_t currIterations = 1;
   const uint64_t invalidResultsTop = currIterations - 1 + radius;
@@ -289,11 +328,13 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   for(;;) {
     // copy srcHost [firstRowUsable - invalidResultsTop, min(firstRowUsable - invalidResultsTop+wpmSz, end of rows)) into first slots of working memory
       // rowsThisIter = numcopied
+    std::cout << "first row src: " << firstRowSrc << ", srcHost.size(): " << srcHost.size() << std::endl;
     const uint64_t firstRowUsableSrc = firstRowSrc + invalidResultsTop;
-    if(firstRowUsableSrc >= srcHost.size()) {
+    if(firstRowUsableSrc + invalidResultsTop >= srcHost.size()) {
       break;
     }
     const uint64_t totalRowsThisIter = min(srcHost.size(), firstRowSrc + workingPimMemory.size()) - firstRowSrc;
+    const uint64_t usableRowsThisIter = totalRowsThisIter - 2*invalidResultsTop;
     uint64_t workingPimMemoryIdx = 0;
     for(uint64_t srcHostRow = firstRowSrc; srcHostRow < firstRowSrc + totalRowsThisIter; ++srcHostRow) {
       status = pimCopyHostToDevice((void*) srcHost[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
@@ -305,8 +346,13 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
       computeStencilChunkIteration(workingPimMemory, rowsInSumCircularQueue, tmpPim, runningSum, stencilAreaToMultiplyPim, radius);
     }
     // copy range wpm [invalidResultsTop, (used wpm size)-invalidResultsTop) into dstHost [firstRowUsable, firstRowUsable+rowsThisIter)
+    workingPimMemoryIdx = invalidResultsTop;
+    for(uint64_t srcHostRow = firstRowUsableSrc; srcHostRow < firstRowUsableSrc + usableRowsThisIter; ++srcHostRow) {
+      status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
+      assert (status == PIM_OK);
+      ++workingPimMemoryIdx;
+    }
     // firstRowUsable += rowsOnIter
-    const uint64_t usableRowsThisIter = totalRowsThisIter - 2*invalidResultsTop;
     firstRowSrc += usableRowsThisIter;
   }
 
@@ -429,13 +475,14 @@ int main(int argc, char* argv[])
   PimDeviceProperties deviceProp;
   PimStatus status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
-
-  stencil(x, y, 2 * deviceProp.numRowPerSubarray, params.iterations, params.stencilWidth, params.stencilHeight, params.numLeft, params.numAbove);
+  // void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost, const uint64_t numRows,
+  // const uint64_t iterations, const uint64_t radius)
+  stencil(x, y, 2 * deviceProp.numRowPerSubarray, params.iterations, 1);
 
   if (params.shouldVerify) 
   {
-    std::vector<std::vector<float>> cpuY;
-    cpuY.resize(y.size(), std::vector<float>(y[0].size(), 0));
+    // std::vector<std::vector<float>> cpuY;
+    // cpuY.resize(y.size(), std::vector<float>(y[0].size(), 0));
 
     bool ok = true;
 
