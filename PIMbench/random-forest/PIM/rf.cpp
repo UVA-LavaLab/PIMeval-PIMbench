@@ -115,7 +115,7 @@ void getModelAndInput(uint64_t numRows, uint64_t numCols, vector<vector<int>> &m
         //int rand_input = (rand() % 501) - 500;  // generate random input that 
         for (uint64_t col = 0; col < numCols; ++col) {
 
-            matrix[row][col] = (rand() % 2001) - 1000;  // Generates a number in [-1000, 1000]
+            matrix[row][col] = ((row*col + row) % 2001) - 1000;  // Generates a number in [-1000, 1000]
             
             // to simulate compare operations at each leaf 
             int rand_op = rand() % 4;
@@ -304,10 +304,6 @@ int runRF(uint64_t numOfPaths, int numTrees, int dimension, vector<vector<int>> 
 int main(int argc, char *argv[])
 {
   struct Params params = input_params(argc, argv);
-  // vector<vector<int>> dataPoints;
-  // vector<vector<int>> testPoints;
-  //std::cout << "Running KNN on PIM for datapoints: " << params.numDataPoints << "\n";
-
   int numberOfPaths = ((int) pow(2, params.treeDepth)) * params.tree_count;
 
   std::unordered_map<int, std::string> compMap;
@@ -323,19 +319,16 @@ int main(int argc, char *argv[])
 
 
   // generate random inputs
-  // vector<int> modelInput(params.dimension);
   vector<vector<int>> modelInput;
   modelInput.resize(numberOfPaths, vector<int>(params.dimension));
   vector<vector<int>> eqCompareParameterMapping; 
   eqCompareParameterMapping.resize(numberOfPaths, vector<int>(params.dimension));
 
-  // NOTE - 2/23/25: Should we time negating input parameters on host? or do expesensive multiply on PIM?
-  //          - broadcast might save on big model AND input matricies being sent to PIM  
   auto start = std::chrono::high_resolution_clock::now();
   
   #pragma omp parallel for
     for (uint64_t row = 0; row < numberOfPaths; ++row) {
-      int rand_input = (rand() % 501) - 500;  // generate random input that should be the same across each row 
+      int rand_input = (row*row % 501) - 250;  // generate random input that should be the same across each row 
       for (uint64_t col = 0; col < params.dimension; ++col) {
 
         modelInput[row][col] = rand_input * negativeParameterMapping[row][col];  // will either be "rand_input * -1" or "rand_input * 1"
@@ -366,18 +359,6 @@ int main(int argc, char *argv[])
   cout << "Host elapsed time: " << fixed << setprecision(3) << hostElapsedTime.count() << " ms." << endl;
   cout << rfResult[0] << '\n';
   cout << "classification result: " << res << '\n';
-  // for(int i = 0; i < numberOfPaths; i++) {
-  //   cout << rfResult[i] << '\n';
-  // }
-
-  // if (params.shouldVerify)
-  // {
-  //   if (!knn_test(dataPoints, testPoints, dim, k, testPredictions)) {
-  //     cerr << "KNN verification failed!\n";
-  //   } else {
-  //     cout << "KNN was succesfully verified against host result\n";
-  //   }
-  // }
 
   return 0;
 }
