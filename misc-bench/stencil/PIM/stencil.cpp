@@ -321,7 +321,7 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   // }
 
   // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
-  const uint64_t currIterations = 1;
+  const uint64_t currIterations = 2;
   const uint64_t invalidResultsTop = currIterations - 1 + radius;
   const uint64_t maxUsableResults = workingPimMemory.size() - 2*invalidResultsTop;
   uint64_t firstRowSrc = 0;
@@ -424,6 +424,33 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   // }
 }
 
+void stencilCpu(std::vector<std::vector<float>>& src, std::vector<std::vector<float>>& dst, const uint64_t iterations, const uint64_t radius) {
+  // Only compute when stencil is fully in range
+  const uint64_t startY = radius;
+  const uint64_t endY = src.size() - radius;
+  const uint64_t startX = radius;
+  const uint64_t endX = src[0].size() - radius;
+  const uint64_t stencilAreaInt = (2 * radius + 1) * (2 * radius + 1);
+  const float stencilAreaInverseFloat = 1.0f / static_cast<float>(stencilAreaInt);
+
+  for(uint64_t iter=0; iter<iterations; ++iter) {
+    #pragma omp parallel for collapse(2)
+    for(uint64_t gridY=startY; gridY<endY; ++gridY) {
+      for(uint64_t gridX=startX; gridX<endX; ++gridX) {
+        float resCPU = 0.0f;
+        for(uint64_t stencilY=gridY-1; stencilY<=gridY+1; ++stencilY) {
+          for(uint64_t stencilX=gridX-1; stencilX<=gridX+1; ++stencilX) {
+            resCPU += src[stencilY][stencilX];
+          }
+        }
+        dst[gridY][gridX] = resCPU * stencilAreaInverseFloat;
+      }
+    }
+    std::swap(src, dst);
+  }
+  std::swap(src, dst);
+}
+
 int main(int argc, char* argv[])
 {
   struct Params params = getInputParams(argc, argv);
@@ -481,36 +508,29 @@ int main(int argc, char* argv[])
 
   if (params.shouldVerify) 
   {
-    // std::vector<std::vector<float>> cpuY;
-    // cpuY.resize(y.size(), std::vector<float>(y[0].size(), 0));
+    std::vector<std::vector<float>> cpuY;
+    cpuY.resize(y.size(), std::vector<float>(y[0].size(), 0));
+    stencilCpu(x, cpuY, params.iterations, 1);
 
     bool ok = true;
 
     // Only compute when stencil is fully in range
-    const uint64_t startY = params.numAbove;
-    const uint64_t endY = params.gridHeight - (params.stencilHeight - params.numAbove - 1);
-    const uint64_t startX = params.numLeft;
-    const uint64_t endX = params.gridWidth - (params.stencilWidth - params.numLeft - 1);
+    const uint64_t startY = 1 + params.iterations - 1;
+    const uint64_t endY = params.gridHeight - (1 + params.iterations - 1);
+    const uint64_t startX = 1 + params.iterations - 1;
+    const uint64_t endX = params.gridWidth - (1 + params.iterations - 1);
 
     std::cout << std::fixed << std::setprecision(10);
 
     #pragma omp parallel for collapse(2)
     for(uint64_t gridY=startY; gridY<endY; ++gridY) {
       for(uint64_t gridX=startX; gridX<endX; ++gridX) {
-        float resCPU = 0.0f;
-        for(uint64_t stencilY=0; stencilY<params.stencilHeight; ++stencilY) {
-          for(uint64_t stencilX=0; stencilX<params.stencilWidth; ++stencilX) {
-            resCPU += x[gridY + stencilY - params.numAbove][gridX + stencilX - params.numLeft];
-          }
-        }
-        resCPU *= 1.0f / (static_cast<float>(params.stencilWidth * params.stencilHeight));
-
         constexpr float acceptableDelta = 0.1f;
-        if (std::abs(resCPU - y[gridY][gridX]) > acceptableDelta)
+        if (std::abs(cpuY[gridY][gridX] - y[gridY][gridX]) > acceptableDelta)
         {
           #pragma omp critical
           {
-            std::cout << "Wrong answer: " << y[gridY][gridX] << " (expected " << resCPU << ") at position (" << gridX << ", " << gridY << ")" << std::endl;
+            std::cout << "Wrong answer: " << y[gridY][gridX] << " (expected " << cpuY[gridY][gridX] << ") at position (" << gridX << ", " << gridY << ")" << std::endl;
             ok = false;
           }
         }
