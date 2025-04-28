@@ -1,25 +1,16 @@
-# K-Nearest Neighbors (KNN)
+# Random Forest (RF)
 
-The KNN algorithm is a supervised learning classifier which uses proximity to classify the grouping of an individual query point. In our implementation of KNN, we use Manhatten Distance which is defined as:
-
-$ d(x,y) = \sum_{i=1}^{m}|x_i - y_i|$
+The random forest is a supervised model that utilizes an ensemble of decision trees to classify input data. 
 
 ## Directory Structure
 ```
-cpp-knn/
+random-forest/
 ├── PIM/
 │   ├── Makefile
-│   ├── knn.cpp
+│   ├── rf.cpp
 ├── baselines/
-│   ├── CPU/
-│   │   ├── Makefile
-│   │   ├── knn.cpp
-│   ├── GPU/
-│   │   ├── inc/
-│   │   ├── knncuda.cu
-│   │   ├── knncuda.h
-│   │   ├── Makefile
-│   │   ├── test.cpp
+│   ├── benchmark_rf.py
+│   ├── run_rivanna_GPU.sh
 ├── README.md
 ├── Makefile
 ```
@@ -37,35 +28,18 @@ CPU and GPU have been used as baselines.
 
 #### CPU
 
-The CPU variant of k nearest neighbors has been implemented using standard C++ and OpenMP for parallel execution.
+The CPU variant of random forest has been implemented using the standard sklearn `RandomForestClassifer` object.
 
 #### GPU
 
-The GPU variant has been implemented using CUDA to perform the KNN process end to end using global memory. Note that the inc directory was pulled from [this](https://github.com/MarziehLenjani/InSituBench/tree/master) repo.
+The GPU variant has been implemented using NVIDIA's highly optimized [Forest Inference library](https://developer.nvidia.com/blog/sparse-forests-with-fil/) library.
+This is effectivly a wrapper around sklearn, so for the training RF, it's effectivly the same for both GPU and CPU. 
 
 ### PIM Implementation
 
 The PIM variant is implemented using C++ and three different PIM architectures can be tested with this.
   
 ## Compilation Instructions for Specific Variants
-
-### CPU Variant
-
-To compile for the CPU variant, use:
-
-```bash
-cd baselines/CPU
-make
-```
-
-### GPU Variant
-
-To compile for the GPU variant, use:
-
-```bash
-cd baselines/GPU
-make
-```
 
 ### PIM Variant
 
@@ -78,32 +52,36 @@ make
 
 ## Execution Instructions
 
-### Running the Executable
+### Running the PIM Executable
 
 After compiling, run the each executable with the following command that will run it for default parameters:
 
 ```bash
-./knn.out
+./rf.out
 ```
+
+### Running the CPU and GPU File
+
+After going to the `baselines` directory, run the python file with the following command that will run it for default parameters:
+
+```bash
+python ./benchmark_rf.py -cuda -num_trees 1000 -dt_height 6 -input_dim 20
+```
+
+Where the `cuda` flag will utilize a GPU to evaluate the model.
 
 ### Specifying Parameters
 
-You can also specify the number of reference points using the -n option and the number of query points using the -m option:
+You can also specify the number of decision trees using the `-n` or `-num_trees` option and the height of each tree using the `-m` or `-dt_height` option:
 
 ```bash
-./knn.out -n <reference_size> -m <query_size>
+./rf.out -n <number of Decision trees> -m <tree depth/height>
 ```
 
-To specifiy how many k neighbors to consider, use the -k option:
+To specifiy how many dimensions for the input, use the `-d` or `-input_dim` option:
 
 ```bash
-./knn.out -k <number_of_neighbors> 
-```
-
-To specifiy the dimension of data points use the -k option:
-
-```bash
-./knn.out -d <dimension> 
+./rf.out -d <input dimension> 
 ```
 
 ### Help and Usage Options
@@ -111,5 +89,5 @@ To specifiy the dimension of data points use the -k option:
 For help or to see usage options, use the `-h` option:
 
 ```bash
-./knn.out -h
+./rf.out -h
 ```

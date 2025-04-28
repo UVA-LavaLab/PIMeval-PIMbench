@@ -9,6 +9,26 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 import numpy as np
+import pynvml 
+
+def _get_nvml_handle(idx: int = 0):
+    """Return an nvmlDevice_t handle (assumes one GPU)."""
+    pynvml.nvmlInit()
+    return pynvml.nvmlDeviceGetHandleByIndex(idx)
+
+def _energy_joules(handle):
+    """
+    Energy since boot in joules if the counter is supported,
+    else returns None.
+    """
+    try:
+        return pynvml.nvmlDeviceGetTotalEnergyConsumption(handle) #mJ
+    except pynvml.NVMLError_FunctionNotFound:
+        return None
+
+def _power_watts(handle):
+    # µW  →  W
+    return pynvml.nvmlDeviceGetPowerUsage(handle) / 1_000
 
 def train_model(X_train, y_train, num_trees, dt_height):
     # train the model on the CPU, since this time isn't taken into account for evaluation 
@@ -48,20 +68,47 @@ def eval_cpu(model, input_sample):
 def eval_gpu(model, input_sample):
     import cupy as cp
 
+    handle = _get_nvml_handle()
+    start_energy = _energy_joules(handle)
+    if start_energy is None:
+        # fall back: record instantaneous power just before the kernel
+        start_power = _power_watts(handle)
+
     single_gpu_sample = cp.asarray(input_sample)  # move sample to GPU
     start = cp.cuda.Event()
     end = cp.cuda.Event()
 
     start.record()
 
-    single_prediction = model.predict(
-        single_gpu_sample
-    )
+    reps = 1000                           # 1000 × 0.7 ms ≈ 0.7 s
+    start_energy = _energy_joules(handle)
+
+    for _ in range(reps):
+        single_prediction = model.predict(
+            single_gpu_sample
+        )
+
     end.record()
     end.synchronize()
 
-    elapsed_ms = cp.cuda.get_elapsed_time(start, end)
-    print(f"Inference Execution Time: {elapsed_ms:.4f} ms")
+    elapsed_ms = cp.cuda.get_elapsed_time(start, end) / reps
+    end_energy = _energy_joules(handle)
+
+    # make sure to average by the number of runs
+    if end_energy is not None:
+        energy_j = (end_energy - start_energy) / reps
+        avg_power_w = (energy_j / (elapsed_ms / 1_000)) / reps
+        print(f"Inference time   : {elapsed_ms:>8.4f} ms")
+        print(f"Energy consumed : {energy_j:>8.4f} mJ")
+        print(f"Avg GPU power   : {avg_power_w:>8.2f} W")
+    else:
+        # counter not supported → crude estimate
+        avg_power_w = start_power / reps
+        energy_j = (avg_power_w * (elapsed_ms / 1_000) ) / reps
+        print(f"Inference time   : {elapsed_ms:>8.4f} ms")
+        print("Energy counter   : not supported on this GPU")
+        print(f"Est. energy      : {energy_j:>8.4f} mJ "
+            f"(using {avg_power_w:.1f} W)")
 
 
 

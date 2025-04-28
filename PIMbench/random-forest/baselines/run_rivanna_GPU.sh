@@ -1,3 +1,4 @@
+#!/bin/bash
 #SBATCH -A LAVAlab
 #SBATCH --job-name="GPU_a100_rf"
 #SBATCH --error="./GPU_a100_rf.err"
@@ -5,7 +6,7 @@
 ##SBATCH --mem=20G                                                                                    
 #SBATCH --time=1:00:00
 #SBATCH --gres=gpu:1
-#SBATCH --constraint=a100_80gb
+#SBATCH --constraint=a6000
 #SBATCH -n 1
 #SBATCH -p gpu 
 
@@ -20,5 +21,4 @@ pip install scikit-learn
 pip uninstall -y numpy
 pip install numpy==1.26
 
-apptainer exec nvidia-smi
-apptainer exec --nv $CONTAINERDIR/rapidsai-24.06.sif python ./benchmark_rf.py -cuda
+apptainer exec --nv $CONTAINERDIR/rapidsai-24.06.sif python ./benchmark_rf.py -cuda -num_trees 1000 -dt_height 6 -input_dim 20
