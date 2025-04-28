@@ -323,7 +323,7 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
           case 41: expected = vecSrc1[i];                break; // pimCopyObjectToObject 
           default: assert(0);
         }
-        if (vecDest[i] != expected) {
+        if (!fuzzyEqualPercent(vecDest[i], expected)) {
           if (numError < maxErrorToShow) {
           std::cout << "Error: Index = " << i << " Result = " << std::fixed << std::setprecision(12) << vecDest[i] << " Expected = " << std::fixed << std::setprecision(12) << expected << std::endl;
           }

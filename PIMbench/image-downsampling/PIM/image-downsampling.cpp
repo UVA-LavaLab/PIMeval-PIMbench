@@ -39,7 +39,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = (char*) "input_1.bmp";
+  p.inputFile = (char*) "./../Dataset/input_1.bmp";
   p.shouldVerify = false;
   p.outputFile = nullptr;
 
@@ -374,7 +374,6 @@ int main(int argc, char* argv[])
   std::cout << "PIM test: Image Downsampling" << std::endl;
 
   string input_file = params.inputFile;
-  input_file = "./../Dataset/" + input_file;
 
   // Check if file exists [2]
   struct stat exists_buffer;

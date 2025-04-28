@@ -186,8 +186,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
       msWrite = m_tW;
       msALU = (maxElementsPerRegion * numberOfALUOperationPerElement * (m_fulcrumAddLatency + m_fulcrumMulLatency ) * (numPass - 1)) +  (minElementPerRegion * numberOfALUOperationPerElement * (m_fulcrumAddLatency + m_fulcrumMulLatency ));
       msRuntime = msRead + msWrite + msALU;
-      mjEnergy = numCoresUsed * (numPass - 1) * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy * 2) + (maxElementsPerRegion * (m_fulcrumAddEnergy + m_fulcrumMulEnergy) * numberOfALUOperationPerElement));
-      mjEnergy += numCoresUsed * ((m_eAP * 3) + ((minElementPerRegion - 1) * 3 *  m_fulcrumShiftEnergy * 2) + (minElementPerRegion * (m_fulcrumAddEnergy + m_fulcrumMulEnergy) * numberOfALUOperationPerElement));
+      mjEnergy = numCoresUsed * (numPass - 1) * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy * 2) + (maxElementsPerRegion * (m_fulcrumAddEnergy + m_fulcrumMulEnergy) * numberOfALUOperationPerElement));
+      mjEnergy += numCoresUsed * ((m_eAP * 2) + ((minElementPerRegion - 1) * 2 *  m_fulcrumShiftEnergy * 2) + (minElementPerRegion * (m_fulcrumAddEnergy + m_fulcrumMulEnergy) * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       totalOp = obj.getNumElements() * 2;
       break;
@@ -236,7 +236,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
-  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+  double cpuTDP = 225; // W; AMD EPYC 7742 64 core
   uint64_t totalOp = 0;
 
   switch (cmdType)
@@ -250,15 +250,15 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
   {
     // read a row to walker, then reduce in serial
     double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
-    // reduction for all regions assuming 16 core AMD EPYC 9124
-    double aggregateMs = static_cast<double>(obj.getNumCoreAvailable()) / (3200000 * 16);
+    // TODO: This needs to be flexible
+    double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
     
     msRead = m_tR;
     msWrite = 0;
     msCompute = aggregateMs + (maxElementsPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement * (numPass  - 1)) + (minElementPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement);
     msRuntime = msRead + msWrite + msCompute;
-    mjEnergy = (numPass - 1) * numCore * (m_eAP * ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
-    mjEnergy += numCore * (m_eAP * ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
+    mjEnergy = (numPass - 1) * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
+    mjEnergy += numCore * (m_eAP + ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
     mjEnergy += aggregateMs * cpuTDP;
     mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
     totalOp = obj.getNumElements();
@@ -294,7 +294,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
   mjEnergy = (numPass - 1) * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + ((maxElementsPerRegion) * m_fulcrumAddEnergy * numberOfOperationPerElement));
   mjEnergy += numCore * (m_eAP + ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-  totalOp = obj.getNumElements();
+  totalOp = 0;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }

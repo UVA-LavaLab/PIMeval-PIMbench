@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <climits>
 #include <omp.h>
+#include <vector>
 
 #include <iomanip>
 

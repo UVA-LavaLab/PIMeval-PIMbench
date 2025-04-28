@@ -16,6 +16,8 @@
 #include <thrust/transform.h>
 #include <thrust/functional.h>
 
+#include "utilBaselines.h"
+
 #define MINCOLORVALUE 0 // Sets the max value that any color channel can be in a given pixel
 #define MAXCOLORVALUE 255 // Sets the max value that any color channel can be in a given pixel 
 
@@ -169,24 +171,15 @@ int main(int argc, char *argv[])
 
   thrust::device_vector<uint8_t> thrustImgData = imgData;
   THRUST_CHECK();
-  
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  float timeElapsed = 0;
 
-  // Start timer
-  cudaEventRecord(start, 0);
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+    thrust::transform(thrustImgData.begin(), thrustImgData.end(), thrustImgData.begin(), calculateBrightness(brightnessCoefficient));
+    THRUST_CHECK();
+  });
 
-  thrust::transform(thrustImgData.begin(), thrustImgData.end(), thrustImgData.begin(), calculateBrightness(brightnessCoefficient));
-  THRUST_CHECK();
-
-  // End timer
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-  cudaEventElapsedTime(&timeElapsed, start, stop);
-
-  printf("Execution time = %f ms\n", timeElapsed);
+  printf("\nExecution time of birghtness = %f ms\n", timeElapsed);
+  printf("Average Power = %f mW\n", avgPower);
+  printf("Energy Consumption = %f mJ\n", energy);
 
   thrust::copy(thrustImgData.begin(), thrustImgData.end(), resultData.begin());
   THRUST_CHECK();
