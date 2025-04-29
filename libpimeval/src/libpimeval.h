@@ -9,7 +9,7 @@
 
 #include <cstdint>
 #include <cstdarg>
-
+#include <vector> 
 //! @brief  PIM API return status
 enum PimStatus {
   PIM_ERROR = 0,
@@ -196,6 +196,9 @@ PimStatus pimShiftElementsLeft(PimObjId src);
 PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
 PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+// AES sbox and inverse-box APIs 
+PimStatus pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+PimStatus pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Warning: Avoid using below customized APIs for functional simulation       //

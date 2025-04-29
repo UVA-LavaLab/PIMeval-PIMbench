@@ -83,6 +83,8 @@ enum class PimCmdEnum {
   ROTATE_ELEM_L,
   SHIFT_ELEM_R,
   SHIFT_ELEM_L,
+  AES_SBOX,
+  AES_INVERSE_SBOX, 
 
   // BitSIMD v-layout commands
   ROW_R,
@@ -480,6 +482,33 @@ protected:
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };
+
+//! @class pimCmdAes
+//! @brief  Pim CMD: AES look-up table (LUT) functions 
+class pimCmdAesLut : public pimCmd
+{
+public: 
+  pimCmdAesLut(PimCmdEnum cmdType, PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_lut(lut)
+  {
+    assert(cmdType == PimCmdEnum::AES_SBOX || cmdType == PimCmdEnum::AES_INVERSE_SBOX); 
+  }
+  virtual ~pimCmdAesLut() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected: 
+    PimObjId m_src; 
+    PimObjId m_dest; 
+    std::vector<uint8_t> m_lut; 
+private: 
+  inline bool computeResult(uint8_t operand, PimCmdEnum cmdType, uint8_t& result) {
+    result = m_lut[operand]; 
+    return true;
+  }
+};
+
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements

@@ -69,6 +69,8 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::COND_BROADCAST, "cond_broadcast" },
     { PimCmdEnum::COND_SELECT, "cond_select" },
     { PimCmdEnum::COND_SELECT_SCALAR, "cond_select_scalar" },
+    { PimCmdEnum::AES_SBOX, "aes_sbox" },
+    { PimCmdEnum::AES_INVERSE_SBOX, "aes_inverse_sbox" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::REDMIN, "redmin" },
@@ -932,6 +934,108 @@ pimCmdCond::updateStats() const
   return true;
 }
 
+//! @brief  PIM CMD: AES look-up table (LUT) Operations
+bool
+pimCmdAesLut::execute()
+{
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d -> %d)\n", getName().c_str(), m_src, m_dest);
+  }
+
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+    objSrc.syncFromSimulatedMem();
+    if (m_cmdType == PimCmdEnum::BIT_SLICE_INSERT) {  // require dest data to be synced
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objDest.syncFromSimulatedMem();
+    }
+  }
+
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  unsigned numRegions = objSrc.getRegions().size();
+  computeAllRegions(numRegions);
+
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    objDest.syncToSimulatedMem();
+  }
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: AES look-up table (LUT) - sanity check
+bool
+pimCmdAesLut::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+  if (!isValidObjId(resMgr, m_src) || !isValidObjId(resMgr, m_dest)) {
+    return false;
+  }
+  const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
+  const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  if (!isAssociated(objSrc, objDest)) {
+    return false;
+  }
+  if (objSrc.getDataType() != PIM_UINT8) {
+    return false;
+  }
+  if (objDest.getDataType() != PIM_UINT8) {
+    return false;
+  }
+  if (m_lut.size() != 256) {
+    return false;
+  }
+ 
+  return true; 
+}
+
+//! @brief  PIM CMD: AES look-up table (LUT) - compute region
+bool
+pimCmdAesLut::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+
+  PimDataType dataType = objSrc.getDataType();
+  unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::SIM);
+  const pimRegion& srcRegion = objSrc.getRegions()[index];
+
+  // perform the computation
+  uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+  for (unsigned j = 0; j < numElementsInRegion; ++j) {
+    uint64_t elemIdx = elemIdxBegin + j;
+    uint8_t unsignedOperand = objSrc.getElementBits(elemIdx);
+    uint8_t result = 0;
+    // TODO: Implement pimCmdAesLut::computeResult
+    if(!computeResult(unsignedOperand, m_cmdType, result)) return false;
+    objDest.setElement(elemIdx, result);
+  }
+  return true; 
+}
+
+//! @brief  PIM CMD: AES look-up table (LUT) - update stats
+bool
+pimCmdAesLut::updateStats() const
+{
+  // Special handling: Use dest for performance energy calculation of bit-slice insert
+  bool useDestAsSrc = (m_cmdType == PimCmdEnum::BIT_SLICE_INSERT);
+  const pimObjInfo& objSrc = (useDestAsSrc? m_device->getResMgr()->getObjInfo(m_dest) : m_device->getResMgr()->getObjInfo(m_src));
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  PimDataType dataType = objSrc.getDataType();
+  bool isVLayout = objSrc.isVLayout();
+
+  //TODO
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
+  return true;
+}
+ 
 //! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
 template <typename T> bool
 pimCmdReduction<T>::sanityCheck() const

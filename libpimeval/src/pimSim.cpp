@@ -874,6 +874,26 @@ pimSim::pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
   return m_device->executeCmd(std::move(cmd));
 }
 
+bool 
+pimSim::pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+{
+  // TODO: implement perfMon("pimAesSbox")
+  //pimPerfMon perfMon("pimAesSbox");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAesLut>(PimCmdEnum::AES_SBOX, src, dest, lut);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool 
+pimSim::pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+{
+  // TODO: implement perfMon("pimAesInverseSbox")
+  //pimPerfMon perfMon("pimAesInverseSbox");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAesLut>(PimCmdEnum::AES_INVERSE_SBOX, src, dest, lut);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 bool
 pimSim::pimOpReadRowToSa(PimObjId objId, unsigned ofst)
 {
