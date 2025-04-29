@@ -1012,7 +1012,6 @@ pimCmdAesLut::computeRegion(unsigned index)
     uint64_t elemIdx = elemIdxBegin + j;
     uint8_t unsignedOperand = objSrc.getElementBits(elemIdx);
     uint8_t result = 0;
-    // TODO: Implement pimCmdAesLut::computeResult
     if(!computeResult(unsignedOperand, m_cmdType, result)) return false;
     objDest.setElement(elemIdx, result);
   }
@@ -1030,8 +1029,7 @@ pimCmdAesLut::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  //TODO
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForLut(m_cmdType, objSrc, objDest);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }

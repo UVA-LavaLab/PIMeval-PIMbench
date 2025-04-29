@@ -493,3 +493,29 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
+//! @brief  Perf energy model of bit-serial PIM for lut func
+pimeval::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForLut(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const
+{
+  pimeval::perfEnergy perf;
+  switch (m_simTarget) {
+    case PIM_DEVICE_BITSIMD_V:
+    case PIM_DEVICE_BITSIMD_V_AP:
+    case PIM_DEVICE_BITSIMD_H:
+    case PIM_DEVICE_SIMDRAM:
+    {
+      // handle type conversion specially
+      if (cmdType == PimCmdEnum::CONVERT_TYPE) {
+        perf = getPerfEnergyTypeConversion(m_simTarget, cmdType, objSrc, objDest);
+      } else {
+        unsigned numPass = objSrc.getMaxNumRegionsPerCore();
+        perf = getPerfEnergyBitSerial(m_simTarget, cmdType, numPass, objSrc, objSrc, objDest);
+      }
+      break;
+    }
+    default:
+      assert(0);
+  }
+  return perf;
+}
+
