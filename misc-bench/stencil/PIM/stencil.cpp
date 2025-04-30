@@ -53,10 +53,10 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.iterations = 2;
-  p.gridWidth = 10;
-  p.gridHeight = 20;
-  p.radius = 2;
+  p.iterations = 10;
+  p.gridWidth = 2048;
+  p.gridHeight = 2048;
+  p.radius = 1;
   p.configFile = nullptr;
   p.inputFile = nullptr;
   p.shouldVerify = true;
@@ -100,51 +100,11 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-// //! @brief  Shifts the elements of the input row so that necessary elements are vertically aligned
-// //! @param[in]  src  The vector to shift
-// //! @param[in]  stencilWidth  The horizontal width of the stencil
-// //! @param[in]  numLeft  The number of elements to the left of the output element in the stencil pattern
-// //! @param[in]  toAssociate  A PIM Object to associate the added data with
-// //! @return  The shifted row as a list of PIM objects
-// std::vector<PimObjId> createShiftedStencilRows(const std::vector<float> &src, const uint64_t stencilWidth,
-//                                                const uint64_t numLeft, const PimObjId toAssociate) {
-//   PimStatus status;
-
-//   std::vector<PimObjId> result(stencilWidth);
-
-//   for(uint64_t i=0; i<result.size(); ++i) {
-//     result[i] = pimAllocAssociated(toAssociate, PIM_FP32);
-//     assert(result[i] != -1);
-//   }
-
-//   status = pimCopyHostToDevice((void *)src.data(), result[numLeft]);
-//   assert (status == PIM_OK);
-
-//   for(uint64_t i=numLeft; i>0; --i) {
-//     status = pimCopyObjectToObject(result[i], result[i-1]);
-//     assert (status == PIM_OK);
-
-//     status = pimShiftElementsRight(result[i-1]);
-//     assert (status == PIM_OK);
-//   }
-
-//   for(uint64_t i=numLeft+1; i<result.size(); ++i) {
-//     status = pimCopyObjectToObject(result[i-1], result[i]);
-//     assert (status == PIM_OK);
-
-//     status = pimShiftElementsLeft(result[i]);
-//     assert (status == PIM_OK);
-//   }
-
-//   return result;
-// }
-
-//! @brief  Sums the elements to the left and right within a vector according to the horizontal stencil width
-//! @param[in]  src  The vector to sum
-//! @param[in]  stencilWidth  The horizontal width of the stencil
-//! @param[in]  numLeft  The number of elements to the left of the output element in the stencil pattern
-//! @param[in]  toAssociate  A PIM Object to associate the added data with
-//! @return  The sumed PIM row
+//! @brief  Sums the neighbors of each element in a stencil row to compute the horizontal stencil sum 
+//! @param[in]  mid  PIM row to be summed
+//! @param[out]  pimRowSum  The resultant PIM object to place the sum into
+//! @param[in,out]  shiftBackup  Temporary PIM object used for calculations
+//! @param[in]  radius  The stencil radius
 void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const uint64_t radius) {
   PimStatus status;
 
@@ -160,15 +120,6 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
 
   status = pimAdd(mid, shiftBackup, pimRowSum);
   assert (status == PIM_OK);
-
-  // status = pimShiftElementsLeft(shiftBackup);
-  // assert (status == PIM_OK);
-
-  // status = pimShiftElementsLeft(shiftBackup);
-  // assert (status == PIM_OK);
-
-  // status = pimAdd(pimRowSum, shiftBackup, pimRowSum);
-  // assert (status == PIM_OK);
 
   for(uint64_t shiftIter=1; shiftIter<radius; ++shiftIter) {
     status = pimShiftElementsRight(shiftBackup);
@@ -190,24 +141,6 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
   }
 }
 
-std::vector<float> get_pim(PimObjId obj, uint64_t len) {
-  std::vector<float> vec(len);
-  PimStatus status = pimCopyDeviceToHost(obj, (void*) vec.data());
-  assert (status == PIM_OK);
-  return vec;
-}
-
-void print_pim(PimObjId obj, uint64_t len) {
-  std::vector<float> vec(len);
-  PimStatus status = pimCopyDeviceToHost(obj, (void*) vec.data());
-  assert (status == PIM_OK);
-
-  for(float f : vec) {
-    std::cout << f << ", ";
-  }
-  std::cout << std::endl;
-}
-
 void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::vector<PimObjId>& rowsInSumCircularQueue, PimObjId tmpPim, PimObjId runningSum, const uint64_t stencilAreaToMultiplyPim, const uint64_t radius) {
   PimStatus status;
   uint64_t circularQueueTop = 0;
@@ -219,7 +152,7 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
   ++circularQueueTop;
   status = pimAdd(rowsInSumCircularQueue[0], rowsInSumCircularQueue[1], runningSum);
   assert (status == PIM_OK);
-  // std::cout << "radius " << radius;
+
   for(uint64_t i=2; i<2*radius; ++i) {
     sumStencilRow(workingPimMemory[i], rowsInSumCircularQueue[circularQueueTop], tmpPim, radius);
     status = pimAdd(runningSum, rowsInSumCircularQueue[circularQueueTop], runningSum);
@@ -230,14 +163,11 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
   uint64_t nextRowToAdd = 2*radius;
 
   for(uint64_t row=radius; row<workingPimMemory.size()-radius; ++row) {
-    // rowsInSum.push_back(sumStencilRow(srcHost[nextRowToAdd], stencilWidth, numLeft, resultPim));
     sumStencilRow(workingPimMemory[nextRowToAdd], rowsInSumCircularQueue[circularQueueTop], tmpPim, radius);
+
     status = pimAdd(runningSum, rowsInSumCircularQueue[circularQueueTop], runningSum);
-    // std::cout << "row: " << row << ", added from queue: ";
-    // print_pim(rowsInSumCircularQueue[circularQueueTop], 10);
-    // std::cout << "running sum: ";
-    // print_pim(runningSum, 10);
     assert (status == PIM_OK);
+
     circularQueueTop = (1+circularQueueTop) % rowsInSumCircularQueue.size();
     ++nextRowToAdd;
 
@@ -254,21 +184,19 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
 
 //! @brief  Computes a stencil pattern over a 2d array
 //! @param[in]  srcHost  The input stencil grid
-//! @param[in]  dstHost  The resultant stencil grid
-//! @param[in]  stencilPattern  The stencil pattern to apply
-//! @param[in]  numLeft  The number of elements to the left of the output element in the stencil pattern
-//! @param[in]  numAbove  The number of elements above the output element in the stencil pattern
-void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost, const uint64_t numRows,
-              const uint64_t iterations, const uint64_t radius) {
+//! @param[out]  dstHost  The resultant stencil grid
+//! @param[in]  numRows  Number of PIM rows that objects can be associated within
+//! @param[in]  iterations  Number of iterations to run the stencil pattern for
+//! @param[in]  radius  The radius of the stencil pattern
+void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost,
+              const uint64_t numRows, const uint64_t iterations, const uint64_t radius) {
   PimStatus status;
   
   assert(!srcHost.empty());
   assert(!srcHost[0].empty());
   assert(srcHost.size() == dstHost.size());
   assert(srcHost[0].size() == dstHost[0].size());
-  // assert(srcHost.size() <= 20);
 
-  const uint64_t gridHeight = srcHost.size();
   const uint64_t gridWidth = srcHost[0].size();
 
   const uint64_t stencilAreaInt = (2 * radius + 1) * (2 * radius + 1);
@@ -295,29 +223,12 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
     assert(workingPimMemory[i] != -1);
   }
 
-  // uint64_t workingPimMemoryIdx = 0;
-  // for(uint64_t srcHostRow = 0; srcHostRow < srcHost.size(); ++srcHostRow) {
-  //   status = pimCopyHostToDevice((void*) srcHost[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
-  //   assert (status == PIM_OK);
-  //   ++workingPimMemoryIdx;
-  // }
-  // computeStencilChunkIteration(workingPimMemory, rowsInSumCircularQueue, tmpPim, runningSum, stencilAreaToMultiplyPim, radius);
-  // workingPimMemoryIdx = 1;
-  // for(uint64_t srcHostRow = 1; srcHostRow < srcHost.size()-1; ++srcHostRow) {
-  //   status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
-  //   assert (status == PIM_OK);
-  //   ++workingPimMemoryIdx;
-  // }
-
   // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
   const uint64_t currIterations = iterations;
   const uint64_t invalidResultsTop = radius * currIterations;
-  const uint64_t maxUsableResults = workingPimMemory.size() - 2*invalidResultsTop;
+
   uint64_t firstRowSrc = 0;
   for(;;) {
-    // copy srcHost [firstRowUsable - invalidResultsTop, min(firstRowUsable - invalidResultsTop+wpmSz, end of rows)) into first slots of working memory
-      // rowsThisIter = numcopied
-    std::cout << "first row src: " << firstRowSrc << ", srcHost.size(): " << srcHost.size() << std::endl;
     const uint64_t firstRowUsableSrc = firstRowSrc + invalidResultsTop;
     if(firstRowUsableSrc + invalidResultsTop >= srcHost.size()) {
       break;
@@ -330,87 +241,20 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
       assert (status == PIM_OK);
       ++workingPimMemoryIdx;
     }
-    // computeStencilChunkIteration x currIters
+
     for(uint64_t iterNum = 0; iterNum < currIterations; ++iterNum) {
       computeStencilChunkIteration(workingPimMemory, rowsInSumCircularQueue, tmpPim, runningSum, stencilAreaToMultiplyPim, radius);
     }
-    // copy range wpm [invalidResultsTop, (used wpm size)-invalidResultsTop) into dstHost [firstRowUsable, firstRowUsable+rowsThisIter)
+
     workingPimMemoryIdx = invalidResultsTop;
     for(uint64_t srcHostRow = firstRowUsableSrc; srcHostRow < firstRowUsableSrc + usableRowsThisIter; ++srcHostRow) {
       status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
       assert (status == PIM_OK);
       ++workingPimMemoryIdx;
     }
-    // firstRowUsable += rowsOnIter
+
     firstRowSrc += usableRowsThisIter;
   }
-
-  
-
-  // PimObjId resultPim = pimAlloc(PIM_ALLOC_AUTO, gridWidth, PIM_FP32);
-  // assert(resultPim != -1);
-
-  // // Handle special case
-  // if(stencilHeight == 1) {
-  //   for(size_t i=0; i<gridHeight; ++i) {
-  //     PimObjId summedRow = sumStencilRow(srcHost[i], stencilWidth, numLeft, resultPim);
-
-  //     status = pimMulScalar(summedRow, resultPim, stencilAreaToMultiply);
-  //     assert (status == PIM_OK);
-
-  //     status = pimCopyDeviceToHost(resultPim, dstHost[i].data());
-  //     assert (status == PIM_OK);
-
-  //     pimFree(summedRow);
-  //   }
-
-  //   pimFree(resultPim);
-  //   return;
-  // }
-
-  // PimObjId runningSum = pimAllocAssociated(resultPim, PIM_FP32);
-  // assert(runningSum != -1);
-
-  // std::list<PimObjId> rowsInSum;
-  // rowsInSum.push_back(sumStencilRow(srcHost[0], stencilWidth, numLeft, resultPim));
-  // rowsInSum.push_back(sumStencilRow(srcHost[1], stencilWidth, numLeft, resultPim));
-  // status = pimAdd(rowsInSum.front(), rowsInSum.back(), runningSum);
-  // assert (status == PIM_OK);
-
-  // for(uint64_t i=2; i<stencilHeight-1; ++i) {
-  //   rowsInSum.push_back(sumStencilRow(srcHost[i], stencilWidth, numLeft, resultPim));
-  //   status = pimAdd(runningSum, rowsInSum.back(), runningSum);
-  //   assert (status == PIM_OK);
-  // }
-
-  // uint64_t nextRowToAdd = stencilHeight-1;
-
-  // for(uint64_t row=numAbove; row<gridHeight-numBelow; ++row) {
-  //   rowsInSum.push_back(sumStencilRow(srcHost[nextRowToAdd], stencilWidth, numLeft, resultPim));
-  //   status = pimAdd(runningSum, rowsInSum.back(), runningSum);
-  //   assert (status == PIM_OK);
-  //   ++nextRowToAdd;
-
-  //   status = pimMulScalar(runningSum, resultPim, stencilAreaToMultiply);
-  //   assert (status == PIM_OK);
-
-  //   status = pimCopyDeviceToHost(resultPim, (void *) dstHost[row].data());
-  //   assert (status == PIM_OK);
-    
-  //   if(row+1<gridHeight-numBelow) {
-  //     status = pimSub(runningSum, rowsInSum.front(), runningSum);
-  //     assert (status == PIM_OK);
-  //     status = pimFree(rowsInSum.front());
-  //     assert (status == PIM_OK);
-  //     rowsInSum.pop_front();
-  //   }
-  // }
-
-  // while(!rowsInSum.empty()) {
-  //   status = pimFree(rowsInSum.front());
-  //   assert (status == PIM_OK);
-  //   rowsInSum.pop_front();
-  // }
 }
 
 void stencilCpu(std::vector<std::vector<float>>& src, std::vector<std::vector<float>>& dst, const uint64_t iterations, const uint64_t radius) {
@@ -484,8 +328,7 @@ int main(int argc, char* argv[])
   PimDeviceProperties deviceProp;
   PimStatus status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
-  // void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost, const uint64_t numRows,
-  // const uint64_t iterations, const uint64_t radius)
+
   stencil(x, y, 2 * deviceProp.numRowPerSubarray, params.iterations, params.radius);
 
   if (params.shouldVerify) 
