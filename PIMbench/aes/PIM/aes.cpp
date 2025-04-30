@@ -628,7 +628,6 @@ int testAesAddRoundKey() {
 
     if (!createDevice(NULL)) return 1;
     unsigned totalElementCount = 1024; 
-    unsigned long numBytes = totalElementCount * AES_BLOCK_SIZE;
 
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
@@ -706,7 +705,6 @@ int testAesAddRoundKeyCpy(void) {
 
     if (!createDevice(NULL)) return 1;
     unsigned totalElementCount = 1024; 
-    unsigned long numBytes = totalElementCount * AES_BLOCK_SIZE;
 
     // Allocate memory for input buffers
     std::vector<PIMAuxilary*> *inputObjBuf = new std::vector<PIMAuxilary*>(AES_BLOCK_SIZE);
@@ -1371,7 +1369,7 @@ int testDecryptdemo(void) {
 int testDemo(int argc, char **argv) {
     struct Params params = getInputParams(argc, argv);
     bool status; 
-    FILE *file;
+    FILE *file = NULL;
     uint8_t *buf;
     unsigned long numBytes;
     int padding;
@@ -1436,7 +1434,9 @@ int testDemo(int argc, char **argv) {
     buf = (uint8_t*)malloc(numBytes * sizeof(uint8_t));
     if (buf == NULL) {
         printf("ERROR: Memory allocation error\n");
-        fclose(file);
+        if (file != NULL) {
+          fclose(file);
+        }
         return EXIT_FAILURE;
     }
 
@@ -1586,7 +1586,7 @@ void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj){
 void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
   struct PimDeviceProperties pimDevicePropoerties;
   pimGetDeviceProperties(&pimDevicePropoerties);
-  if (pimDevicePropoerties.deviceType == PIM_DEVICE_FULCRUM) {
+  if (pimDevicePropoerties.simTarget == PIM_DEVICE_FULCRUM) {
     int status;
     // Copy input buffer back to the host 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
@@ -1626,7 +1626,7 @@ void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf) {
 void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf) {
   struct PimDeviceProperties pimDevicePropoerties;
   pimGetDeviceProperties(&pimDevicePropoerties);
-  if (pimDevicePropoerties.deviceType == PIM_DEVICE_FULCRUM) {
+  if (pimDevicePropoerties.simTarget == PIM_DEVICE_FULCRUM) {
     int status;
     // Copy input buffer back to the host 
     for (unsigned j = 0; j < AES_BLOCK_SIZE; ++j) {
