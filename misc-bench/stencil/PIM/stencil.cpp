@@ -29,10 +29,7 @@ typedef struct Params
   uint64_t iterations;
   uint64_t gridWidth;
   uint64_t gridHeight;
-  uint64_t stencilWidth;
-  uint64_t stencilHeight;
-  uint64_t numLeft;
-  uint64_t numAbove;
+  uint64_t radius;
   const char *configFile;
   const char *inputFile;
   bool shouldVerify;
@@ -46,10 +43,7 @@ void usage()
           "\n    -n    iterations (default=10 iterations)"
           "\n    -x    grid width (default=2048 elements)"
           "\n    -y    grid height (default=2048 elements)"
-          "\n    -w    horizontal stencil size (default=3)"
-          "\n    -d    vertical stencil size (default=3)"
-          "\n    -l    number of elements to the left of the output element for the stencil pattern, must be less than the horizontal stencil size (default=1)"
-          "\n    -a    number of elements above the output element for the stencil pattern, must be less than the vertical stencil size (default=1)"
+          "\n    -r    stencil radius (default=1)"
           "\n    -c    dramsim config file"
           "\n    -i    input file containing a 2d array (default=random)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
@@ -59,19 +53,16 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.iterations = 10;
-  p.gridWidth = 2048;
-  p.gridHeight = 2048;
-  p.stencilWidth = 3;
-  p.stencilHeight = 3;
-  p.numLeft = 1;
-  p.numAbove = 1;
+  p.iterations = 2;
+  p.gridWidth = 10;
+  p.gridHeight = 20;
+  p.radius = 2;
   p.configFile = nullptr;
   p.inputFile = nullptr;
-  p.shouldVerify = false;
+  p.shouldVerify = true;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:n:x:y:w:d:l:a:c:i:v:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:n:x:y:r:c:i:v:")) >= 0)
   {
     switch (opt)
     {
@@ -88,17 +79,8 @@ struct Params getInputParams(int argc, char **argv)
     case 'y':
       p.gridHeight = strtoull(optarg, NULL, 0);
       break;
-    case 'w':
-      p.stencilWidth = strtoull(optarg, NULL, 0);
-      break;
-    case 'd':
-      p.stencilHeight = strtoull(optarg, NULL, 0);
-      break;
-    case 'l':
-      p.numLeft = strtoull(optarg, NULL, 0);
-      break;
-    case 'a':
-      p.numAbove = strtoull(optarg, NULL, 0);
+    case 'r':
+      p.radius= strtoull(optarg, NULL, 0);
       break;
     case 'c':
       p.configFile = optarg;
@@ -208,6 +190,13 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
   }
 }
 
+std::vector<float> get_pim(PimObjId obj, uint64_t len) {
+  std::vector<float> vec(len);
+  PimStatus status = pimCopyDeviceToHost(obj, (void*) vec.data());
+  assert (status == PIM_OK);
+  return vec;
+}
+
 void print_pim(PimObjId obj, uint64_t len) {
   std::vector<float> vec(len);
   PimStatus status = pimCopyDeviceToHost(obj, (void*) vec.data());
@@ -233,7 +222,7 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
   // std::cout << "radius " << radius;
   for(uint64_t i=2; i<2*radius; ++i) {
     sumStencilRow(workingPimMemory[i], rowsInSumCircularQueue[circularQueueTop], tmpPim, radius);
-    status = pimAdd(runningSum, rowsInSumCircularQueue[i], runningSum);
+    status = pimAdd(runningSum, rowsInSumCircularQueue[circularQueueTop], runningSum);
     assert (status == PIM_OK);
     ++circularQueueTop;
   }
@@ -321,8 +310,8 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   // }
 
   // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
-  const uint64_t currIterations = 2;
-  const uint64_t invalidResultsTop = currIterations - 1 + radius;
+  const uint64_t currIterations = iterations;
+  const uint64_t invalidResultsTop = radius * currIterations;
   const uint64_t maxUsableResults = workingPimMemory.size() - 2*invalidResultsTop;
   uint64_t firstRowSrc = 0;
   for(;;) {
@@ -425,21 +414,21 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
 }
 
 void stencilCpu(std::vector<std::vector<float>>& src, std::vector<std::vector<float>>& dst, const uint64_t iterations, const uint64_t radius) {
-  // Only compute when stencil is fully in range
-  const uint64_t startY = radius;
-  const uint64_t endY = src.size() - radius;
-  const uint64_t startX = radius;
-  const uint64_t endX = src[0].size() - radius;
   const uint64_t stencilAreaInt = (2 * radius + 1) * (2 * radius + 1);
   const float stencilAreaInverseFloat = 1.0f / static_cast<float>(stencilAreaInt);
 
-  for(uint64_t iter=0; iter<iterations; ++iter) {
+  for(uint64_t iter=1; iter<=iterations; ++iter) {
+    // Only compute when stencil is fully in range
+    const uint64_t startY = radius*iter;
+    const uint64_t endY = src.size() - startY;
+    const uint64_t startX = radius*iter;
+    const uint64_t endX = src[0].size() - startX;
     #pragma omp parallel for collapse(2)
     for(uint64_t gridY=startY; gridY<endY; ++gridY) {
       for(uint64_t gridX=startX; gridX<endX; ++gridX) {
         float resCPU = 0.0f;
-        for(uint64_t stencilY=gridY-1; stencilY<=gridY+1; ++stencilY) {
-          for(uint64_t stencilX=gridX-1; stencilX<=gridX+1; ++stencilX) {
+        for(uint64_t stencilY=gridY-radius; stencilY<=gridY+radius; ++stencilY) {
+          for(uint64_t stencilX=gridX-radius; stencilX<=gridX+radius; ++stencilX) {
             resCPU += src[stencilY][stencilX];
           }
         }
@@ -456,18 +445,14 @@ int main(int argc, char* argv[])
   struct Params params = getInputParams(argc, argv);
 
   std::cout << "Running PIM stencil for grid: " << params.gridHeight << "x" << params.gridWidth << std::endl;
-  std::cout << "Stencil Size: " << params.stencilHeight << "x" << params.stencilWidth << std::endl;
-  std::cout << "Num Above: " << params.numAbove << ", Num Left: " << params.numLeft << std::endl;
+  std::cout << "Stencil Radius: " << params.radius << std::endl;
 
   std::vector<std::vector<float>> x, y;
 
   if (params.inputFile == nullptr)
   {
     // Fill in random grid
-    x.resize(params.gridHeight);
-    for(size_t i=0; i<x.size(); ++i) {
-      x[i].resize(params.gridWidth);
-    }
+    x.resize(params.gridHeight, std::vector<float>(params.gridWidth));
 
     #pragma omp parallel
     {
@@ -494,31 +479,27 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  y.resize(x.size());
-  for(size_t i=0; i<y.size(); ++i) {
-    y[i].resize(x[0].size());
-  }
+  y.resize(x.size(), std::vector<float>(x[0].size()));
 
   PimDeviceProperties deviceProp;
   PimStatus status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
   // void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost, const uint64_t numRows,
   // const uint64_t iterations, const uint64_t radius)
-  stencil(x, y, 2 * deviceProp.numRowPerSubarray, params.iterations, 1);
+  stencil(x, y, 2 * deviceProp.numRowPerSubarray, params.iterations, params.radius);
 
   if (params.shouldVerify) 
   {
-    std::vector<std::vector<float>> cpuY;
-    cpuY.resize(y.size(), std::vector<float>(y[0].size(), 0));
-    stencilCpu(x, cpuY, params.iterations, 1);
+    std::vector<std::vector<float>> cpuY(y.size(), std::vector<float>(y[0].size()));
+    stencilCpu(x, cpuY, params.iterations, params.radius);
 
     bool ok = true;
 
     // Only compute when stencil is fully in range
-    const uint64_t startY = 1 + params.iterations - 1;
-    const uint64_t endY = params.gridHeight - (1 + params.iterations - 1);
-    const uint64_t startX = 1 + params.iterations - 1;
-    const uint64_t endX = params.gridWidth - (1 + params.iterations - 1);
+    const uint64_t startY = params.radius * params.iterations;
+    const uint64_t endY = params.gridHeight - startY;
+    const uint64_t startX = params.radius * params.iterations;
+    const uint64_t endX = params.gridWidth - startX;
 
     std::cout << std::fixed << std::setprecision(10);
 
