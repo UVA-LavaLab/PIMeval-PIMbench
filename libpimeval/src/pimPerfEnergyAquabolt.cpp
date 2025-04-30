@@ -249,3 +249,44 @@ pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjIn
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
+
+//! @brief  Perf energy model of aquabolt PIM for lut func 
+pimeval::perfEnergy
+pimPerfEnergyAquabolt::getPerfEnergyForLut(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned numCores = obj.getNumCoresUsed();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numberOfOperationPerElement = 1; // Assuming each 8-bit element allocates one ALU word 
+  unsigned minElementPerRegion = std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1));
+  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  double aquaboltCoreCycle = m_tGDL * 3;
+  uint64_t totalOp = 0;
+  switch (cmdType)
+  {
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+    { 
+      msRead = m_tR;
+      msWrite = m_tW;
+      msCompute = (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) + ((maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1));
+      msRuntime = msRead + msWrite + msCompute;
+      mjEnergy = (m_eAP * 2 + (m_eR * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
+    default:
+      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      break;
+  }
+
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
+}
