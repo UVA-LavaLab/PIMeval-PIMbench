@@ -59,7 +59,7 @@ struct Params getInputParams(int argc, char **argv)
   p.radius = 1;
   p.configFile = nullptr;
   p.inputFile = nullptr;
-  p.shouldVerify = true;
+  p.shouldVerify = false;
 
   int opt;
   while ((opt = getopt(argc, argv, "h:n:x:y:r:c:i:v:")) >= 0)
@@ -197,6 +197,9 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   assert(srcHost.size() == dstHost.size());
   assert(srcHost[0].size() == dstHost[0].size());
 
+  std::vector<std::vector<float>> tmpGrid;
+  tmpGrid.resize(srcHost.size(), std::vector<float>(srcHost[0].size()));
+
   const uint64_t gridWidth = srcHost[0].size();
 
   const uint64_t stencilAreaInt = (2 * radius + 1) * (2 * radius + 1);
@@ -204,7 +207,7 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   uint32_t tmp;
   std::memcpy(&tmp, &stencilAreaFloat, sizeof(float));
   const uint64_t stencilAreaToMultiplyPim = static_cast<uint64_t>(tmp);
-  constexpr uint64_t numIterationsPerPim = 5;
+  constexpr uint64_t maxIterationsPerPim = 2;
 
   PimObjId tmpPim = pimAlloc(PIM_ALLOC_AUTO, gridWidth, PIM_FP32);
   assert(tmpPim != -1);
@@ -223,38 +226,47 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
     assert(workingPimMemory[i] != -1);
   }
 
-  // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
-  const uint64_t currIterations = iterations;
-  const uint64_t invalidResultsTop = radius * currIterations;
+  const uint64_t numLoops = (iterations + maxIterationsPerPim - 1)/maxIterationsPerPim;
+  for(uint64_t iter=0; iter<numLoops; ++iter) {
+    // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
+    const uint64_t currIterations = iter+1==numLoops ? (iterations - maxIterationsPerPim*(numLoops-1)) : maxIterationsPerPim;
+    const uint64_t invalidResultsTop = radius * currIterations;
 
-  uint64_t firstRowSrc = 0;
-  for(;;) {
-    const uint64_t firstRowUsableSrc = firstRowSrc + invalidResultsTop;
-    if(firstRowUsableSrc + invalidResultsTop >= srcHost.size()) {
-      break;
-    }
-    const uint64_t totalRowsThisIter = min(srcHost.size(), firstRowSrc + workingPimMemory.size()) - firstRowSrc;
-    const uint64_t usableRowsThisIter = totalRowsThisIter - 2*invalidResultsTop;
-    uint64_t workingPimMemoryIdx = 0;
-    for(uint64_t srcHostRow = firstRowSrc; srcHostRow < firstRowSrc + totalRowsThisIter; ++srcHostRow) {
-      status = pimCopyHostToDevice((void*) srcHost[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
-      assert (status == PIM_OK);
-      ++workingPimMemoryIdx;
-    }
+    uint64_t firstRowSrc = 0;
+    for(;;) {
+      const uint64_t firstRowUsableSrc = firstRowSrc + invalidResultsTop;
+      if(firstRowUsableSrc + invalidResultsTop >= srcHost.size()) {
+        break;
+      }
+      const uint64_t totalRowsThisIter = min(srcHost.size(), firstRowSrc + workingPimMemory.size()) - firstRowSrc;
+      const uint64_t usableRowsThisIter = totalRowsThisIter - 2*invalidResultsTop;
+      uint64_t workingPimMemoryIdx = 0;
+      for(uint64_t srcHostRow = firstRowSrc; srcHostRow < firstRowSrc + totalRowsThisIter; ++srcHostRow) {
+        if(iter == 0) {
+          status = pimCopyHostToDevice((void*) srcHost[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
+        } else {
+          status = pimCopyHostToDevice((void*) tmpGrid[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
+        }
+        assert (status == PIM_OK);
+        ++workingPimMemoryIdx;
+      }
 
-    for(uint64_t iterNum = 0; iterNum < currIterations; ++iterNum) {
-      computeStencilChunkIteration(workingPimMemory, rowsInSumCircularQueue, tmpPim, runningSum, stencilAreaToMultiplyPim, radius);
-    }
+      for(uint64_t iterNum = 0; iterNum < currIterations; ++iterNum) {
+        computeStencilChunkIteration(workingPimMemory, rowsInSumCircularQueue, tmpPim, runningSum, stencilAreaToMultiplyPim, radius);
+      }
 
-    workingPimMemoryIdx = invalidResultsTop;
-    for(uint64_t srcHostRow = firstRowUsableSrc; srcHostRow < firstRowUsableSrc + usableRowsThisIter; ++srcHostRow) {
-      status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
-      assert (status == PIM_OK);
-      ++workingPimMemoryIdx;
-    }
+      workingPimMemoryIdx = invalidResultsTop;
+      for(uint64_t srcHostRow = firstRowUsableSrc; srcHostRow < firstRowUsableSrc + usableRowsThisIter; ++srcHostRow) {
+        status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
+        assert (status == PIM_OK);
+        ++workingPimMemoryIdx;
+      }
 
-    firstRowSrc += usableRowsThisIter;
+      firstRowSrc += usableRowsThisIter;
+    }
+    std::swap(tmpGrid, dstHost);
   }
+  std::swap(tmpGrid, dstHost);
 }
 
 void stencilCpu(std::vector<std::vector<float>>& src, std::vector<std::vector<float>>& dst, const uint64_t iterations, const uint64_t radius) {
