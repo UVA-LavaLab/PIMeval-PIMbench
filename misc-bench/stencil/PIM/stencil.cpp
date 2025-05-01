@@ -207,7 +207,7 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   uint32_t tmp;
   std::memcpy(&tmp, &stencilAreaFloat, sizeof(float));
   const uint64_t stencilAreaToMultiplyPim = static_cast<uint64_t>(tmp);
-  constexpr uint64_t maxIterationsPerPim = 2;
+  constexpr uint64_t maxIterationsPerPim = 2; // TODO: what should this number be?
 
   PimObjId tmpPim = pimAlloc(PIM_ALLOC_AUTO, gridWidth, PIM_FP32);
   assert(tmpPim != -1);
@@ -228,7 +228,6 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
 
   const uint64_t numLoops = (iterations + maxIterationsPerPim - 1)/maxIterationsPerPim;
   for(uint64_t iter=0; iter<numLoops; ++iter) {
-    // Should (untested) compute stenil for currIterations for the whole grid. Will be run in a loop to compute all the iterations, as only (max iterations per loop) iterations can be run for each loop
     const uint64_t currIterations = iter+1==numLoops ? (iterations - maxIterationsPerPim*(numLoops-1)) : maxIterationsPerPim;
     const uint64_t invalidResultsTop = radius * currIterations;
 
