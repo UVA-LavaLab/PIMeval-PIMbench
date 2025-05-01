@@ -185,11 +185,11 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
 //! @brief  Computes a stencil pattern over a 2d array
 //! @param[in]  srcHost  The input stencil grid
 //! @param[out]  dstHost  The resultant stencil grid
-//! @param[in]  numRows  Number of PIM rows that objects can be associated within
+//! @param[in]  numAssociable  Number of float 32 PIM objects that can be associated with each other
 //! @param[in]  iterations  Number of iterations to run the stencil pattern for
 //! @param[in]  radius  The radius of the stencil pattern
 void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost,
-              const uint64_t numRows, const uint64_t iterations, const uint64_t radius) {
+              const uint64_t numAssociable, const uint64_t iterations, const uint64_t radius) {
   PimStatus status;
   
   assert(!srcHost.empty());
@@ -220,7 +220,7 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
     assert(rowsInSumCircularQueue[i] != -1);
   }
 
-  std::vector<PimObjId> workingPimMemory(20); // TODO: Set to a better number, num associable - num used other
+  std::vector<PimObjId> workingPimMemory(numAssociable - (rowsInSumCircularQueue.size() + 2));
   for(uint64_t i=0; i<workingPimMemory.size(); ++i) {
     workingPimMemory[i] = pimAllocAssociated(tmpPim, PIM_FP32);
     assert(workingPimMemory[i] != -1);
@@ -341,7 +341,12 @@ int main(int argc, char* argv[])
   PimStatus status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
 
-  stencil(x, y, 2 * deviceProp.numRowPerSubarray, params.iterations, params.radius);
+  uint64_t numAssociable = 2 * deviceProp.numRowPerSubarray;
+  if(!deviceProp.isHLayoutDevice) {
+    numAssociable /= 32;
+  }
+
+  stencil(x, y, numAssociable, params.iterations, params.radius);
 
   if (params.shouldVerify) 
   {
