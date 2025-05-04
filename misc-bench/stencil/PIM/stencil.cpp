@@ -23,6 +23,8 @@
 #include "util.h"
 #include "libpimeval.h"
 
+constexpr bool isHorizontallyChunked = true;
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -182,15 +184,58 @@ void computeStencilChunkIteration(std::vector<PimObjId>& workingPimMemory, std::
   }
 }
 
+void copyChunkedVectorPim(std::vector<float> &vec, PimObjId pimObj, const uint64_t pimObjLen, const uint64_t numInvalid, const uint64_t numElementsHorizontal, const bool isToPim) {
+  PimStatus status;
+  if constexpr (!isHorizontallyChunked) {
+    if(isToPim) {
+      status = pimCopyHostToDevice((void*) vec.data(), pimObj);
+    } else {
+      status = pimCopyDeviceToHost(pimObj, (void*) vec.data());
+    }
+    assert (status == PIM_OK);
+  } else {
+    const uint64_t totalValid = vec.size() - 2*numInvalid;
+    const uint64_t maxUsable = numElementsHorizontal - 2*numInvalid;
+    const uint64_t numChunks = (totalValid + maxUsable - 1) / maxUsable;
+    if(isToPim) {
+      uint64_t hostStartIdx = 0;
+      uint64_t pimStartIdx = 0;
+      for(uint64_t i=0; i<numChunks; ++i) {
+        const uint64_t hostEndIdx = std::min(vec.size(), hostStartIdx+numElementsHorizontal);
+        const uint64_t len = hostEndIdx - hostStartIdx;
+
+        status = pimCopyHostToDevice((void*) &vec[hostStartIdx], pimObj, pimStartIdx, pimStartIdx+len);
+        assert (status == PIM_OK);
+
+        hostStartIdx += maxUsable;
+        pimStartIdx += numElementsHorizontal;
+      }
+    } else {
+      uint64_t hostStartIdx = numInvalid;
+      uint64_t pimStartIdx = numInvalid;
+      for(uint64_t i=0; i<numChunks; ++i) {
+        const uint64_t currValid = i+1==numChunks ? (totalValid%maxUsable) : maxUsable; // TODO: Is it better to evenly spread out horizontal chunks?
+
+        // Copy pim[pimStartIdx, pimStartIdx+currValid) into host[hostStartIdx,hostStartIdx+currValid)
+        status = pimCopyDeviceToHost(pimObj, (void*) &vec[hostStartIdx], pimStartIdx, pimStartIdx+currValid);
+        assert (status == PIM_OK);
+        
+        hostStartIdx += currValid;
+        pimStartIdx += currValid + 2*numInvalid;
+      }
+    }
+  }
+}
+
 //! @brief  Computes a stencil pattern over a 2d array
 //! @param[in]  srcHost  The input stencil grid
 //! @param[out]  dstHost  The resultant stencil grid
 //! @param[in]  numAssociable  Number of float 32 PIM objects that can be associated with each other
+//! @param[in]  numElementsHorizontal  Number of float 32 PIM objects that can be placed in a PIM row without creating shifting issues
 //! @param[in]  iterations  Number of iterations to run the stencil pattern for
 //! @param[in]  radius  The radius of the stencil pattern
-void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost,
-              const uint64_t numAssociable, const uint64_t iterations, const uint64_t radius) {
-  PimStatus status;
+void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::vector<float>> &dstHost, const uint64_t numAssociable,
+              const uint64_t numElementsHorizontal, const uint64_t iterations, const uint64_t radius) {
   
   assert(!srcHost.empty());
   assert(!srcHost[0].empty());
@@ -209,7 +254,17 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
   const uint64_t stencilAreaToMultiplyPim = static_cast<uint64_t>(tmp);
   constexpr uint64_t maxIterationsPerPim = 2; // TODO: what should this number be?
 
-  PimObjId tmpPim = pimAlloc(PIM_ALLOC_AUTO, gridWidth, PIM_FP32);
+  uint64_t pimAllocWidth;
+  if constexpr (isHorizontallyChunked) {
+    const uint64_t maxInvalidHorizontal = radius * std::min(maxIterationsPerPim, iterations);
+    const uint64_t maxUsableHorizontal = numElementsHorizontal - 2*maxInvalidHorizontal;
+    const uint64_t maxChunksHorizontal = (gridWidth + maxUsableHorizontal - 1) / maxUsableHorizontal;
+    pimAllocWidth = numElementsHorizontal * maxChunksHorizontal;
+  } else {
+    pimAllocWidth = gridWidth;
+  }
+
+  PimObjId tmpPim = pimAlloc(PIM_ALLOC_AUTO, pimAllocWidth, PIM_FP32);
   assert(tmpPim != -1);
   PimObjId runningSum = pimAllocAssociated(tmpPim, PIM_FP32);
   assert(runningSum != -1);
@@ -237,16 +292,15 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
       if(firstRowUsableSrc + invalidResultsTop >= srcHost.size()) {
         break;
       }
-      const uint64_t totalRowsThisIter = min(srcHost.size(), firstRowSrc + workingPimMemory.size()) - firstRowSrc;
+      const uint64_t totalRowsThisIter = std::min(srcHost.size(), firstRowSrc + workingPimMemory.size()) - firstRowSrc;
       const uint64_t usableRowsThisIter = totalRowsThisIter - 2*invalidResultsTop;
       uint64_t workingPimMemoryIdx = 0;
       for(uint64_t srcHostRow = firstRowSrc; srcHostRow < firstRowSrc + totalRowsThisIter; ++srcHostRow) {
         if(iter == 0) {
-          status = pimCopyHostToDevice((void*) srcHost[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
+          copyChunkedVectorPim(const_cast<std::vector<float>&>(srcHost[srcHostRow]), workingPimMemory[workingPimMemoryIdx], pimAllocWidth, invalidResultsTop, numElementsHorizontal, true);
         } else {
-          status = pimCopyHostToDevice((void*) tmpGrid[srcHostRow].data(), workingPimMemory[workingPimMemoryIdx]);
+          copyChunkedVectorPim(tmpGrid[srcHostRow], workingPimMemory[workingPimMemoryIdx], pimAllocWidth, invalidResultsTop, numElementsHorizontal, true);
         }
-        assert (status == PIM_OK);
         ++workingPimMemoryIdx;
       }
 
@@ -256,8 +310,7 @@ void stencil(const std::vector<std::vector<float>> &srcHost, std::vector<std::ve
 
       workingPimMemoryIdx = invalidResultsTop;
       for(uint64_t srcHostRow = firstRowUsableSrc; srcHostRow < firstRowUsableSrc + usableRowsThisIter; ++srcHostRow) {
-        status = pimCopyDeviceToHost(workingPimMemory[workingPimMemoryIdx], (void*) dstHost[srcHostRow].data());
-        assert (status == PIM_OK);
+        copyChunkedVectorPim(dstHost[srcHostRow], workingPimMemory[workingPimMemoryIdx], pimAllocWidth, invalidResultsTop, numElementsHorizontal, false);
         ++workingPimMemoryIdx;
       }
 
@@ -340,12 +393,31 @@ int main(int argc, char* argv[])
   PimStatus status = pimGetDeviceProperties(&deviceProp);
   assert(status == PIM_OK);
 
+  constexpr uint64_t bitsPerElement = 32;
+
   uint64_t numAssociable = 2 * deviceProp.numRowPerSubarray;
   if(!deviceProp.isHLayoutDevice) {
-    numAssociable /= 32;
+    numAssociable /= bitsPerElement;
   }
 
-  stencil(x, y, numAssociable, params.iterations, params.radius);
+  uint64_t numElementsHorizontal;
+  if(deviceProp.isHLayoutDevice) {
+    switch(deviceProp.simTarget) {
+      case PIM_DEVICE_FULCRUM:
+        numElementsHorizontal = deviceProp.numColPerSubarray / bitsPerElement;
+        break;
+      case PIM_DEVICE_BANK_LEVEL:
+        numElementsHorizontal = deviceProp.numSubarrayPerBank * deviceProp.numColPerSubarray / bitsPerElement;
+        break;
+      default:
+        std::cerr << "Stencil unimplmented for simulation target: " << deviceProp.simTarget << std::endl;
+        std::exit(1);
+    }
+  } else {
+    numElementsHorizontal = deviceProp.numColPerSubarray;
+  }
+
+  stencil(x, y, numAssociable, numElementsHorizontal, params.iterations, params.radius);
 
   if (params.shouldVerify) 
   {
