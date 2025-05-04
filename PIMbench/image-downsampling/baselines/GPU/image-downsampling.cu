@@ -1,5 +1,5 @@
 /* File:     image-downsampling.cu
- * Purpose:  Implement brightness on a gpu using Thrust
+ * Purpose:  Implement image downsampling on a gpu
  *
  */
 
@@ -9,16 +9,18 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <cstdlib>
+#include <cstdio>
 #include <sys/stat.h>
+#include "utilBaselines.h"
 
 using namespace std;
 
 typedef struct Params
 {
-  char *configFile;
-  char *inputFile;
+  const char *inputFile;
+  const char *outputFile;
   bool shouldVerify;
-  char *outputFile;
 } Params;
 
 void usage()
@@ -26,7 +28,6 @@ void usage()
   fprintf(stderr,
           "\nUsage:  ./image-downsampling.out [options]"
           "\n"
-          "\n    -c    dramsim config file"
           "\n    -i    input image file of BMP type (default=\"input_1.bmp\")"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n    -o    output file for downsampled image (default=no output)"
@@ -36,22 +37,18 @@ void usage()
 struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
-  p.configFile = nullptr;
-  p.inputFile = (char*) "../../Dataset/input_1.bmp";
-  p.shouldVerify = false;
+  p.inputFile = "../../Dataset/input_1.bmp";
   p.outputFile = nullptr;
+  p.shouldVerify = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "h:c:i:v:o:")) >= 0)
+  while ((opt = getopt(argc, argv, "h:i:v:o:")) >= 0)
   {
     switch (opt)
     {
     case 'h':
       usage();
       exit(0);
-      break;
-    case 'c':
-      p.configFile = optarg;
       break;
     case 'i':
       p.inputFile = optarg;
@@ -191,8 +188,8 @@ std::vector<uint8_t> avg_gpu(std::vector<uint8_t> img) {
     char* pixels_in = (char*) img.data() + avg_out.data_offset;
 
 
-    dim3 dimGrid (( avg_out.new_width + 1023) / 1024 , avg_out.new_height , 1);
-    dim3 dimBlock (1024 , 1 , 1);
+    dim3 dimBlock (128 , 1 , 1);
+    dim3 dimGrid (( avg_out.new_width + dimBlock.x - 1) / dimBlock.x , ( avg_out.new_height + dimBlock.y - 1 ) / dimBlock.y, 1);
 
     char* new_pixels_gpu_average;
     char* old_pixels_gpu;
@@ -222,27 +219,19 @@ std::vector<uint8_t> avg_gpu(std::vector<uint8_t> img) {
         exit(1);
     }
 
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float timeElapsed = 0;
-
-    cudaEventRecord(start, 0);
-
-    imgDSAverage<<<dimGrid, dimBlock>>>(old_pixels_gpu, new_pixels_gpu_average, avg_out.new_height, avg_out.new_width, avg_out.scanline_size, avg_out.new_scanline_size, avg_out.new_pixel_data_width);
-    
-    errorCode = cudaGetLastError();
-    if (errorCode != cudaSuccess)
-    {
+    auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+      imgDSAverage<<<dimGrid, dimBlock>>>(old_pixels_gpu, new_pixels_gpu_average, avg_out.new_height, avg_out.new_width, avg_out.scanline_size, avg_out.new_scanline_size, avg_out.new_pixel_data_width);
+      errorCode = cudaGetLastError();
+      if (errorCode != cudaSuccess)
+      {
         cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
         exit(1);
-    }
+      }
+    });
 
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&timeElapsed, start, stop);
-
-    printf("Execution time of image downsampling = %f ms\n", timeElapsed);
+    printf("\nExecution time of Image Downsampling = %f ms\n", timeElapsed);
+    printf("Average Power = %f mW\n", avgPower);
+    printf("Energy Consumption = %f mJ\n", energy);
 
     errorCode = cudaMemcpy(pixels_out_averaged, new_pixels_gpu_average, new_pixels_size, cudaMemcpyDeviceToHost);
     if (errorCode != cudaSuccess)
@@ -371,18 +360,28 @@ int main(int argc, char* argv[])
   if(params.shouldVerify) {
     vector<uint8_t> cpu_averaged = avg_cpu(img);
 
-    if (cpu_averaged.size() !=gpu_averaged.size()) {
+    if (cpu_averaged.size() != gpu_averaged.size()) {
       cout << "Average kernel fail, sizes do not match" << endl;
       return 1;
     }
-    for (size_t i = 0; i < cpu_averaged.size(); ++i) {
-      if (cpu_averaged[i] != gpu_averaged[i]) {
-        cout << "Average kernel mismatch at byte " << i << endl;
-        return 1;
+
+    // verify result
+    bool ok = true;
+    #pragma omp parallel for
+    for (uint64_t i = 0; i < cpu_averaged.size(); ++i)
+    {
+      if (cpu_averaged[i] != gpu_averaged[i])
+      {
+        #pragma omp critical
+        {
+          std::cerr << "Wrong answer: " << unsigned(gpu_averaged[i]) << " (expected " << unsigned(cpu_averaged[i]) << "), at byte " << i << std::endl;
+          ok = false;
+        }
       }
     }
-
-    cout << "GPU Result matches CPU result" << endl;
+    if(ok) {
+      std::cout << "Correct for image downsampling!" << std::endl;
+    }
   }
 }
 

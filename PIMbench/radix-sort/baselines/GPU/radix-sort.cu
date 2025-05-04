@@ -47,6 +47,7 @@
 
 // #include "../../test/test_util.h"
 #include "./include/test_util.h"
+#include "utilBaselines.h"
 using namespace cub;
 
 
@@ -194,23 +195,14 @@ int main(int argc, char** argv)
     CubDebugExit(cudaMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(int) * num_items, cudaMemcpyHostToDevice));
     CubDebugExit(cudaMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(int) * num_items, cudaMemcpyHostToDevice));
 
-    // Event creation
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float timeElapsed = 0;
 
-    // Start timer
-    cudaEventRecord(start, 0);
+    auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+        DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items);
+    });
 
     // Run
     //CubDebugExit(DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items));
-    DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items);
-
-    // End timer
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&timeElapsed, start, stop);
+    
 
     // Check for correctness (and display results, if specified)
     int compare = CompareDeviceResults(h_reference_keys, d_keys.Current(), num_items, true, g_verbose);
@@ -220,7 +212,9 @@ int main(int argc, char** argv)
     printf("\t Compare values (selector %d): %s\n", d_values.selector, compare ? "FAIL" : "PASS");
     AssertEquals(0, compare);
 
-    printf("Execution time = %f ms\n", timeElapsed);
+    printf("\nExecution time of radix sort = %f ms\n", timeElapsed);
+    printf("Average Power = %f mW\n", avgPower);
+    printf("Energy Consumption = %f mJ\n", energy);
 
     // Cleanup
     if (h_keys) delete[] h_keys;
