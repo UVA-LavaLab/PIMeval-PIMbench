@@ -879,7 +879,7 @@ pimSim::pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
 {
   pimPerfMon perfMon("pimAesSbox");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAesLut>(PimCmdEnum::AES_SBOX, src, dest, lut);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::AES_SBOX, src, dest, lut);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -888,7 +888,7 @@ pimSim::pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t
 {
   pimPerfMon perfMon("pimAesInverseSbox");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdAesLut>(PimCmdEnum::AES_INVERSE_SBOX, src, dest, lut);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::AES_INVERSE_SBOX, src, dest, lut);
   return m_device->executeCmd(std::move(cmd));
 }
 

@@ -80,6 +80,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       totalOp = obj.getNumElements();
       break;
     }
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+    {
+      numberOfOperationPerElement = 1;  // Assuming each 8-bit element allocates one ALU word 
+    }
     case PimCmdEnum::AND_SCALAR:
     case PimCmdEnum::OR_SCALAR:
     case PimCmdEnum::XOR_SCALAR:

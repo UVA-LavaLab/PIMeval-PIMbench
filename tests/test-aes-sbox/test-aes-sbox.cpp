@@ -109,6 +109,7 @@ int main()
   ok &= testAesSbox(PIM_DEVICE_BITSIMD_V);
   ok &= testAesSbox(PIM_DEVICE_BITSIMD_V_AP);
   ok &= testAesSbox(PIM_DEVICE_BANK_LEVEL);
+  ok &= testAesSbox(PIM_DEVICE_FULCRUM);
   std::cout << (ok ? "ALL PASSED!" : "FAILED!") << std::endl;
 
   return 0;
