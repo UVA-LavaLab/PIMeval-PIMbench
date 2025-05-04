@@ -71,7 +71,6 @@ public:
   virtual pimeval::perfEnergy getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
   virtual pimeval::perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
-  virtual pimeval::perfEnergy getPerfEnergyForLut(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const;
 
 protected:
   PimDeviceEnum m_simTarget;
