@@ -27,6 +27,18 @@ using namespace std;
 
 chrono::duration<double, milli> hostElapsedTime = chrono::duration<double, milli>::zero();
 
+const int LEQ = 0;
+const int LT = 1;
+const int GEQ = 2;
+const int GT = 3;
+
+std::unordered_map<int, std::string> compMap = {
+  {LEQ, "<="},
+  {LT, "<"},
+  {GEQ, ">="},
+  {GT, ">"}
+};
+
 // Params ---------------------------------------------------------------------
 
 vector<vector<int>> negativeParameterMapping;
@@ -118,11 +130,11 @@ void getModelAndInput(uint64_t numRows, uint64_t numCols, vector<vector<int>> &m
             matrix[row][col] = ((row*col + row) % 2001) - 1000;  // Generates a number in [-1000, 1000]
             
             // to simulate compare operations at each leaf 
-            int rand_op = rand() % 4;
+            int rand_op = matrix[row][col] % 4;  // reuse random value to generate a random sign
             compareMatrix[row][col] = rand_op;
 
             // if its > or >=, switch operators and negate parameter
-            if (rand_op == 2 or rand_op == 3) {
+            if (rand_op == GEQ or rand_op == GT) {
                 mappingMatrix[row][col] = -1;  // indicates that input needs to be negated
                 matrix[row][col] = -1 * matrix[row][col];  // negate mdoel parameter
             } else mappingMatrix[row][col] = 1;
@@ -306,17 +318,8 @@ int main(int argc, char *argv[])
   struct Params params = input_params(argc, argv);
   int numberOfPaths = ((int) pow(2, params.treeDepth)) * params.tree_count;
 
-  std::unordered_map<int, std::string> compMap;
-  compMap[0] = "<=";
-  compMap[1] = "<";
-  compMap[2] = ">=";
-  compMap[3] = ">";
-
-
   // using random matrix to simulate training an RF classifer 
   getModelAndInput(numberOfPaths, params.dimension, modelParameter, negativeParameterMapping, compareParameterMapping);
-  std::cout << modelParameter[0][0] << endl;
-
 
   // generate random inputs
   vector<vector<int>> modelInput;
@@ -332,7 +335,7 @@ int main(int argc, char *argv[])
       for (uint64_t col = 0; col < params.dimension; ++col) {
 
         modelInput[row][col] = rand_input * negativeParameterMapping[row][col];  // will either be "rand_input * -1" or "rand_input * 1"
-        if(compareParameterMapping[row][col] == 0 or compareParameterMapping[row][col] == 2) {
+        if(compareParameterMapping[row][col] == LEQ or compareParameterMapping[row][col] == GEQ) {
           // if the operator uses an equal, set it to use the input against the model parameter in pim
           eqCompareParameterMapping[row][col] = modelInput[row][col];
         } else {

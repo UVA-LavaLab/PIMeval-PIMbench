@@ -27,7 +27,7 @@ def _energy_joules(handle):
         return None
 
 def _power_watts(handle):
-    # µW  →  W
+    # mW  →  W
     return pynvml.nvmlDeviceGetPowerUsage(handle) / 1_000
 
 def train_model(X_train, y_train, num_trees, dt_height):
