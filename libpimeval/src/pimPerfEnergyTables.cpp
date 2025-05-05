@@ -211,8 +211,8 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::REDMIN_RANGE, {   32,    8,   42 } },
       { PimCmdEnum::REDMAX,       {   32,    8,   42 } },
       { PimCmdEnum::REDMAX_RANGE, {   32,    8,   42 } },
-      { PimCmdEnum::AES_SBOX,     {   2219,1921,3632 } },
-      { PimCmdEnum::AES_INVERSE_SBOX,     {   2209,1911,3613 } },
+      { PimCmdEnum::AES_SBOX,     {   2450, 2112, 3625 } },
+      { PimCmdEnum::AES_INVERSE_SBOX,     {   2420, 2086, 3610 } },
     }},
     { PIM_UINT16, {
       { PimCmdEnum::ABS,          {   16,   16,    0 } },
@@ -533,8 +533,8 @@ pimPerfEnergyTables::bitsimdPerfTable = {
       { PimCmdEnum::REDMIN_RANGE, {   32,    8,   51 } },
       { PimCmdEnum::REDMAX,       {   32,    8,   51 } },
       { PimCmdEnum::REDMAX_RANGE, {   32,    8,   51 } },
-      { PimCmdEnum::AES_SBOX,     {   2219,1921,3632 } },
-      { PimCmdEnum::AES_INVERSE_SBOX,     {   2209,1911,3613 } },
+      { PimCmdEnum::AES_SBOX,     {   2450, 2112, 3625 } },
+      { PimCmdEnum::AES_INVERSE_SBOX,     {   2420, 2086, 3610 } },
     }},
     { PIM_UINT16, {
       { PimCmdEnum::ABS,          {   16,   16,    0 } },
