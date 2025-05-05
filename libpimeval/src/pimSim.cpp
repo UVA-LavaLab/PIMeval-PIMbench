@@ -825,7 +825,7 @@ pimSim::pimRotateElementsRight(PimObjId src)
 {
   pimPerfMon perfMon("pimRotateElementsRight");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_ELEM_R, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_ELEM_R, src, true);
   return m_device->executeCmd(std::move(cmd));
 }
 
@@ -834,25 +834,25 @@ pimSim::pimRotateElementsLeft(PimObjId src)
 {
   pimPerfMon perfMon("pimRotateElementsLeft");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_ELEM_L, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::ROTATE_ELEM_L, src, true);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimShiftElementsRight(PimObjId src)
+pimSim::pimShiftElementsRight(PimObjId src, bool useCrossRegionCommunication)
 {
   pimPerfMon perfMon("pimShiftElementsRight");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEM_R, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEM_R, src, useCrossRegionCommunication);
   return m_device->executeCmd(std::move(cmd));
 }
 
 bool
-pimSim::pimShiftElementsLeft(PimObjId src)
+pimSim::pimShiftElementsLeft(PimObjId src, bool useCrossRegionCommunication)
 {
   pimPerfMon perfMon("pimShiftElementsLeft");
   if (!isValidDevice()) { return false; }
-  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEM_L, src);
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdRotate>(PimCmdEnum::SHIFT_ELEM_L, src, useCrossRegionCommunication);
   return m_device->executeCmd(std::move(cmd));
 }
 

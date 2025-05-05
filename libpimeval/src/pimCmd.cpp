@@ -1205,33 +1205,35 @@ pimCmdRotate::execute()
   computeAllRegions(numRegions);
 
   // handle region boundaries
-  if (m_cmdType == PimCmdEnum::ROTATE_ELEM_R || m_cmdType == PimCmdEnum::SHIFT_ELEM_R) {
-    for (unsigned i = 0; i < numRegions; ++i) {
-      const pimRegion &srcRegion = objSrc.getRegions()[i];
-      uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
-      uint64_t val = 0;
-      if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
-        val = m_regionBoundary[numRegions - 1];
-      } else if (i > 0) {
-        val = m_regionBoundary[i - 1];
+  if(m_useCrossRegionCommunication) {
+    if (m_cmdType == PimCmdEnum::ROTATE_ELEM_R || m_cmdType == PimCmdEnum::SHIFT_ELEM_R) {
+      for (unsigned i = 0; i < numRegions; ++i) {
+        const pimRegion &srcRegion = objSrc.getRegions()[i];
+        uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
+        uint64_t val = 0;
+        if (i == 0 && m_cmdType == PimCmdEnum::ROTATE_ELEM_R) {
+          val = m_regionBoundary[numRegions - 1];
+        } else if (i > 0) {
+          val = m_regionBoundary[i - 1];
+        }
+        objSrc.setElement(elemIdxBegin, val);
       }
-      objSrc.setElement(elemIdxBegin, val);
-    }
-  } else if (m_cmdType == PimCmdEnum::ROTATE_ELEM_L || m_cmdType == PimCmdEnum::SHIFT_ELEM_L) {
-    for (unsigned i = 0; i < numRegions; ++i) {
-      const pimRegion &srcRegion = objSrc.getRegions()[i];
-      unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
-      uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
-      uint64_t val = 0;
-      if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_L) {
-        val = m_regionBoundary[0];
-      } else if (i < numRegions - 1) {
-        val = m_regionBoundary[i + 1];
+    } else if (m_cmdType == PimCmdEnum::ROTATE_ELEM_L || m_cmdType == PimCmdEnum::SHIFT_ELEM_L) {
+      for (unsigned i = 0; i < numRegions; ++i) {
+        const pimRegion &srcRegion = objSrc.getRegions()[i];
+        unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+        uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
+        uint64_t val = 0;
+        if (i == numRegions - 1 && m_cmdType == PimCmdEnum::ROTATE_ELEM_L) {
+          val = m_regionBoundary[0];
+        } else if (i < numRegions - 1) {
+          val = m_regionBoundary[i + 1];
+        }
+        objSrc.setElement(elemIdxBegin + numElementsInRegion - 1, val);
       }
-      objSrc.setElement(elemIdxBegin + numElementsInRegion - 1, val);
+    } else {
+      assert(0);
     }
-  } else {
-    assert(0);
   }
 
   if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
@@ -1306,7 +1308,7 @@ pimCmdRotate::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRotate(m_cmdType, objSrc);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForRotate(m_cmdType, objSrc, m_useCrossRegionCommunication);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }

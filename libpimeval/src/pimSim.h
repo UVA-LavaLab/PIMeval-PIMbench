@@ -120,8 +120,8 @@ public:
   template <typename T> bool pimBroadcast(PimObjId dest, T value);
   bool pimRotateElementsRight(PimObjId src);
   bool pimRotateElementsLeft(PimObjId src);
-  bool pimShiftElementsRight(PimObjId src);
-  bool pimShiftElementsLeft(PimObjId src);
+  bool pimShiftElementsRight(PimObjId src, bool useCrossRegionCommunication);
+  bool pimShiftElementsLeft(PimObjId src, bool useCrossRegionCommunication);
   bool pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
   bool pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 

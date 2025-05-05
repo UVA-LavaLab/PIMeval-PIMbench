@@ -117,14 +117,14 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
   status = pimCopyObjectToObject(mid, shiftBackup);
   assert (status == PIM_OK);
 
-  status = pimShiftElementsRight(shiftBackup);
+  status = pimShiftElementsRight(shiftBackup, !isHorizontallyChunked);
   assert (status == PIM_OK);
 
   status = pimAdd(mid, shiftBackup, pimRowSum);
   assert (status == PIM_OK);
 
   for(uint64_t shiftIter=1; shiftIter<radius; ++shiftIter) {
-    status = pimShiftElementsRight(shiftBackup);
+    status = pimShiftElementsRight(shiftBackup, !isHorizontallyChunked);
     assert (status == PIM_OK);
 
     status = pimAdd(pimRowSum, shiftBackup, pimRowSum);
@@ -135,7 +135,7 @@ void sumStencilRow(PimObjId mid, PimObjId pimRowSum, PimObjId shiftBackup, const
   assert (status == PIM_OK);
 
   for(uint64_t shiftIter=0; shiftIter<radius; ++shiftIter) {
-    status = pimShiftElementsLeft(shiftBackup);
+    status = pimShiftElementsLeft(shiftBackup, !isHorizontallyChunked);
     assert (status == PIM_OK);
 
     status = pimAdd(pimRowSum, shiftBackup, pimRowSum);

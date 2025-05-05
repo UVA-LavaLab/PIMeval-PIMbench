@@ -191,8 +191,8 @@ PimStatus pimBroadcastUInt(PimObjId dest, uint64_t value);
 PimStatus pimBroadcastFP(PimObjId dest, float value);
 PimStatus pimRotateElementsRight(PimObjId src);
 PimStatus pimRotateElementsLeft(PimObjId src);
-PimStatus pimShiftElementsRight(PimObjId src);
-PimStatus pimShiftElementsLeft(PimObjId src);
+PimStatus pimShiftElementsRight(PimObjId src, bool useCrossRegionCommunication = true);
+PimStatus pimShiftElementsLeft(PimObjId src, bool useCrossRegionCommunication = true);
 PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
 PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 

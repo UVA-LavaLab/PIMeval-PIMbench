@@ -301,7 +301,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObj
 
 //! @brief  Perf energy model of Fulcrum for rotate
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj, bool useCrossRegionCommunication) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -312,8 +312,6 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
   uint64_t totalOp = 0;
-  // boundary handling - assume two times copying between device and host for boundary elements
-  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
   // rotate within subarray:
   // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
@@ -324,8 +322,12 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   msWrite = m_tW * numPass;
   msRuntime = msRead + msWrite + msCompute;
   mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
-  msRuntime += 2 * perfEnergyBT.m_msRuntime;
-  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+  if(useCrossRegionCommunication) {
+    // boundary handling - assume two times copying between device and host for boundary elements
+    pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
+    msRuntime += 2 * perfEnergyBT.m_msRuntime;
+    mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+  }
   std::cout << "PIM-Warning: Perf energy model is not precise for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
