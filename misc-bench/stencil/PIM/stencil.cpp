@@ -410,7 +410,7 @@ int main(int argc, char* argv[])
         numElementsHorizontal = deviceProp.numSubarrayPerBank * deviceProp.numColPerSubarray / bitsPerElement;
         break;
       default:
-        std::cerr << "Stencil unimplmented for simulation target: " << deviceProp.simTarget << std::endl;
+        std::cerr << "Stencil unimplemented for simulation target: " << deviceProp.simTarget << std::endl;
         std::exit(1);
     }
   } else {
