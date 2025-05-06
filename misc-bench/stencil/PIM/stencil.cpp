@@ -353,7 +353,12 @@ int main(int argc, char* argv[])
   struct Params params = getInputParams(argc, argv);
 
   std::cout << "Running PIM stencil for grid: " << params.gridHeight << "x" << params.gridWidth << std::endl;
-  std::cout << "Stencil Radius: " << params.radius << std::endl;
+  std::cout << "Stencil Radius: " << params.radius << ", Number of Iterations: " << params.iterations << std::endl;
+  if constexpr(isHorizontallyChunked) {
+    std::cout << "Stencil does not use cross region communication" << std::endl;
+  } else {
+    std::cout << "Stencil uses cross region communication" << std::endl;
+  }
 
   std::vector<std::vector<float>> x, y;
 
@@ -437,7 +442,7 @@ int main(int argc, char* argv[])
     #pragma omp parallel for collapse(2)
     for(uint64_t gridY=startY; gridY<endY; ++gridY) {
       for(uint64_t gridX=startX; gridX<endX; ++gridX) {
-        constexpr float acceptableDelta = 0.1f;
+        constexpr float acceptableDelta = 0.01f;
         if (std::abs(cpuY[gridY][gridX] - y[gridY][gridX]) > acceptableDelta)
         {
           #pragma omp critical
