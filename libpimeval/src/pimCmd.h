@@ -506,8 +506,8 @@ protected:
 class pimCmdRotate : public pimCmd
 {
 public:
-  pimCmdRotate(PimCmdEnum cmdType, PimObjId src)
-    : pimCmd(cmdType), m_src(src)
+  pimCmdRotate(PimCmdEnum cmdType, PimObjId src, bool useCrossRegionCommunication)
+    : pimCmd(cmdType), m_src(src), m_useCrossRegionCommunication(useCrossRegionCommunication)
   {
     assert(cmdType == PimCmdEnum::ROTATE_ELEM_R || cmdType == PimCmdEnum::ROTATE_ELEM_L ||
            cmdType == PimCmdEnum::SHIFT_ELEM_R || cmdType == PimCmdEnum::SHIFT_ELEM_L);
@@ -520,6 +520,7 @@ public:
 protected:
   PimObjId m_src;
   std::vector<uint64_t> m_regionBoundary;
+  bool m_useCrossRegionCommunication;
 };
 
 //! @class  pimCmdReadRowToSa

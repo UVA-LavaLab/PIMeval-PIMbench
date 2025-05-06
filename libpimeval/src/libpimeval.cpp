@@ -501,17 +501,17 @@ pimRotateElementsLeft(PimObjId src)
 
 //! @brief  Shift elements of an obj by one step to the right and fill zero
 PimStatus
-pimShiftElementsRight(PimObjId src)
+pimShiftElementsRight(PimObjId src, bool useCrossRegionCommunication)
 {
-  bool ok = pimSim::get()->pimShiftElementsRight(src);
+  bool ok = pimSim::get()->pimShiftElementsRight(src, useCrossRegionCommunication);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  Shift elements of an obj by one step to the left and fill zero
 PimStatus
-pimShiftElementsLeft(PimObjId src)
+pimShiftElementsLeft(PimObjId src, bool useCrossRegionCommunication)
 {
-  bool ok = pimSim::get()->pimShiftElementsLeft(src);
+  bool ok = pimSim::get()->pimShiftElementsLeft(src, useCrossRegionCommunication);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

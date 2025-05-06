@@ -237,7 +237,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimOb
 
 //! @brief  Perf energy model of aquabolt PIM for rotate
 pimeval::perfEnergy
-pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj, bool useCrossRegionCommunication) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
