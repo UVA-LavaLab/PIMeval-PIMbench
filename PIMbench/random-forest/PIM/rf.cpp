@@ -114,7 +114,6 @@ struct Params input_params(int argc, char **argv)
 void getModelAndInput(uint64_t numRows, uint64_t numCols, vector<vector<int>> &matrix, vector<vector<int>> &mappingMatrix, vector<vector<int>> &compareMatrix)
 {
     // Seed the random number generator with a fixed seed for reproducibility
-    srand(8746219);
 
     // Resize the matrix to the specified number of rows and columns
     matrix.resize(numRows, vector<int>(numCols));
@@ -124,7 +123,6 @@ void getModelAndInput(uint64_t numRows, uint64_t numCols, vector<vector<int>> &m
 
     #pragma omp parallel for
     for (uint64_t row = 0; row < numRows; ++row) {
-        //int rand_input = (rand() % 501) - 500;  // generate random input that 
         for (uint64_t col = 0; col < numCols; ++col) {
 
             matrix[row][col] = ((row*col + row) % 2001) - 1000;  // Generates a number in [-1000, 1000]
@@ -360,8 +358,6 @@ int main(int argc, char *argv[])
 
   pimShowStats();
   cout << "Host elapsed time: " << fixed << setprecision(3) << hostElapsedTime.count() << " ms." << endl;
-  cout << rfResult[0] << '\n';
-  cout << "classification result: " << res << '\n';
 
   return 0;
 }
