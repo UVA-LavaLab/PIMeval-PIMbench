@@ -198,6 +198,12 @@ PimStatus pimShiftElementsLeft(PimObjId src);
 PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
 PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+// AES sbox and inverse-box APIs
+// Note: AES S-box and inverse S-box are treated separately because their bit-serial performance models differ.
+// However, it is the user's responsibility to provide the appropriate LUT to ensure correct functionality.
+// The function pimAesInverseSbox expects an inverse S-box LUT as its input.
+PimStatus pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+PimStatus pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Experimental Feature: PIM API Fusion                                       //

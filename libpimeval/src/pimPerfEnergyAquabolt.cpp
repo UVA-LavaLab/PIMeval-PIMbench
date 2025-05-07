@@ -38,6 +38,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
   uint64_t totalOp = 0;
   switch (cmdType)
   {
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+    {
+      numberOfOperationPerElement = 1; // Assuming each 8-bit element allocates one ALU word 
+    }
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
     { 
@@ -249,3 +254,4 @@ pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjIn
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
+

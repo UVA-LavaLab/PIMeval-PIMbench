@@ -9,14 +9,13 @@
 #include <time.h>
 #include <math.h>
 #include <inttypes.h>
-#include <chrono>
 #include <iostream>
 #include <iomanip>
 #include <vector>
 #include <random>
 #include <getopt.h>
 #include <cuda_runtime.h>
-#define MEASUREMENT_TIMES (1 << 4) 
+#include "utilBaselines.h"
 
 uint8_t ctx_key[32]; 
 uint8_t ctx_enckey[32]; 
@@ -108,10 +107,10 @@ __constant__ static const uint8_t sboxinv[256] = {
 typedef struct Params
 {
     uint64_t inputSize;
-    char *keyFile;
-    char *inputFile;
-    char *cipherFile;
-    char *outputFile;
+    const char *keyFile;
+    const char *inputFile;
+    const char *cipherFile;
+    const char *outputFile;
     bool shouldVerify;
 } Params;
 
@@ -284,7 +283,7 @@ __device__ void aes_mixColumns_inv(uint8_t *buf){
 
 // add expand key operation
 __device__ __host__ void aes_expandEncKey(uint8_t *k, uint8_t *rc, const uint8_t *sb){
-  register uint8_t i;
+  uint8_t i;
 
   k[0] ^= sb[k[29]] ^ (*rc);
   k[1] ^= sb[k[30]];
@@ -347,7 +346,7 @@ __device__ void aes_expandDecKey(uint8_t *k, uint8_t *rc){
 // key initition
 void aes256_init(uint8_t *k){
   uint8_t rcon = 1;
-  register uint8_t i;
+  uint8_t i;
 
   for (i = 0; i < sizeof(ctx_key); i++){
     ctx_enckey[i] = ctx_deckey[i] = k[i];
@@ -470,7 +469,24 @@ void encryptdemo(uint8_t key[AES_KEY_BUFFER_SIZE], uint8_t *buf, unsigned long n
 
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
-  aes256_encrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_enckey_d, ctx_key_d);
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+        aes256_encrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_enckey_d, ctx_key_d);
+        cudaDeviceSynchronize(); // ensure all are done
+    });
+
+
+  // Check for kernel launch errors
+  errorCode = cudaGetLastError();
+  if (errorCode != cudaSuccess)
+  {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  printf("\nINFO: Execution time of encryption = %f ms\n", timeElapsed);
+  printf("INFO: Average Power = %f mW\n", avgPower);
+  printf("INFO: Energy Consumption = %f mJ\n", energy);
+
 
   errorCode = cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
   if (errorCode != cudaSuccess)
@@ -548,7 +564,23 @@ void decryptdemo(uint8_t key[AES_KEY_BUFFER_SIZE], uint8_t *buf, unsigned long n
 
   dim3 dimBlock(ceil((double)numbytes / (double)(THREADS_PER_BLOCK * AES_BLOCK_SIZE)));
   dim3 dimGrid(THREADS_PER_BLOCK);
-  aes256_decrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_deckey_d, ctx_key_d);
+  auto [timeElapsed, avgPower, energy] = measureCUDAPowerAndElapsedTime([&]() {
+        aes256_decrypt_ecb<<<dimBlock, dimGrid>>>(buf_d, numbytes, ctx_deckey_d, ctx_key_d);
+        cudaDeviceSynchronize(); // ensure all are done
+    });
+
+
+  // Check for kernel launch errors
+  errorCode = cudaGetLastError();
+  if (errorCode != cudaSuccess)
+  {
+      cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
+      exit(1);
+  }
+
+  printf("\nINFO: Execution time of decryption = %f ms\n", timeElapsed);
+  printf("INFO: Average Power = %f mW\n", avgPower);
+  printf("INFO: Energy Consumption = %f mJ\n", energy);
 
   errorCode = cudaMemcpy(buf, buf_d, numbytes, cudaMemcpyDeviceToHost);
   if (errorCode != cudaSuccess)
@@ -604,13 +636,7 @@ void test_encryptdemo_parallel() {
     aes256_init(key);
 
     // Start encrypt in CPU
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        encryptdemo(key, buffer.data(), SIZE);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
-    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
+    encryptdemo(key, buffer.data(), SIZE);
 
 }
 
@@ -639,13 +665,7 @@ void test_decryptdemo_parallel() {
 
 
     // Start encrypt in CPU
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        decryptdemo(key, buffer.data(), SIZE);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
-    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(6) << elapsedTime.count() << " ms." << std::endl;
+    decryptdemo(key, buffer.data(), SIZE);
 
 }
 
@@ -653,7 +673,7 @@ int main(int argc, char *argv[]) {
     struct Params params = getInputParams(argc, argv);
     
     FILE *file; uint8_t *buf; 
-    int padding;
+    unsigned long long padding;
     uint8_t key[AES_KEY_BUFFER_SIZE];
     unsigned long long numbytes; 
     int deviceCount = 0;
@@ -735,21 +755,14 @@ int main(int argc, char *argv[]) {
     // Calculate padding.
     padding = AES_BLOCK_SIZE - (numbytes % AES_BLOCK_SIZE);
     numbytes += padding;
-    printf("Padding file with %d bytes for a new size of %lu\n", padding, numbytes);
+    printf("Padding file with %llu bytes for a new size of %llu\n", padding, numbytes);
 
     // This is to force nvcc to put the GPU initialization here.
     GPU_init<<<1, 1>>>();
   
     aes256_init(key);
     // Encryption.
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        encryptdemo(key, buf, numbytes);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsedTime = (end - start) / MEASUREMENT_TIMES;
-    std::cout << "Encryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
-    std::cout << "GPU encryption throughput: " << std::fixed << std::setprecision(3) << (numbytes / elapsedTime.count() * 1000) << " bytes/second\n";
+    encryptdemo(key, buf, numbytes);
 
     // Write the ciphertext to file
     file = fopen(params.cipherFile, "w");
@@ -762,14 +775,7 @@ int main(int argc, char *argv[]) {
     fclose(file);
 
     // Decryption.
-    start = std::chrono::high_resolution_clock::now();
-    for (int k = 0; k < MEASUREMENT_TIMES; k++) {
-        decryptdemo(key, buf, numbytes);
-    }
-    end = std::chrono::high_resolution_clock::now();
-    elapsedTime = (end - start) / MEASUREMENT_TIMES;
-    std::cout << "Decryption Duration: " << std::fixed << std::setprecision(3) << elapsedTime.count() << " ms." << std::endl;
-    std::cout << "GPU decryption throughput: " << std::fixed << std::setprecision(3) << (numbytes / elapsedTime.count() * 1000) << " bytes/second\n";
+    decryptdemo(key, buf, numbytes);
 
     // Write to output file
     file = fopen(params.outputFile, "w");

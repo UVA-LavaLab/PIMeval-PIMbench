@@ -80,6 +80,18 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       totalOp = obj.getNumElements();
       break;
     }
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+    {
+      // NOTE:
+      // Although the Processing Element (PE) is 32 bits wide and can theoretically perform four 8-bit operations in parallel,
+      // in the case of these LUT-based commands (e.g., AES S-box or inverse S-box), each operation is treated as a single,
+      // independent access driven by an 8-bit input.
+      //
+      // If the operation instead made full use of the 32-bit PE width to process four 8-bit inputs in parallel
+      // then numberOfOperationPerElement would be 0.25. However, such parallelism is not modeled here due to the limitation of the LUT.
+      numberOfOperationPerElement = 1;
+    }
     case PimCmdEnum::AND_SCALAR:
     case PimCmdEnum::OR_SCALAR:
     case PimCmdEnum::XOR_SCALAR:
@@ -103,6 +115,10 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       mjEnergy += (m_eW * maxGDLItr * (numPass-1) * numBankPerChip + (m_eW * minGDLItr * numBankPerChip));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       totalOp = obj.getNumElements();
+      //
+      // Therefore, for the uint8 data type, we set numberOfOperationPerElement = 1 because each 8-bit input
+      // corresponds to one logical LUT access, and we assume that this access is not vectorized across multiple inputs
+      // within a single PE execution. In other words, we model the cost at the granularity of one element per operation.
       break;
     }
     default:

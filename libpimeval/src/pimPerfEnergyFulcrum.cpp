@@ -126,6 +126,12 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       totalOp = obj.getNumElements();
       break;
     }
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+      msRuntime = 1e10;
+      mjEnergy = 999999999.9;
+      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      break;
     default:
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;

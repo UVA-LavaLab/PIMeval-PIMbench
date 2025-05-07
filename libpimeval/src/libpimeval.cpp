@@ -462,6 +462,22 @@ pimCondSelectScalar(PimObjId condBool, PimObjId src1, uint64_t scalarBits, PimOb
   return ok ? PIM_OK : PIM_ERROR;
  }
 
+//! @brief  AES Sbox: dest[i] = lut[src[i]]
+PimStatus 
+pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+{
+  bool ok = pimSim::get()->pimAesSbox(src, dest, lut);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+//! @brief  AES Sbox: dest[i] = lut[src[i]] (similar to AES sbox, different in perforamance and energy model for the bit-serial architecture)
+PimStatus 
+pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+{
+  bool ok = pimSim::get()->pimAesInverseSbox(src, dest, lut);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 // Implementation of min reduction
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
     bool ok = pimSim::get()->pimRedMin(src, min, idxBegin, idxEnd);

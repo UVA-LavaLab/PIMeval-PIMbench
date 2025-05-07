@@ -69,6 +69,8 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::COND_BROADCAST, "cond_broadcast" },
     { PimCmdEnum::COND_SELECT, "cond_select" },
     { PimCmdEnum::COND_SELECT_SCALAR, "cond_select_scalar" },
+    { PimCmdEnum::AES_SBOX, "aes_sbox" },
+    { PimCmdEnum::AES_INVERSE_SBOX, "aes_inverse_sbox" },
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::REDMIN, "redmin" },
@@ -446,6 +448,18 @@ pimCmdFunc1::sanityCheck() const
       if (m_scalarValue >= objDest.getBitsPerElement(PimBitWidth::SIM)) {
         std::printf("PIM-Error: PIM command %s bit index %llu out of range of %s type\n", getName().c_str(),
                     m_scalarValue, pimUtils::pimDataTypeEnumToStr(objDest.getDataType()).c_str());
+        return false;
+      }
+      break;
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+      if (objSrc.getDataType() != PIM_UINT8) {
+        return false;
+      }
+      if (objDest.getDataType() != PIM_UINT8) {
+        return false;
+      }
+      if (m_lut.size() != 256) {
         return false;
       }
       break;
@@ -931,7 +945,7 @@ pimCmdCond::updateStats() const
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
-
+ 
 //! @brief  PIM CMD: redsum non-ranged/ranged - sanity check
 template <typename T> bool
 pimCmdReduction<T>::sanityCheck() const
