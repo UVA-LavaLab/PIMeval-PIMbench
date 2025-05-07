@@ -6,6 +6,7 @@
 
 #include "pimSim.h"
 #include "pimCmd.h"
+#include "pimCmdFuse.h"
 #include "pimParamsDram.h"
 #include "pimStats.h"
 #include "pimUtils.h"
@@ -889,6 +890,15 @@ pimSim::pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t
   pimPerfMon perfMon("pimAesInverseSbox");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::AES_INVERSE_SBOX, src, dest, lut);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimFuse(PimProg prog)
+{
+  pimPerfMon perfMon("pimFuse");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFuse>(prog);
   return m_device->executeCmd(std::move(cmd));
 }
 

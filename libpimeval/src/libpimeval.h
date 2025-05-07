@@ -9,7 +9,8 @@
 
 #include <cstdint>
 #include <cstdarg>
-#include <vector> 
+#include <vector>
+#include <functional>
 
 //! @brief  PIM API return status
 enum PimStatus {
@@ -202,6 +203,18 @@ PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 // However, it is the user's responsibility to provide the appropriate LUT to ensure correct functionality.
 PimStatus pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
 PimStatus pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+
+////////////////////////////////////////////////////////////////////////////////
+// Experimental Feature: PIM API Fusion                                       //
+////////////////////////////////////////////////////////////////////////////////
+struct PimProg {
+  template <typename... Args>
+  void add(PimStatus(*api)(Args...), Args... args) {
+    m_apis.push_back([=]() { return api(args...); });
+  }
+  std::vector<std::function<PimStatus()>> m_apis;
+};
+PimStatus pimFuse(PimProg prog);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Warning: Avoid using below customized APIs for functional simulation       //
