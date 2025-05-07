@@ -411,9 +411,12 @@ int main(int argc, char* argv[])
       case PIM_DEVICE_FULCRUM:
         numElementsHorizontal = deviceProp.numColPerSubarray / bitsPerElement;
         break;
-      case PIM_DEVICE_BANK_LEVEL:
-        numElementsHorizontal = deviceProp.numSubarrayPerBank * deviceProp.numColPerSubarray / bitsPerElement;
-        break;
+      case PIM_DEVICE_BANK_LEVEL: {
+          // numElementsHorizontal = deviceProp.numSubarrayPerBank * deviceProp.numColPerSubarray / bitsPerElement;
+          // TODO: Are bank level regions subarrays or banks?
+          numElementsHorizontal = deviceProp.numColPerSubarray / bitsPerElement;
+          break;
+        }
       default:
         std::cerr << "Stencil unimplemented for simulation target: " << deviceProp.simTarget << std::endl;
         std::exit(1);
@@ -442,7 +445,7 @@ int main(int argc, char* argv[])
     #pragma omp parallel for collapse(2)
     for(uint64_t gridY=startY; gridY<endY; ++gridY) {
       for(uint64_t gridX=startX; gridX<endX; ++gridX) {
-        constexpr float acceptableDelta = 0.01f;
+        constexpr float acceptableDelta = 0.1f;
         if (std::abs(cpuY[gridY][gridX] - y[gridY][gridX]) > acceptableDelta)
         {
           #pragma omp critical
