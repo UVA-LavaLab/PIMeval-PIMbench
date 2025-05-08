@@ -38,14 +38,22 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
   uint64_t totalOp = 0;
   switch (cmdType)
   {
-    case PimCmdEnum::AES_SBOX:
-    case PimCmdEnum::AES_INVERSE_SBOX:
-    {
-      numberOfOperationPerElement = 1; // Assuming each 8-bit element allocates one ALU word 
-    }
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
     { 
+      msRead = m_tR;
+      msWrite = m_tW;
+      msCompute = (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) + ((maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1));
+      msRuntime = msRead + msWrite + msCompute;
+      mjEnergy = (m_eAP * 2 + (m_eR * 2 + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCores * numPass;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+    {
+      numberOfOperationPerElement = 1; // Assuming each 8-bit element allocates one ALU word
       msRead = m_tR;
       msWrite = m_tW;
       msCompute = (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) + ((maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1));
