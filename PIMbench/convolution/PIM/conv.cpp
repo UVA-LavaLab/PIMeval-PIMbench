@@ -464,9 +464,6 @@ int main(int argc, char *argv[])
 
   std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
   
-
-  std::cout << "Starting convolution\n\n";
-  
   std::vector<std::vector<std::vector<int>>> resultMatrix;
   resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
 
