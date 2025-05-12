@@ -19,7 +19,8 @@ using namespace std;
 typedef vector<vector<vector<int>>> Image3D;
 
 // Params ---------------------------------------------------------------------
-typedef struct Params {
+typedef struct Params
+{
   uint64_t row, column, dim, stride, kernelHeight, kernelWidth, kernelDim,
       padding;
   char *kernelMatrixFile;
@@ -29,7 +30,8 @@ typedef struct Params {
   bool moreDebugPrints;
 } Params;
 
-void usage() {
+void usage()
+{
   fprintf(stderr, "\nUsage:  ./conv.out [options]"
                   "\n"
                   "\n    -r    row (default=224)"
@@ -50,7 +52,8 @@ void usage() {
                   "\n");
 }
 
-struct Params getInputParams(int argc, char **argv) {
+struct Params getInputParams(int argc, char **argv)
+{
   struct Params p;
   p.row = 224;
   p.column = 224;
@@ -67,8 +70,10 @@ struct Params getInputParams(int argc, char **argv) {
   p.moreDebugPrints = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "r:c:d:s:l:w:v:z:f:i:o:p:m:")) >= 0) {
-    switch (opt) {
+  while ((opt = getopt(argc, argv, "r:c:d:s:l:w:v:z:f:i:o:p:m:")) >= 0)
+  {
+    switch (opt)
+    {
     case 'h':
       usage();
       exit(0);
@@ -124,17 +129,22 @@ struct Params getInputParams(int argc, char **argv) {
 void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow,
                          int filterColumn, int stride,
                          std::vector<std::vector<int>> &inputMatrix,
-                         std::vector<std::vector<int>> &decompMatrix) {
+                         std::vector<std::vector<int>> &decompMatrix)
+{
   decompMatrix.resize(filterRow * filterColumn,
                       std::vector<int>(matrixRow * matrixColumn, 0));
   int colIdx = 0, total = 0;
-  for (uint64_t i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride) {
+  for (uint64_t i = 0; i < (inputMatrix.size() - filterRow + 1); i += stride)
+  {
     for (uint64_t j = 0; j < (inputMatrix[i].size() - filterColumn + 1);
-         j += stride) {
+         j += stride)
+    {
       int rowIDX = 0;
       total += 1;
-      for (uint64_t k = i; k < i + filterRow; k++) {
-        for (uint64_t l = j; l < j + filterColumn; l++) {
+      for (uint64_t k = i; k < i + filterRow; k++)
+      {
+        for (uint64_t l = j; l < j + filterColumn; l++)
+        {
           decompMatrix[rowIDX++][colIdx] = inputMatrix[k][l];
         }
       }
@@ -146,21 +156,24 @@ void getDecomposedMatrix(int matrixRow, int matrixColumn, int filterRow,
 void performConv(std::vector<std::vector<int>> &filterMatrix,
                  std::vector<std::vector<int>> &inputMatrix,
                  std::vector<int> &outputVector, uint64_t numRequiredPIMRows,
-                 int numRequiredPIMCol, bool moreDebugPrints) {
+                 int numRequiredPIMCol, bool moreDebugPrints)
+{
 
   if (filterMatrix.empty() || inputMatrix.empty())
     return;
 
   PimObjId filterObject =
       pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
-  if (filterObject == -1) {
+  if (filterObject == -1)
+  {
     std::cout << "Abort: pimAlloc failed for obj1" << std::endl;
     return;
   }
 
   PimStatus status =
       pimCopyHostToDevice((void *)outputVector.data(), filterObject);
-  if (status != PIM_OK) {
+  if (status != PIM_OK)
+  {
     std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects "
                  "at iteration: "
               << std::endl;
@@ -168,7 +181,8 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
   }
 
   PimObjId matrixObject = pimAllocAssociated(filterObject, PIM_INT32);
-  if (matrixObject == -1) {
+  if (matrixObject == -1)
+  {
     std::cout
         << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: "
         << matrixObject << std::endl;
@@ -176,11 +190,14 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
   }
 
   int col = filterMatrix[0].size();
-  for (uint64_t j = 0; j < inputMatrix.size(); j += numRequiredPIMRows) {
-    for (uint64_t i = 0; i < numRequiredPIMRows; i++) {
+  for (uint64_t j = 0; j < inputMatrix.size(); j += numRequiredPIMRows)
+  {
+    for (uint64_t i = 0; i < numRequiredPIMRows; i++)
+    {
       PimStatus status =
           pimCopyHostToDevice((void *)inputMatrix[i + j].data(), matrixObject);
-      if (status != PIM_OK) {
+      if (status != PIM_OK)
+      {
         std::cout << "Abort: pimCopyHostToDevice from inputMatrix to "
                      "matrixObjects at iteration: "
                   << i << std::endl;
@@ -189,7 +206,8 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
 
       status = pimScaledAdd(matrixObject, filterObject, filterObject,
                             filterMatrix[i / col][i % col]);
-      if (status != PIM_OK) {
+      if (status != PIM_OK)
+      {
         std::cout << "Abort" << std::endl;
         return;
       }
@@ -199,7 +217,8 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
   outputVector.resize(numRequiredPIMCol);
 
   status = pimCopyDeviceToHost(filterObject, outputVector.data());
-  if (status != PIM_OK) {
+  if (status != PIM_OK)
+  {
     std::cout << "Abort: pimCopyDeviceToHost failed between filterObjects[0] "
                  "and outputVector"
               << std::endl;
@@ -210,57 +229,65 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
   pimFree(matrixObject);
 }
 
-void aggregate(std::vector<int> &inputVector, std::vector<int> &outputVector,
-               unsigned hopSize) {
+void aggregate(std::vector<int> &inputVector, std::vector<int> &outputVector, unsigned hopSize)
+{
 
-  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, hopSize, PIM_INT32);
-  if (srcObj == -1) {
-    std::cout << "Abort: pimAlloc failed for obj1" << std::endl;
-    return;
-  }
+  uint64_t numChunks = inputVector.size() / hopSize;
+  uint64_t remChunk = numChunks;
+  while (remChunk > 1)
+  {
+    uint64_t reduceChunks = remChunk;
+    std::vector<int> tempVector(hopSize, 0);
 
-  PimObjId dstObj = pimAllocAssociated(srcObj, PIM_INT32);
-  if (dstObj == -1) {
-    std::cout
-        << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: "
-        << dstObj << std::endl;
-    return;
-  }
+    // If remChunk is odd, save the last chunk and exclude from current level reduction
+    if (remChunk % 2) {
+      std::copy(inputVector.end() - hopSize, inputVector.end(), tempVector.begin());
+      reduceChunks = remChunk - 1;
+    }
 
-  PimStatus status = pimCopyHostToDevice((void *)inputVector.data(), dstObj);
-  if (status != PIM_OK) {
-    std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects "
-                 "at iteration: "
-              << std::endl;
-    return;
-  }
+    uint64_t length = (reduceChunks / 2) * hopSize;
 
-  for (uint64_t idx = hopSize; idx < inputVector.size(); idx += hopSize) {
-    status = pimCopyHostToDevice(
-        (void *)(inputVector.data() + idx), srcObj);
-    if (status != PIM_OK) {
-      std::cout << "Abort: pimCopyHostToDevice from inputMatrix to "
-                   "matrixObjects at iteration: "
-                << std::endl;
+    PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, length, PIM_INT32);
+    PimObjId dstObj = pimAllocAssociated(srcObj, PIM_INT32);
+
+    if (srcObj == -1 || dstObj == -1) {
+      std::cerr << "Abort: pimAlloc failed\n";
       return;
     }
-    status = pimAdd(srcObj, dstObj, dstObj);
-    if (status != PIM_OK) {
-      std::cout << "Abort" << std::endl;
-      return;
+
+    pimCopyHostToDevice((void *)inputVector.data(), srcObj);                // left halves
+    pimCopyHostToDevice((void *)(inputVector.data() + length), dstObj);       // right halves
+
+    pimAdd(srcObj, dstObj, dstObj);
+    inputVector.resize(length);
+    pimCopyDeviceToHost(dstObj, inputVector.data());
+
+    pimFree(srcObj);
+    pimFree(dstObj);
+
+    // If we saved a leftover chunk, add it to the result
+    if (reduceChunks != remChunk) {
+      PimObjId finalSrc = pimAlloc(PIM_ALLOC_AUTO, hopSize, PIM_INT32);
+      PimObjId finalDst = pimAllocAssociated(finalSrc, PIM_INT32);
+
+      if (finalSrc == -1 || finalDst == -1) {
+        std::cerr << "Abort: final PIM alloc failed\n";
+        return;
+      }
+
+      pimCopyHostToDevice(inputVector.data(), finalSrc);
+      pimCopyHostToDevice(tempVector.data(), finalDst);
+      pimAdd(finalSrc, finalDst, finalDst);
+      pimCopyDeviceToHost(finalDst, inputVector.data());
+
+      pimFree(finalSrc);
+      pimFree(finalDst);
     }
+
+    remChunk = reduceChunks / 2;
   }
 
-  status = pimCopyDeviceToHost(dstObj, outputVector.data());
-  if (status != PIM_OK) {
-    std::cout << "Abort: pimCopyDeviceToHost failed between filterObjects[0] "
-                 "and outputVector"
-              << std::endl;
-    return;
-  }
-  // std::cout << "Total Add: " << id << "\n";
-  pimFree(srcObj);
-  pimFree(dstObj);
+  outputVector = inputVector;
 }
 
 // Function to perform 3D convolution on CPU and compare the results with PIM
@@ -268,7 +295,8 @@ void aggregate(std::vector<int> &inputVector, std::vector<int> &outputVector,
 void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
                    std::vector<std::vector<std::vector<int>>> &kernel,
                    int padding, int stride, bool moreDebugPrints,
-                   std::vector<std::vector<std::vector<int>>> &PIMResult) {
+                   std::vector<std::vector<std::vector<int>>> &PIMResult)
+{
 
   // Compute input, kernel and output dimensions
   int inputDepth = input.size();
@@ -283,7 +311,8 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
       kernel.size(); // Output depth matches the number of filters in the kernel
 
   // Check if output dimensions are within reasonable limits
-  if (outputHeight <= 0 || outputWidth <= 0 || outputDepth <= 0) {
+  if (outputHeight <= 0 || outputWidth <= 0 || outputDepth <= 0)
+  {
     std::cerr << "Invalid output dimensions." << std::endl;
     exit(0);
   }
@@ -295,13 +324,19 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
   // Perform convolution
   std::cout << "Performing convolution on CPU " << std::endl;
 #pragma omp parallel for collapse(3)
-  for (int k = 0; k < kernelDepth; ++k) {
-    for (int i = 0; i < outputHeight; ++i) {
-      for (int j = 0; j < outputWidth; ++j) {
+  for (int k = 0; k < kernelDepth; ++k)
+  {
+    for (int i = 0; i < outputHeight; ++i)
+    {
+      for (int j = 0; j < outputWidth; ++j)
+      {
         int convSum = 0;
-        for (int d = 0; d < inputDepth; ++d) {
-          for (int h = 0; h < kernelHeight; ++h) {
-            for (int w = 0; w < kernelWidth; ++w) {
+        for (int d = 0; d < inputDepth; ++d)
+        {
+          for (int h = 0; h < kernelHeight; ++h)
+          {
+            for (int w = 0; w < kernelWidth; ++w)
+            {
               convSum +=
                   kernel[k][h][w] * input[d][i * stride + h][j * stride + w];
             }
@@ -315,11 +350,16 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
   int mismatch_counter = 0;
   std::cout << "Comparing PIM convolution results with CPU results "
             << std::endl;
-  for (uint64_t i = 0; i < output.size(); ++i) {
-    for (uint64_t j = 0; j < output[0].size(); ++j) {
-      for (uint64_t k = 0; k < output[0][0].size(); ++k) {
-        if (output[i][j][k] != PIMResult[i][j][k]) {
-          if (moreDebugPrints == true) {
+  for (uint64_t i = 0; i < output.size(); ++i)
+  {
+    for (uint64_t j = 0; j < output[0].size(); ++j)
+    {
+      for (uint64_t k = 0; k < output[0][0].size(); ++k)
+      {
+        if (output[i][j][k] != PIMResult[i][j][k])
+        {
+          if (moreDebugPrints == true)
+          {
             std::cout << "Mismatch between PIM and CPU results at index: " << i
                       << ", " << j << ", " << k
                       << "; PIM result: " << PIMResult[i][j][k]
@@ -331,47 +371,59 @@ void VerifyWithCPU(std::vector<std::vector<std::vector<int>>> &input,
     }
   }
 
-  if (moreDebugPrints == true) {
+  if (moreDebugPrints == true)
+  {
     std::cout << "Ouput matrix from CPU:" << std::endl;
-    for (uint64_t i = 0; i < output.size(); ++i) {
+    for (uint64_t i = 0; i < output.size(); ++i)
+    {
       std::cout << "Layer " << i << ":\n";
       printMatrix(output[i]);
       std::cout << "\n";
     }
   }
 
-  if (mismatch_counter == 0) {
+  if (mismatch_counter == 0)
+  {
     std::cout << "Success: PIM results match with CPU" << std::endl;
-  } else {
+  }
+  else
+  {
     std::cout << "Failure: PIM results do not match with CPU, mismatch at "
               << mismatch_counter << " indices" << std::endl;
     exit(0);
   }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   struct Params params = getInputParams(argc, argv);
   std::vector<std::vector<std::vector<int>>> inputMatrix;
   std::vector<std::vector<std::vector<int>>> kernelMatrix;
 
-  if (params.imageMatrixFile == nullptr) {
+  if (params.imageMatrixFile == nullptr)
+  {
     inputMatrix.resize(params.dim);
-    for (uint64_t i = 0; i < params.dim; i++) {
+    for (uint64_t i = 0; i < params.dim; i++)
+    {
       getMatrix(params.row, params.column, params.padding, inputMatrix[i]);
     }
-  } else {
-    std::cerr << "Reading from the input file is not implemented yet for the "
-                 "input matrix"
-              << std::endl;
+  }
+  else
+  {
+    std::cerr << "Reading from the input file is not implemented yet for the input matrix" << std::endl;
     return 1;
   }
 
-  if (params.kernelMatrixFile == nullptr) {
+  if (params.kernelMatrixFile == nullptr)
+  {
     kernelMatrix.resize(params.kernelDim);
-    for (auto &mat : kernelMatrix) {
+    for (auto &mat : kernelMatrix)
+    {
       getMatrix(params.kernelHeight, params.kernelWidth, 0, mat);
     }
-  } else {
+  }
+  else
+  {
     std::cerr << "Reading from the input file is not implemented yet for the "
                  "kernel matrix"
               << std::endl;
@@ -383,7 +435,8 @@ int main(int argc, char *argv[]) {
 
   PimDeviceProperties deviceProp;
   PimStatus status = pimGetDeviceProperties(&deviceProp);
-  if (status != PIM_OK) {
+  if (status != PIM_OK)
+  {
     std::cout << "Abort: pimGetDeviceProperties failed" << std::endl;
     return 1;
   }
@@ -409,33 +462,42 @@ int main(int argc, char *argv[]) {
           : params.dim;
   int numOfPIMRow = params.kernelHeight * params.kernelWidth;
 
-  std::chrono::duration<double, std::milli> hostElapsedTime =
-      std::chrono::duration<double, std::milli>::zero();
+  std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+  
+
+  std::cout << "Starting convolution\n\n";
+  
   std::vector<std::vector<std::vector<int>>> resultMatrix;
-  resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(
-                                     outMatRow, std::vector<int>(outMatCol)));
-  for (uint64_t i = 0; i < params.kernelDim; i++) {
+  resultMatrix.resize(outMatDim, std::vector<std::vector<int>>(outMatRow, std::vector<int>(outMatCol)));
+
+
+  for (uint64_t i = 0; i < params.kernelDim; i++)
+  {
     int tempcol = 0;
     std::vector<int> dstVec(outMatRow * outMatCol);
     std::vector<int> outVector(outMatRow * outMatCol * inputDepth, 0);
-    for (uint64_t j = 0; j < params.dim; j += numOfMatPerRow) {
+    for (uint64_t j = 0; j < params.dim; j += numOfMatPerRow)
+    {
       uint64_t matChunk = (numOfMatPerRow + j) <= params.dim
                               ? (numOfMatPerRow + j)
                               : params.dim;
 
       std::vector<std::vector<int>> mergedMat(numOfPIMRow);
       std::vector<std::vector<int>> decompMat;
-      for (uint64_t k = j; k < matChunk; k++) {
+      for (uint64_t k = j; k < matChunk; k++)
+      {
         getDecomposedMatrix(params.row, params.column, kernelHeight,
                             kernelWidth, params.stride, inputMatrix[k],
                             decompMat);
-        if (params.moreDebugPrints == true) {
+        if (params.moreDebugPrints == true)
+        {
           // Debug print
           std::cout << "Decomposed Matrix:" << std::endl;
           printMatrix(decompMat);
         }
         // Merge the matrices
-        for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
+        for (uint64_t idx = 0; idx < mergedMat.size(); idx++)
+        {
           mergedMat[idx].insert(mergedMat[idx].end(),
                                 std::make_move_iterator(decompMat[idx].begin()),
                                 std::make_move_iterator(decompMat[idx].end()));
@@ -443,7 +505,8 @@ int main(int argc, char *argv[]) {
         tempcol = mergedMat[0].size();
       }
 
-      if (params.moreDebugPrints == true) {
+      if (params.moreDebugPrints == true)
+      {
         // Debug print
         std::cout << "Merged Matrix (Iteration " << i << ", Chunk " << j
                   << "):" << std::endl;
@@ -452,13 +515,15 @@ int main(int argc, char *argv[]) {
 
       performConv(kernelMatrix[i], mergedMat, outVector, numOfPIMRow, tempcol,
                   params.moreDebugPrints);
-      if (params.moreDebugPrints == true) {
+      if (params.moreDebugPrints == true)
+      {
         // Debug print
         std::cout << "Output Matrix from performConv():" << std::endl;
         printVector(outVector);
       }
 
-      if (params.moreDebugPrints == true) {
+      if (params.moreDebugPrints == true)
+      {
         // Debug print
         std::cout << "Intermediate dstVec (Iteration " << i << ", Chunk " << j
                   << "):" << std::endl;
@@ -468,20 +533,24 @@ int main(int argc, char *argv[]) {
     int hopSize = outMatCol * outMatRow;
     aggregate(outVector, dstVec, hopSize);
     int ddx = 0;
-    for (int rdx = 0; rdx < outMatRow; ++rdx) {
-      for (int cdx = 0; cdx < outMatCol; ++cdx) {
+    for (int rdx = 0; rdx < outMatRow; ++rdx)
+    {
+      for (int cdx = 0; cdx < outMatCol; ++cdx)
+      {
         resultMatrix[i][rdx][cdx] = dstVec[ddx++];
       }
     }
 
-    if (params.moreDebugPrints == true) {
+    if (params.moreDebugPrints == true)
+    {
       // Debug print
       std::cout << "Result matrix from PIM< (Kernel " << i << "):" << std::endl;
       printMatrix(resultMatrix[i]);
     }
   }
 
-  if (params.shouldVerify == true) {
+  if (params.shouldVerify == true)
+  {
     // Perform convolution on CPU and compare results with PIM
     VerifyWithCPU(inputMatrix, kernelMatrix, params.padding, params.stride,
                   params.moreDebugPrints, resultMatrix);
