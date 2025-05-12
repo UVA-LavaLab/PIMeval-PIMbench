@@ -812,17 +812,21 @@ int main(int argc, char *argv[])
   std::cout << "........ending dense3........\n";
 
   // perform softmax in host
-  std::vector<double> resultVector;  
-  std::vector<float> denseOutput3_f;
-  denseOutput3_f = fixedToFloat(denseOutput3); 
-  auto start = std::chrono::high_resolution_clock::now();
-  if (params.shouldVerify == true) {
-    softmaxOnHost(denseOutput3_f, resultVector); 
-  } else {
-    softmaxOnHost(denseOutput3, resultVector);
-  }
-  auto end = std::chrono::high_resolution_clock::now();
-  hostElapsedTime += (end - start);
+  // std::vector<double> resultVector;  
+  // std::vector<float> denseOutput3_f;
+  // denseOutput3_f = fixedToFloat(denseOutput3); 
+  // auto start = std::chrono::high_resolution_clock::now();
+  // if (params.shouldVerify == true) {
+  //   softmaxOnHost(denseOutput3_f, resultVector); 
+  // } else {
+  //   softmaxOnHost(denseOutput3, resultVector);
+  // }
+  // auto end = std::chrono::high_resolution_clock::now();
+  // hostElapsedTime += (end - start);
+  std::vector<int> resultVector;  
+  std::vector<float> resultVector_f;
+  softMaxPIM(denseOutput3, resultVector);
+  resultVector_f = fixedToFloat(resultVector);
   std::cout << "Dimensions of the softmax output: " << resultVector.size() <<  std::endl;
 
   // *********************************************************************************************************************************
