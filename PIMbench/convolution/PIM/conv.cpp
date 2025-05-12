@@ -159,33 +159,26 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
                  int numRequiredPIMCol, bool moreDebugPrints)
 {
 
-  if (filterMatrix.empty() || inputMatrix.empty())
-    return;
+  if (filterMatrix.empty() || inputMatrix.empty()) return;
 
-  PimObjId filterObject =
-      pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
+  PimObjId filterObject = pimAlloc(PIM_ALLOC_AUTO, numRequiredPIMCol, PIM_INT32);
   if (filterObject == -1)
   {
     std::cout << "Abort: pimAlloc failed for obj1" << std::endl;
     return;
   }
 
-  PimStatus status =
-      pimCopyHostToDevice((void *)outputVector.data(), filterObject);
+  PimStatus status = pimCopyHostToDevice((void *)outputVector.data(), filterObject);
   if (status != PIM_OK)
   {
-    std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObjects "
-                 "at iteration: "
-              << std::endl;
+    std::cout << "Abort: pimCopyHostToDevice from inputMatrix to matrixObject" << std::endl;
     return;
   }
 
   PimObjId matrixObject = pimAllocAssociated(filterObject, PIM_INT32);
   if (matrixObject == -1)
   {
-    std::cout
-        << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: "
-        << matrixObject << std::endl;
+    std::cout << "Abort: pimAllocAssociated failed obj (matrixObjects) at iteration: " << matrixObject << std::endl;
     return;
   }
 
@@ -194,8 +187,7 @@ void performConv(std::vector<std::vector<int>> &filterMatrix,
   {
     for (uint64_t i = 0; i < numRequiredPIMRows; i++)
     {
-      PimStatus status =
-          pimCopyHostToDevice((void *)inputMatrix[i + j].data(), matrixObject);
+      PimStatus status = pimCopyHostToDevice((void *)inputMatrix[i + j].data(), matrixObject);
       if (status != PIM_OK)
       {
         std::cout << "Abort: pimCopyHostToDevice from inputMatrix to "
@@ -255,7 +247,7 @@ void aggregate(std::vector<int> &inputVector, std::vector<int> &outputVector, un
       return;
     }
 
-    pimCopyHostToDevice((void *)inputVector.data(), srcObj);                // left halves
+    PimStatus status = pimCopyHostToDevice((void *)inputVector.data(), srcObj);                // left halves
     pimCopyHostToDevice((void *)(inputVector.data() + length), dstObj);       // right halves
 
     pimAdd(srcObj, dstObj, dstObj);
