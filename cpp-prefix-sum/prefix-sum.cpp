@@ -317,6 +317,7 @@ int main(int argc, char *argv[])
         max--;
     }
 
+    
     for (uint64_t i = 0; i < host_device_merged.size(); i++) {  // Merge results 
         host_device_merged[i] += input[i];
     }
