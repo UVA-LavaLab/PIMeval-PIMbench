@@ -149,35 +149,35 @@ void prefixSum(vector<int> &even, vector<int> &odd,vector<int> &deviceoutput, ui
 void downsweep(vector<int> &odd2, vector<int> &even2, uint64_t len)
 {
  
-  PimObjId evenObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
-  if (evenObj == -1)
+  PimObjId d_evenObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
+  if (d_evenObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
     return;
   }
 
-  PimStatus status = pimCopyHostToDevice((void *)even2.data(), evenObj);
+  PimStatus status = pimCopyHostToDevice((void *)even2.data(), d_evenObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
     return;
   }
 
-  PimObjId oddObj = pimAllocAssociated(evenObj, PIM_INT32);
-  if (evenObj == -1)
+  PimObjId d_oddObj = pimAllocAssociated(d_evenObj, PIM_INT32);
+  if (d_evenObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
     return;
   }
 
-  status = pimCopyHostToDevice((void *)odd2.data(), oddObj);
+  status = pimCopyHostToDevice((void *)odd2.data(), d_oddObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
   } 
   
   //PIM Add
-  status = pimAdd(evenObj, oddObj, evenObj);
+  status = pimAdd(d_evenObj, d_oddObj, d_evenObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to perform PIM addition." << std::endl;
@@ -185,7 +185,7 @@ void downsweep(vector<int> &odd2, vector<int> &even2, uint64_t len)
   }
  
   //Copy results back to Host
-  status = pimCopyDeviceToHost(evenObj, (void *)even2.data());
+  status = pimCopyDeviceToHost(d_evenObj, (void *)even2.data());
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy prefix sum result from PIM." << std::endl;
@@ -193,8 +193,8 @@ void downsweep(vector<int> &odd2, vector<int> &even2, uint64_t len)
   }
    
   // Clean up PIM objects
-  pimFree(evenObj);
-  pimFree(oddObj);
+  pimFree(d_evenObj);
+  pimFree(d_oddObj);
 }
 
 
