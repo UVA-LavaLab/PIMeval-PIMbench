@@ -375,6 +375,30 @@ pimPerfEnergyBankLevel::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimO
   switch (cmdType) {
     case PimCmdEnum::PREFIX_SUM:
     {
+      /**
+       * Performs prefix sum: dstVec[i] = dstVec[i-1] + srcVec[i]
+       *
+       * Execution Steps:
+       * 1. Each bank performs a local prefix sum on its portion of the data.
+       * 2. The host CPU fetches the final value from each subarray using `n`
+       * DRAM READ. Here, `n = number of banks`.
+       * 3. The host CPU aggregates these values (i.e., computes the prefix sum
+       * across banks).
+       * 4. The host CPU writes the aggregated values back to DRAM using `n`
+       * DRAM WRITE.
+       * 5. Each bank updates its elements using the received value to complete
+       * the final prefix sum.
+       *
+       * Performance Model:
+       * - While performing addition, the next row can be
+       * fetched concurrently. As a result, `msRead = 2 * m_tR` (multiplied by
+       * two because, two prefix sum iterations are required).
+       * - `aggregateMs` models the time for host-side aggregation.
+       * - `hostRW` accounts for host read/write overhead, including DRAM tR,
+       * tW, and GDL delays.
+       *
+       */
+
       // How many iteration require to read / write max elements per region
       double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
       msRead = 2 * m_tR;

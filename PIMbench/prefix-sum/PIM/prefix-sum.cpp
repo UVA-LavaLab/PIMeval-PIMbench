@@ -33,7 +33,7 @@ void usage()
           "\n"
           "\n    -l    input size (default=2048 elements)"
           "\n    -c    dramsim config file"
-          "\n    -i    input file containing two vectors (default=generates vector with random numbers)"
+          "\n    -i    input file containing a vector (default=generates vector with random numbers)"
           "\n    -v    t = verifies PIM output with host output. (default=false)"
           "\n");
 }
@@ -134,7 +134,6 @@ int main(int argc, char* argv[])
 
   //TODO: Check if vector can fit in one iteration. Otherwise need to run addition in multiple iteration.
   prefixSum(params.vectorLength, src, dst);
-  std::cout << "Done Running Prefix sum on PIM" << std::endl;
   if (params.shouldVerify) {
     // verify result
     int sum = 0;
