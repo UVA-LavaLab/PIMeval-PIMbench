@@ -84,7 +84,8 @@ enum class PimCmdEnum {
   SHIFT_ELEM_R,
   SHIFT_ELEM_L,
   AES_SBOX,
-  AES_INVERSE_SBOX, 
+  AES_INVERSE_SBOX,
+  PREFIX_SUM,
 
   // BitSIMD v-layout commands
   ROW_R,
@@ -489,6 +490,26 @@ protected:
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };
+
+//! @class  pimCmdPrefixSum
+//! @brief  Pim CMD: PrefixSum
+class pimCmdPrefixSum : public pimCmd
+{
+public:
+  pimCmdPrefixSum(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
+    : pimCmd(cmdType), m_src(src), m_dst(dest)
+  {
+    assert(cmdType == PimCmdEnum::PREFIX_SUM);
+  }
+  virtual ~pimCmdPrefixSum() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected:
+  PimObjId m_src, m_dst;
+};
+
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements

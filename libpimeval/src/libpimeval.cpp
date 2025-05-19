@@ -40,6 +40,13 @@ pimDeleteDevice()
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+PimStatus
+pimPrefixSum(PimObjId src, PimObjId dest)
+{
+  bool ok = pimSim::get()->pimPrefixSum(src, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Start timer for a PIM kernel to measure CPU runtime and DRAM refresh
 void
 pimStartTimer()

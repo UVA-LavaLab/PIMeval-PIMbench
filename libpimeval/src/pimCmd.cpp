@@ -71,6 +71,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::COND_SELECT_SCALAR, "cond_select_scalar" },
     { PimCmdEnum::AES_SBOX, "aes_sbox" },
     { PimCmdEnum::AES_INVERSE_SBOX, "aes_inverse_sbox" },
+    { PimCmdEnum::PREFIX_SUM, "prefix_sum"},
     { PimCmdEnum::REDSUM, "redsum" },
     { PimCmdEnum::REDSUM_RANGE, "redsum_range" },
     { PimCmdEnum::REDMIN, "redmin" },
@@ -1324,6 +1325,134 @@ pimCmdRotate::updateStats() const
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
+
+//! @brief  PIM CMD: prefix sum - sanity check
+bool
+pimCmdPrefixSum::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+  if (!isValidObjId(resMgr, m_src) || !isValidObjId(resMgr, m_dst)) {
+    return false;
+  }
+
+  if (!(isAssociated(resMgr->getObjInfo(m_src), resMgr->getObjInfo(m_dst)))) {
+    return false;
+  }
+  return true;
+}
+
+bool
+pimCmdPrefixSum::execute()
+{
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (obj id %d)\n", getName().c_str(), m_src);
+  }
+
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    objSrc.syncFromSimulatedMem();
+  }
+
+  unsigned numRegions = objSrc.getRegions().size();
+  computeAllRegions(numRegions);
+  pimObjInfo& objDst = m_device->getResMgr()->getObjInfo(m_dst);
+  // Aggregate Result
+  for (unsigned i = 1; i < numRegions; ++i) {
+    const pimRegion& dstRegion = objDst.getRegions()[i];
+    PimDataType dataType = objDst.getDataType();
+    unsigned numElementsInRegion = dstRegion.getNumElemInRegion();
+    uint64_t currIdx = dstRegion.getElemIdxBegin();
+    for (uint64_t j = currIdx; j < numElementsInRegion; ++j) {
+      if (pimUtils::isSigned(dataType)) {
+        uint64_t operandBits1 = objDst.getElementBits(j - 1);
+        uint64_t operandBits2 = objDst.getElementBits(j);
+        int64_t operand1 = pimUtils::signExt(operandBits1, dataType);
+        int64_t operand2 = pimUtils::signExt(operandBits2, dataType);
+        int64_t result = operand1 + operand2;
+        objDst.setElement(j, result);
+      } else if (pimUtils::isUnsigned(dataType)) {
+        uint64_t unsignedOperand1 = objDst.getElementBits(j - 1);
+        uint64_t unsignedOperand2 = objDst.getElementBits(j);
+        uint64_t result = unsignedOperand1 + unsignedOperand2;
+        objDst.setElement(j, result);
+      } else if (pimUtils::isFP(dataType)) {
+        uint64_t operandBits1 = objDst.getElementBits(j - 1);
+        uint64_t operandBits2 = objDst.getElementBits(j);
+        float floatOperand1 = pimUtils::castBitsToType<float>(operandBits1);
+        float floatOperand2 = pimUtils::castBitsToType<float>(operandBits2);
+        float result = floatOperand1 + floatOperand2;
+        objDst.setElement(j, result);
+      } else {
+        assert(0); // todo: data type
+      }
+    }
+  }
+
+  updateStats();
+  return true;
+}
+
+bool
+pimCmdPrefixSum::computeRegion(unsigned index)
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  pimObjInfo& objDst = m_device->getResMgr()->getObjInfo(m_dst);
+  const pimRegion& srcRegion = objSrc.getRegions()[index];
+  PimDataType dataType = objSrc.getDataType();
+  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+  uint64_t currIdx = srcRegion.getElemIdxBegin();
+  for (uint64_t j = currIdx; j < currIdx + numElementsInRegion; ++j) {
+      if (pimUtils::isSigned(dataType)) {
+      uint64_t srcOperandBits = objSrc.getElementBits(j);
+      if (j == currIdx) objDst.setElement(j, pimUtils::signExt(srcOperandBits, dataType));
+      else
+      {
+        uint64_t dstOperandBits = objDst.getElementBits(j-1);
+        int64_t operand1 = pimUtils::signExt(srcOperandBits, dataType);
+        int64_t operand2 = pimUtils::signExt(dstOperandBits, dataType);
+        int64_t result = operand1 + operand2;
+        objDst.setElement(j, result);
+      }
+    } else if (pimUtils::isUnsigned(dataType)) {
+      uint64_t unsignedOperand1 = objSrc.getElementBits(j);
+      if (j == currIdx) objDst.setElement(j, unsignedOperand1);
+      else {
+        uint64_t unsignedOperand2 = objDst.getElementBits(j-1);
+        uint64_t result = unsignedOperand1 + unsignedOperand2;
+        objDst.setElement(j, result);
+      }
+    } else if (pimUtils::isFP(dataType)) {
+      uint64_t operandBits1 = objSrc.getElementBits(j);
+      float floatOperand1 = pimUtils::castBitsToType<float>(operandBits1);
+      if (j == currIdx) objDst.setElement(j, floatOperand1);
+      else {
+        uint64_t operandBits2 = objDst.getElementBits(j-1);
+        float floatOperand2 = pimUtils::castBitsToType<float>(operandBits2);
+        float result = floatOperand1 + floatOperand2;
+        objDst.setElement(j, result);
+      }
+    } else {
+      assert(0); // todo: data type
+    }
+  }
+  return true;
+}
+
+bool
+pimCmdPrefixSum::updateStats() const
+{
+  const pimObjInfo& objSrc = m_device->getResMgr()->getObjInfo(m_src);
+  PimDataType dataType = objSrc.getDataType();
+  bool isVLayout = objSrc.isVLayout();
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForPrefixSum(m_cmdType, objSrc);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
+  return true;
+}
+
 
 
 //! @brief  Pim CMD: BitSIMD-V: Read a row to SA

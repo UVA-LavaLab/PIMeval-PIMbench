@@ -352,3 +352,54 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
+//! @brief  Perf energy model of bank-level PIM for prefix-sum
+pimeval::perfEnergy
+pimPerfEnergyBankLevel::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  double cpuTDP = 225; // W; AMD EPYC 9124 16 core
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  // How many iteration require to read / write max elements per region
+  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth) - 1;
+  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth) - 1;
+  uint64_t totalOp = 0;
+  unsigned numBankPerChip = numCore / m_numChipsPerRank;
+  switch (cmdType) {
+    case PimCmdEnum::PREFIX_SUM:
+    {
+      // How many iteration require to read / write max elements per region
+      double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+      msRead = 2 * m_tR;
+      msWrite = 2 * m_tW;
+
+      // reduction for all regions assuming 16 core AMD EPYC 9124
+      double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
+      double hostRW = (obj.getNumCoresUsed() * 1.0 / m_numChipsPerRank) * (m_tR + m_tW + (m_tGDL * 2));
+      
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement) + aggregateMs + hostRW;
+      msRuntime = msRead + msWrite + msCompute;
+
+      // Refer to fulcrum documentation
+      mjEnergy = (m_eAP + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * (numPass - 1) * numCore * 2;
+      mjEnergy += (m_eAP + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numCore * 2;
+      mjEnergy += aggregateMs * cpuTDP + ((obj.getNumCoresUsed() * 1.0 / m_numChipsPerRank) * ((2 * m_eAP)  + m_eR + m_eW));
+      mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
+    default:
+      std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
+                << pimCmd::getName(cmdType, "") << std::endl;
+      break;
+    }
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
+}
