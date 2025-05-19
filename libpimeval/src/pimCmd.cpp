@@ -1366,7 +1366,7 @@ pimCmdPrefixSum::execute()
     PimDataType dataType = objDst.getDataType();
     unsigned numElementsInRegion = dstRegion.getNumElemInRegion();
     uint64_t currIdx = dstRegion.getElemIdxBegin();
-    for (uint64_t j = currIdx; j < numElementsInRegion; ++j) {
+    for (uint64_t j = currIdx; j < currIdx + numElementsInRegion; ++j) {
       if (pimUtils::isSigned(dataType)) {
         uint64_t operandBits1 = objDst.getElementBits(j - 1);
         uint64_t operandBits2 = objDst.getElementBits(j);
