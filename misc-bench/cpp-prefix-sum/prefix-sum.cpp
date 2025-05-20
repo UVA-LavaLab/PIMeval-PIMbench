@@ -81,58 +81,46 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
-void prefixSum(vector<int> &even, vector<int> &odd,vector<int> &deviceoutput, uint64_t len)
+void prefixSum(vector<int> &right, vector<int> &left,uint64_t len)
 {
  
-  PimObjId evenObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
-  if (evenObj == -1)
+  PimObjId rightObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
+  if (rightObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
     return;
   }
-
-  PimStatus status = pimCopyHostToDevice((void *)even.data(), evenObj);
+  PimStatus status = pimCopyHostToDevice((void *)right.data(), rightObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
     return;
   }
   
-  PimObjId oddObj = pimAllocAssociated(evenObj , PIM_INT32);
-  if (oddObj == -1)
+
+  PimObjId leftObj = pimAllocAssociated(rightObj , PIM_INT32);
+  if (leftObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
     return;
   }
-
-  status = pimCopyHostToDevice((void *)odd.data(), oddObj);
+  status = pimCopyHostToDevice((void *)left.data(), leftObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
   } 
 
-  PimObjId outObj = pimAllocAssociated(evenObj, PIM_INT32);
-  if (outObj == -1)
-  {
-    std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
-    return;
-  }
 
-  status = pimCopyHostToDevice((void *)deviceoutput.data(), outObj);
-  if (status != PIM_OK)
-  {
-    std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
-  } 
-  
   //PIM Add
-  status = pimAdd(evenObj, oddObj, outObj);
+  status = pimAdd(rightObj, leftObj, rightObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to perform PIM addition." << std::endl;
     return;
   }
+
   //Copy results back to Host
-  status = pimCopyDeviceToHost(outObj, (void *)deviceoutput.data());
+  status = pimCopyDeviceToHost(rightObj, (void *)right.data());
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy prefix sum result from PIM." << std::endl;
@@ -140,66 +128,76 @@ void prefixSum(vector<int> &even, vector<int> &odd,vector<int> &deviceoutput, ui
   }
 
   // Clean up PIM objects
-  pimFree(evenObj);
-  pimFree(oddObj);
-  pimFree(outObj);
+  pimFree(rightObj);
+  pimFree(leftObj);
 }
 
 
-void downsweep(vector<int> &odd2, vector<int> &even2, uint64_t len)
+void downsweep(vector<int> &left, vector<int> &right, uint64_t len)
 {
- 
-  PimObjId d_evenObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
-  if (d_evenObj == -1)
+  PimObjId rightObj = pimAlloc(PIM_ALLOC_AUTO, len, PIM_INT32);
+  if (rightObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
     return;
   }
-
-  PimStatus status = pimCopyHostToDevice((void *)even2.data(), d_evenObj);
+  PimStatus status = pimCopyHostToDevice((void *)right.data(), rightObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
     return;
   }
 
-  PimObjId d_oddObj = pimAllocAssociated(d_evenObj, PIM_INT32);
-  if (d_evenObj == -1)
+  PimObjId leftObj = pimAllocAssociated(rightObj, PIM_INT32);
+  if (rightObj == -1)
   {
     std::cerr << "Abort: Failed to allocate memory on PIM." << std::endl;
     return;
   }
-
-  status = pimCopyHostToDevice((void *)odd2.data(), d_oddObj);
+  status = pimCopyHostToDevice((void *)left.data(), leftObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy data to PIM." << std::endl;
   } 
-  
+
   //PIM Add
-  status = pimAdd(d_evenObj, d_oddObj, d_evenObj);
+  status = pimAdd(rightObj, leftObj, rightObj);
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to perform PIM addition." << std::endl;
     return;
   }
- 
+
   //Copy results back to Host
-  status = pimCopyDeviceToHost(d_evenObj, (void *)even2.data());
+  status = pimCopyDeviceToHost(rightObj, (void *)right.data());
   if (status != PIM_OK)
   {
     std::cerr << "Abort: Failed to copy prefix sum result from PIM." << std::endl;
     return;
-  }
-   
-  // Clean up PIM objects
-  pimFree(d_evenObj);
-  pimFree(d_oddObj);
+  } 
+
+  //Clean up PIM objects
+  pimFree(rightObj);
+  pimFree(leftObj);
 }
 
+bool isPowerofTwo(int n) {
+    if (n <= 0)
+        return false;
 
-int main(int argc, char *argv[])
-{
+    int logValue = log2(n);
+    return pow(2, logValue) == n;
+}
+
+int nextPowerOfTwo(int n) {
+    int power = 1;
+    while (power < n) {
+        power *= 2;
+    }
+    return power;
+}
+
+int main(int argc, char *argv[]) {
     struct Params params = getInputParams(argc, argv);
     std::vector<int> input;
 
@@ -210,118 +208,131 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    uint64_t len = input.size();
-    std::vector<int> deviceoutput;
-    std::vector<int> hostoutput(len);
-    std::vector<int> intermeadiate_results;
-    std::vector<int> host_device_merged;
-
-    auto start_cpu = std::chrono::high_resolution_clock::now();
-
-    for (uint64_t i = 0; i < input.size(); i++) {
-        deviceoutput.push_back(0);
+    int len = input.size();
+    if (!isPowerofTwo(len)) {
+      int result = nextPowerOfTwo(len);
+      int padding = result + len;
+      input.resize(padding, 0);
+      len = input.size();
+    } else {
+        std::cout << "Input size is already a power of two. " << std::endl;
     }
 
+    std::vector<int> host_device_merged(len);
+    std::vector<int> hostoutput(len);
+    
+    auto start_cpu = std::chrono::high_resolution_clock::now();
     hostoutput[0] = input[0];
     for (uint64_t i = 0; i < input.size(); i++) {
-        hostoutput[i + 1] = hostoutput[i] + input[i + 1];
-        intermeadiate_results.push_back(input[i]);
-        host_device_merged.push_back(input[i]);
+      hostoutput[i] = input[i]+ hostoutput[i-1];
+      host_device_merged[i]=input[i];
     }
 
     int max = 0;
     int it = 0;
+    std::vector<int> right(len);
+    std::vector<int> left(len);   
+    size_t iterations = input.size();
 
-    // UpSweep
-    while (intermeadiate_results.size() > 1) {
-        std::vector<int> even, odd;
+// UpSweep
+while (iterations > 1) {
+    size_t num_right = (iterations + 1) / 2;
+    size_t num_left = iterations / 2;
+    int position = std::pow(2, it);
 
-        for (uint64_t i = 0; i < intermeadiate_results.size(); ++i) {
-            if (i % 2 == 0)
-                even.push_back(intermeadiate_results[i]);
-            else
-                odd.push_back(intermeadiate_results[i]);
-        }
+    right.resize(num_right);
+    left.resize(num_left);
 
-        size_t maxSize = std::max(even.size(), odd.size());
-        even.resize(maxSize, 0);
-        odd.resize(maxSize, 0);
-        
+    size_t right_idx = 0, left_idx = 0;
 
-        auto stop_cpu = std::chrono::high_resolution_clock::now();
-        hostElapsedTime += (stop_cpu - start_cpu);
+    for (size_t i = 0; i < right.size(); i++) {
+      
+        size_t running_indexex_right = position * (2 * i) + (position - 1);
+        size_t running_indexex_left  = position * (2 * i + 1) + (position - 1);
 
-        if (!createDevice(params.configFile))
-            return 1;
-
-        prefixSum(even, odd, deviceoutput, maxSize);
-
-        auto start_cpu2 = std::chrono::high_resolution_clock::now();
-        it++;
-        int ind = std::pow(2, it);
-        intermeadiate_results = deviceoutput;
-        intermeadiate_results.resize(maxSize);
-
-        for (uint64_t i = 0; i < maxSize; ++i) {
-            int index = ind * i + (ind - 1);
-            input[index] = deviceoutput[i];
-        }
-
-        max = ind;
-
-        auto stop_cpu2 = std::chrono::high_resolution_clock::now();
-        hostElapsedTime += (stop_cpu2 - start_cpu2);
+        right[right_idx++] = input[running_indexex_right];
+        left[left_idx++]   = input[running_indexex_left];
     }
 
-    std::cout << "Host elapsed time before downsweep: "
-              << std::fixed << std::setprecision(3)
-              << hostElapsedTime.count() << " ms." << std::endl;
+        
+    auto stop_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += (stop_cpu - start_cpu);
 
-    auto start_cpu3 = std::chrono::high_resolution_clock::now();
+    if (!createDevice(params.configFile))
+        return 1;
 
-    // Clear last element
-    input[max - 1] = input[(max / 2) - 1];
-    input[(max / 2) - 1] = 0;
-    max = static_cast<int>(std::log2(max));  //eliminate the looping for first two steps
-    max -= 2;
+    prefixSum(right, left, right.size());
+
+    auto start_cpu2 = std::chrono::high_resolution_clock::now();
+    it++;
+    int running_index = std::pow(2, it);
+    iterations = right.size();
+  
+    for (uint64_t i = 0; i < right.size(); ++i) {
+        int running_indexex = running_index * i + (running_index - 1);
+        input[running_indexex] = right[i];
+    }
+
+    max = running_index;
+
+    auto stop_cpu2 = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += (stop_cpu2 - start_cpu2);
+}
+
+auto start_cpu3 = std::chrono::high_resolution_clock::now();
+
+// DownSweep
+input[max - 1] = input[(max / 2) - 1];  // Clear last element
+input[(max / 2) - 1] = 0;
+max = static_cast<int>(std::log2(max));  // eliminate the looping for first two steps
+max -= 2;
+
+while (max >= 0) {
+    int position = std::pow(2, max);
+    int val = 0;
+    size_t partitions = 0;
     
-    
-    // DownSweep
-    while (max >= 0) {
-        int ind2 = std::pow(2, max);
-        int val = 0;
-        std::vector<int> even2, odd2, result;
+    for (uint64_t i = position - 1; i < input.size(); i += position)
+    partitions++;
+    size_t num_right = (partitions + 1) / 2;
+    size_t num_left = partitions / 2;
 
-        for (uint64_t i = ind2 - 1; i < input.size(); i += ind2) {
-            if (val % 2 == 0)
-                even2.push_back(input[i]);
-            else
-                odd2.push_back(input[i]);
-            val++;
-        }
+    right.resize(num_right);
+    left.resize(num_left);
+    size_t right_idx = 0, left_idx = 0;
+
+    for (uint64_t i = position - 1; i < input.size(); i+= position) {
+
+        if (val % 2 == 0)
+            right[right_idx++] = input[i];
+        else
+            left[left_idx++] = input[i];
+        val++;
+    }
+
     auto stop_cpu3 = std::chrono::high_resolution_clock::now();
     hostElapsedTime += (stop_cpu3 - start_cpu3);
-        //PIM kernel
-        downsweep(odd2, even2, even2.size());
 
-    auto start_cpu4 = std::chrono::high_resolution_clock::now();
-        for (uint64_t i = 0; i < even2.size(); i++) {
-            result.push_back(odd2[i]);
-            result.push_back(even2[i]);
-        }
+    // PIM kernel
+    downsweep(left, right, right.size());
 
-        for (uint64_t i = 0; i < result.size(); i++) {
-            int index2 = ind2 * i + (ind2 - 1);
-            input[index2] = result[i];
-        }
-        max--;
+    for (size_t i = 0; i < right.size(); i++) {
+
+        size_t running_indexex_left = position * (2 * i) + (position - 1);
+        size_t running_indexex_right = position * (2 * i + 1) + (position - 1);
+
+        if (i < left.size())
+            input[running_indexex_left] = left[i];
+            input[running_indexex_right] = right[i];
     }
 
-    
-    for (uint64_t i = 0; i < host_device_merged.size(); i++) {  // Merge results 
-        host_device_merged[i] += input[i];
-    }
-    
+    max--;
+}
+
+for (uint64_t i = 0; i < host_device_merged.size(); i++) {            // Merge results 
+    host_device_merged[i] += input[i];
+}
+
 //Verification of Results hostresults vs deviceresults
 if (params.shouldVerify)
 {
