@@ -92,22 +92,28 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
     return;
   }
 
-  PimObjId dstObj = pimAllocAssociated(srcObj, PIM_INT32);
-  if (dstObj == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
   PimDeviceProperties deviceProp;
   status = pimGetDeviceProperties(&deviceProp);
   if (deviceProp.isHLayoutDevice) {
+    PimObjId dstObj = pimAllocAssociated(srcObj, PIM_INT32);
+    if (dstObj == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
     status = pimPrefixSum(srcObj, dstObj);
     if (status != PIM_OK)
     {
       std::cout << "Abort" << std::endl;
       return;
     }
+    dst.resize(vectorLength);
+    status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+    }
+    pimFree(dstObj);
   } else {
     PimObjId maskObj = pimAllocAssociated(srcObj, PIM_INT32);
     if (maskObj == -1)
@@ -119,26 +125,24 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
     for (uint64_t i = 0; i < vectorLength; ++i) {
       for (int j = 0; j < vectorLength; ++j) {
         if (j <= i) maskVec[j] = 0;
-        else maskVec[j] = src[j];
+        else maskVec[j] = src[i];
       }
       status = pimCopyHostToDevice((void *)maskVec.data(), maskObj);
       if (status != PIM_OK) {
         std::cout << "Abort" << std::endl;
         return;
       }
-      status = pimAdd(srcObj, maskObj, dstObj);
+      status = pimAdd(srcObj, maskObj, srcObj);
+    }
+    dst.resize(vectorLength);
+    status = pimCopyDeviceToHost(srcObj, (void *)dst.data());
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
     }
     pimFree(maskObj);
   }
-
-  dst.resize(vectorLength);
-  status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-  }
   pimFree(srcObj);
-  pimFree(dstObj);
 }
 
 int main(int argc, char* argv[])
