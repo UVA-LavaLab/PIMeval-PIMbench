@@ -99,11 +99,36 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
     return;
   }
 
-  status = pimPrefixSum(srcObj, dstObj);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
+  PimDeviceProperties deviceProp;
+  status = pimGetDeviceProperties(&deviceProp);
+  if (deviceProp.isHLayoutDevice) {
+    status = pimPrefixSum(srcObj, dstObj);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+  } else {
+    PimObjId maskObj = pimAllocAssociated(srcObj, PIM_INT32);
+    if (maskObj == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+    std::vector<int> maskVec (vectorLength, 0);
+    for (uint64_t i = 0; i < vectorLength; ++i) {
+      for (int j = 0; j < vectorLength; ++j) {
+        if (j <= i) maskVec[j] = 0;
+        else maskVec[j] = src[j];
+      }
+      status = pimCopyHostToDevice((void *)maskVec.data(), maskObj);
+      if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return;
+      }
+      status = pimAdd(srcObj, maskObj, dstObj);
+    }
+    pimFree(maskObj);
   }
 
   dst.resize(vectorLength);
