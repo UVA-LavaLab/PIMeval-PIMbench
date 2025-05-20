@@ -629,6 +629,16 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: prefixsum
+bool
+pimSim::pimPrefixSum(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimPrefixSum");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdPrefixSum>(PimCmdEnum::PREFIX_SUM, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 //! @brief  Min reduction operation
 bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
   std::string tag = (idxBegin != idxEnd && idxBegin < idxEnd) ? "pimRedMinRanged" : "pimRedMin";

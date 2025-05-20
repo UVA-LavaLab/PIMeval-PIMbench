@@ -170,11 +170,16 @@ PimStatus pimNEScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
+
+// Only supported by bit-parallel PIM
+PimStatus pimPrefixSum(PimObjId src, PimObjId dest);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 // Min/Max Reduction APIs
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
 // Bit slice operations
 PimStatus pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
 PimStatus pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);

@@ -126,6 +126,7 @@ public:
   bool pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
   bool pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
   bool pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+  bool pimPrefixSum(PimObjId src, PimObjId dest);
 
   // PIM API Fusion
   bool pimFuse(PimProg prog);
