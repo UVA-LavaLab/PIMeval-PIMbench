@@ -394,7 +394,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimObj
     mjEnergy += 2 * numCore * (m_eAP + ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
     mjEnergy += aggregateMs * cpuTDP + ((obj.getNumCoresUsed() * 1.0 / m_numChipsPerRank) * ((2 * m_eAP)  + m_eR + m_eW));
     mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-    totalOp = obj.getNumElements();
+    totalOp = obj.getNumElements() * 2;
     break;
   }
   default:

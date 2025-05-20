@@ -417,7 +417,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimO
       mjEnergy += aggregateMs * cpuTDP + ((obj.getNumCoresUsed() * 1.0 / m_numChipsPerRank) * ((2 * m_eAP)  + m_eR + m_eW));
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = obj.getNumElements();
+      totalOp = obj.getNumElements() * 2;
       break;
     }
     default:
