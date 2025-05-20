@@ -1,5 +1,5 @@
-/* File:     axpy.cu
- * Purpose:  Implement axpy on a gpu using cuda
+/* File:     prefix-sum.cu
+ * Purpose:  Implement prefix sum on gpu using cuda
  *
  */
 
@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
       exit(1);
   }
   errorCode = cudaMalloc(&d_out, sizeof(int) * vector_size);
+  if (errorCode != cudaSuccess)
   {
       cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
       exit(1);
@@ -89,12 +90,14 @@ int main(int argc, char *argv[])
                                 vector_size);
 
   errorCode = cudaMalloc(&d_temp_storage, temp_storage_bytes);
+  if (errorCode != cudaSuccess)
   {
       cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
       exit(1);
   }
 
   errorCode = cudaMemcpy(d_in, A.data(), sizeof(int) * vector_size, cudaMemcpyHostToDevice);
+  if (errorCode != cudaSuccess)
   {
       cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
       exit(1);
@@ -105,15 +108,8 @@ int main(int argc, char *argv[])
     errorCode = cub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, d_in, d_out,
                                 vector_size);
   });
-  // Check for kernel launch errors
-  errorCode = cudaGetLastError();
-  if (errorCode != cudaSuccess)
-  {
-    cerr << "Cuda Error: " << cudaGetErrorString(errorCode) << "\n";
-    exit(1);
-  }
 
-  printf("Execution time for AXPY = %f ms\n", timeElapsed);
+  printf("Execution time for Prefix Sum = %f ms\n", timeElapsed);
   printf("Average Power = %f mW\n", avgPower);
   printf("Energy Consumption = %f mJ\n", energy);
 
@@ -126,12 +122,13 @@ int main(int argc, char *argv[])
   }
 
   cout.precision(0);
+  int sum = 0;
   for (size_t i = 0; i < A.size(); ++i)
   {
-    int32_t sum = a * B[i] + A[i];
+    sum += A[i];
     if (abs(C[i] - sum) > TOLERANCE)
     {
-      cout << fixed << "AXPY failed at index: " << i << "\t" << C[i] << "\t" << sum << endl;
+      cout << fixed << "Prefix Sum failed at index: " << i << "\t" << C[i] << "\t" << sum << endl;
       break;
     }
   }
@@ -139,6 +136,7 @@ int main(int argc, char *argv[])
   /* Free memory */
   cudaFree(d_in);
   cudaFree(d_out);
+  cudaFree(d_temp_storage);
 
   return 0;
 } /* main */
