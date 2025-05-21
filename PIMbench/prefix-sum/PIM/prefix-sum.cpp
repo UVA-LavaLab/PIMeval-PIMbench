@@ -76,6 +76,8 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
 void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &dst)
 {
   PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT32);
@@ -115,6 +117,7 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
     }
     pimFree(dstObj);
   } else {
+    std::vector <int> tempVec = src;
     PimObjId maskObj = pimAllocAssociated(srcObj, PIM_INT32);
     if (maskObj == -1)
     {
@@ -122,24 +125,28 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
       return;
     }
     std::vector<int> maskVec (vectorLength, 0);
-    for (uint64_t i = 0; i < vectorLength; ++i) {
-      for (int j = 0; j < vectorLength; ++j) {
-        if (j <= i) maskVec[j] = 0;
-        else maskVec[j] = src[i];
+    for (uint64_t i = 0; (1 << i) < vectorLength; ++i) {
+      auto start_cpu = std::chrono::high_resolution_clock::now();
+      #pragma omp parallel for
+      for (uint64_t j = 0; j < vectorLength; ++j) {
+        if (j < (1 << i)) maskVec[j] = 0;
+        else maskVec[j] = tempVec[j - (1 << i)];
       }
+      auto stop_cpu = std::chrono::high_resolution_clock::now();
+      hostElapsedTime += (stop_cpu - start_cpu);
       status = pimCopyHostToDevice((void *)maskVec.data(), maskObj);
       if (status != PIM_OK) {
         std::cout << "Abort" << std::endl;
         return;
       }
       status = pimAdd(srcObj, maskObj, srcObj);
+      status = pimCopyDeviceToHost(srcObj, tempVec.data());
+      if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return;
+      }
     }
-    dst.resize(vectorLength);
-    status = pimCopyDeviceToHost(srcObj, (void *)dst.data());
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort" << std::endl;
-    }
+    dst = tempVec;
     pimFree(maskObj);
   }
   pimFree(srcObj);
