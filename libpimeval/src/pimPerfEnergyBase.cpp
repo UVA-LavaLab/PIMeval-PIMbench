@@ -167,3 +167,16 @@ pimPerfEnergyBase::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 
+//! @brief  Perf energy model of base class for prefixsum
+pimeval::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 1e10;
+  double mjEnergy = 999999999.9;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
+  uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
+}
+

@@ -9,6 +9,8 @@
 
 #include <cstdint>
 #include <cstdarg>
+#include <vector>
+#include <functional>
 
 //! @brief  PIM API return status
 enum PimStatus {
@@ -168,11 +170,16 @@ PimStatus pimNEScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
+
+// Only supported by bit-parallel PIM
+PimStatus pimPrefixSum(PimObjId src, PimObjId dest);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 // Min/Max Reduction APIs
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
 // Bit slice operations
 PimStatus pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
 PimStatus pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);
@@ -196,6 +203,24 @@ PimStatus pimShiftElementsLeft(PimObjId src);
 PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
 PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+// AES sbox and inverse-box APIs
+// Note: AES S-box and inverse S-box are treated separately because their bit-serial performance models differ.
+// However, it is the user's responsibility to provide the appropriate LUT to ensure correct functionality.
+// The function pimAesInverseSbox expects an inverse S-box LUT as its input.
+PimStatus pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+PimStatus pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+
+////////////////////////////////////////////////////////////////////////////////
+// Experimental Feature: PIM API Fusion                                       //
+////////////////////////////////////////////////////////////////////////////////
+struct PimProg {
+  template <typename... Args>
+  void add(PimStatus(*api)(Args...), Args... args) {
+    m_apis.push_back([=]() { return api(args...); });
+  }
+  std::vector<std::function<PimStatus()>> m_apis;
+};
+PimStatus pimFuse(PimProg prog);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Warning: Avoid using below customized APIs for functional simulation       //

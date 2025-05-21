@@ -289,7 +289,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   uint64_t numElements = obj.getNumElements();
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoresUsed();
-  double cpuTDP = 200; // W; AMD EPYC 9124 16 core
+  double cpuTDP = 225; // W; AMD EPYC 9124 16 core
 
   switch (m_simTarget) {
     case PIM_DEVICE_BITSIMD_V:
@@ -305,7 +305,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
           // For a single row, popcount is calculated per 64-bit chunks, and result is shifted then added to an 64-bit accumulator register
           // If there are multiple regions per core, the multi-region reduction sum is stored in the accumulator
           // reduction for all regions
-          double aggregateMs = static_cast<double>(numCore) / 3200000;
+          double aggregateMs = static_cast<double>(numCore) / 2300000;
           double mjEnergyPerPcl = m_pclNsDelay * m_pclUwPower * 1e-12;
           int numPclPerCore = (maxElementsPerRegion + 63) / 64; // number of 64-bit popcount needed for a row
           msRead = m_tR * bitsPerElement * numPass;
@@ -408,7 +408,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
       msRead = 0;
       msWrite = m_tW * bitsPerElement * numPass;
       msCompute = m_tL * bitsPerElement * numPass;
-      totalOp = obj.getNumElements();
+      totalOp = 0;
       msRuntime = msRead + msWrite + msCompute;
       mjEnergy = m_eAP * numCore * numPass ;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -493,3 +493,16 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
+//! @brief  Perf energy model of bit-serial PIM for prefix sum
+pimeval::perfEnergy
+pimPerfEnergyBitSerial::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
+  uint64_t totalOp = 0;
+  std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
+}
