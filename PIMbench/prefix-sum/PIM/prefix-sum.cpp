@@ -147,6 +147,7 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
       }
     }
     dst = tempVec;
+    pimFree(maskObj);
   }
   pimFree(srcObj);
 }

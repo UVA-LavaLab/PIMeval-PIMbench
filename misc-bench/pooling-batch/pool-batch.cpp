@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
   getDecomposedMatrix(concatenatedHeight, concatenatedWidth, params.kernelHeight, params.kernelWidth, params.stride, concatenatedMatrix, tempMat);
   if (params.moreDebugPrints == true) {
     // Debug print
-    std::cout << "Decomposed Matrix at iterations, j: " << " " << j << std::endl;
+    std::cout << "Decomposed Matrix: "<< std::endl;
     printMatrix(tempMat);
   }
   for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
