@@ -87,11 +87,11 @@ bool testMicroOps()
   // move
   status = pimOpReadRowToSa(obj1, 0);
   assert(status == PIM_OK);
-  status = pimOpMove(obj1, PIM_RREG_SA, PIM_RREG_R2);
+  status = pimOpMove(obj1, PIM_RREG_SA, PIM_RREG_R16);
   assert(status == PIM_OK);
   status = pimOpSet(obj1, PIM_RREG_SA, 0);
   assert(status == PIM_OK);
-  status = pimOpMove(obj1, PIM_RREG_R2, PIM_RREG_SA);
+  status = pimOpMove(obj1, PIM_RREG_R16, PIM_RREG_SA);
   assert(status == PIM_OK);
   status = pimOpWriteSaToRow(obj4, 0);
   assert(status == PIM_OK);
