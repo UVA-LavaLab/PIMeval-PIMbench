@@ -35,7 +35,7 @@ pimCore::pimCore(unsigned numRows, unsigned numCols)
   }
 }
 
-//! @brief  pimCore cdor
+//! @brief  pimCore dtor
 pimCore::~pimCore()
 {
 }
