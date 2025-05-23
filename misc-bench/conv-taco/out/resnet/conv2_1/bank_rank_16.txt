@@ -1,0 +1,39 @@
+----------------------------------------
+PIM-Config: Debug Flags = 0x0
+PIM-Config: Simulator Config File: ../../configs/taco/PIMeval_Bank_Rank16.cfg
+PIM-Config: Memory Config File: ../../configs/taco//DDR4_8Gb_x16_3200.ini
+PIM-Config: Memory Protocol: DDR
+PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BANK_LEVEL
+PIM-Config: #ranks = 16, #banksPerRank = 128, #subarraysPerBank = 16, #rowsPerSubarray = 4096, #colsPerSubarray = 8192
+PIM-Config: Number of Threads = 64
+PIM-Config: Load Balanced = 1
+----------------------------------------
+PIM-Info: Aggregate all subarrays within a bank as a single core
+PIM-Info: Created performance energy model for bank-level PIM
+PIM-Info: Created PIM device with 2048 cores of 65536 rows and 8192 columns.
+PIM-Info: Created thread pool with 63 threads.
+Done initialization
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
+ Rank, Bank, Subarray, Row, Col : 16, 128, 16, 4096, 8192
+            Number of PIM Cores : 2048
+        Number of Rows per Core : 65536
+        Number of Cols per Core : 8192
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 46.620000
+                 Row Write (ns) : 46.620000
+                      tCCD (ns) : 2.520000
+Data Copy Stats:
+                               Host to Device : 25895632896 bytes
+                               Device to Host : 411041792 bytes
+                             Device to Device : 0 bytes
+                              TOTAL --------- : 26306674688 bytes      59.814453 ms Estimated Runtime     257.250772 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)         GOPS/W      %R      %W      %L
+                                  add.int32.h :        768      13.610097     631.414223      10.253029   37.56   33.18   29.26
+                           scaled_add.int32.h :        128       9.261988     421.901888      31.176294    6.31    6.31   87.37
+                              TOTAL --------- :        896      22.872084    1053.316111      18.633766   33.10   29.34   37.57
+----------------------------------------
+Host elapsed time: 0.000 ms.

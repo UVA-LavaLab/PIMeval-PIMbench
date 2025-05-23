@@ -1,0 +1,39 @@
+----------------------------------------
+PIM-Config: Debug Flags = 0x0
+PIM-Config: Simulator Config File: ../../configs/taco/PIMeval_Bank_Rank16.cfg
+PIM-Config: Memory Config File: ../../configs/taco//DDR4_8Gb_x16_3200.ini
+PIM-Config: Memory Protocol: DDR
+PIM-Config: Current Device = PIM_FUNCTIONAL, Simulation Target = PIM_DEVICE_BANK_LEVEL
+PIM-Config: #ranks = 16, #banksPerRank = 128, #subarraysPerBank = 16, #rowsPerSubarray = 4096, #colsPerSubarray = 8192
+PIM-Config: Number of Threads = 48
+PIM-Config: Load Balanced = 1
+----------------------------------------
+PIM-Info: Aggregate all subarrays within a bank as a single core
+PIM-Info: Created performance energy model for bank-level PIM
+PIM-Info: Created PIM device with 2048 cores of 65536 rows and 8192 columns.
+PIM-Info: Created thread pool with 47 threads.
+Done initialization
+----------------------------------------
+PIM Params:
+           PIM Device Type Enum : PIM_FUNCTIONAL
+          PIM Simulation Target : PIM_DEVICE_BANK_LEVEL
+ Rank, Bank, Subarray, Row, Col : 16, 128, 16, 4096, 8192
+            Number of PIM Cores : 2048
+        Number of Rows per Core : 65536
+        Number of Cols per Core : 8192
+                Typical Rank BW : 25.600000 GB/s
+                  Row Read (ns) : 46.620000
+                 Row Write (ns) : 46.620000
+                      tCCD (ns) : 2.520000
+Data Copy Stats:
+                               Host to Device : 13127647232 bytes
+                               Device to Host : 25690112 bytes
+                             Device to Device : 0 bytes
+                              TOTAL --------- : 13153337344 bytes      29.907227 ms Estimated Runtime     128.625386 mj Estimated Energy
+PIM Command Stats:
+                                      PIM-CMD :        CNT    Runtime(ms)     Energy(mJ)         GOPS/W      %R      %W      %L
+                                  add.int32.h :       4608       7.339530     400.414514       8.196286   39.32   33.15   27.53
+                           scaled_add.int32.h :        512       4.666798     217.257548      30.271301    6.65    6.65   86.70
+                              TOTAL --------- :       5120      12.006328     617.672062      15.960865   36.06   30.50   33.45
+----------------------------------------
+Host elapsed time: 0.000 ms.
