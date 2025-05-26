@@ -320,21 +320,17 @@ int main(int argc, char *argv[])
 
   // This vector packs all the matrices that can be fit into one PIM iteration
   std::vector<std::vector<int>> mergedMat(numOfPIMRow);
-  int matChunk = std::min(numOfMatPerRow, params.dim);
   std::vector<std::vector<int>> tempMat;
 
-  for (int j = 0; j < matChunk; j++)
-  {
-    getDecomposedMatrix(concatenatedHeight, concatenatedWidth, params.kernelHeight, params.kernelWidth, params.stride, concatenatedMatrix, tempMat);
-    if (params.moreDebugPrints == true) {
-      // Debug print
-      std::cout << "Decomposed Matrix at iterations, j: " << " " << j << std::endl;
-      printMatrix(tempMat);
-    }
-    for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
-      mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
-      mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
-    }
+  getDecomposedMatrix(concatenatedHeight, concatenatedWidth, params.kernelHeight, params.kernelWidth, params.stride, concatenatedMatrix, tempMat);
+  if (params.moreDebugPrints == true) {
+    // Debug print
+    std::cout << "Decomposed Matrix: "<< std::endl;
+    printMatrix(tempMat);
+  }
+  for (uint64_t idx = 0; idx < mergedMat.size(); idx++) {
+    mergedMat[idx].reserve(mergedMat[idx].size() + tempMat[idx].size());
+    mergedMat[idx].insert(mergedMat[idx].end(), make_move_iterator(tempMat[idx].begin()), make_move_iterator(tempMat[idx].end()));
   }
   
   std::vector<int> outVector;

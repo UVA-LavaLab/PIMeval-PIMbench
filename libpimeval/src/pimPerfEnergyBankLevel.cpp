@@ -105,6 +105,32 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       totalOp = obj.getNumElements();
       break;
     }
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+    {
+      // NOTE:
+      // Although the Processing Element (PE) is 32 bits wide and can theoretically perform four 8-bit operations in parallel,
+      // in the case of these LUT-based commands (e.g., AES S-box or inverse S-box), each operation is treated as a single,
+      // independent access driven by an 8-bit input.
+      //
+      // If the operation instead made full use of the 32-bit PE width to process four 8-bit inputs in parallel
+      // then numberOfOperationPerElement would be 0.25. However, such parallelism is not modeled here due to the limitation of the LUT.
+      // Therefore, for the uint8 data type, we set numberOfOperationPerElement = 1 because each 8-bit input
+      // corresponds to one logical LUT access, and we assume that this access is not vectorized across multiple inputs
+      // within a single PE execution. In other words, we model the cost at the granularity of one element per operation.
+      numberOfOperationPerElement = 1;
+      msRead = m_tR;
+      msWrite = ((m_tW + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tW + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
+      mjEnergy = ((m_eAP * 2) +  (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numCores * (numPass - 1);
+      mjEnergy += ((m_eAP * 2) + (minElementPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numCores;
+      mjEnergy += (m_eR * maxGDLItr * (numPass-1) * numBankPerChip + (m_eR * minGDLItr * numBankPerChip));
+      mjEnergy += (m_eW * maxGDLItr * (numPass-1) * numBankPerChip + (m_eW * minGDLItr * numBankPerChip));
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
     default:
       std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
       break;
@@ -326,3 +352,78 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
+//! @brief  Perf energy model of bank-level PIM for prefix-sum
+pimeval::perfEnergy
+pimPerfEnergyBankLevel::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimObjInfo& obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
+  unsigned numPass = obj.getMaxNumRegionsPerCore();
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  double cpuTDP = 225; // W; AMD EPYC 9124 16 core
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  // How many iteration require to read / write max elements per region
+  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth) - 1;
+  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth) - 1;
+  uint64_t totalOp = 0;
+  unsigned numBankPerChip = numCore / m_numChipsPerRank;
+  switch (cmdType) {
+    case PimCmdEnum::PREFIX_SUM:
+    {
+      /**
+       * Performs prefix sum: dstVec[i] = dstVec[i-1] + srcVec[i]
+       *
+       * Execution Steps:
+       * 1. Each bank performs a local prefix sum on its portion of the data.
+       * 2. The host CPU fetches the final value from each subarray using `n`
+       * DRAM READ. Here, `n = number of banks`.
+       * 3. The host CPU aggregates these values (i.e., computes the prefix sum
+       * across banks).
+       * 4. The host CPU writes the aggregated values back to DRAM using `n`
+       * DRAM WRITE.
+       * 5. Each bank updates its elements using the received value to complete
+       * the final prefix sum.
+       *
+       * Performance Model:
+       * - While performing addition, the next row can be
+       * fetched concurrently. As a result, `msRead = 2 * m_tR` (multiplied by
+       * two because, two prefix sum iterations are required).
+       * - `aggregateMs` models the time for host-side aggregation.
+       * - `hostRW` accounts for host read/write overhead, including DRAM tR,
+       * tW, and GDL delays.
+       *
+       */
+
+      // How many iteration require to read / write max elements per region
+      double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+      msRead = 2 * m_tR;
+      msWrite = 2 * m_tW;
+
+      // reduction for all regions assuming 16 core AMD EPYC 9124
+      double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
+      double hostRW = (obj.getNumCoresUsed() * 1.0 / m_numChipsPerRank) * (m_tR + m_tW + (m_tGDL * 2));
+      
+      msCompute = (maxElementsPerRegion * m_blimpCoreLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpCoreLatency * numberOfOperationPerElement) + aggregateMs + hostRW;
+      msRuntime = msRead + msWrite + msCompute;
+
+      // Refer to fulcrum documentation
+      mjEnergy = (m_eAP + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * (numPass - 1) * numCore * 2;
+      mjEnergy += (m_eAP + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numCore * 2;
+      mjEnergy += aggregateMs * cpuTDP + ((obj.getNumCoresUsed() * 1.0 / m_numChipsPerRank) * ((2 * m_eAP)  + m_eR + m_eW));
+      mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements() * 2;
+      break;
+    }
+    default:
+      std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
+                << pimCmd::getName(cmdType, "") << std::endl;
+      break;
+    }
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
+}

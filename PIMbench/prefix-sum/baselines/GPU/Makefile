@@ -3,22 +3,21 @@ NVCC := nvcc
 CUDA_DIR ?= $(shell dirname $(shell dirname $(shell which nvcc)))
 CUDA_INCLUDE := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64
-CUDA_LIB := -lcublas -lnvidia-ml
+CUDA_LIB := -lnvidia-ml
 FOPENMP := -Xcompiler -fopenmp
 ARCH_FLAG := -arch=sm_80
 
 # Target executable
-EXEC := aes.out
+EXEC := prefix-sum.out
 
 # Source files
-SOURCES := aes.cu
+SOURCES := prefix-sum.cu
 
 # Compiler flags
 CFLAGS := -O3
 CXXFLAGS := -std=c++17
 # Dependancy
 DEP := ../../../../util/
-
 # Default target
 all: $(EXEC)
 

@@ -83,6 +83,9 @@ enum class PimCmdEnum {
   ROTATE_ELEM_L,
   SHIFT_ELEM_R,
   SHIFT_ELEM_L,
+  AES_SBOX,
+  AES_INVERSE_SBOX,
+  PREFIX_SUM,
 
   // BitSIMD v-layout commands
   ROW_R,
@@ -208,6 +211,8 @@ class pimCmdFunc1 : public pimCmd
 public:
   pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalarValue = 0)
     : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalarValue(scalarValue) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_lut(lut) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -217,6 +222,7 @@ protected:
   PimObjId m_src;
   PimObjId m_dest;
   uint64_t m_scalarValue;
+  std::vector<uint8_t> m_lut; 
 private:
   template<typename T>
   inline bool computeResult(T operand, PimCmdEnum cmdType, T scalarValue, T& result, int bitsPerElementSrc) {
@@ -266,6 +272,10 @@ private:
         }
         break;
     }
+    case PimCmdEnum::AES_SBOX:
+    case PimCmdEnum::AES_INVERSE_SBOX:
+      result = m_lut[operand]; 
+      break;
     default:
         std::printf("PIM-Error: Unexpected cmd type %d\n", static_cast<int>(cmdType));
         assert(0);
@@ -480,6 +490,26 @@ protected:
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = std::numeric_limits<uint64_t>::max();
 };
+
+//! @class  pimCmdPrefixSum
+//! @brief  Pim CMD: PrefixSum
+class pimCmdPrefixSum : public pimCmd
+{
+public:
+  pimCmdPrefixSum(PimCmdEnum cmdType, PimObjId src, PimObjId dest)
+    : pimCmd(cmdType), m_src(src), m_dst(dest)
+  {
+    assert(cmdType == PimCmdEnum::PREFIX_SUM);
+  }
+  virtual ~pimCmdPrefixSum() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected:
+  PimObjId m_src, m_dst;
+};
+
 
 //! @class  pimCmdBroadcast
 //! @brief  Pim CMD: Broadcast a value to all elements
