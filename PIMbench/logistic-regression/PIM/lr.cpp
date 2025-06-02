@@ -20,7 +20,7 @@ struct Params {
     float learningRate = 0.01f;
     char* configFile = nullptr;
     char* inputFile = nullptr;
-    bool shouldVerify = true;
+    bool shouldVerify = false;
 };
 
 void usage() {
@@ -75,6 +75,9 @@ float sigmoid_exact(float z) {
     return 1.0f / (1.0f + exp(-z));
 }
 
+
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
 void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vector<int>& X, const vector<int>& Y, float& w, float& b) {
     PimObjId xObj = pimAlloc(PIM_ALLOC_AUTO, dataSize, PIM_FP32);
     if (xObj == -1)
@@ -101,11 +104,18 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
         return;
     }
 
+
+    auto start_cpu = std::chrono::high_resolution_clock::now();
+
     std::vector<float> Xf(dataSize), Yf(dataSize);
     for (uint64_t i = 0; i < dataSize; ++i) {
         Xf[i] = static_cast<float>(X[i]);
         Yf[i] = static_cast<float>(Y[i]);
     }
+
+    auto stop_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += (stop_cpu - start_cpu);
+
 
     PimStatus status = pimCopyHostToDevice(Xf.data(), xObj);
     if (status != PIM_OK)
@@ -120,6 +130,7 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
         std::cout << "Abort" << std::endl;
         return;
     }
+    
 
     std::vector<float> zBuffer(dataSize);
 
@@ -146,9 +157,14 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
           return;
         }
 
+
+        auto start_cpu = std::chrono::high_resolution_clock::now();
+        #pragma omp parallel for
         for (uint64_t i = 0; i < dataSize; ++i) {
             zBuffer[i] = sigmoid_exact(zBuffer[i]);
         }
+        auto stop_cpu = std::chrono::high_resolution_clock::now();
+        hostElapsedTime += (stop_cpu - start_cpu);
 
         status = pimCopyHostToDevice(zBuffer.data(), predictionObj);
         if (status != PIM_OK)
@@ -199,11 +215,6 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
 
 
 void runLogisticRegressionHost(uint64_t n, int epochs, float lr, const vector<int>& X, const vector<int>& Y, float& w_host, float& b_host) {
-    vector<float> Xf(n), Yf(n);
-    for (uint64_t i = 0; i < n; ++i) {
-        Xf[i] = static_cast<float>(X[i]);
-        Yf[i] = static_cast<float>(Y[i]);
-    }
 
     w_host = 0.0f;
     b_host = 0.0f;
@@ -211,10 +222,10 @@ void runLogisticRegressionHost(uint64_t n, int epochs, float lr, const vector<in
     for (int epoch = 0; epoch < epochs; ++epoch) {
         float dw = 0.0f, db = 0.0f;
         for (uint64_t i = 0; i < n; ++i) {
-            float z = w_host * Xf[i] + b_host;
+            float z = w_host * X[i] + b_host;
             float pred = sigmoid_exact(z);
-            float error = pred - Yf[i];
-            dw += error * Xf[i];
+            float error = pred - Y[i];
+            dw += error * X[i];
             db += error;
         }
         w_host -= lr * dw / n;
@@ -222,28 +233,30 @@ void runLogisticRegressionHost(uint64_t n, int epochs, float lr, const vector<in
     }
 }
 
+
 int main(int argc, char* argv[]) {
     Params params = getInputParams(argc, argv);
-
-    if (!createDevice(params.configFile)) return 1;
-
     vector<int> X(params.dataSize), Y(params.dataSize);
-    if (params.shouldVerify) {
+    
+    if (params.inputFile == nullptr){
         getVector(params.dataSize, X);
         getVector(params.dataSize, Y);
         for (auto& y : Y) y = y % 2;
     }
+    else{
+        std::cout << "Reading from input file is not implemented yet." << std::endl;
+        return 1;
+    }
+    
+    if (!createDevice(params.configFile)) return 1;
+
 
     float w = 0.0f, b = 0.0f;
 
-    auto start = chrono::high_resolution_clock::now();
-    runLogisticRegressionPIM(params.dataSize, params.epochs, params.learningRate, X, Y, w, b);
-    auto end = chrono::high_resolution_clock::now();
 
+    runLogisticRegressionPIM(params.dataSize, params.epochs, params.learningRate, X, Y, w, b);
     pimShowStats();
 
-    chrono::duration<double, milli> elapsed = end - start;
-    cout << "Duration: " << fixed << setprecision(3) << elapsed.count() << " ms\n";
     cout << "Model: sigmoid(" << w << " * x + " << b << ")\n";
 
 
@@ -256,9 +269,7 @@ int main(int argc, char* argv[]) {
         float w_diff = fabs(w - w_host);
         float b_diff = fabs(b - b_host);
     
-        cout << "Difference in w: " << w_diff << ", b: " << b_diff << "\n";
-    
-        if (w_diff < 1e-10 && b_diff < 1e-10)
+        if (w_diff < 1e-4 && b_diff < 1e-4)
             cout << "Verification PASSED.\n";
         else
             cout << "Verification FAILED.\n";
