@@ -114,7 +114,7 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
     }
 
     auto stop_cpu = std::chrono::high_resolution_clock::now();
-    hostElapsedTime += (stop_cpu - start_cpu);
+    // hostElapsedTime += (stop_cpu - start_cpu);
 
 
     PimStatus status = pimCopyHostToDevice(Xf.data(), xObj);
@@ -209,6 +209,7 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
     pimFree(yObj);
     pimFree(predictionObj);
     pimFree(errorObj);
+    std::cout << "Host elapsed time: " << hostElapsedTime.count() << " ms" << std::endl;
 }
 
 
