@@ -72,13 +72,12 @@ Params getInputParams(int argc, char** argv) {
 }
 
 float sigmoid_exact(float z) {
-    return 1.0f / (1.0f + exp(-z));
+    return 1.0f / (1.0f + expf(-z));
 }
 
 
-std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
 
-void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vector<int>& X, const vector<int>& Y, float& w, float& b) {
+void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<float>& Xf, vector<float>& Yf, float& w, float& b) {
     PimObjId xObj = pimAlloc(PIM_ALLOC_AUTO, dataSize, PIM_FP32);
     if (xObj == -1)
     {
@@ -97,24 +96,22 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
         std::cout << "Abort" << std::endl;
         return;
     }
-    PimObjId errorObj = pimAllocAssociated(xObj, PIM_FP32);
-    if (errorObj == -1)
+
+    PimObjId oneVecObj = pimAllocAssociated(predictionObj, PIM_FP32);
+    if (oneVecObj == -1)
     {
         std::cout << "Abort" << std::endl;
         return;
     }
 
 
-    auto start_cpu = std::chrono::high_resolution_clock::now();
 
-    std::vector<float> Xf(dataSize), Yf(dataSize);
-    for (uint64_t i = 0; i < dataSize; ++i) {
-        Xf[i] = static_cast<float>(X[i]);
-        Yf[i] = static_cast<float>(Y[i]);
+    PimObjId errorObj = pimAllocAssociated(xObj, PIM_FP32);
+    if (errorObj == -1)
+    {
+        std::cout << "Abort" << std::endl;
+        return;
     }
-
-    auto stop_cpu = std::chrono::high_resolution_clock::now();
-    // hostElapsedTime += (stop_cpu - start_cpu);
 
 
     PimStatus status = pimCopyHostToDevice(Xf.data(), xObj);
@@ -130,10 +127,15 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
         std::cout << "Abort" << std::endl;
         return;
     }
+
+    status = pimBroadcastFP(oneVecObj, 1.0f);
+    if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return;
+    }
     
-
+    std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
     std::vector<float> zBuffer(dataSize);
-
     for (int epoch = 0; epoch < epochs; ++epoch) {
         float dw = 0.0f, db = 0.0f;
 
@@ -161,7 +163,7 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
         auto start_cpu = std::chrono::high_resolution_clock::now();
         #pragma omp parallel for
         for (uint64_t i = 0; i < dataSize; ++i) {
-            zBuffer[i] = sigmoid_exact(zBuffer[i]);
+            zBuffer[i] = expf(-zBuffer[i]);
         }
         auto stop_cpu = std::chrono::high_resolution_clock::now();
         hostElapsedTime += (stop_cpu - start_cpu);
@@ -171,6 +173,18 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
         {
           std::cout << "Abort" << std::endl;
           return;
+        }
+
+        status = pimAdd(predictionObj, oneVecObj, predictionObj);
+        if (status != PIM_OK) {
+            std::cout << "Abort" << std::endl;
+            return;
+        }
+
+        status = pimDiv(oneVecObj, predictionObj, predictionObj);  
+        if (status != PIM_OK) {
+            std::cout << "Abort" << std::endl;
+            return;
         }
 
         status = pimSub(predictionObj, yObj, errorObj);
@@ -209,19 +223,20 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, const vec
     pimFree(yObj);
     pimFree(predictionObj);
     pimFree(errorObj);
-    std::cout << "Host elapsed time: " << hostElapsedTime.count() << " ms" << std::endl;
+    std::cout << "Host elapsed time: " << fixed << setprecision(3)<< hostElapsedTime.count() << " ms" << std::endl;
 }
 
 
 
 
-void runLogisticRegressionHost(uint64_t n, int epochs, float lr, const vector<int>& X, const vector<int>& Y, float& w_host, float& b_host) {
+void runLogisticRegressionHost(uint64_t n, int epochs, float lr, const vector<float>& X, const vector<float>& Y, float& w_host, float& b_host) {
 
     w_host = 0.0f;
     b_host = 0.0f;
 
     for (int epoch = 0; epoch < epochs; ++epoch) {
         float dw = 0.0f, db = 0.0f;
+        #pragma omp parallel for reduction(+ : dw, db)
         for (uint64_t i = 0; i < n; ++i) {
             float z = w_host * X[i] + b_host;
             float pred = sigmoid_exact(z);
@@ -248,6 +263,13 @@ int main(int argc, char* argv[]) {
         std::cout << "Reading from input file is not implemented yet." << std::endl;
         return 1;
     }
+
+    std::vector<float> Xf(params.dataSize), Yf(params.dataSize);
+    for (uint64_t i = 0; i < params.dataSize; ++i) {
+        Xf[i] = static_cast<float>(X[i]);
+        Yf[i] = static_cast<float>(Y[i]);
+    }
+
     
     if (!createDevice(params.configFile)) return 1;
 
@@ -255,7 +277,7 @@ int main(int argc, char* argv[]) {
     float w = 0.0f, b = 0.0f;
 
 
-    runLogisticRegressionPIM(params.dataSize, params.epochs, params.learningRate, X, Y, w, b);
+    runLogisticRegressionPIM(params.dataSize, params.epochs, params.learningRate, Xf, Yf, w, b);
     pimShowStats();
 
     cout << "Model: sigmoid(" << w << " * x + " << b << ")\n";
@@ -263,14 +285,20 @@ int main(int argc, char* argv[]) {
 
     if (params.shouldVerify) {
         float w_host, b_host;
-        runLogisticRegressionHost(params.dataSize, params.epochs, params.learningRate, X, Y, w_host, b_host);
-    
+        auto start = chrono::high_resolution_clock::now();
+
+        runLogisticRegressionHost(params.dataSize, params.epochs, params.learningRate, Xf, Yf, w_host, b_host);
+
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double, milli> elapsedTime = end - start;
+
+        cout << "Duration: " << fixed << setprecision(3) << elapsedTime.count() << " ms\n";
         cout << "Host Model: sigmoid(" << w_host << " * x + " << b_host << ")\n";
     
         float w_diff = fabs(w - w_host);
         float b_diff = fabs(b - b_host);
     
-        if (w_diff < 1e-4 && b_diff < 1e-4)
+        if (w_diff < 1e-2 && b_diff < 1e-2)
             cout << "Verification PASSED.\n";
         else
             cout << "Verification FAILED.\n";

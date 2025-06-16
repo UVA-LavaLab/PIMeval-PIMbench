@@ -82,17 +82,17 @@ int main(int argc, char* argv[]) {
 
     cout << "Done initializing data\n";
 
-    double w = 0.0, b = 0.0;
+    float w = 0.0, b = 0.0;
     auto start = chrono::high_resolution_clock::now();
 
     for (int epoch = 0; epoch < params.epochs; ++epoch) {
-        double dw = 0.0, db = 0.0;
+        float dw = 0.0, db = 0.0;
 
         #pragma omp parallel for reduction(+ : dw, db)
         for (uint64_t i = 0; i < n; i++) {
-            double z = w * dataPointsX[i] + b;
-            double pred = sigmoid(z);
-            double error = pred - dataPointsY[i];
+            float z = w * dataPointsX[i] + b;
+            float pred = sigmoid(z);
+            float error = pred - dataPointsY[i];
 
             dw += error * dataPointsX[i];
             db += error;
