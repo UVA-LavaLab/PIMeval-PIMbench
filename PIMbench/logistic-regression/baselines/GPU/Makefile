@@ -8,14 +8,15 @@ FOPENMP := -Xcompiler -fopenmp
 # ARCH_FLAG := -arch=sm_80
 
 # Target executable
-EXEC := vec-add.out
+EXEC := lr.out
 
 # Source files
-SOURCES := vec-add.cu
+SOURCES := lr.cu
 
 # Compiler flags
 CFLAGS := -O3
 CXXFLAGS := -std=c++17
+
 # Dependancy
 DEP := ../../../../util/
 
