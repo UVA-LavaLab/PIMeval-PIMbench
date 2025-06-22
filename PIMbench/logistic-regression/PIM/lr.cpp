@@ -128,30 +128,38 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
         return;
     }
 
-    status = pimBroadcastFP(oneVecObj, 1.0f);
-    if (status != PIM_OK) {
-        std::cout << "Abort" << std::endl;
-        return;
-    }
     
     std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
     std::vector<float> zBuffer(dataSize);
     for (int epoch = 0; epoch < epochs; ++epoch) {
         float dw = 0.0f, db = 0.0f;
 
-        status = pimMulScalar(xObj, predictionObj, *(uint64_t*)&w);
+
+        status = pimBroadcastFP(oneVecObj, w);
+        if (status != PIM_OK) {
+            std::cout << "Abort" << std::endl;
+            return;
+        }
+        status = pimMul(xObj, oneVecObj, predictionObj);
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;
           return;
         }
 
-        status = pimAddScalar(predictionObj, predictionObj, *(uint64_t*)&b);
+        status = pimBroadcastFP(oneVecObj, b);
+        if (status != PIM_OK) {
+            std::cout << "Abort" << std::endl;
+            return;
+        }
+        status = pimAdd(predictionObj, oneVecObj, predictionObj);
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;
           return;
         }
+
+
         status = pimCopyDeviceToHost(predictionObj, zBuffer.data());
         if (status != PIM_OK)
         {
@@ -174,12 +182,19 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
           std::cout << "Abort" << std::endl;
           return;
         }
+        
+        status = pimBroadcastFP(oneVecObj, 1.0f);
+        if (status != PIM_OK) {
+            std::cout << "Abort" << std::endl;
+            return;
+        }
 
         status = pimAdd(predictionObj, oneVecObj, predictionObj);
         if (status != PIM_OK) {
             std::cout << "Abort" << std::endl;
             return;
         }
+
 
         status = pimDiv(oneVecObj, predictionObj, predictionObj);  
         if (status != PIM_OK) {
