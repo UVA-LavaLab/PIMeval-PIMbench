@@ -2,7 +2,7 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
+CXXFLAGS := -Wall -Wextra -Werror -march=native -std=c++17 -O3 -fopenmp
 
 # Executable name
 EXEC := axpy.out
@@ -10,13 +10,15 @@ EXEC := axpy.out
 # Source files
 SRC_FILES := $(wildcard *.cpp)
 
+# Dependancy
+DEP := ../../../../util/
 
 .PHONY: all clean
 
 all: $(EXEC)
 
 $(EXEC): $(SRC_FILES) |
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -I$(DEP) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -rf $(EXEC)

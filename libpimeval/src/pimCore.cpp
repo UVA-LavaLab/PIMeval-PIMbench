@@ -30,15 +30,12 @@ pimCore::pimCore(unsigned numRows, unsigned numCols)
     }
   }
 
-  declareRowReg(PIM_RREG_SA);
-  declareRowReg(PIM_RREG_R1);
-  declareRowReg(PIM_RREG_R2);
-  declareRowReg(PIM_RREG_R3);
-  declareRowReg(PIM_RREG_R4);
-  declareRowReg(PIM_RREG_R5);
+  for (int reg = PIM_RREG_SA; reg < PIM_RREG_MAX; ++reg) {
+    declareRowReg(static_cast<PimRowReg>(reg));
+  }
 }
 
-//! @brief  pimCore cdor
+//! @brief  pimCore dtor
 pimCore::~pimCore()
 {
 }

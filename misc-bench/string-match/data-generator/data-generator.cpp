@@ -4,17 +4,11 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include <unistd.h>
-#include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <vector>
-#include <algorithm>
-#include <filesystem>
-#include <cmath>
-#include <unordered_set>
-#include <iterator>
-#include <random>
+#include <stdint.h>
+
 #include "utilStringMatch.h"
 
 typedef struct Params

@@ -6,6 +6,7 @@
 
 #include "pimSim.h"
 #include "pimCmd.h"
+#include "pimCmdFuse.h"
 #include "pimParamsDram.h"
 #include "pimStats.h"
 #include "pimUtils.h"
@@ -628,6 +629,16 @@ pimSim::pimPopCount(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+// @brief  PIM OP: prefixsum
+bool
+pimSim::pimPrefixSum(PimObjId src, PimObjId dest)
+{
+  pimPerfMon perfMon("pimPrefixSum");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdPrefixSum>(PimCmdEnum::PREFIX_SUM, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
 //! @brief  Min reduction operation
 bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
   std::string tag = (idxBegin != idxEnd && idxBegin < idxEnd) ? "pimRedMinRanged" : "pimRedMin";
@@ -671,7 +682,7 @@ bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxE
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, min, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedMin does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -720,7 +731,7 @@ bool pimSim::pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxE
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, max, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedMax does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -744,6 +755,7 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
     case PimDataType::PIM_INT64:
       cmd = std::make_unique<pimCmdReduction<int64_t>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
+    case PimDataType::PIM_BOOL:
     case PimDataType::PIM_UINT8:
     case PimDataType::PIM_UINT16:
     case PimDataType::PIM_UINT32:
@@ -757,7 +769,7 @@ pimSim::pimRedSum(PimObjId src, void* sum, uint64_t idxBegin, uint64_t idxEnd)
       cmd = std::make_unique<pimCmdReduction<float>>(cmdType, src, sum, idxBegin, idxEnd);
       break;
     default:
-      std::printf("PIM-Error: Unsupported datatype.\n");
+      std::printf("PIM-Error: pimRedSum does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
       return false;
   }
   return m_device->executeCmd(std::move(cmd));
@@ -870,6 +882,33 @@ pimSim::pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount)
   pimPerfMon perfMon("pimShiftBitsLeft");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::SHIFT_BITS_L, src, dest, shiftAmount);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool 
+pimSim::pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+{
+  pimPerfMon perfMon("pimAesSbox");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::AES_SBOX, src, dest, lut);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool 
+pimSim::pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
+{
+  pimPerfMon perfMon("pimAesInverseSbox");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::AES_INVERSE_SBOX, src, dest, lut);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool
+pimSim::pimFuse(PimProg prog)
+{
+  pimPerfMon perfMon("pimFuse");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFuse>(prog);
   return m_device->executeCmd(std::move(cmd));
 }
 

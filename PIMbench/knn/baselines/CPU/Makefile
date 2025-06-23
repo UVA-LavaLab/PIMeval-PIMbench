@@ -2,7 +2,10 @@
 CXX := g++
 
 # Compiler flags
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -O3 -fopenmp
+CXXFLAGS := -Wall -Wextra -march=native -Werror -std=c++17 -O3 -fopenmp
+
+# Dependancy
+DEP := ../../../../util/
 
 # Executable name
 EXEC := knn.out
@@ -15,7 +18,7 @@ SRC_FILES := $(wildcard *.cpp)
 all: $(EXEC)
 
 $(EXEC): $(SRC_FILES)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lopenblas
+	$(CXX) $(CXXFLAGS) -I$(DEP) -o $@ $^ -lopenblas
 
 clean:
 	rm -rf $(EXEC)

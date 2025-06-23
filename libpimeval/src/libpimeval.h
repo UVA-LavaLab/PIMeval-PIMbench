@@ -9,6 +9,8 @@
 
 #include <cstdint>
 #include <cstdarg>
+#include <vector>
+#include <functional>
 
 //! @brief  PIM API return status
 enum PimStatus {
@@ -130,6 +132,8 @@ PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 PimStatus pimConvertType(PimObjId src, PimObjId dest);
 
 // Logic and Arithmetic Operation
+// Mixed data type extensions:
+// - pimAdd/pimSub: If src1 is an integer vector, src2 can be a Boolean vector for accumulation purposes.
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest);
@@ -140,10 +144,6 @@ PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimXnor(PimObjId src1, PimObjId src2, PimObjId dest);
-PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId dest);
-PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId dest);
-PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId dest);
-PimStatus pimNE(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest);
 PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
@@ -154,20 +154,32 @@ PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
-PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
-PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
-PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
-PimStatus pimNEScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+
+// Relational operations - Dest object is BOOL type
+PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId destBool);
+PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId destBool);
+PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId destBool);
+PimStatus pimNE(PimObjId src1, PimObjId src2, PimObjId destBool);
+PimStatus pimGTScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
+PimStatus pimLTScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
+PimStatus pimEQScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
+PimStatus pimNEScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue);
+
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
 PimStatus pimPopCount(PimObjId src, PimObjId dest);
+
+// Only supported by bit-parallel PIM
+PimStatus pimPrefixSum(PimObjId src, PimObjId dest);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 // Min/Max Reduction APIs
 PimStatus pimRedMin(PimObjId src, void* min, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
 // Bit slice operations
 PimStatus pimBitSliceExtract(PimObjId src, PimObjId destBool, unsigned bitIdx);
 PimStatus pimBitSliceInsert(PimObjId srcBool, PimObjId dest, unsigned bitIdx);
@@ -191,6 +203,24 @@ PimStatus pimShiftElementsLeft(PimObjId src);
 PimStatus pimShiftBitsRight(PimObjId src, PimObjId dest, unsigned shiftAmount);
 PimStatus pimShiftBitsLeft(PimObjId src, PimObjId dest, unsigned shiftAmount);
 
+// AES sbox and inverse-box APIs
+// Note: AES S-box and inverse S-box are treated separately because their bit-serial performance models differ.
+// However, it is the user's responsibility to provide the appropriate LUT to ensure correct functionality.
+// The function pimAesInverseSbox expects an inverse S-box LUT as its input.
+PimStatus pimAesSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+PimStatus pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
+
+////////////////////////////////////////////////////////////////////////////////
+// Experimental Feature: PIM API Fusion                                       //
+////////////////////////////////////////////////////////////////////////////////
+struct PimProg {
+  template <typename... Args>
+  void add(PimStatus(*api)(Args...), Args... args) {
+    m_apis.push_back([=]() { return api(args...); });
+  }
+  std::vector<std::function<PimStatus()>> m_apis;
+};
+PimStatus pimFuse(PimProg prog);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Warning: Avoid using below customized APIs for functional simulation       //
@@ -225,6 +255,18 @@ enum PimRowReg {
   PIM_RREG_R3,
   PIM_RREG_R4,
   PIM_RREG_R5,
+  PIM_RREG_R6,
+  PIM_RREG_R7,
+  PIM_RREG_R8,
+  PIM_RREG_R9,
+  PIM_RREG_R10,
+  PIM_RREG_R11,
+  PIM_RREG_R12,
+  PIM_RREG_R13,
+  PIM_RREG_R14,
+  PIM_RREG_R15,
+  PIM_RREG_R16,
+  PIM_RREG_MAX
 };
 
 // BitSIMD-V micro ops
