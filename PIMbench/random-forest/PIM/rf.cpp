@@ -4,6 +4,7 @@
 // See the LICENSE file in the root of this repository for more details.
 
 #include <iostream>
+#include <atomic>
 #include <fstream>
 #include <sstream>
 #include <random>
@@ -32,13 +33,6 @@ const int LT = 1;
 const int GEQ = 2;
 const int GT = 3;
 
-std::unordered_map<int, std::string> compMap = {
-  {LEQ, "<="},
-  {LT, "<"},
-  {GEQ, ">="},
-  {GT, ">"}
-};
-
 // Params ---------------------------------------------------------------------
 
 vector<vector<int>> negativeParameterMapping;
@@ -48,7 +42,7 @@ vector<vector<int>> compareParameterMapping;  // probably not needed once optimi
 typedef struct Params
 {
     int tree_count;
-    int dimension;
+    uint64_t dimension;
     int numThreads;
     int treeDepth;
     char *configFile;
@@ -148,37 +142,43 @@ void getModelAndInput(uint64_t numRows, uint64_t numCols, vector<vector<int>> &m
 int countLabelsAndClassify(uint64_t numPaths, uint64_t dim, uint64_t numTrees, vector<int> &compareResult, vector<int> &finalResult) {
 
   int numPathsDt = (numPaths / numTrees);  // number of paths PER decison tree in the ensemble/RF 
-  unordered_map<int, int> labelCount;
+  std::vector<std::atomic<int>> labelCount(numPathsDt);
 
   
   // loop each decision tree in parallel
   //#pragma omp parallel for schedule(static)
+
+  auto start = std::chrono::high_resolution_clock::now();
+  #pragma omp parallel for
   for(int i = 0; i < (int) numPaths; i += numPathsDt) {
     
     // Tally the labels of the k nearest neighbors
     int indRes = 0;
-    
-    #pragma omp parallel for schedule(static)
+    int lastMatch = -1;
     for(int j = 0; j < numPathsDt; j++) {
       if (compareResult[i + j] == 1) {
-        indRes = j; // since our implementation is based on random values, need to iterate through all elements
+        lastMatch = j; // since our implementation is based on random values, need to iterate through all elements
       }
     }
 
-    #pragma omp atomic
-    labelCount[indRes]++;  // do only one increment per decision tree, since there would normally only be one possible path in the DT 
+    if (lastMatch != -1) {
+            labelCount[lastMatch]++;
+        }
+
     
   }
 
   int maxValue = -1;
   int maxKey = -1;
 
-  for (const auto &pair : labelCount) {
-      if (pair.second > maxValue) {
-          maxValue = pair.second;
-          maxKey = pair.first;
-      }
+  for (int i = 0; i < numPathsDt; ++i) {
+        if (labelCount[i] > maxValue) {
+            maxValue = labelCount[i];
+            maxKey = i;
+        }
   }
+  auto end = std::chrono::high_resolution_clock::now();
+  hostElapsedTime += (end - start);
   return maxKey;
 }
 
@@ -243,8 +243,11 @@ int runRF(uint64_t numOfPaths, int numTrees, int dimension, vector<vector<int>> 
   allocatePimObject(numOfPaths, dimension, eqMappingObjectList, modelParamObjectList[0]);
   copyDataPoints(eqCompareOps, eqMappingObjectList);
 
-  PimObjId temp = pimAllocAssociated(modelParamObjectList[0], PIM_INT32);  // for intermediate value store during logic statement
-  PimObjId pimResult = pimAllocAssociated(modelParamObjectList[0], PIM_INT32);  // initalize object to all zeros
+  PimObjId temp = pimAllocAssociated(modelParamObjectList[0], PIM_BOOL);  // for intermediate value store during logic statement
+  PimObjId pimResult = pimAllocAssociated(temp, PIM_BOOL);  // initalize object to all zerosPimObjId temp = pimAllocAssociated(modelParamObjectList[0], PIM_BOOL);  // for intermediate value store during logic statement
+  PimObjId temp1 = pimAllocAssociated(temp, PIM_BOOL);  // for intermediate value store during logic statement
+  
+  
   
   for(int i = 0; i < (int) dimension; ++i){
     // for each row/input dimension do the following evaluate the following logic statement:
@@ -256,44 +259,58 @@ int runRF(uint64_t numOfPaths, int numTrees, int dimension, vector<vector<int>> 
       return -1;
     }
 
-    status = pimEQ(eqMappingObjectList[i], modelParamObjectList[i], inputObjectList[i]);
+    status = pimEQ(eqMappingObjectList[i], modelParamObjectList[i], temp1);
     if (status != PIM_OK)
     {
       cout << "Abort" << endl;
       return -1;
     }
 
-    status = pimOr(inputObjectList[i], temp, temp);
+    status = pimOr(temp1, temp, temp);
     if (status != PIM_OK)
     {
       cout << "Abort" << endl;
       return -1;
     }
 
+    if (i == 0)
+    {
+      // if this is the first row, copy the result to the pimResult
+      status = pimCopyObjectToObject(temp, pimResult);
+      if (status != PIM_OK)
+      {
+        cout << "Abort" << endl;
+        return -1;
+      }
+      continue;
+    }
     status = pimAnd(temp, pimResult, pimResult);
     if (status != PIM_OK)
     {
       cout << "Abort" << endl;
       return -1;
     }
-
   }
 
   vector<int> pimCompareResult(numOfPaths);
+  vector<uint8_t> pimCompareResultBool(numOfPaths, 0);  // initialize to false
 
-  PimStatus status = pimCopyDeviceToHost(pimResult, (void *)pimCompareResult.data());
+  PimStatus status = pimCopyDeviceToHost(pimResult, (void *)pimCompareResultBool.data());
   if (status != PIM_OK)
   {
     cout << "Abort" << endl;
   }
 
-
-  auto start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < (int) pimCompareResult.size(); ++i) {
+    // convert the boolean result to int
+    if (pimCompareResultBool[i] == 1) {
+      pimCompareResult[i] = 1;  // true
+    } else {
+      pimCompareResult[i] = 0;  // false
+    }
+  }
   
   int classificationResult = countLabelsAndClassify(numOfPaths, dimension, numTrees, pimCompareResult, hostResult);
-
-  auto end = std::chrono::high_resolution_clock::now();
-  hostElapsedTime += (end - start);
 
 
   for (int i = 0; i < (int) modelParamObjectList.size(); ++i) {
@@ -306,6 +323,7 @@ int runRF(uint64_t numOfPaths, int numTrees, int dimension, vector<vector<int>> 
 
   pimFree(pimResult);
   pimFree(temp);
+  pimFree(temp1);
 
   return classificationResult;
 }
@@ -314,7 +332,7 @@ int runRF(uint64_t numOfPaths, int numTrees, int dimension, vector<vector<int>> 
 int main(int argc, char *argv[])
 {
   struct Params params = input_params(argc, argv);
-  int numberOfPaths = ((int) pow(2, params.treeDepth)) * params.tree_count;
+  uint64_t numberOfPaths = ((uint64_t) pow(2, params.treeDepth)) * params.tree_count;
 
   // using random matrix to simulate training an RF classifer 
   getModelAndInput(numberOfPaths, params.dimension, modelParameter, negativeParameterMapping, compareParameterMapping);
@@ -344,9 +362,7 @@ int main(int argc, char *argv[])
     }
 
   auto end = std::chrono::high_resolution_clock::now();
-  hostElapsedTime += (end - start);
-
-
+  chrono::duration<double, milli> inputTime = end - start;
 
   if (!createDevice(params.configFile))
     return 1;
@@ -357,6 +373,8 @@ int main(int argc, char *argv[])
 
 
   pimShowStats();
+  cout << "Host elapsed time for preprocessing: " << fixed << setprecision(3) << inputTime.count() << " ms." << endl;
+
   cout << "Host elapsed time: " << fixed << setprecision(3) << hostElapsedTime.count() << " ms." << endl;
 
   return 0;
