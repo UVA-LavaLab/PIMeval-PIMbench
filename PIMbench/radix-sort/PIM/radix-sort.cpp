@@ -15,6 +15,7 @@
 using namespace std;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+std::chrono::duration<double, std::milli> hostElapsedTimePref = std::chrono::duration<double, std::milli>::zero();
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -130,7 +131,7 @@ void runPrefixSum(uint64_t vectorLength, std::vector<int64_t> &src, std::vector<
         else maskVec[j] = tempVec[j - (1 << i)];
       }
       auto stop_cpu = std::chrono::high_resolution_clock::now();
-      hostElapsedTime += (stop_cpu - start_cpu);
+      hostElapsedTimePref += (stop_cpu - start_cpu);
       status = pimCopyHostToDevice((void *)maskVec.data(), maskObj);
       if (status != PIM_OK) {
         std::cout << "Abort" << std::endl;
@@ -252,9 +253,9 @@ int main(int argc, char *argv[])
 
 
         auto start_cpu = std::chrono::high_resolution_clock::now();
-
+        unsigned shiftMask = i * radix_bits;
         for(int j = (int)(numElements - 1); j >= 0; j--){
-            unsigned element_num = (src1[j] & mask) >> (i * radix_bits);
+            unsigned element_num = (src1[j] & mask) >> shiftMask; //get the element number in the counting table
             temp_array[count_table[element_num]-1] = src1[j];
             count_table[element_num]--;
         }
@@ -282,5 +283,6 @@ int main(int argc, char *argv[])
     }
 
     cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
+    cout << "Host elapsed time for Prefix Sum: " << std::fixed << std::setprecision(3) << hostElapsedTimePref.count() << " ms." << endl;
     return 0;
 }
