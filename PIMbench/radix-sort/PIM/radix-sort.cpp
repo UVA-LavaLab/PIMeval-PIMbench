@@ -242,11 +242,6 @@ int main(int argc, char *argv[])
         }
 
         runPrefixSum(radix, count_table, count_table);
-        //Assuming the BitSIMD support 8 bits EQ, so CPU doesn't need to creat slice
-        //host do prefix scan on the counting table
-        // for (unsigned j = 1; j < radix; j++){
-        //     count_table[j] = count_table[j] + count_table[j-1];
-        // }
 
         //host perform reording on temp_array and copy it to src1
         std::vector<int> temp_array(numElements);
