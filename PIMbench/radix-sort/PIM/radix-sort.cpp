@@ -15,6 +15,7 @@
 using namespace std;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+std::chrono::duration<double, std::milli> hostElapsedTimePref = std::chrono::duration<double, std::milli>::zero();
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -74,6 +75,79 @@ struct Params getInputParams(int argc, char **argv)
     }
   }
   return p;
+}
+
+void runPrefixSum(uint64_t vectorLength, std::vector<int64_t> &src, std::vector<int64_t> &dst) {
+  PimObjId srcObj = pimAlloc(PIM_ALLOC_AUTO, vectorLength, PIM_INT64);
+  if (srcObj == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  PimStatus status = pimCopyHostToDevice((void *)src.data(), srcObj);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  PimDeviceProperties deviceProp;
+  status = pimGetDeviceProperties(&deviceProp);
+  if (deviceProp.isHLayoutDevice) {
+    PimObjId dstObj = pimAllocAssociated(srcObj, PIM_INT64);
+    if (dstObj == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+    status = pimPrefixSum(srcObj, dstObj);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+    dst.resize(vectorLength);
+    status = pimCopyDeviceToHost(dstObj, (void *)dst.data());
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+    }
+    pimFree(dstObj);
+  } else {
+    std::vector <int64_t> tempVec = src;
+    PimObjId maskObj = pimAllocAssociated(srcObj, PIM_INT64);
+    if (maskObj == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+    std::vector<int64_t> maskVec (vectorLength, 0);
+    for (uint64_t i = 0; (uint64_t)(1 << i) < vectorLength; ++i) {
+      auto start_cpu = std::chrono::high_resolution_clock::now();
+      #pragma omp parallel for
+      for (uint64_t j = 0; j < vectorLength; ++j) {
+        if (j < (uint64_t)(1 << i)) maskVec[j] = 0;
+        else maskVec[j] = tempVec[j - (1 << i)];
+      }
+      auto stop_cpu = std::chrono::high_resolution_clock::now();
+      hostElapsedTimePref += (stop_cpu - start_cpu);
+      status = pimCopyHostToDevice((void *)maskVec.data(), maskObj);
+      if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return;
+      }
+      status = pimAdd(srcObj, maskObj, srcObj);
+      status = pimCopyDeviceToHost(srcObj, tempVec.data());
+      if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return;
+      }
+    }
+    dst = tempVec;
+    pimFree(maskObj);
+  }
+  pimFree(srcObj);
 }
 
 int main(int argc, char *argv[])
@@ -167,26 +241,23 @@ int main(int argc, char *argv[])
             }
         }
 
-        //Assuming the BitSIMD support 8 bits EQ, so CPU doesn't need to creat slice
-        auto start_cpu = std::chrono::high_resolution_clock::now();
-        //host do prefix scan on the counting table
-        for (unsigned j = 1; j < radix; j++){
-            count_table[j] = count_table[j] + count_table[j-1];
-        }
+        runPrefixSum(radix, count_table, count_table);
 
         //host perform reording on temp_array and copy it to src1
         std::vector<int> temp_array(numElements);
 
+
+        auto start_cpu = std::chrono::high_resolution_clock::now();
+        unsigned shiftMask = i * radix_bits;
         for(int j = (int)(numElements - 1); j >= 0; j--){
-            unsigned element_num = (src1[j] & mask) >> (i * radix_bits);
+            unsigned element_num = (src1[j] & mask) >> shiftMask; //get the element number in the counting table
             temp_array[count_table[element_num]-1] = src1[j];
             count_table[element_num]--;
         }
-        src1 = temp_array;
-
         auto stop_cpu = std::chrono::high_resolution_clock::now();
         hostElapsedTime += (stop_cpu - start_cpu);
-
+        
+        src1 = temp_array;
         //shift mask bit for next iteration
         mask = mask << radix_bits;
     }
@@ -207,5 +278,6 @@ int main(int argc, char *argv[])
     }
 
     cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
+    cout << "Host elapsed time for Prefix Sum: " << std::fixed << std::setprecision(3) << hostElapsedTimePref.count() << " ms." << endl;
     return 0;
 }

@@ -37,8 +37,6 @@ def train_model(X_train, y_train, num_trees, dt_height):
     rf_model = RandomForestClassifier(
         n_estimators=num_trees,
         max_leaf_nodes=2**dt_height,
-        min_samples_split=2,
-        min_samples_leaf=1,
         criterion="gini",
         random_state=42
     )
@@ -48,7 +46,7 @@ def train_model(X_train, y_train, num_trees, dt_height):
     print("[INFO] Finished training Random Forest")
     return rf_model
 
-def eval_cpu(model, input_sample):
+def eval_cpu(model, input_sample, dt_height):
     # Evaluate the model
     start_time = time.time()
     single_prediction = model.predict(input_sample)  # run and time inference
@@ -59,7 +57,7 @@ def eval_cpu(model, input_sample):
 
     # ensure random forest actually creates the correct sized decision trees
     leaf_counts = [estimator.get_n_leaves() for estimator in model.estimators_]
-    num_leaf_nodes = 2**args.dt_height
+    num_leaf_nodes = 2**dt_height
     if all(leaf_count == num_leaf_nodes for leaf_count in leaf_counts):
         print(f"PASS: All trees have exactly {num_leaf_nodes} leaf nodes.")
     else:
@@ -69,46 +67,39 @@ def eval_gpu(model, input_sample):
     import cupy as cp
 
     handle = _get_nvml_handle()
-    start_energy = _energy_joules(handle)
-    if start_energy is None:
-        # fall back: record instantaneous power just before the kernel
-        start_power = _power_watts(handle)
+    n_samples = input_sample.shape[0]
 
-    single_gpu_sample = cp.asarray(input_sample)  # move sample to GPU
+    reps = 10
     start = cp.cuda.Event()
     end = cp.cuda.Event()
 
-    start.record()
-
-    reps = 1000                           # 1000 × 0.7 ms ≈ 0.7 s
     start_energy = _energy_joules(handle)
+    if start_energy is None:
+        start_power = _power_watts(handle)
 
+    start.record()
     for _ in range(reps):
-        single_prediction = model.predict(
-            single_gpu_sample
-        )
-
+        _ = model.predict(input_sample)
     end.record()
     end.synchronize()
 
-    elapsed_ms = cp.cuda.get_elapsed_time(start, end) / reps
+    total_elapsed_ms = cp.cuda.get_elapsed_time(start, end)  # ms over all reps
+    avg_batch_time_ms = total_elapsed_ms / reps
+    avg_sample_time_ms = avg_batch_time_ms / n_samples
+
     end_energy = _energy_joules(handle)
 
-    # make sure to average by the number of runs
+    print(f"[RESULT] Inference time per batch : {avg_batch_time_ms:.4f} ms")
+    print(f"[RESULT] Inference time per sample: {avg_sample_time_ms:.6f} ms")
+
     if end_energy is not None:
-        energy_j = (end_energy - start_energy) / reps
-        avg_power_w = (energy_j / (elapsed_ms / 1_000)) / reps
-        print(f"Inference time   : {elapsed_ms:>8.4f} ms")
-        print(f"Energy consumed : {energy_j:>8.4f} mJ")
-        print(f"Avg GPU power   : {avg_power_w:>8.2f} W")
+        energy_per_batch_mJ = (end_energy - start_energy) / reps
+        print(f"[RESULT] Energy per batch        : {energy_per_batch_mJ:.4f} mJ")
     else:
-        # counter not supported → crude estimate
-        avg_power_w = start_power / reps
-        energy_j = (avg_power_w * (elapsed_ms / 1_000) ) / reps
-        print(f"Inference time   : {elapsed_ms:>8.4f} ms")
-        print("Energy counter   : not supported on this GPU")
-        print(f"Est. energy      : {energy_j:>8.4f} mJ "
-            f"(using {avg_power_w:.1f} W)")
+        avg_power_W = start_power / reps
+        energy_per_batch_mJ = (avg_power_W * (avg_batch_time_ms / 1000)) * 1000  # W·s → mJ
+        print("[RESULT] Energy counter not supported")
+        print(f"[RESULT] Est. energy per batch   : {energy_per_batch_mJ:.4f} mJ")
 
 
 
@@ -125,21 +116,35 @@ def main(args):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     # make data completely random, so as to ensure we get enough decision splits during training
     X_train = X_train + np.random.normal(0, 0.99, X_train.shape)
-    single_sample = X_test[0].reshape(1, -1)  # sample 1 input for evaluation
+    X_train = X_train.astype(np.float32)
+    X_test = X_test.astype(np.float32)
+    batch_sample = X_test[:1].astype(np.float32)
+    single_sample = np.array(batch_sample)  # sample 1 input for evaluation
     
     # train the same sklearn model for both CPU and GPU inference
     rf_model = train_model(X_train, y_train, args.num_trees, args.dt_height)
     
     if args.cuda:
-        from cuml import ForestInference
-        fil_model = ForestInference.load_from_sklearn(
-            rf_model,
-            output_class=True,
-        )
-        eval_gpu(fil_model, single_sample)
+        from cuml import RandomForestClassifier as cuRF
+        import gc
+        cu_rf_params = {
+            'n_estimators': args.num_trees,
+            'max_depth': 2**args.dt_height,
+            }
+        cu_rf = cuRF(**cu_rf_params)
+        cu_rf.fit(X_train, y_train)
+        print("[INFO] Finished training cuML Random Forest")
+        # fil_model = ForestInference.load_from_sklearn(
+        #     rf_model,
+        #     output_class=True,
+        # )
+        eval_gpu(cu_rf, single_sample)
+        del cu_rf
+        gc.collect()
+        pynvml.nvmlShutdown()
     else:
         # if cuda not set, train and eval on CPU
-        eval_cpu(rf_model, single_sample)
+        eval_cpu(rf_model, single_sample, args.dt_height)
         
 
 
