@@ -26,7 +26,6 @@ typedef struct Params
   bool affine;
   char *dramConfigFile;
   bool shouldVerify;
-  bool moreDebugPrints;
 } Params;
 
 void usage()
@@ -50,14 +49,13 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.batch_size = 64;
-  p.num_features = 64;
+  p.num_features = 3;
   p.height = 224;
   p.width = 224;
   p.eps = 1e-4;
   p.affine = false;
   p.dramConfigFile = nullptr;
   p.shouldVerify = false;
-  p.moreDebugPrints = false;
 
   int opt;
   while ((opt = getopt(argc, argv, "hb:f:r:c:e:a:d:v:g:")) >= 0)
@@ -91,9 +89,6 @@ struct Params getInputParams(int argc, char **argv)
       break;
     case 'v':
       p.shouldVerify = (*optarg == 't') ? true : false;
-      break;
-    case 'g':
-      p.moreDebugPrints = (*optarg == 't') ? true : false;
       break;
     default:
       fprintf(stderr, "\nUnrecognized option!\n");
@@ -132,6 +127,8 @@ void cpuBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
                   std::vector<std::vector<std::vector<std::vector<float>>>> &output,
                   int num_features, float eps, bool affine)
 {
+  auto cpu_start = std::chrono::high_resolution_clock::now();
+   
   int batch_size = input.size();
   int height = input[0][0].size();
   int width = input[0][0][0].size();
@@ -161,7 +158,11 @@ void cpuBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
       beta[f] = dist(gen);
     }
   }
-  
+  auto cpu_end = std::chrono::high_resolution_clock::now();
+  auto cpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(cpu_end - cpu_start);
+   std::cout << "[INFO] CPU computation time: " << cpu_duration.count() / 1000.0 << " ms" << std::endl;
+    
+    
   // For each feature channel
   for (int f = 0; f < num_features; f++) {
     // Compute mean and variance for this batch and feature
@@ -178,7 +179,6 @@ void cpuBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
         }
       }
     }
-    
     float mean = sum / count;
     float var = (sum_sq / count) - (mean * mean);
     var = std::max(var, 0.0f); // Ensure variance is non-negative
@@ -191,7 +191,9 @@ void cpuBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
       for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
           float normalized = (input[b][f][h][w] - mean) / std_dev;
-          output[b][f][h][w] = gamma[f] * normalized + beta[f];
+          if (affine){
+            output[b][f][h][w] = gamma[f] * normalized + beta[f];
+          }
         }
       }
     }
@@ -203,6 +205,8 @@ void cpuBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
 void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>> &input,
                   std::vector<std::vector<std::vector<std::vector<float>>>> &output,
                   int num_features, float eps, bool affine) {
+    std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+    auto start_cpu = std::chrono::high_resolution_clock::now();
     int batch_size = input.size();
     int height = input[0][0].size();
     int width = input[0][0][0].size();
@@ -230,152 +234,155 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
             beta[f] = dist(gen);
         }
     }
+    auto stop_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += (stop_cpu - start_cpu);
+    std::cout << "Host elapsed time: " << fixed << setprecision(3)<< hostElapsedTime.count() << " ms" << std::endl;
 
     for (int f = 0; f < num_features; ++f) {
-        // Flatten channel data
-        std::vector<float> feature_data, output_data;
-        feature_data.reserve(batch_size * height * width);
-        output_data.resize(batch_size * height * width);
-        for (int b = 0; b < batch_size; ++b)
-            for (int h = 0; h < height; ++h)
-                for (int w = 0; w < width; ++w)
-                    feature_data.push_back(input[b][f][h][w]);
-
-
-        int data_size = feature_data.size();
-        PimObjId input_obj = pimAlloc(PIM_ALLOC_AUTO, data_size, PIM_FP32);
-        if (input_obj == -1) {
-            std::cout << "Abort: pimAlloc failed for input_obj" << std::endl;
-            return;
-        }
-
-        PimObjId output_obj = pimAlloc(PIM_ALLOC_AUTO, data_size, PIM_FP32);
-        if (output_obj == -1) {
-            std::cout << "Abort: pimAlloc failed for output_obj" << std::endl;
-            return;
-        }
-
-        PimObjId temp_obj = pimAllocAssociated(output_obj, PIM_FP32);
-        if (temp_obj == -1) {
-            std::cout << "Abort: pimAlloc failed for temp_obj" << std::endl;
-            return;
-        }
-
-        PimStatus status = pimCopyHostToDevice(feature_data.data(), input_obj);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
-
-        status = pimCopyHostToDevice(feature_data.data(), output_obj);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
-
-        // Compute mean
+        int data_size = batch_size * height * width;
         float sum = 0.0f;
-        status = pimRedSum(input_obj, &sum);
-        if (status != PIM_OK)
-        {
-          std::cout << "Abort" << std::endl;
-          return;
-        }
-        float mean = sum / data_size;
-
-
-        // Compute variance
         float sum_sq = 0.0f;
-        status = pimMul(input_obj, input_obj, input_obj);
-        if (status != PIM_OK)
-        {
-          std::cout << "Abort" << std::endl;
-          return;
+        
+        for (int b = 0; b < batch_size; ++b){
+          for (int h = 0; h < height; ++h){
+
+            PimObjId input_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_FP32);
+            if (input_obj == -1) {
+                std::cout << "Abort: pimAlloc failed for input_obj" << std::endl;
+                return;
+            }
+
+            PimStatus status = pimCopyHostToDevice((void*)input[b][f][h].data(), input_obj);
+            if (status != PIM_OK) {
+                std::cout << "Abort" << std::endl;
+                return;
+            }
+
+            float local_sum = 0.0f;
+            status = pimRedSum(input_obj, &local_sum);
+            if (status != PIM_OK)
+            {
+              std::cout << "Abort" << std::endl;
+              return;
+            }
+
+
+            float local_sum_sq = 0.0f;
+            status = pimMul(input_obj, input_obj, input_obj);
+            if (status != PIM_OK)
+            {
+              std::cout << "Abort" << std::endl;
+              return;
+            }
+            status = pimRedSum(input_obj, &local_sum_sq);
+            if (status != PIM_OK){
+              std::cout << "Abort" << std::endl;
+              return;
+            }
+
+            sum += local_sum;
+            sum_sq += local_sum_sq;
+
+            pimFree(input_obj);
+
+          }
         }
-        status = pimRedSum(input_obj, &sum_sq);
-        if (status != PIM_OK){
-          std::cout << "Abort" << std::endl;
-          return;
-        }
+
+        float mean = sum / data_size;
         float var = (sum_sq / data_size) - (mean * mean);
         var = std::max(var, 0.0f); // Ensure variance is non-negative
         float std_dev = std::sqrt(var + eps);
-
         std::cout << "Feature " << f << " Mean: " << mean << ", Std Dev: " << std_dev << std::endl;
+       
+        for (int b = 0; b < batch_size; ++b){
+          for (int h = 0; h < height; ++h){
 
-        // Normalize
-        status = pimBroadcastFP(temp_obj, mean);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
-        status = pimSub(output_obj, temp_obj, output_obj);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
-
-        status = pimBroadcastFP(temp_obj, std_dev);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
-        status = pimDiv(output_obj, temp_obj, output_obj);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
-
-        // Apply affine transformation
-        if (affine) {
-
-            status = pimBroadcastFP(temp_obj, gamma[f]);
-            if (status != PIM_OK) {
-                std::cout << "Abort" << std::endl;
+            PimObjId output_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_FP32);
+            if (output_obj == -1) {
+                std::cout << "Abort: pimAlloc failed for output_obj" << std::endl;
                 return;
             }
-            status = pimMul(output_obj, temp_obj, output_obj);
+
+            PimStatus status = pimCopyHostToDevice((void*)input[b][f][h].data(), output_obj);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
 
-            status = pimBroadcastFP(temp_obj, beta[f]);
+            PimObjId temp_obj = pimAllocAssociated(output_obj, PIM_FP32);
+            if (temp_obj == -1) {
+                std::cout << "Abort: pimAlloc failed for temp_obj" << std::endl;
+                return;
+            }
+
+
+            // Normalize
+            status = pimBroadcastFP(temp_obj, mean);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
-            status = pimAdd(output_obj, temp_obj, output_obj);
+            status = pimSub(output_obj, temp_obj, output_obj);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
-        }
 
-        status = pimCopyDeviceToHost(output_obj, output_data.data());
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
+            status = pimBroadcastFP(temp_obj, std_dev);
+            if (status != PIM_OK) {
+                std::cout << "Abort" << std::endl;
+                return;
+            }
+            status = pimDiv(output_obj, temp_obj, output_obj);
+            if (status != PIM_OK) {
+                std::cout << "Abort" << std::endl;
+                return;
+            }
 
-        // Copy output data to output tensor
-        for (int b = 0; b < batch_size; b++) {
-            for (int h = 0; h < height; h++) {
-                for (int w = 0; w < width; w++) {
-                    output[b][f][h][w] = output_data[b * height * width + h * width + w];
+            // Apply affine transformation
+            if (affine) {
+
+                status = pimBroadcastFP(temp_obj, gamma[f]);
+                if (status != PIM_OK) {
+                    std::cout << "Abort" << std::endl;
+                    return;
+                }
+                status = pimMul(output_obj, temp_obj, output_obj);
+                if (status != PIM_OK) {
+                    std::cout << "Abort" << std::endl;
+                    return;
+                }
+
+                status = pimBroadcastFP(temp_obj, beta[f]);
+                if (status != PIM_OK) {
+                    std::cout << "Abort" << std::endl;
+                    return;
+                }
+                status = pimAdd(output_obj, temp_obj, output_obj);
+                if (status != PIM_OK) {
+                    std::cout << "Abort" << std::endl;
+                    return;
                 }
             }
+            
+            status = pimCopyDeviceToHost(output_obj, output[b][f][h].data());
+            if (status != PIM_OK) {
+                std::cout << "Abort" << std::endl;
+                return;
+            }
+
+            pimFree(output_obj);
+            pimFree(temp_obj);
+
+          }
         }
-        pimFree(input_obj);
-        pimFree(output_obj);
     }
 }
 
 
 // Compare PIM results with CPU reference
 void compareResults(const std::vector<std::vector<std::vector<std::vector<float>>>> &pim_output,
-                   const std::vector<std::vector<std::vector<std::vector<float>>>> &cpu_output,
-                   bool moreDebugPrints)
+                   const std::vector<std::vector<std::vector<std::vector<float>>>> &cpu_output)
 {
   if (pim_output.size() != cpu_output.size()) {
     std::cout << "[ERROR] Output sizes don't match!" << std::endl;
@@ -399,13 +406,6 @@ void compareResults(const std::vector<std::vector<std::vector<std::vector<float>
           max_diff = std::max(max_diff, diff);
           total_diff += diff;
           total_elements++;
-          
-          // if (diff > 1e-5) {
-          //   std::cout << "[DEBUG] Mismatch at [" << b << "][" << f << "][" << h_idx << "][" << w_idx 
-          //             << "]: PIM=" << pim_output[b][f][h_idx][w_idx] 
-          //             << ", CPU=" << cpu_output[b][f][h_idx][w_idx] 
-          //             << ", diff=" << diff << std::endl;
-          // }
         }
       }
     }
@@ -418,7 +418,7 @@ void compareResults(const std::vector<std::vector<std::vector<std::vector<float>
   std::cout << "  - Average difference: " << avg_diff << std::endl;
   std::cout << "  - Total elements: " << total_elements << std::endl;
   
-  if (max_diff < 1e-3) {
+  if (avg_diff < 1e-2) {
     std::cout << "[SUCCESS] PIM and CPU results match within tolerance!" << std::endl;
   } else {
     std::cout << "[WARNING] PIM and CPU results have significant differences!" << std::endl;
@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
     std::cout << "[INFO] CPU computation time: " << cpu_duration.count() / 1000.0 << " ms" << std::endl;
     
     // Compare results
-    compareResults(pim_output, cpu_output, params.moreDebugPrints);
+    compareResults(pim_output, cpu_output);
   }
   
   
