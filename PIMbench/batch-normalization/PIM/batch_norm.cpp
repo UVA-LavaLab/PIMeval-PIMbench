@@ -191,9 +191,8 @@ void cpuBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
       for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
           float normalized = (input[b][f][h][w] - mean) / std_dev;
-          if (affine){
-            output[b][f][h][w] = gamma[f] * normalized + beta[f];
-          }
+          output[b][f][h][w] = affine?gamma[f] * normalized + beta[f]:normalized;
+      
         }
       }
     }
@@ -238,6 +237,33 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
     hostElapsedTime += (stop_cpu - start_cpu);
     std::cout << "Host elapsed time: " << fixed << setprecision(3)<< hostElapsedTime.count() << " ms" << std::endl;
 
+    PimObjId row_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_FP32);
+    if (row_obj == -1) {
+        std::cerr << "Abort: pimAlloc failed for row_obj\n";
+        return;
+    }
+    PimObjId mean_obj = pimAllocAssociated(row_obj, PIM_FP32);
+    if (mean_obj == -1) {
+        std::cerr << "Abort: pimAlloc failed for mean_obj\n";
+        return;
+    }
+    PimObjId std_obj = pimAllocAssociated(row_obj, PIM_FP32);
+    if (std_obj == -1) {
+        std::cerr << "Abort: pimAlloc failed for std_obj\n";
+        return;
+    }
+    PimObjId affine_std = pimAllocAssociated(row_obj, PIM_FP32);
+    if (affine_std == -1) {
+        std::cerr << "Abort: pimAlloc failed for affine_std\n";
+        return;
+    }
+    PimObjId affine_mean = pimAllocAssociated(row_obj, PIM_FP32);
+    if (affine_mean == -1) {
+        std::cerr << "Abort: pimAlloc failed for affine_mean\n";
+        return;
+    }
+
+
     for (int f = 0; f < num_features; ++f) {
         int data_size = batch_size * height * width;
         float sum = 0.0f;
@@ -246,20 +272,15 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
         for (int b = 0; b < batch_size; ++b){
           for (int h = 0; h < height; ++h){
 
-            PimObjId input_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_FP32);
-            if (input_obj == -1) {
-                std::cout << "Abort: pimAlloc failed for input_obj" << std::endl;
-                return;
-            }
 
-            PimStatus status = pimCopyHostToDevice((void*)input[b][f][h].data(), input_obj);
+            PimStatus status = pimCopyHostToDevice((void*)input[b][f][h].data(), row_obj);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
 
             float local_sum = 0.0f;
-            status = pimRedSum(input_obj, &local_sum);
+            status = pimRedSum(row_obj, &local_sum);
             if (status != PIM_OK)
             {
               std::cout << "Abort" << std::endl;
@@ -268,13 +289,13 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
 
 
             float local_sum_sq = 0.0f;
-            status = pimMul(input_obj, input_obj, input_obj);
+            status = pimMul(row_obj, row_obj, row_obj);
             if (status != PIM_OK)
             {
               std::cout << "Abort" << std::endl;
               return;
             }
-            status = pimRedSum(input_obj, &local_sum_sq);
+            status = pimRedSum(row_obj, &local_sum_sq);
             if (status != PIM_OK){
               std::cout << "Abort" << std::endl;
               return;
@@ -282,8 +303,6 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
 
             sum += local_sum;
             sum_sq += local_sum_sq;
-
-            pimFree(input_obj);
 
           }
         }
@@ -293,47 +312,52 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
         var = std::max(var, 0.0f); // Ensure variance is non-negative
         float std_dev = std::sqrt(var + eps);
         std::cout << "Feature " << f << " Mean: " << mean << ", Std Dev: " << std_dev << std::endl;
+
+       
+        PimStatus status = pimBroadcastFP(mean_obj, mean);
+        if (status != PIM_OK) {
+            std::cout << "Abort" << std::endl;
+            return;
+        }
+
+        status = pimBroadcastFP(std_obj, std_dev);
+            if (status != PIM_OK) {
+                std::cout << "Abort" << std::endl;
+                return;
+        }
+
+
+        if(affine){
+          status = pimBroadcastFP(affine_std, gamma[f]);
+          if (status != PIM_OK) {
+              std::cout << "Abort" << std::endl;
+              return;
+          }
+
+          status = pimBroadcastFP(affine_mean, beta[f]);
+          if (status != PIM_OK) {
+              std::cout << "Abort" << std::endl;
+              return;
+          }
+
+        }
        
         for (int b = 0; b < batch_size; ++b){
           for (int h = 0; h < height; ++h){
 
-            PimObjId output_obj = pimAlloc(PIM_ALLOC_AUTO, width, PIM_FP32);
-            if (output_obj == -1) {
-                std::cout << "Abort: pimAlloc failed for output_obj" << std::endl;
-                return;
-            }
-
-            PimStatus status = pimCopyHostToDevice((void*)input[b][f][h].data(), output_obj);
+            PimStatus status = pimCopyHostToDevice((void*)input[b][f][h].data(), row_obj);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
 
-            PimObjId temp_obj = pimAllocAssociated(output_obj, PIM_FP32);
-            if (temp_obj == -1) {
-                std::cout << "Abort: pimAlloc failed for temp_obj" << std::endl;
-                return;
-            }
-
-
-            // Normalize
-            status = pimBroadcastFP(temp_obj, mean);
-            if (status != PIM_OK) {
-                std::cout << "Abort" << std::endl;
-                return;
-            }
-            status = pimSub(output_obj, temp_obj, output_obj);
+            status = pimSub(row_obj, mean_obj, row_obj);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
 
-            status = pimBroadcastFP(temp_obj, std_dev);
-            if (status != PIM_OK) {
-                std::cout << "Abort" << std::endl;
-                return;
-            }
-            status = pimDiv(output_obj, temp_obj, output_obj);
+            status = pimDiv(row_obj, std_obj, row_obj);
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
@@ -342,41 +366,31 @@ void pimBatchNorm(const std::vector<std::vector<std::vector<std::vector<float>>>
             // Apply affine transformation
             if (affine) {
 
-                status = pimBroadcastFP(temp_obj, gamma[f]);
-                if (status != PIM_OK) {
-                    std::cout << "Abort" << std::endl;
-                    return;
-                }
-                status = pimMul(output_obj, temp_obj, output_obj);
+                status = pimMul(row_obj, affine_std, row_obj);
                 if (status != PIM_OK) {
                     std::cout << "Abort" << std::endl;
                     return;
                 }
 
-                status = pimBroadcastFP(temp_obj, beta[f]);
-                if (status != PIM_OK) {
-                    std::cout << "Abort" << std::endl;
-                    return;
-                }
-                status = pimAdd(output_obj, temp_obj, output_obj);
+                status = pimAdd(row_obj, affine_mean, row_obj);
                 if (status != PIM_OK) {
                     std::cout << "Abort" << std::endl;
                     return;
                 }
             }
             
-            status = pimCopyDeviceToHost(output_obj, output[b][f][h].data());
+            status = pimCopyDeviceToHost(row_obj, output[b][f][h].data());
             if (status != PIM_OK) {
                 std::cout << "Abort" << std::endl;
                 return;
             }
 
-            pimFree(output_obj);
-            pimFree(temp_obj);
-
           }
         }
     }
+    pimFree(std_obj);
+    pimFree(mean_obj);
+    pimFree(row_obj);
 }
 
 
