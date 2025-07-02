@@ -96,6 +96,19 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
         std::cout << "Abort" << std::endl;
         return;
     }
+    PimObjId w_obj = pimAllocAssociated(xObj, PIM_FP32);
+    if (w_obj == -1)
+    {
+        std::cout << "Abort" << std::endl;
+        return;
+    }
+
+    PimObjId b_obj = pimAllocAssociated(predictionObj, PIM_FP32);
+    if (b_obj == -1)
+    {
+        std::cout << "Abort" << std::endl;
+        return;
+    }
 
     PimObjId oneVecObj = pimAllocAssociated(predictionObj, PIM_FP32);
     if (oneVecObj == -1)
@@ -128,6 +141,11 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
         return;
     }
 
+    status = pimBroadcastFP(oneVecObj, 1.0f);
+    if (status != PIM_OK) {
+        std::cout << "Abort" << std::endl;
+        return;
+    }
     
     std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
     std::vector<float> zBuffer(dataSize);
@@ -135,31 +153,31 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
         float dw = 0.0f, db = 0.0f;
 
 
-        status = pimBroadcastFP(oneVecObj, w);
+        status = pimBroadcastFP(w_obj, w);
         if (status != PIM_OK) {
             std::cout << "Abort" << std::endl;
             return;
         }
-        status = pimMul(xObj, oneVecObj, predictionObj);
+
+        status = pimMul(xObj, w_obj, predictionObj);
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;
           return;
         }
 
-        status = pimBroadcastFP(oneVecObj, b);
+        status = pimBroadcastFP(b_obj, b);
         if (status != PIM_OK) {
             std::cout << "Abort" << std::endl;
             return;
         }
-        status = pimAdd(predictionObj, oneVecObj, predictionObj);
+
+        status = pimAdd(predictionObj, b_obj, predictionObj);
         if (status != PIM_OK)
         {
           std::cout << "Abort" << std::endl;
           return;
         }
-
-
         status = pimCopyDeviceToHost(predictionObj, zBuffer.data());
         if (status != PIM_OK)
         {
@@ -169,9 +187,9 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
 
 
         auto start_cpu = std::chrono::high_resolution_clock::now();
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (uint64_t i = 0; i < dataSize; ++i) {
-            zBuffer[i] = expf(-zBuffer[i]);
+            zBuffer[i] = exp(-zBuffer[i]);
         }
         auto stop_cpu = std::chrono::high_resolution_clock::now();
         hostElapsedTime += (stop_cpu - start_cpu);
@@ -182,19 +200,12 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
           std::cout << "Abort" << std::endl;
           return;
         }
-        
-        status = pimBroadcastFP(oneVecObj, 1.0f);
-        if (status != PIM_OK) {
-            std::cout << "Abort" << std::endl;
-            return;
-        }
 
         status = pimAdd(predictionObj, oneVecObj, predictionObj);
         if (status != PIM_OK) {
             std::cout << "Abort" << std::endl;
             return;
         }
-
 
         status = pimDiv(oneVecObj, predictionObj, predictionObj);  
         if (status != PIM_OK) {
@@ -209,20 +220,7 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
           return;
         }
 
-        status = pimMul(errorObj, xObj, predictionObj);
-        if (status != PIM_OK)
-        {
-          std::cout << "Abort" << std::endl;
-          return;
-        }
 
-        status = pimRedSum(predictionObj, &dw);
-        if (status != PIM_OK)
-        {
-          std::cout << "Abort" << std::endl;
-          return;
-        }
-        
         status = pimRedSum(errorObj, &db);
         if (status != PIM_OK)
         {
@@ -230,14 +228,40 @@ void runLogisticRegressionPIM(uint64_t dataSize, int epochs, float lr, vector<fl
           return;
         }
 
+        status = pimMul(errorObj, xObj, errorObj);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+
+        std::vector<float> errorBuffer(dataSize);
+
+        status = pimRedSum(errorObj, &dw);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+        
+        
         w -= lr * dw / dataSize;
         b -= lr * db / dataSize;
+        std::cout << "Epoch " << epoch
+                  << ": w = " << w
+                  << ", b = " << b
+                  << ", dw = " << dw
+                  << ", db = " << db
+                  << std::endl;
+
     }
 
     pimFree(xObj);
     pimFree(yObj);
     pimFree(predictionObj);
     pimFree(errorObj);
+    pimFree(w_obj);
+    pimFree(b_obj);
     std::cout << "Host elapsed time: " << fixed << setprecision(3)<< hostElapsedTime.count() << " ms" << std::endl;
 }
 
@@ -251,16 +275,26 @@ void runLogisticRegressionHost(uint64_t n, int epochs, float lr, const vector<fl
 
     for (int epoch = 0; epoch < epochs; ++epoch) {
         float dw = 0.0f, db = 0.0f;
-        #pragma omp parallel for reduction(+ : dw, db)
+        // #pragma omp parallel for reduction(+ : dw, db) 
         for (uint64_t i = 0; i < n; ++i) {
             float z = w_host * X[i] + b_host;
             float pred = sigmoid_exact(z);
             float error = pred - Y[i];
             dw += error * X[i];
+            static std::ofstream error_log("error_log_host.txt", std::ios::app);
+            error_log << error * X[i] << std::endl;
             db += error;
         }
         w_host -= lr * dw / n;
         b_host -= lr * db / n;
+
+
+        std::cout << "Epoch " << epoch
+            << ": w = " << w_host
+            << ", b = " << b_host
+            << ", dw = " << dw
+            << ", db = " << db
+            << std::endl;
     }
 }
 
