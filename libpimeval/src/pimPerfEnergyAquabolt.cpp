@@ -36,11 +36,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   double aquaboltCoreCycle = m_tGDL;
-  unsigned numActPre = std::ceil(maxElementsPerRegion * 1.0 / (16 * 256));
-
+  unsigned numActPre = std::ceil(maxElementsPerRegion * 1.0 * bitsPerElement / (16 * 256));
   uint64_t totalOp = 0;
   switch (cmdType)
   {
+    // Refer to Aquabolt Paper (Table 2, Figure 5). OP Format: GRF = BANK +/* SRF
     case PimCmdEnum::ADD_SCALAR:
     case PimCmdEnum::MUL_SCALAR:
     { 
@@ -98,11 +98,11 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   double aquaboltCoreCycle = m_tGDL;
-  unsigned numActPre = std::ceil(maxElementsPerRegion * 1.0 / (16 * 256));
+  unsigned numActPre = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / (8 * 256));
   uint64_t totalOp = 0;
-
   switch (cmdType)
   {
+    // Refer to Aquabolt Paper (Table 2, Figure 5). OP Format: GRF = BANK +/* GRF
     case PimCmdEnum::ADD:
     case PimCmdEnum::MUL:
     {
