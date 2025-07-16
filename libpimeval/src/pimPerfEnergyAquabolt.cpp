@@ -134,8 +134,9 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
        *
        * As a result, only one read operation is necessary for the entire pass.
       */
+      // OP Format: GRF = BANK * SRF; GRF = BANK + GRF 
       unsigned numberOfOperationPerElement = std::ceil(bitsPerElement * 1.0 / m_aquaboltFPUBitWidth) * 2; // multiplying by 2 as one addition and one multiplication is needed
-      msRead = m_tR * numPass * numActPre + (maxGDLItr * m_tGDL * (numPass - 1)) + (minGDLItr * m_tGDL);
+      msRead = m_tR * numPass * numActPre * 2 + (maxGDLItr * m_tGDL * (numPass - 1)) + (minGDLItr * m_tGDL);
       msWrite = m_tW * numPass * numActPre + (maxGDLItr * m_tGDL * (numPass - 1)) + (minGDLItr * m_tGDL);
       msCompute = (maxGDLItr * aquaboltCoreCycle * numberOfOperationPerElement) * (numPass - 1);
       msCompute += (minGDLItr * aquaboltCoreCycle * numberOfOperationPerElement);
