@@ -109,7 +109,7 @@ pimDevice::init()
     m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
     m_numRows = numRows;
     m_numCols = numCols;
-    m_bufferSize = getBufferSize();
+    m_bufferSize = bufferSize;
   } else {
     return false;
   }
