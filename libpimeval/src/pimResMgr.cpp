@@ -19,8 +19,9 @@
 void
 pimRegion::print(uint64_t regionId) const
 {
-  std::printf("{ PIM-Region %lld: CoreId = %d, Loc = (%u, %u), Size = (%u, %u) }\n",
-              regionId, m_coreId, m_rowIdx, m_colIdx, m_numAllocRows, m_numAllocCols);
+  std::cout << "{ PIM-Region " << regionId << ": CoreId = " << m_coreId 
+            << ", Loc = (" << m_rowIdx << ", " << m_colIdx << "), Size = (" 
+            << m_numAllocRows << ", " << m_numAllocCols << ") }" << std::endl;
 }
 
 //! @brief  Print info of a PIM object
