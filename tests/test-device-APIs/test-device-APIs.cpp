@@ -17,8 +17,9 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   unsigned numSubarrayPerBank = 16;
   unsigned numRows = 1024;
   unsigned numCols = 4096;
+  unsigned bufferSize = numCols / 8;
 
-  PimStatus status = pimCreateDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
+  PimStatus status = deviceType == PIM_DEVICE_AIM ? pimCreateDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols, bufferSize) : pimCreateDevice(deviceType, numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols);
   assert(status == PIM_OK);
 
   PimDeviceProperties deviceProp;
@@ -66,6 +67,8 @@ int main()
   testDeviceAPIs(PIM_DEVICE_FULCRUM);
   testDeviceAPIs(PIM_DEVICE_BANK_LEVEL);
   testDeviceAPIs(PIM_FUNCTIONAL);
+  testDeviceAPIs(PIM_DEVICE_AQUABOLT);
+  testDeviceAPIs(PIM_DEVICE_AIM);
 
   std::cout << "PIM Regression Test: Device Related APIs Passed!" << std::endl;
 
