@@ -9,6 +9,7 @@
 #include "pimParamsDDRDram.h"
 #include "pimParamsLPDDRDram.h"
 #include "pimParamsHBMDram.h"
+#include "pimParamsGDDRDram.h"
 #include <string>
 #include <algorithm>
 #include <cctype>
@@ -29,6 +30,10 @@ std::unique_ptr<pimParamsDram> pimParamsDram::create(PimDeviceProtocolEnum devic
   else if (deviceProtocol == PIM_DEVICE_PROTOCOL_HBM)
   {
     return std::make_unique<pimParamsHBMDram>();
+  } 
+  else if (deviceProtocol == PIM_DEVICE_PROTOCOL_GDDR)
+  {
+    return std::make_unique<pimParamsGDDRDram>();
   }
   else
   {
@@ -62,6 +67,10 @@ std::unique_ptr<pimParamsDram> pimParamsDram::createFromConfig(const std::string
   } 
   else if (deviceProtocol == "HBM" || deviceProtocol == "HBM2") {
     return std::make_unique<pimParamsHBMDram>(params);
+  }
+  else if (deviceProtocol == "GDDR5" || deviceProtocol == "GDDR5X" || deviceProtocol == "GDDR6")
+  {
+    return std::make_unique<pimParamsGDDRDram>(params);
   }
   else
   {

@@ -157,6 +157,7 @@ pimUtils::pimProtocolEnumToStr(PimDeviceProtocolEnum protocol)
     case PIM_DEVICE_PROTOCOL_DDR: return "DDR";
     case PIM_DEVICE_PROTOCOL_LPDDR: return "LPDDR";
     case PIM_DEVICE_PROTOCOL_HBM: return "HBM";
+    case PIM_DEVICE_PROTOCOL_GDDR: return "GDDR";
   }
   return "Unknown";
 }

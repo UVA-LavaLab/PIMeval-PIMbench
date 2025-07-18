@@ -48,11 +48,15 @@ enum PimDeviceEnum {
  *
  * @var PIM_DEVICE_PROTOCOL_HBM
  * High Bandwidth Memory (HBM) protocol.
+ * 
+ * @var PIM_DEVICE_PROTOCOL_GDDR
+ * Graphics Double Data Rate (GDDR) protocol.
 */
 enum PimDeviceProtocolEnum {
   PIM_DEVICE_PROTOCOL_DDR = 0,
   PIM_DEVICE_PROTOCOL_LPDDR,
   PIM_DEVICE_PROTOCOL_HBM,
+  PIM_DEVICE_PROTOCOL_GDDR,
 };
 
 //! @brief  PIM allocation types
@@ -120,7 +124,7 @@ bool pimIsAnalysisMode();
  * @param numSubarrayPerBank Number of subarrays per bank.
  * @param numRows         Number of rows in each subarray.
  * @param numCols         Number of columns in each row.
- * @param bufferSize      Optional on-chip buffer size (KB) for the device (default is 0). This parameter is only applicable for AiM.
+ * @param bufferSize      Optional on-chip buffer size (B) for the device (default is 0). This parameter is only applicable for AiM.
  * @return PimStatus      Status code indicating success or failure of device creation.
  */
 PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, unsigned bufferSize = 0);

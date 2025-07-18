@@ -265,6 +265,8 @@ pimSimConfig::deriveMemConfigFile()
         m_memoryProtocol = PIM_DEVICE_PROTOCOL_LPDDR;
       } else if (protocol == "HBM" || protocol == "HBM2") {
         m_memoryProtocol = PIM_DEVICE_PROTOCOL_HBM;
+      } else if (protocol == "GDDR5" || protocol == "GDDR5X" || protocol == "GDDR6") {
+        m_memoryProtocol = PIM_DEVICE_PROTOCOL_GDDR;
       } else {
         std::cout << "PIM-Error: Unknown protocol " << protocol << " in memory config file: " << m_memConfigFile << std::endl;
         return false;
