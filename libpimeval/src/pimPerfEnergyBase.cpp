@@ -10,6 +10,7 @@
 #include "pimPerfEnergyFulcrum.h"
 #include "pimPerfEnergyBankLevel.h"
 #include "pimPerfEnergyAquabolt.h"
+#include "pimPerfEnergyAim.h"
 #include <cstdint>
 #include <iostream>
 
@@ -34,6 +35,9 @@ pimPerfEnergyFactory::createPerfEnergyModel(const pimPerfEnergyModelParams& para
     case PIM_DEVICE_AQUABOLT:
       std::cout << "PIM-Info: Created performance energy model for AQUABOLT" << std::endl;
       return std::make_unique<pimPerfEnergyAquabolt>(params);
+    case PIM_DEVICE_AIM:
+      std::cout << "PIM-Info: Created performance energy model for AiM" << std::endl;
+      return std::make_unique<pimPerfEnergyAim>(params);
     default:
       std::cout << "PIM-Warning: Created performance energy base model for unrecognized simulation target" << std::endl;
   }
