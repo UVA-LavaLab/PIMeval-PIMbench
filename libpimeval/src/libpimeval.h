@@ -62,7 +62,6 @@ enum PimAllocEnum {
   PIM_ALLOC_H,        // H layout, multiple regions per core
   PIM_ALLOC_V1,       // V layout, at most 1 region per core
   PIM_ALLOC_H1,       // H layout, at most 1 region per core
-  PIM_ALLOC_BUFFER,   // Buffer allocation, horizontal layout, contiguous memory, size depends on the device, location (per bank/chip) depends on the device
 };
 
 //! @brief  PIM data copy types
