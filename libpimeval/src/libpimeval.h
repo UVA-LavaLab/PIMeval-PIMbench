@@ -33,6 +33,7 @@ enum PimDeviceEnum {
   PIM_DEVICE_FULCRUM,
   PIM_DEVICE_BANK_LEVEL,
   PIM_DEVICE_AQUABOLT,
+  PIM_DEVICE_AIM,
 };
 
 /**
@@ -110,7 +111,19 @@ void pimResetStats();
 bool pimIsAnalysisMode();
 
 // Device creation and deletion
-PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols);
+/**
+ * @brief Creates and initializes a PIM (Processing-In-Memory) device with the specified configuration.
+ *
+ * @param deviceType      The type of PIM device to create (see PimDeviceEnum).
+ * @param numRanks        Number of ranks in the device.
+ * @param numBankPerRank  Number of banks per rank.
+ * @param numSubarrayPerBank Number of subarrays per bank.
+ * @param numRows         Number of rows in each subarray.
+ * @param numCols         Number of columns in each row.
+ * @param bufferSize      Optional on-chip buffer size (KB) for the device (default is 0). This parameter is only applicable for AiM.
+ * @return PimStatus      Status code indicating success or failure of device creation.
+ */
+PimStatus pimCreateDevice(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRows, unsigned numCols, unsigned bufferSize = 0);
 PimStatus pimCreateDeviceFromConfig(PimDeviceEnum deviceType, const char* configFileName);
 PimStatus pimGetDeviceProperties(PimDeviceProperties* deviceProperties);
 PimStatus pimDeleteDevice();

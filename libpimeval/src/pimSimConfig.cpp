@@ -20,12 +20,12 @@
 bool
 pimSimConfig::init(PimDeviceEnum deviceType,
     unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank,
-    unsigned numRowPerSubarray, unsigned numColPerSubarray)
+    unsigned numRowPerSubarray, unsigned numColPerSubarray, unsigned bufferSize)
 {
   reset();  // always reset before init
   return deriveConfig(deviceType, "",
                       numRanks, numBankPerRank, numSubarrayPerBank,
-                      numRowPerSubarray, numColPerSubarray);
+                      numRowPerSubarray, numColPerSubarray, bufferSize);
 }
 
 //! @brief  Init PIMeval simulation configuration parameters at device creation
@@ -55,7 +55,9 @@ pimSimConfig::show() const
             << ", #banksPerRank = " << m_numBankPerRank
             << ", #subarraysPerBank = " << m_numSubarrayPerBank
             << ", #rowsPerSubarray = " << m_numRowPerSubarray
-            << ", #colsPerSubarray = " << m_numColPerSubarray << std::endl;
+            << ", #colsPerSubarray = " << m_numColPerSubarray;
+  if (m_bufferSize > 0) std::cout << ", bufferSize = " << m_bufferSize << "B";
+  std::cout << std::endl;
 
   std::cout << "PIM-Config: Number of Threads = " << m_numThreads << std::endl;
   std::cout << "PIM-Config: Load Balanced = " << m_loadBalanced << std::endl;
@@ -67,7 +69,8 @@ bool
 pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
     const std::string& configFilePath,
     unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank,
-    unsigned numRowPerSubarray, unsigned numColPerSubarray)
+    unsigned numRowPerSubarray, unsigned numColPerSubarray,
+    unsigned bufferSize)
 {
   bool ok = true;
 
@@ -87,7 +90,7 @@ pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
   ok = ok & deriveDeviceType(deviceType);
   ok = ok & deriveSimTarget();
   ok = ok & deriveMemConfigFile();
-  ok = ok & deriveDimensions(numRanks, numBankPerRank, numSubarrayPerBank, numRowPerSubarray, numColPerSubarray);
+  ok = ok & deriveDimensions(numRanks, numBankPerRank, numSubarrayPerBank, numRowPerSubarray, numColPerSubarray, bufferSize);
   ok = ok & deriveNumThreads();
   ok = ok & deriveMiscEnvVars();
   ok = ok & deriveLoadBalance();
@@ -320,7 +323,7 @@ pimSimConfig::deriveDimension(const std::string& cfgVar, const std::string& envV
 
 //! @brief  Derive Params: PIM Memory Dimensions
 bool
-pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray)
+pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray, unsigned bufferSize)
 {
   bool ok = true;
   ok = ok & deriveDimension(m_cfgVarNumRanks, m_envVarNumRanks, numRanks, DEFAULT_NUM_RANKS, m_numRanks);
@@ -328,8 +331,13 @@ pimSimConfig::deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsig
   ok = ok & deriveDimension(m_cfgVarNumSubarrayPerBank, m_envVarNumSubarrayPerBank, numSubarrayPerBank, DEFAULT_NUM_SUBARRAY_PER_BANK, m_numSubarrayPerBank);
   ok = ok & deriveDimension(m_cfgVarNumRowPerSubarray, m_envVarNumRowPerSubarray, numRowPerSubarray, DEFAULT_NUM_ROW_PER_SUBARRAY, m_numRowPerSubarray);
   ok = ok & deriveDimension(m_cfgVarNumColPerSubarray, m_envVarNumColPerSubarray, numColPerSubarray, DEFAULT_NUM_COL_PER_SUBARRAY, m_numColPerSubarray);
+  ok = ok & deriveDimension(m_cfgVarBufferSize, m_envVarBufferSize, bufferSize, DEFAULT_BUFFER_SIZE, m_bufferSize);
   if (m_numRanks == 0 || m_numBankPerRank == 0 || m_numSubarrayPerBank == 0 || m_numRowPerSubarray == 0 || m_numColPerSubarray == 0) {
     std::cout << "PIM-Error: Memory dimension parameter cannot be 0" << std::endl;
+    ok = false;
+  }
+  if (m_simTarget != PIM_DEVICE_AIM && m_bufferSize > 0) {
+    std::cout << "PIM-Error: PIM Device " << pimUtils::pimDeviceEnumToStr(m_simTarget) << " does not support any on-chip buffer." << std::endl;
     ok = false;
   }
   return ok;

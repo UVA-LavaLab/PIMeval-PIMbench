@@ -71,7 +71,7 @@ public:
 
   // Update PIMeval simulation configuration parameters at device creation
   bool init(PimDeviceEnum deviceType, unsigned numRanks, unsigned numBankPerRank,
-      unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
+      unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray, unsigned bufferSize);
   bool init(PimDeviceEnum deviceType, const std::string& configFilePath);
   void uninit() { reset(); }
   bool isInit() const { return m_isInit; }
@@ -89,6 +89,7 @@ public:
   unsigned getNumRowPerSubarray() const { return m_numRowPerSubarray; }
   unsigned getNumColPerSubarray() const { return m_numColPerSubarray; }
   unsigned getNumThreads() const { return m_numThreads; }
+  unsigned getBufferSize() const { return m_bufferSize; }
   bool isAnalysisMode() const { return m_analysisMode; }
   unsigned getDebug() const { return m_debug; }
   bool isLoadBalanced() const { return m_loadBalanced; }
@@ -109,7 +110,8 @@ private:
       unsigned numBankPerRank = 0,
       unsigned numSubarrayPerBank = 0,
       unsigned numRowPerSubarray = 0,
-      unsigned numColPerSubarray = 0);
+      unsigned numColPerSubarray = 0,
+      unsigned bufferSize = 0);
 
   bool deriveDebug();
   std::unordered_map<std::string, std::string> readEnvVars() const;
@@ -119,7 +121,7 @@ private:
   bool deriveSimTarget();
   bool deriveMemConfigFile();
   bool deriveDimension(const std::string& envVar, const std::string& cfgVar, const unsigned apiVal, const unsigned defVal, unsigned& retVal);
-  bool deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray);
+  bool deriveDimensions(unsigned numRanks, unsigned numBankPerRank, unsigned numSubarrayPerBank, unsigned numRowPerSubarray, unsigned numColPerSubarray, unsigned bufferSize);
   bool deriveNumThreads();
   bool deriveMiscEnvVars();
   bool deriveLoadBalance();
@@ -136,6 +138,7 @@ private:
   inline static const std::string m_cfgVarNumColPerSubarray = "num_col_per_subarray";
   inline static const std::string m_cfgVarMaxNumThreads = "max_num_threads";
   inline static const std::string m_cfgVarLoadBalance = "should_load_balance";
+  inline static const std::string m_cfgVarBufferSize = "buffer_size";
 
   // Environment variables
   inline static const std::string m_envVarSimConfig = "PIMEVAL_SIM_CONFIG";
@@ -146,6 +149,7 @@ private:
   inline static const std::string m_envVarNumSubarrayPerBank = "PIMEVAL_NUM_SUBARRAY_PER_BANK";
   inline static const std::string m_envVarNumRowPerSubarray = "PIMEVAL_NUM_ROW_PER_SUBARRAY";
   inline static const std::string m_envVarNumColPerSubarray = "PIMEVAL_NUM_COL_PER_SUBARRAY";
+  inline static const std::string m_envVarBufferSize = "PIMEVAL_BUFFER_SIZE";
   inline static const std::string m_envVarMaxNumThreads = "PIMEVAL_MAX_NUM_THREADS";
   inline static const std::string m_envVarAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
   inline static const std::string m_envVarDebug = "PIMEVAL_DEBUG";
@@ -165,6 +169,7 @@ private:
     m_envVarAnalysisMode,
     m_envVarDebug,
     m_envVarLoadBalance,
+    m_envVarBufferSize,
   };
 
   // Default values if not specified during init
@@ -173,7 +178,8 @@ private:
   static constexpr int DEFAULT_NUM_SUBARRAY_PER_BANK = 32;
   static constexpr int DEFAULT_NUM_ROW_PER_SUBARRAY = 1024;
   static constexpr int DEFAULT_NUM_COL_PER_SUBARRAY = 8192;
-  static constexpr PimDeviceEnum DEFAULT_SIM_TARGET = PIM_DEVICE_BITSIMD_V;
+  static constexpr int DEFAULT_BUFFER_SIZE = 0;
+  static constexpr PimDeviceEnum DEFAULT_SIM_TARGET = PIM_DEVICE_BANK_LEVEL;
 
   //! @brief  Reset all member variables to default status
   inline void reset() {
@@ -188,6 +194,7 @@ private:
     m_numRowPerSubarray = 0;
     m_numColPerSubarray = 0;
     m_numThreads = 0;
+    m_bufferSize = 0;
     m_analysisMode = false;
     m_debug = 0;
     m_loadBalanced = false;
@@ -208,6 +215,7 @@ private:
   unsigned m_numRowPerSubarray;
   unsigned m_numColPerSubarray;
   unsigned m_numThreads;
+  unsigned m_bufferSize;
   bool m_analysisMode;
   unsigned m_debug;
   bool m_loadBalanced;

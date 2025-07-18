@@ -50,6 +50,7 @@ pimDevice::adjustConfigForSimTarget(unsigned& numRanks, unsigned& numBankPerRank
     numSubarrayPerBank /= 2;
     break;
   case PIM_DEVICE_BANK_LEVEL:
+  case PIM_DEVICE_AIM:
     std::printf("PIM-Info: Aggregate all subarrays within a bank as a single core\n");
     numRows *= numSubarrayPerBank;
     numSubarrayPerBank = 1;
@@ -103,10 +104,12 @@ pimDevice::init()
   unsigned numSubarrayPerBank = getNumSubarrayPerBank();
   unsigned numRows = getNumRowPerSubarray();
   unsigned numCols = getNumColPerSubarray();
+  unsigned bufferSize = getOnChipBufferSize();
   if (adjustConfigForSimTarget(numRanks, numBankPerRank, numSubarrayPerBank, numRows, numCols)) {
     m_numCores = numRanks * numBankPerRank * numSubarrayPerBank;
     m_numRows = numRows;
     m_numCols = numCols;
+    m_bufferSize = bufferSize;
   } else {
     return false;
   }
@@ -142,6 +145,13 @@ pimDevice::init()
   // Disable simulated memory creation for functional simulation
   if (getDeviceType() != PIM_FUNCTIONAL) {
     m_cores.resize(m_numCores, pimCore(m_numRows, m_numCols));
+  }
+
+  if (getSimTarget() != PIM_DEVICE_AIM && m_bufferSize > 0) {
+    std::printf("PIM-Error: Device Does not support On-Chip Buffer\n");
+    m_isInit = false;
+    m_isValid = false;
+    return m_isValid;
   }
 
   std::printf("PIM-Info: Created PIM device with %u cores of %u rows and %u columns.\n", m_numCores, m_numRows, m_numCols);

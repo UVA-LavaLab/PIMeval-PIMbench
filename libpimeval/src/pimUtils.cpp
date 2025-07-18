@@ -177,6 +177,7 @@ pimUtils::getDeviceDataLayout(PimDeviceEnum deviceType)
     case PIM_DEVICE_FULCRUM: return PimDataLayout::H;
     case PIM_DEVICE_BANK_LEVEL: return PimDataLayout::H;
     case PIM_DEVICE_AQUABOLT: return PimDataLayout::H;
+    case PIM_DEVICE_AIM: return PimDataLayout::H;
     case PIM_FUNCTIONAL:
     case PIM_DEVICE_NONE: return PimDataLayout::UNKNOWN;
   }
