@@ -15,7 +15,7 @@
 
 
 // test UINT32 reduction sum
-bool testRedSum(PimDeviceEnum deviceType)
+bool testBuffer(PimDeviceEnum deviceType)
 {
   unsigned numRanks = 2;
   unsigned numBankPerRank = 2;
@@ -215,15 +215,15 @@ int main()
 
   bool ok = true;
 
-  ok &= testRedSum(PIM_DEVICE_BITSIMD_V);
+  ok &= testBuffer(PIM_DEVICE_BITSIMD_V);
   ok &= testRedSumBool(PIM_DEVICE_BITSIMD_V);
   ok &= testRedSumBoolPadded(PIM_DEVICE_BITSIMD_V);
 
-  ok &= testRedSum(PIM_DEVICE_FULCRUM);
+  ok &= testBuffer(PIM_DEVICE_FULCRUM);
   ok &= testRedSumBool(PIM_DEVICE_FULCRUM);
   ok &= testRedSumBoolPadded(PIM_DEVICE_FULCRUM);
 
-  ok &= testRedSum(PIM_DEVICE_BANK_LEVEL);
+  ok &= testBuffer(PIM_DEVICE_BANK_LEVEL);
   ok &= testRedSumBool(PIM_DEVICE_BANK_LEVEL);
   ok &= testRedSumBoolPadded(PIM_DEVICE_BANK_LEVEL);
 

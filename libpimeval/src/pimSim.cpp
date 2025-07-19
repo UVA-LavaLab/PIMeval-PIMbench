@@ -240,6 +240,14 @@ pimSim::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
   return m_device->pimAllocAssociated(assocId, dataType);
 }
 
+PimObjId
+pimSim::pimAllocBuffer(uint32_t numElements, PimDataType dataType)
+{
+  pimPerfMon perfMon("pimAllocBuffer");
+  if (!isValidDevice()) { return -1; }
+  return m_device->pimAllocBuffer(numElements, dataType);
+}
+
 // @brief  Free a PIM object
 bool
 pimSim::pimFree(PimObjId obj)

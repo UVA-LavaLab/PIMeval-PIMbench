@@ -96,6 +96,13 @@ pimAllocAssociated(PimObjId assocId, PimDataType dataType)
   return pimSim::get()->pimAllocAssociated(assocId, dataType);
 }
 
+//! @brief  Allocate a global buffer for broadcasting data to all PIM cores
+PimObjId
+pimAllocBuffer(uint32_t numElements, PimDataType dataType)
+{
+  return pimSim::get()->pimAllocBuffer(numElements, dataType);
+}
+
 //! @brief  Free a PIM resource
 PimStatus
 pimFree(PimObjId obj)

@@ -391,6 +391,99 @@ pimResMgr::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType da
   return objId;
 }
 
+//! @brief  Allocate a new PIM object of type buffer
+PimObjId
+pimResMgr::pimAllocBuffer(uint32_t numElements, PimDataType dataType)
+{
+  if (m_debugAlloc) {
+    std::cout << "PIM-Debug: pimAlloc: Request: Global Buffer"
+              << " " << numElements << " elements of type "
+              << pimUtils::pimDataTypeEnumToStr(dataType) << std::endl;
+  }
+
+  if (numElements == 0) {
+    std::cout << "PIM-Error: pimAlloc: Invalid input parameter: 0 element" << std::endl;
+    return -1;
+  }
+
+  unsigned bitsPerElement = pimUtils::getNumBitsOfDataType(dataType, PimBitWidth::SIM);
+
+  if (numElements * bitsPerElement > m_device->getBufferSize() * 8) {
+    std::cout << "PIM-Error: pimAlloc: Invalid input parameter: "
+              << numElements << " elements exceeds buffer size "
+              << m_device->getBufferSize() << " bytes" << std::endl;
+    return -1;
+  }
+
+  pimObjInfo newObj(m_availObjId, dataType, PIM_ALLOC_H, numElements, bitsPerElement, m_device, true);
+  m_availObjId++;
+
+  unsigned numCols = m_device->getNumCols();
+  unsigned numRowsToAlloc = 1;
+  uint64_t numRegions = 1; // AiM buffer size will be always size of one row; For UPMEM this will be different
+  unsigned numColsToAllocLast = 0;
+  uint64_t numElemPerRegion = 0;
+  uint64_t numElemPerRegionLast = 0;
+  unsigned numColsPerElem = 0;
+  numColsToAllocLast = (numElements * bitsPerElement) % numCols;
+  if (numColsToAllocLast == 0) {
+    numColsToAllocLast = numCols;
+  }
+  numElemPerRegion = numCols / bitsPerElement;
+  numElemPerRegionLast = numColsToAllocLast / bitsPerElement;
+  numColsPerElem = bitsPerElement;
+
+  if (m_debugAlloc) {
+    std::cout << "PIM-Debug: pimAlloc: Allocate "
+              << numRegions << " regions" << std::endl;
+    std::cout << "PIM-Debug: pimAlloc: Each region has "
+              << numRowsToAlloc << " rows x " << numCols << " cols with "
+              << numElemPerRegion << " elements" << std::endl;
+    std::cout << "PIM-Debug: pimAlloc: Last region has "
+              << numRowsToAlloc << " rows x " << numColsToAllocLast << " cols with "
+              << numElemPerRegionLast << " elements" << std::endl;
+  }
+
+  // create new regions
+  bool success = true;
+  uint64_t elemIdx = 0;
+  unsigned numColsToAlloc = numCols;
+  unsigned numElemInRegion = numElemPerRegionLast;
+  pimRegion newRegion;
+  newRegion.setColIdx(0);
+  newRegion.setNumAllocRows(numRowsToAlloc);
+  newRegion.setNumAllocCols(numColsToAlloc);
+  newRegion.setIsBuffer(true);
+  newRegion.setElemIdxBegin(elemIdx);
+  newRegion.setIsValid(true);
+  elemIdx += numElemInRegion;
+  newRegion.setElemIdxEnd(elemIdx); // exclusive
+  newRegion.setNumColsPerElem(numColsPerElem);
+  newObj.addRegion(newRegion);
+
+  if (!success) {
+    return -1;
+  }
+
+  PimObjId objId = -1;
+  if (newObj.isValid()) {
+    objId = newObj.getObjId();
+    newObj.finalize();
+    // update new object to resource mgr
+    m_objMap.insert(std::make_pair(newObj.getObjId(), newObj));
+  }
+
+  if (m_debugAlloc) {
+    if (newObj.isValid()) {
+      std::cout << "PIM-Debug: pimAlloc: Allocated PIM object of type Buffer " << objId << " successfully" << std::endl;
+      newObj.print();
+    } else {
+      std::cout << "PIM-Debug: pimAlloc: Failed" << std::endl;
+    }
+  }
+  return objId;
+}
+
 //! @brief  Allocate a PIM object associated with an existing object
 //!         Number of elements must be identical between the two associated objects
 //!         For V layout, no specific requirement on data type
@@ -409,9 +502,16 @@ pimResMgr::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
     return -1;
   }
 
+  // associated object must not be a buffer
+  const pimObjInfo& assocObj = m_objMap.at(assocId);
+  if (assocObj.isBuffer()) {
+    std::cout << "PIM-Error: pimAllocAssociated: Associated PIM object ID " << assocId
+              << " is a buffer, which is not allowed." << std::endl;
+    return -1;
+  }
+
   // get regions of the assoc obj
   unsigned numCores = m_device->getNumCores();
-  const pimObjInfo& assocObj = m_objMap.at(assocId);
 
   // check if the request can be associated with ref
   PimAllocEnum allocType = assocObj.getAllocType();

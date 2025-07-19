@@ -135,6 +135,11 @@ PimStatus pimDeleteDevice();
 // Resource allocation and deletion
 PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
 PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
+// Buffer will always be allocated in H layout; Current assumption is buffer is global and shared across all PIM cores in a chip/device. This assumption is based on AiM.
+// The buffer is used for broadcasting data to all PIM cores in a chip/device.
+// Please note that each chip/device will hold the same data in their respective buffers.
+// TODO: Support per-core buffers (like UPMEM)
+PimObjId pimAllocBuffer(uint32_t numElements, PimDataType dataType);
 PimStatus pimFree(PimObjId obj);
 
 // Data transfer
