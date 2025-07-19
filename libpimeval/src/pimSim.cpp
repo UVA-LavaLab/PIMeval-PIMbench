@@ -140,6 +140,7 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
   deviceProperties->isHLayoutDevice = m_device->isHLayoutDevice();
+  deviceProperties->numPIMCores = m_device->getNumCores();
   return true;
 }
 
