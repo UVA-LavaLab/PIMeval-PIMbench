@@ -56,6 +56,17 @@ bool testBuffer(PimDeviceEnum deviceType)
   PimObjId objAssociated = pimAllocAssociated(obj, PIM_INT32);  // associated
   assert(objAssociated != -1);
 
+  status = pimCopyHostToDevice((void*)src.data(), buffObj);
+  assert(status == PIM_OK);
+
+  dest.resize(numCols / 32);
+  status = pimCopyDeviceToHost(buffObj, (void*)dest.data());
+  assert(status == PIM_OK);
+
+  for (size_t i = 0; i < dest.size(); ++i) {
+    assert(dest[i] == src[i]);
+  }
+
   pimShowStats();
   pimResetStats();
   pimDeleteDevice();

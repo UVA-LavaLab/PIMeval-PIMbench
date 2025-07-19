@@ -450,6 +450,8 @@ pimResMgr::pimAllocBuffer(uint32_t numElements, PimDataType dataType)
   unsigned numColsToAlloc = numCols;
   unsigned numElemInRegion = numElemPerRegionLast;
   pimRegion newRegion;
+  newRegion.setCoreId(0);  // Assign global buffer to core 0; this is fine for global buffers; for UPMEM, this will be different
+  newRegion.setRowIdx(0);
   newRegion.setColIdx(0);
   newRegion.setNumAllocRows(numRowsToAlloc);
   newRegion.setNumAllocCols(numColsToAlloc);
