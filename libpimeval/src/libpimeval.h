@@ -100,6 +100,7 @@ struct PimDeviceProperties {
   unsigned numSubarrayPerBank = 0;
   unsigned numRowPerSubarray = 0;
   unsigned numColPerSubarray = 0;
+  unsigned numPIMCores = 0;
   bool isHLayoutDevice = false;
 };
 
@@ -135,6 +136,11 @@ PimStatus pimDeleteDevice();
 // Resource allocation and deletion
 PimObjId pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType dataType);
 PimObjId pimAllocAssociated(PimObjId assocId, PimDataType dataType);
+// Buffer will always be allocated in H layout; Current assumption is buffer is global and shared across all PIM cores in a chip/device. This assumption is based on AiM.
+// The buffer is used for broadcasting data to all PIM cores in a chip/device.
+// Please note that each chip/device will hold the same data in their respective buffers.
+// TODO: Support per-core buffers (like UPMEM)
+PimObjId pimAllocBuffer(uint32_t numElements, PimDataType dataType);
 PimStatus pimFree(PimObjId obj);
 
 // Data transfer
@@ -190,6 +196,13 @@ PimStatus pimPopCount(PimObjId src, PimObjId dest);
 
 // Only supported by bit-parallel PIM
 PimStatus pimPrefixSum(PimObjId src, PimObjId dest);
+
+// MAC operation: dest += src1 * src2
+// Note: src2 is a global buffer that holds a vector of values to be multiplied with src1.
+// Note: dest must be of the same data type as src1 and src2; Size of dest must be equal to the total number of PIM cores in the device.
+// Note: The MAC operation is performed in parallel across all PIM cores, and each PIM core writes its local MAC value to the specific id of the dest.
+// Note: User needs to ensure that dest vector is of size equal to the total number of PIM cores in the device, and contains `0` or any value that the user wants it to have as initial values.
+PimStatus pimMAC(PimObjId src1, PimObjId src2, void* dest);
 
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);

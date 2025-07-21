@@ -32,6 +32,8 @@ void testDeviceAPIs(PimDeviceEnum deviceType)
   assert(deviceProp.numColPerSubarray == numCols);
   assert(deviceProp.numRowPerSubarray == numRows);
 
+  std::cout << "Number of PIM units: " << deviceProp.numPIMCores << std::endl;
+
   // Special handling for functional simulation target
   if (deviceType == PIM_FUNCTIONAL) {
     assert(deviceProp.simTarget != PIM_FUNCTIONAL);

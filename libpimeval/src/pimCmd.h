@@ -86,6 +86,7 @@ enum class PimCmdEnum {
   AES_SBOX,
   AES_INVERSE_SBOX,
   PREFIX_SUM,
+  MAC,
 
   // BitSIMD v-layout commands
   ROW_R,
@@ -508,6 +509,28 @@ public:
   virtual bool updateStats() const override;
 protected:
   PimObjId m_src, m_dst;
+};
+
+//! @class  pimCmdMAC
+//! @brief  Pim CMD: Multiply-Accumulate
+template <typename T>
+class pimCmdMAC : public pimCmd
+{
+public:
+  pimCmdMAC(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, void* dest)
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest)
+  {
+    assert(cmdType == PimCmdEnum::MAC);
+  }
+  virtual ~pimCmdMAC() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool computeRegion(unsigned index) override;
+  virtual bool updateStats() const override;
+protected:
+  std::vector<T> m_regionResult;
+  PimObjId m_src1, m_src2;
+  void* m_dest; // Pointer to the destination buffer where MAC results will be stored
 };
 
 

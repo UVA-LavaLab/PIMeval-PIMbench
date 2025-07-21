@@ -140,6 +140,7 @@ pimSim::getDeviceProperties(PimDeviceProperties* deviceProperties) {
   deviceProperties->numRowPerSubarray = m_device->getNumRowPerSubarray();
   deviceProperties->numColPerSubarray = m_device->getNumColPerSubarray();
   deviceProperties->isHLayoutDevice = m_device->isHLayoutDevice();
+  deviceProperties->numPIMCores = m_device->getNumCores();
   return true;
 }
 
@@ -238,6 +239,14 @@ pimSim::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
   pimPerfMon perfMon("pimAllocAssociated");
   if (!isValidDevice()) { return -1; }
   return m_device->pimAllocAssociated(assocId, dataType);
+}
+
+PimObjId
+pimSim::pimAllocBuffer(uint32_t numElements, PimDataType dataType)
+{
+  pimPerfMon perfMon("pimAllocBuffer");
+  if (!isValidDevice()) { return -1; }
+  return m_device->pimAllocBuffer(numElements, dataType);
 }
 
 // @brief  Free a PIM object
@@ -636,6 +645,53 @@ pimSim::pimPrefixSum(PimObjId src, PimObjId dest)
   pimPerfMon perfMon("pimPrefixSum");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdPrefixSum>(PimCmdEnum::PREFIX_SUM, src, dest);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+ //! @brief  PIM OP: multiply-accumulate
+bool pimSim::pimMAC(PimObjId src1, PimObjId src2, void* dest)
+{
+  pimPerfMon perfMon("pimMAC");
+  if (!isValidDevice()) { return false; }
+  const PimDataType dataType = m_device->getResMgr()->getObjInfo(src1).getDataType();
+  std::unique_ptr<pimCmd> cmd;
+  PimCmdEnum cmdType = PimCmdEnum::MAC;
+  
+  switch (dataType) {
+    case PimDataType::PIM_INT8:
+      cmd = std::make_unique<pimCmdMAC<int8_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_INT16:
+      cmd = std::make_unique<pimCmdMAC<int16_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_INT32:
+      cmd = std::make_unique<pimCmdMAC<int32_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_INT64:
+      cmd = std::make_unique<pimCmdMAC<int64_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT8:
+      cmd = std::make_unique<pimCmdMAC<uint8_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT16:
+      cmd = std::make_unique<pimCmdMAC<uint16_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT32:
+      cmd = std::make_unique<pimCmdMAC<uint32_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT64:
+      cmd = std::make_unique<pimCmdMAC<uint64_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_FP8:
+    case PimDataType::PIM_FP16:
+    case PimDataType::PIM_BF16:
+    case PimDataType::PIM_FP32:
+      cmd = std::make_unique<pimCmdMAC<float>>(cmdType, src1, src2, dest);
+      break;
+    default:
+      std::printf("PIM-Error: pimRedMin does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
+      return false;
+  }
   return m_device->executeCmd(std::move(cmd));
 }
 

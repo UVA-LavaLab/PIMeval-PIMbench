@@ -96,6 +96,13 @@ pimAllocAssociated(PimObjId assocId, PimDataType dataType)
   return pimSim::get()->pimAllocAssociated(assocId, dataType);
 }
 
+//! @brief  Allocate a global buffer for broadcasting data to all PIM cores
+PimObjId
+pimAllocBuffer(uint32_t numElements, PimDataType dataType)
+{
+  return pimSim::get()->pimAllocBuffer(numElements, dataType);
+}
+
 //! @brief  Free a PIM resource
 PimStatus
 pimFree(PimObjId obj)
@@ -497,6 +504,12 @@ PimStatus pimRedMax(PimObjId src, void* max, uint64_t idxBegin, uint64_t idxEnd)
     return ok ? PIM_OK : PIM_ERROR;
 }
 
+//! @brief  PIM MAC operation: dest += src1 * src2
+PimStatus pimMAC(PimObjId src1, PimObjId src2, void *dest)
+{
+  bool ok = pimSim::get()->pimMAC(src1, src2, dest);
+  return ok ? PIM_OK : PIM_ERROR;
+}
 
 //! @brief  PIM reduction sum for signed int. Result returned to a host variable
 PimStatus

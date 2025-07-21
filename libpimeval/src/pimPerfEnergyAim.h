@@ -27,6 +27,7 @@ public:
   virtual pimeval::perfEnergy getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const override;
   virtual pimeval::perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
+  virtual pimeval::perfEnergy getPerfEnergyForMac(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
   
 protected:
   unsigned m_aquaboltFPUBitWidth = 16;

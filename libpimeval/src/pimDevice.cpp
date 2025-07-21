@@ -176,6 +176,17 @@ pimDevice::pimAlloc(PimAllocEnum allocType, uint64_t numElements, PimDataType da
   return m_resMgr->pimAlloc(allocType, numElements, dataType);
 }
 
+ //! @brief  Allocate a PIM buffer
+PimObjId
+pimDevice::pimAllocBuffer(uint32_t numElements, PimDataType dataType)
+{
+  if (getSimTarget() != PIM_DEVICE_AIM) {
+    std::printf("PIM-Error: Device does not support On-Chip Buffer\n");
+    return -1;
+  }
+  return m_resMgr->pimAllocBuffer(numElements, dataType);
+}
+
 //! @brief  Allocate a PIM object associated with another PIM object
 PimObjId
 pimDevice::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
