@@ -125,12 +125,12 @@ void prefixSum(uint64_t vectorLength, std::vector<int> &src, std::vector<int> &d
       return;
     }
     std::vector<int> maskVec (vectorLength, 0);
-    for (uint64_t i = 0; (1 << i) < vectorLength; ++i) {
+    for (uint64_t i = 0; (1ULL << i) < vectorLength; ++i) {
       auto start_cpu = std::chrono::high_resolution_clock::now();
       #pragma omp parallel for
       for (uint64_t j = 0; j < vectorLength; ++j) {
-        if (j < (1 << i)) maskVec[j] = 0;
-        else maskVec[j] = tempVec[j - (1 << i)];
+        if (j < (1ULL << i)) maskVec[j] = 0;
+        else maskVec[j] = tempVec[j - (1ULL << i)];
       }
       auto stop_cpu = std::chrono::high_resolution_clock::now();
       hostElapsedTime += (stop_cpu - start_cpu);

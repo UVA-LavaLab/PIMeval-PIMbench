@@ -13,6 +13,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <cstring>
 #include <memory>
 #include <limits>
 #include <type_traits>
@@ -47,7 +48,9 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
   // Cover scalar value testing
   // PIMeval uses uint64_t to represent bits of scalarValue
   const float scalarValFloat = 123.0f;
-  const uint64_t scalarVal = *reinterpret_cast<const uint32_t*>(&scalarValFloat);
+  uint32_t temp32;
+  std::memcpy(&temp32, &scalarValFloat, sizeof(temp32));
+  const uint64_t scalarVal = temp32;
   const int64_t scalarValInt = -11; // for int broadcasting
   vecSrc1[500] = static_cast<T>(scalarVal); // cover scalar EQ
   vecSrc1[501] = static_cast<T>(scalarVal - 1); // cover scalar LT
@@ -257,7 +260,8 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
         uint8_t expected = 0;
-        T val = *reinterpret_cast<const T*>(&scalarVal);
+        T val;
+        std::memcpy(&val, &scalarVal, sizeof(val));
         switch (testId) {
           case  9: expected = (vecSrc1[i] > vecSrc2[i] ? 1 : 0);    break; // pimGT
           case 10: expected = (vecSrc1[i] < vecSrc2[i] ? 1 : 0);    break; // pimLT
@@ -284,7 +288,8 @@ testFunctional::testFp(const std::string& category, PimDataType dataType)
       int numError = 0;
       for (unsigned i = 0; i < numElements; ++i) {
         T expected = 0.0;
-        T val = *reinterpret_cast<const T*>(&scalarVal);
+        T val;
+        std::memcpy(&val, &scalarVal, sizeof(val));
         T valInt = static_cast<T>(scalarValInt);
         switch (testId) {
           case  0: expected = vecSrc1[i] + vecSrc2[i];              break; // pimAdd

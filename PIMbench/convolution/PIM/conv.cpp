@@ -14,6 +14,7 @@
 #include "util.h"
 #include <chrono>
 #include <iomanip>
+#include <assert.h>
 
 using namespace std;
 typedef vector<vector<vector<int>>> Image3D;
@@ -248,6 +249,7 @@ void aggregate(std::vector<int> &inputVector, std::vector<int> &outputVector, un
     }
 
     PimStatus status = pimCopyHostToDevice((void *)inputVector.data(), srcObj);                // left halves
+    assert(status == PIM_OK);
     pimCopyHostToDevice((void *)(inputVector.data() + length), dstObj);       // right halves
 
     pimAdd(srcObj, dstObj, dstObj);
