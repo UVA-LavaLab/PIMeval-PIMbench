@@ -280,9 +280,6 @@ int main(int argc, char *argv[])
     std::cout << "Abort: pimGetDeviceProperties failed" << std::endl;
     return 1;
   }
-  // Get the device parameters
-  uint64_t numCols = deviceProp.numColPerSubarray;
-  uint64_t numOfBits = deviceProp.numRanks * deviceProp.numBankPerRank * deviceProp.numSubarrayPerBank;
 
   // Flatten the batch matrices into a 2D matrix by concatenating columns
   std::vector<std::vector<int>> concatenatedMatrix(params.row * params.dim, std::vector<int>(params.column * params.batchSize));
@@ -305,8 +302,6 @@ int main(int argc, char *argv[])
   int concatenatedHeight = concatenatedMatrix.size();
   int concatenatedWidth = concatenatedMatrix[0].size();
   int numOfPIMRow = params.kernelHeight * params.kernelWidth;
-  int numOfPIMColumn = (concatenatedHeight * concatenatedWidth  / numOfPIMRow);
-  int numOfMatPerRow = std::min(static_cast<int>(std::floor((1.0 * numCols * numOfBits) / numOfPIMColumn)), params.dim);  
 
   int inputHeight = inputMatrix[0][0].size();
   int inputWidth =  inputMatrix[0][0][0].size();

@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <climits>
+#include <cinttypes>         // for PRIu64, PRIx64
 
 //! @brief  Get PIM command name from command type enum
 std::string
@@ -320,7 +321,7 @@ pimCmdCopy::updateStats() const
     pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     if (m_debugCmds) {
-      std::printf("PIM-Cmd: Copied %llu elements of %u bits from host to PIM obj %d\n",
+      std::printf("PIM-Cmd: Copied %" PRIu64 " elements of %u bits from host to PIM obj %d\n",
                   numElements, bitsPerElement, m_dest);
     }
   } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
@@ -334,7 +335,7 @@ pimCmdCopy::updateStats() const
     pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
 
     if (m_debugCmds) {
-      std::printf("PIM-Cmd: Copied %llu elements of %u bits from PIM obj %d to host\n",
+      std::printf("PIM-Cmd: Copied %" PRIu64 " elements of %u bits from PIM obj %d to host\n",
                   numElements, bitsPerElement, m_src);
     }
   } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
@@ -348,7 +349,7 @@ pimCmdCopy::updateStats() const
     pimSim::get()->getStatsMgr()->recordCopyDeviceToDevice(numElements * bitsPerElement, mPerfEnergy);
 
     if (m_debugCmds) {
-      std::printf("PIM-Cmd: Copied %llu elements of %u bits from PIM obj %d to PIM obj %d\n",
+      std::printf("PIM-Cmd: Copied %" PRIu64 " elements of %u bits from PIM obj %d to PIM obj %d\n",
                   numElements, bitsPerElement, m_src, m_dest);
     }
   } else {
@@ -437,7 +438,7 @@ pimCmdFunc1::sanityCheck() const
         return false;
       }
       if (m_scalarValue >= objSrc.getBitsPerElement(PimBitWidth::SIM)) {
-        std::printf("PIM-Error: PIM command %s bit index %llu out of range of %s type\n", getName().c_str(),
+        std::printf("PIM-Error: PIM command %s bit index %" PRIu64 " out of range of %s type\n", getName().c_str(),
                     m_scalarValue, pimUtils::pimDataTypeEnumToStr(objSrc.getDataType()).c_str());
         return false;
       }
@@ -448,7 +449,7 @@ pimCmdFunc1::sanityCheck() const
         return false;
       }
       if (m_scalarValue >= objDest.getBitsPerElement(PimBitWidth::SIM)) {
-        std::printf("PIM-Error: PIM command %s bit index %llu out of range of %s type\n", getName().c_str(),
+        std::printf("PIM-Error: PIM command %s bit index %" PRIu64 " out of range of %s type\n", getName().c_str(),
                     m_scalarValue, pimUtils::pimDataTypeEnumToStr(objDest.getDataType()).c_str());
         return false;
       }
@@ -782,7 +783,7 @@ bool
 pimCmdCond::execute()
 {
   if (m_debugCmds) {
-    std::printf("PIM-Cmd: %s (obj ids: bool %d, src1 %d, src2 %d, dest %d, scalar 0x%llx)\n",
+    std::printf("PIM-Cmd: %s (obj ids: bool %d, src1 %d, src2 %d, dest %d, scalar 0x%" PRIx64 ")\n",
         getName().c_str(), m_condBool, m_src1, m_src2, m_dest, m_scalarBits);
   }
 
@@ -1136,7 +1137,7 @@ bool
 pimCmdBroadcast::execute()
 {
   if (m_debugCmds) {
-    std::printf("PIM-Cmd: %s (obj id %d value %llu)\n", getName().c_str(), m_dest, m_signExtBits);
+    std::printf("PIM-Cmd: %s (obj id %d value %" PRIu64 ")\n", getName().c_str(), m_dest, m_signExtBits);
   }
 
   if (!sanityCheck()) {

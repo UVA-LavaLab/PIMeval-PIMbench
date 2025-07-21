@@ -153,7 +153,6 @@ int countLabelsAndClassify(uint64_t numPaths, uint64_t dim, uint64_t numTrees, v
   for(int i = 0; i < (int) numPaths; i += numPathsDt) {
     
     // Tally the labels of the k nearest neighbors
-    int indRes = 0;
     int lastMatch = -1;
     for(int j = 0; j < numPathsDt; j++) {
       if (compareResult[i + j] == 1) {
@@ -369,7 +368,7 @@ int main(int argc, char *argv[])
 
   // load predictions into var
   vector<int> rfResult(numberOfPaths);
-  int res = runRF(numberOfPaths, params.tree_count, params.dimension, modelInput, eqCompareParameterMapping, rfResult);
+  runRF(numberOfPaths, params.tree_count, params.dimension, modelInput, eqCompareParameterMapping, rfResult);
 
 
   pimShowStats();
