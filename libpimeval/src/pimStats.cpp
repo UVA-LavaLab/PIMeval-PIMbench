@@ -108,13 +108,10 @@ pimStatsMgr::showCopyStats() const
   uint64_t totalBytes = bytesCopiedMainToDevice + bytesCopiedDeviceToMain;
   double totalMsRuntime = m_elapsedTimeCopiedMainToDevice + m_elapsedTimeCopiedDeviceToMain + m_elapsedTimeCopiedDeviceToDevice;
   double totalMjEnergy = m_mJCopiedMainToDevice + m_mJCopiedDeviceToMain + m_mJCopiedDeviceToDevice;
-  std::cout << std::setw(45) << "Host to Device" << " : " << bytesCopiedMainToDevice << " bytes" << std::endl;
-  std::cout << std::setw(45) << "Device to Host" << " : " << bytesCopiedDeviceToMain << " bytes" << std::endl;
-  std::cout << std::setw(45) << "Device to Device" << " : " << bytesCopiedDeviceToDevice << " bytes" << std::endl;
-  std::cout << std::setw(45) << "TOTAL ---------" << " : " << totalBytes << " bytes "
-            << std::setw(14) << std::fixed << std::setprecision(6) << totalMsRuntime << " ms Estimated Runtime "
-            << std::setw(14) << std::fixed << std::setprecision(6) << totalMjEnergy << " mj Estimated Energy"
-            << std::endl;
+  std::printf(" %45s : %llu bytes\n", "Host to Device", (unsigned long long)bytesCopiedMainToDevice);
+  std::printf(" %45s : %llu bytes\n", "Device to Host", (unsigned long long)bytesCopiedDeviceToMain);
+  std::printf(" %45s : %llu bytes\n", "Device to Device", (unsigned long long)bytesCopiedDeviceToDevice);
+  std::printf(" %45s : %llu bytes %14.6f ms Estimated Runtime %14.6f mj Estimated Energy\n", "TOTAL ---------", (unsigned long long)totalBytes, totalMsRuntime, totalMjEnergy);
 }
 
 //! @brief  Show PIM cmd and perf stats
