@@ -648,6 +648,53 @@ pimSim::pimPrefixSum(PimObjId src, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
+ //! @brief  PIM OP: multiply-accumulate
+bool pimSim::pimMAC(PimObjId src1, PimObjId src2, void* dest)
+{
+  pimPerfMon perfMon("pimMAC");
+  if (!isValidDevice()) { return false; }
+  const PimDataType dataType = m_device->getResMgr()->getObjInfo(src1).getDataType();
+  std::unique_ptr<pimCmd> cmd;
+  PimCmdEnum cmdType = PimCmdEnum::MAC;
+  
+  switch (dataType) {
+    case PimDataType::PIM_INT8:
+      cmd = std::make_unique<pimCmdMAC<int8_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_INT16:
+      cmd = std::make_unique<pimCmdMAC<int16_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_INT32:
+      cmd = std::make_unique<pimCmdMAC<int32_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_INT64:
+      cmd = std::make_unique<pimCmdMAC<int64_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT8:
+      cmd = std::make_unique<pimCmdMAC<uint8_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT16:
+      cmd = std::make_unique<pimCmdMAC<uint16_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT32:
+      cmd = std::make_unique<pimCmdMAC<uint32_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_UINT64:
+      cmd = std::make_unique<pimCmdMAC<uint64_t>>(cmdType, src1, src2, dest);
+      break;
+    case PimDataType::PIM_FP8:
+    case PimDataType::PIM_FP16:
+    case PimDataType::PIM_BF16:
+    case PimDataType::PIM_FP32:
+      cmd = std::make_unique<pimCmdMAC<float>>(cmdType, src1, src2, dest);
+      break;
+    default:
+      std::printf("PIM-Error: pimRedMin does not support data type %s\n", pimUtils::pimDataTypeEnumToStr(dataType).c_str());
+      return false;
+  }
+  return m_device->executeCmd(std::move(cmd));
+}
+
 //! @brief  Min reduction operation
 bool pimSim::pimRedMin(PimObjId src, void* min, uint64_t idxBegin, uint64_t idxEnd) {
   std::string tag = (idxBegin != idxEnd && idxBegin < idxEnd) ? "pimRedMinRanged" : "pimRedMin";

@@ -197,6 +197,13 @@ PimStatus pimPopCount(PimObjId src, PimObjId dest);
 // Only supported by bit-parallel PIM
 PimStatus pimPrefixSum(PimObjId src, PimObjId dest);
 
+// MAC operation: dest += src1 * src2
+// Note: src2 is a global buffer that holds a vector of values to be multiplied with src1.
+// Note: dest must be of the same data type as src1 and src2; Size of dest must be equal to the total number of PIM cores in the device.
+// Note: The MAC operation is performed in parallel across all PIM cores, and each PIM core writes its local MAC value to the specific id of the dest.
+// Note: User needs to ensure that dest vector is of size equal to the total number of PIM cores in the device, and contains `0` or any value that the user wants it to have as initial values.
+PimStatus pimMAC(PimObjId src1, PimObjId src2, void* dest);
+
 // Note: Reduction sum range is [idxBegin, idxEnd)
 PimStatus pimRedSum(PimObjId src, void* sum, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 // Min/Max Reduction APIs

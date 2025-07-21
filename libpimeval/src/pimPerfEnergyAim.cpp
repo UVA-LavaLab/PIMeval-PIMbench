@@ -183,3 +183,26 @@ pimPerfEnergyAim::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& o
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 
+pimeval::perfEnergy pimPerfEnergyAim::getPerfEnergyForMac(PimCmdEnum cmdType, const pimObjInfo &obj) const
+{
+  double msRuntime = 0.0;
+  double mjEnergy = 0.0;
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = 0.0;
+  uint64_t totalOp = 0;
+  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.getNumCoreAvailable();
+  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, (bitsPerElement * numCore) / 8);
+  msRead = m_tR + m_tGDL;
+  msWrite = perfEnergyBT.m_msRuntime;
+  msCompute = (maxGDLItr * m_tGDL);
+  msRuntime = msRead + msWrite + msCompute;
+  mjEnergy = (m_eAP + (m_eR + (maxElementsPerRegion * m_aquaboltArithmeticEnergy))) * numCore;
+  mjEnergy += perfEnergyBT.m_mjEnergy;
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+  totalOp = obj.getNumElements() * 2;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
+}
