@@ -64,35 +64,12 @@ pimPerfEnergyAim::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& ob
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
-  unsigned numCoresUsed = obj.getNumCoreAvailable();
-  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned elementsPerCore = std::ceil(obj.getNumElements() * 1.0 / numCoresUsed);
-  unsigned minElementPerRegion = elementsPerCore > maxElementsPerRegion ? elementsPerCore - (maxElementsPerRegion * (numPass - 1)) : elementsPerCore;
-  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
-  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
-  double aquaboltCoreCycle = m_tGDL;
-  unsigned numActPre = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / (8 * 256));
   uint64_t totalOp = 0;
   switch (cmdType)
   {
     // Refer to Aquabolt Paper (Table 2, Figure 5). OP Format: GRF = BANK +/* GRF
     case PimCmdEnum::ADD:
     case PimCmdEnum::MUL:
-    {
-      unsigned numberOfOperationPerElement = std::ceil(bitsPerElement * 1.0 / m_aquaboltFPUBitWidth);
-      msRead = (2 * m_tR * numPass * numActPre) + (maxGDLItr * m_tGDL * (numPass - 1)) + (minGDLItr * m_tGDL);
-      msWrite = (m_tW * numPass * numActPre) + (maxGDLItr * m_tGDL * (numPass - 1)) + (minGDLItr * m_tGDL);
-      msCompute = (maxGDLItr * numberOfOperationPerElement * aquaboltCoreCycle) * (numPass - 1);
-      msCompute += (minGDLItr * numberOfOperationPerElement * aquaboltCoreCycle);
-      msRuntime = msRead + msWrite + msCompute;
-      mjEnergy = ((m_eAP * 3 * numActPre) + (m_eR * 2 + m_eW + (maxElementsPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed * (numPass - 1);
-      mjEnergy += ((m_eAP * 3 * numActPre) + (m_eR * 2 + m_eW + (minElementPerRegion * m_aquaboltArithmeticEnergy * numberOfOperationPerElement))) * numCoresUsed;
-      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
-      totalOp = obj.getNumElements();
-      break;
-    }
     case PimCmdEnum::SCALED_ADD:
     case PimCmdEnum::DIV:
     case PimCmdEnum::SUB:
@@ -148,22 +125,7 @@ pimPerfEnergyAim::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
-  unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
-  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
-  unsigned numCore = obj.getNumCoreAvailable();
   uint64_t totalOp = 0;
-
-  unsigned elementsPerCore = std::ceil(obj.getNumElements() * 1.0 / numCore);
-  unsigned minElementPerRegion = elementsPerCore > maxElementsPerRegion ? elementsPerCore - (maxElementsPerRegion * (numPass - 1)) : elementsPerCore;
-  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
-  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
-  msWrite = (m_tW + maxGDLItr * m_tGDL) * (numPass - 1);
-  msWrite += (m_tW + minGDLItr * m_tGDL);
-  msRuntime = msRead + msWrite + msCompute;
-  mjEnergy = (m_eAP + m_eR * maxGDLItr) * (numPass - 1) * numCore;
-  mjEnergy += (m_eAP + m_eR * minGDLItr) * numCore;
-  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
