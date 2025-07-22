@@ -53,17 +53,26 @@ pimPerfEnergyBase::pimPerfEnergyBase(const pimPerfEnergyModelParams& params)
 {
   m_tR = m_paramsDram.getNsRowRead() / m_nano_to_milli;
   m_tW = m_paramsDram.getNsRowWrite() / m_nano_to_milli;
+  m_tACT = m_paramsDram.getNsRowActivate() / m_nano_to_milli; // Row activate latency in ms
+  m_tPRE = m_paramsDram.getNsRowPrecharge() / m_nano_to_milli; // Row precharge latency in ms
   m_tL = m_paramsDram.getNsTCCD_S() / m_nano_to_milli;
   m_tGDL = m_paramsDram.getNsTCCD_L() / m_nano_to_milli;
   m_eAP = m_paramsDram.getPjActPre() / m_pico_to_milli; // Convert pJ to mJ
   m_eL = m_paramsDram.getPjLogic() / m_pico_to_milli; // Convert pJ to mJ
   m_eR = m_paramsDram.getPjRead() / m_pico_to_milli;
   m_eW = m_paramsDram.getPjWrite() / m_pico_to_milli;
+  m_eACT = m_paramsDram.getPjActivate() / m_pico_to_milli; // Convert pJ to mJ
+  m_ePRE = m_paramsDram.getPjPrecharge() / m_pico_to_milli; // Convert pJ to mJ
   // m_pBCore = (m_paramsDram.getMwIDD3N() - m_paramsDram.getMwIDD2N()) / 1000.0; // Convert mW to W, so that W * ms = mJ
   m_pBChip = m_paramsDram.getMwIDD3N() / 1000.0; // Convert mW to W, so that W * ms = mJ
   m_GDLWidth = m_paramsDram.getBurstLength() * m_paramsDram.getDeviceWidth();
   m_numChipsPerRank = m_paramsDram.getNumChipsPerRank();
   m_typicalRankBW = m_paramsDram.getTypicalRankBW(); // GB/s
+  m_tCK = m_paramsDram.gettCK() / m_nano_to_milli; // Convert ns to ms 
+  m_tCCD_S = m_paramsDram.gettCCD_S();
+  m_tCCD_L = m_paramsDram.gettCCD_L();
+  m_tRCD = m_paramsDram.gettRCD();
+  m_tRP = m_paramsDram.gettRP();
 }
 
 //! @brief  Perf energy model of data transfer between CPU memory and PIM memory

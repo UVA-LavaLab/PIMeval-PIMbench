@@ -30,8 +30,7 @@ public:
   virtual pimeval::perfEnergy getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimObjInfo& obj) const override;
 
 protected:
-  double m_blimpCoreOriginalLatency = 0.000005; // ms; 200 MHz. Reference: BLIMP paper
-  double m_blimpCoreLatency = m_blimpCoreOriginalLatency > m_tGDL ? m_blimpCoreOriginalLatency : m_tGDL; // if compute unit is faster than GDL, compute unit needs to sit idly for next data 
+  double m_blimpLatency = m_tCCD_L * m_tCK;
   unsigned m_blimpCoreBitWidth = m_GDLWidth;
   unsigned m_simdUnitCount = m_blimpCoreBitWidth / 32; // 32-bit SIMD unit
   // Following values are taken from fulcrum paper as BLIMP paper does not model energy

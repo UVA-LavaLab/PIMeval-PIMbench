@@ -83,6 +83,8 @@ protected:
   const double m_pico_to_milli = 1000000000.0;
   double m_tR; // Row read latency in ms
   double m_tW; // Row write latency in ms
+  double m_tACT; // Row read(ACT) latency in ms
+  double m_tPRE; // Row precharge latency in ms
   double m_tL; // Logic operation for bitserial / tCCD in ms
   double m_tGDL; // Fetch data from local row buffer to global row buffer
   int m_GDLWidth; // Number of bits that can be fetched from local to global row buffer.
@@ -93,8 +95,15 @@ protected:
   double m_eL; // Logic energy in mJ microjoule
   double m_eR; // local row buffer to global row buffer
   double m_eW; // global row buffer to local row buffer
+  double m_eACT; // Row activate energy in mJ 
+  double m_ePRE; // Row precharge energy in mJ
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
+  double m_tCK; // Clock cycle time in ns
+  unsigned m_tCCD_S; // Short command delay in ns
+  unsigned m_tCCD_L; // Long command delay in ns
+  unsigned m_tRCD; // RCD time in ns
+  unsigned m_tRP; // RP time in ns
 };
 
 #endif

@@ -30,6 +30,8 @@ public:
   virtual int getBurstLength() const = 0;
   virtual int getNumChipsPerRank() const = 0;
   virtual double getNsRowRead() const = 0;
+  virtual double getNsRowActivate() const = 0;
+  virtual double getNsRowPrecharge() const = 0;
   virtual double getNsRowWrite() const = 0;
   virtual double getNsTCCD_S() const = 0;
   virtual double getNsTCCD_L() const = 0;
@@ -42,6 +44,13 @@ public:
   virtual double getMwIDD3N() const = 0;
   virtual double getPjRead() const = 0;
   virtual double getPjWrite() const = 0;
+  virtual double getPjPrecharge() const = 0;
+  virtual double getPjActivate() const = 0;
+  virtual double gettRCD() const = 0;
+  virtual double gettRP() const = 0;
+  virtual double gettCCD_L() const = 0;
+  virtual double gettCCD_S() const = 0;
+  virtual double gettCK() const = 0;
 };
 
 #endif
