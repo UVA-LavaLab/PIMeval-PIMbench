@@ -20,11 +20,13 @@ public:
   pimParamsHBMDram(std::unordered_map<std::string, std::string> params);
   ~pimParamsHBMDram() override = default;
 
-  int getDeviceWidth() const override { return m_deviceWidth;}
+    int getDeviceWidth() const override { return m_deviceWidth;}
   int getBurstLength() const override { return m_BL;}
   int getNumChipsPerRank() const override {return m_busWidth / m_deviceWidth; }
   double getNsRowRead() const override { return m_tCK * (m_tRAS + m_tRP); }
   double getNsRowWrite() const override { return m_tCK * (m_tRAS + m_tRP); }
+  double getNsRowActivate() const override { return m_tCK * m_tRCDRD; }
+  double getNsRowPrecharge() const override { return m_tCK * m_tRP; }
   double getNsTCCD_S() const override { return m_tCK * m_tCCD_S; }
   double getNsTCCD_L() const override { return m_tCK * m_tCCD_L; }
   double getNsTCAS() const override { return m_tCK * m_CL; }
@@ -36,7 +38,14 @@ public:
   double getMwIDD3N() const override {return m_VDD * m_IDD3N; }
   double getPjRead() const override { return m_VDD * 0.15 * m_tCK * m_tCCD_L * (m_IDD4R - m_IDD3N); } // read power per chip (data copy)
   double getPjWrite() const override { return m_VDD * 0.15 * m_tCK * m_tCCD_L * (m_IDD4W - m_IDD3N); } // write power per chip (data copy)
-
+  double getPjPrecharge() const override { return m_VDD * ((m_IDD0 * m_tRP) - (m_IDD2N * m_tRP)); } // precharge power per chip
+  double getPjActivate() const override { return m_VDD * ((m_IDD0 * m_tRP) - (m_IDD3N * m_tRAS)); } // activate power per chip
+  double gettRCD() const override { return m_tRCDRD; }
+  double gettRP() const override { return m_tRP; }
+  double gettCCD_L() const override { return m_tCCD_L; }
+  double gettCCD_S() const override { return m_tCCD_S; }
+  double gettCK() const override { return m_tCK; }
+  
 private:
   // [dram_structure]
   std::string m_protocol;
