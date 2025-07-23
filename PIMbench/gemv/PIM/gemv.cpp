@@ -14,6 +14,7 @@
 
 #include "util.h"
 #include "libpimeval.h"
+#include <assert.h>
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -87,12 +88,6 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     std::cout << "Abort" << std::endl;
     return;
   }
-  PimObjId srcObj2 = pimAllocAssociated(srcObj1, PIM_INT32);
-  if (srcObj2 == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
 
   PimObjId dstObj = pimAllocAssociated(srcObj1, PIM_INT32);
   if (dstObj == -1)
@@ -132,8 +127,69 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
     std::cout << "Abort" << std::endl;
   }
   pimFree(srcObj1);
-  pimFree(srcObj2);
   pimFree(dstObj);
+}
+
+void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst, PimDeviceProperties &deviceProps)
+{
+  unsigned elementPerRow = deviceProps.numColPerSubarray / 32; // 32 bits per elements
+  dst.resize(row, 0); // Initialize result vector
+  
+  // Allocate PIM objects
+  PimObjId vectorChunkObj = pimAllocBuffer(col, PIM_INT32);
+  assert(vectorChunkObj != -1);
+  
+  PimObjId matrixChunkObj = pimAlloc(PIM_ALLOC_AUTO, col, PIM_INT32);
+  if (matrixChunkObj == -1) {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  uint64_t numChunks = std::ceil(static_cast<double>(col) / elementPerRow);
+  std::cout << "Processing " << numChunks << " chunks of size " << elementPerRow << std::endl;
+
+  std::vector<int> matrixChunkData(deviceProps.numPIMCores * elementPerRow);
+  std::vector<int> partialResult(row, 0);
+
+  for (uint64_t chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx) {
+    uint64_t chunkStart = chunkIdx * elementPerRow;
+    uint64_t chunkSize = std::min(elementPerRow, static_cast<unsigned>(col - chunkStart));
+    
+    // Prepare vector chunk
+    std::vector<int> vectorChunk(elementPerRow, 0);
+    for (uint64_t i = 0; i < chunkSize; ++i) {
+      vectorChunk[i] = srcVector[chunkStart + i];
+    }
+    
+    // Prepare matrix chunk: for each row, get the corresponding columns
+    for (uint64_t rowIdx = 0; rowIdx < row; ++rowIdx) {
+      for (uint64_t colIdx = 0; colIdx < elementPerRow; ++colIdx) {
+        if (chunkStart + colIdx < col) {
+          matrixChunkData[rowIdx * elementPerRow + colIdx] = srcMatrix[rowIdx][chunkStart + colIdx];
+        } else {
+          matrixChunkData[rowIdx * elementPerRow + colIdx] = 0; // padding
+        }
+      }
+    }
+    
+    // Copy data to PIM
+    PimStatus status = pimCopyHostToDevice(vectorChunk.data(), vectorChunkObj);
+    assert(status == PIM_OK);
+    status = pimCopyHostToDevice(matrixChunkData.data(), matrixChunkObj);
+    assert(status == PIM_OK);
+    
+    // Perform MAC operation: compute partial dot products
+    status = pimMAC(matrixChunkObj, vectorChunkObj, partialResult.data());
+    assert(status == PIM_OK);
+    
+    // Accumulate partial results
+    for (uint64_t i = 0; i < row; ++i) {
+      dst[i] += partialResult[i];
+    }
+  }
+
+  pimFree(vectorChunkObj);
+  pimFree(matrixChunkObj);
 }
 
 int main(int argc, char *argv[])
@@ -162,8 +218,28 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  // TODO: Check if vector can fit in one iteration. Otherwise need to run in multiple iteration.
-  gemv(params.row, params.column, srcVector, srcMatrix, resultVector);
+  PimDeviceProperties deviceProps;
+  PimStatus status = pimGetDeviceProperties(&deviceProps);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return 1;
+  }
+  if (deviceProps.simTarget == PIM_DEVICE_AIM)
+  {
+    std::vector<std::vector<int>> tempMatrix (params.row, std::vector<int>(params.column, 1));
+    for (size_t i = 0; i < params.row; ++i)
+    {
+      for (size_t j = 0; j < params.column; ++j)
+      {
+        tempMatrix[i][j] = srcMatrix[j][i];
+      }
+    }
+    uint64_t elementPerRow = deviceProps.numColPerSubarray / 32; // 32 bits per elements
+    gemv_aim(params.row, params.column, srcVector, tempMatrix, resultVector, deviceProps);
+  } else {
+    gemv(params.row, params.column, srcVector, srcMatrix, resultVector);
+  }
 
   if (params.shouldVerify)
   {

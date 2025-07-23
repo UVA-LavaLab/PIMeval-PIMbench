@@ -147,6 +147,13 @@ pimPerfEnergyAim::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& o
 
 pimeval::perfEnergy pimPerfEnergyAim::getPerfEnergyForMac(PimCmdEnum cmdType, const pimObjInfo &obj) const
 {
+  // NumPass is always 1 for MAC operation in AiM. User really needs to make sure that this holds true.
+  // Buffer read time is `tCAS - m_tGDL` based on following reasoning:
+  // 1. tCAS = cycles required to data available at the I/O interface after a read command.
+  // 2. m_tGDL = cycles required for two consecutive read commands to the same bank.
+  // Hence, the time to read data from the global AiM buffer to the bank interface is `tCAS - m_tGDL`.
+  // AiM paper mentions accumulation reduction tree requires 4 cycles after the multiplier. Hence, the compute time for accumulation is `4 * tCK`.
+  // TODO: Energy model
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   double msRead = 0.0;
@@ -156,11 +163,14 @@ pimeval::perfEnergy pimPerfEnergyAim::getPerfEnergyForMac(PimCmdEnum cmdType, co
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.getNumCoreAvailable();
-  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  unsigned elementsPerCore = std::ceil(obj.getNumElements() * 1.0 / numCore);
+  unsigned gdlItr = std::ceil(elementsPerCore * bitsPerElement * 1.0 / m_GDLWidth);
+  
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, (bitsPerElement * numCore) / 8);
-  msRead = m_tR + m_tGDL;
+  
+  msRead = m_tACT + m_tPRE + (m_tCAS - m_tGDL) * gdlItr;
   msWrite = perfEnergyBT.m_msRuntime;
-  msCompute = (maxGDLItr * m_tGDL);
+  msCompute = (gdlItr * m_tGDL + 4 * m_tCK);
   msRuntime = msRead + msWrite + msCompute;
   mjEnergy = (m_eAP + (m_eR + (maxElementsPerRegion * m_aquaboltArithmeticEnergy))) * numCore;
   mjEnergy += perfEnergyBT.m_mjEnergy;

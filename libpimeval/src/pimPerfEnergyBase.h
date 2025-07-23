@@ -99,11 +99,12 @@ protected:
   double m_ePRE; // Row precharge energy in mJ
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
-  double m_tCK; // Clock cycle time in ns
-  unsigned m_tCCD_S; // Short command delay in ns
-  unsigned m_tCCD_L; // Long command delay in ns
-  unsigned m_tRCD; // RCD time in ns
-  unsigned m_tRP; // RP time in ns
+  double m_tCK; // Clock cycle time in ms
+  unsigned m_tCCD_S; // Short command delay in ms
+  unsigned m_tCCD_L; // Long command delay in ms
+  unsigned m_tRCD; // RCD time in ms
+  unsigned m_tRP; // RP time in ms
+  unsigned m_tCAS; // CAS time in ms
 };
 
 #endif
