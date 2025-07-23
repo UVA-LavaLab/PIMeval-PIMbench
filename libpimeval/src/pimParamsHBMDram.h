@@ -39,7 +39,7 @@ public:
   double getPjRead() const override { return m_VDD * 0.15 * m_tCK * m_tCCD_L * (m_IDD4R - m_IDD3N); } // read power per chip (data copy)
   double getPjWrite() const override { return m_VDD * 0.15 * m_tCK * m_tCCD_L * (m_IDD4W - m_IDD3N); } // write power per chip (data copy)
   double getPjPrecharge() const override { return m_VDD * ((m_IDD0 * m_tRP) - (m_IDD2N * m_tRP)); } // precharge power per chip
-  double getPjActivate() const override { return m_VDD * ((m_IDD0 * m_tRP) - (m_IDD3N * m_tRAS)); } // activate power per chip
+  double getPjActivate() const override { return m_VDD * ((m_IDD0 * m_tRAS) - (m_IDD3N * m_tRAS)); } // activate power per chip
   double gettRCD() const override { return m_tRCDRD; }
   double gettRP() const override { return m_tRP; }
   double gettCCD_L() const override { return m_tCCD_L; }
