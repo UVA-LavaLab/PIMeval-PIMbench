@@ -134,9 +134,13 @@ void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vect
 {
   unsigned elementPerRow = deviceProps.numColPerSubarray / 32; // 32 bits per elements
   dst.resize(row, 0); // Initialize result vector
-  
+  std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
+  uint64_t numChunks = std::ceil(static_cast<double>(col) / elementPerRow);
+  std::cout << "Processing " << numChunks << " chunks of size " << elementPerRow << std::endl;
+
   // Allocate PIM objects
-  PimObjId vectorChunkObj = pimAllocBuffer(col, PIM_INT32);
+  PimObjId vectorChunkObj = pimAllocBuffer(numChunks, PIM_INT32);
   assert(vectorChunkObj != -1);
   
   PimObjId matrixChunkObj = pimAlloc(PIM_ALLOC_AUTO, col, PIM_INT32);
@@ -145,13 +149,11 @@ void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vect
     return;
   }
 
-  uint64_t numChunks = std::ceil(static_cast<double>(col) / elementPerRow);
-  std::cout << "Processing " << numChunks << " chunks of size " << elementPerRow << std::endl;
-
   std::vector<int> matrixChunkData(deviceProps.numPIMCores * elementPerRow);
   std::vector<int> partialResult(row, 0);
 
   for (uint64_t chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx) {
+    auto start = std::chrono::high_resolution_clock::now();
     uint64_t chunkStart = chunkIdx * elementPerRow;
     uint64_t chunkSize = std::min(elementPerRow, static_cast<unsigned>(col - chunkStart));
     
@@ -171,7 +173,9 @@ void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vect
         }
       }
     }
-    
+    auto end = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += (end - start);
+
     // Copy data to PIM
     PimStatus status = pimCopyHostToDevice(vectorChunk.data(), vectorChunkObj);
     assert(status == PIM_OK);
@@ -187,7 +191,7 @@ void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vect
       dst[i] += partialResult[i];
     }
   }
-
+  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
   pimFree(vectorChunkObj);
   pimFree(matrixChunkObj);
 }
