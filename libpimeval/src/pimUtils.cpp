@@ -7,7 +7,7 @@
 #include "pimUtils.h"
 #include "libpimeval.h"
 #include <fstream>
-#include <iostream>
+#include <cstdio>
 #include <sstream>
 #include <unordered_map>
 #include <string>
@@ -285,7 +285,7 @@ pimUtils::readFileContent(const char* fileName, std::string& fileContent) {
     std::ifstream fileStream(fileName);
 
     if (!fileStream.is_open()) {
-        std::cerr << "PIM-Error: Could not open the file: " << fileName << std::endl;
+        printf("PIM-Error: Could not open the file: %s\n", fileName);
         return false;
     }
 

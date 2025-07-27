@@ -12,7 +12,7 @@
 #include "pimPerfEnergyAquabolt.h"
 #include "pimPerfEnergyAim.h"
 #include <cstdint>
-#include <iostream>
+#include <cstdio>
 
 
 //! @brief  A factory function to create perf energy model for sim target
@@ -24,22 +24,22 @@ pimPerfEnergyFactory::createPerfEnergyModel(const pimPerfEnergyModelParams& para
     case PIM_DEVICE_BITSIMD_V_AP:
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
-      std::cout << "PIM-Info: Created performance energy model for bit-serial PIM" << std::endl;
+      printf("PIM-Info: Created performance energy model for bit-serial PIM\n");
       return std::make_unique<pimPerfEnergyBitSerial>(params);
     case PIM_DEVICE_FULCRUM:
-      std::cout << "PIM-Info: Created performance energy model for Fulcrum" << std::endl;
+      printf("PIM-Info: Created performance energy model for Fulcrum\n");
       return std::make_unique<pimPerfEnergyFulcrum>(params);
     case PIM_DEVICE_BANK_LEVEL:
-      std::cout << "PIM-Info: Created performance energy model for bank-level PIM" << std::endl;
+      printf("PIM-Info: Created performance energy model for bank-level PIM\n");
       return std::make_unique<pimPerfEnergyBankLevel>(params);
     case PIM_DEVICE_AQUABOLT:
-      std::cout << "PIM-Info: Created performance energy model for AQUABOLT" << std::endl;
+      printf("PIM-Info: Created performance energy model for AQUABOLT\n");
       return std::make_unique<pimPerfEnergyAquabolt>(params);
     case PIM_DEVICE_AIM:
-      std::cout << "PIM-Info: Created performance energy model for AiM" << std::endl;
+      printf("PIM-Info: Created performance energy model for AiM\n");
       return std::make_unique<pimPerfEnergyAim>(params);
     default:
-      std::cout << "PIM-Warning: Created performance energy base model for unrecognized simulation target" << std::endl;
+      printf("PIM-Warning: Created performance energy base model for unrecognized simulation target\n");
   }
   return std::make_unique<pimPerfEnergyBase>(params);
 }
@@ -109,7 +109,7 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
     }
     default:
     {
-      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
     }
   }

@@ -6,8 +6,8 @@
 
 #include "pimPerfEnergyAim.h"
 #include "pimCmd.h"
-#include <iostream>
 #include <cmath>
+#include <cstdio>
 
 // AiM adds a SIMD Multiplier and a Reduction Tree in each bank.
 // The supported instructions are: MAC.
@@ -48,7 +48,7 @@ pimPerfEnergyAim::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& ob
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     default:
-      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
 
@@ -84,7 +84,7 @@ pimPerfEnergyAim::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& ob
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     default:
-      std::cout << "PIM-Warning: Unsupported for AiM: " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Unsupported for AiM: %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
 
@@ -110,7 +110,7 @@ pimPerfEnergyAim::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::REDMAX:
     case PimCmdEnum::REDMAX_RANGE:
     default:
-      std::cout << "PIM-Warning: Unsupported for AiM: " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Unsupported for AiM: %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
@@ -140,7 +140,7 @@ pimPerfEnergyAim::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& o
   double msWrite = 0.0;
   double msCompute = 0.0;
   uint64_t totalOp = 0;
-  std::cout << "PIM-Warning: Unsupported for AiM: " << pimCmd::getName(cmdType, "") << std::endl;
+  printf("PIM-Warning: Unsupported for AiM: %s\n", pimCmd::getName(cmdType, "").c_str());
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
