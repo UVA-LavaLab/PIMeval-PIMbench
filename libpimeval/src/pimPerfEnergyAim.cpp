@@ -166,14 +166,16 @@ pimeval::perfEnergy pimPerfEnergyAim::getPerfEnergyForMac(PimCmdEnum cmdType, co
   unsigned numCore = obj.getNumCoreAvailable();
   unsigned elementsPerCore = std::ceil(obj.getNumElements() * 1.0 / numCore);
   unsigned gdlItr = std::ceil(elementsPerCore * bitsPerElement * 1.0 / m_GDLWidth);
+  unsigned numBankPerChip = numCore / m_numChipsPerRank;
 
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, (bitsPerElement * numCore) / 8);
   
   msRead = m_tACT + m_tPRE + (m_tCAS - m_tGDL) * gdlItr;
   msWrite = perfEnergyBT.m_msRuntime;
-  msCompute = (gdlItr * m_tGDL + 4 * m_tCK);
+  msCompute = (gdlItr * m_tGDL + 4 * m_tCK * gdlItr);
   msRuntime = msRead + msWrite + msCompute;
-  mjEnergy = (m_eAP + (m_eR + (maxElementsPerRegion * m_aquaboltArithmeticEnergy))) * numCore;
+  mjEnergy = ((m_eACT + m_ePRE) + (maxElementsPerRegion * m_aquaboltArithmeticEnergy)) * numCore;
+  mjEnergy += m_eR * numBankPerChip * m_numRanks * gdlItr; // Energy for reading data from local row buffer to global row buffer
   mjEnergy += perfEnergyBT.m_mjEnergy;
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
   totalOp = obj.getNumElements() * 2;
