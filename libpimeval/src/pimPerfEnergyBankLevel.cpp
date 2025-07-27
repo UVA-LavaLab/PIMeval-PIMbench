@@ -6,7 +6,7 @@
 
 #include "pimPerfEnergyBankLevel.h"
 #include "pimCmd.h"
-#include <iostream>
+#include <cstdio>
 #include <cmath>
 
 
@@ -132,7 +132,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       break;
     }
     default:
-      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
 
@@ -235,7 +235,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
       break;
     }
     default:
-      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
@@ -287,8 +287,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
       break;
     }
     default:
-      std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
-                << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Unsupported reduction command for bank-level PIM: %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
     }
 
@@ -349,7 +348,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
   msRuntime += 2 * perfEnergyBT.m_msRuntime;
   mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-  std::cout << "PIM-Warning: Perf energy model is not precise for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+  printf("PIM-Warning: Perf energy model is not precise for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
@@ -424,8 +423,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimO
       break;
     }
     default:
-      std::cout << "PIM-Warning: Unsupported reduction command for bank-level PIM: " 
-                << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Unsupported reduction command for bank-level PIM: %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
     }
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);

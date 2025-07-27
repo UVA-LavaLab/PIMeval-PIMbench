@@ -8,7 +8,7 @@
 #include "pimCmd.h"
 #include "pimPerfEnergyTables.h"
 #include "pimUtils.h"
-#include <iostream>
+#include <cstdio>
 #include <cmath> // For log2()
 
 
@@ -156,11 +156,10 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
   }
 
   if (!ok) {
-    std::cout << "PIM-Warning: Unimplemented bit-serial runtime estimation for"
-              << " device=" << pimUtils::pimDeviceEnumToStr(deviceType)
-              << " cmd=" << pimCmd::getName(cmdType, "")
-              << " dataType=" << pimUtils::pimDataTypeEnumToStr(dataType)
-              << std::endl;
+    printf("PIM-Warning: Unimplemented bit-serial runtime estimation for device=%s cmd=%s dataType=%s\n",
+           pimUtils::pimDeviceEnumToStr(deviceType).c_str(),
+           pimCmd::getName(cmdType, "").c_str(),
+           pimUtils::pimDataTypeEnumToStr(dataType).c_str());
     msRuntime = 1000000;
   }
   msRead *= numPass;
@@ -193,11 +192,10 @@ pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, Pi
       PimDataType dataTypeSrc = objSrc.getDataType();
       PimDataType dataTypeDest = objDest.getDataType();
       if (pimUtils::isFP(dataTypeSrc) || pimUtils::isFP(dataTypeDest)) {
-        std::cout << "PIM-Warning: Unimplemented bit-serial runtime estimation for"
-                  << " device=" << pimUtils::pimDeviceEnumToStr(m_simTarget)
-                  << " cmd=" << pimCmd::getName(cmdType, "")
-                  << " dataType=" << pimUtils::pimDataTypeEnumToStr(dataTypeSrc)
-                  << std::endl;
+        printf("PIM-Warning: Unimplemented bit-serial runtime estimation for device=%s cmd=%s dataType=%s\n",
+               pimUtils::pimDeviceEnumToStr(m_simTarget).c_str(),
+               pimCmd::getName(cmdType, "").c_str(),
+               pimUtils::pimDataTypeEnumToStr(dataTypeSrc).c_str());
         msRuntime = 1000000;
         break;
       }
@@ -355,13 +353,13 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
         }
         default:
         {
-          std::cout << "PIM-Warning: Unsupported reduction command for bit-serial PIM: "
-                    << pimCmd::getName(cmdType, "") << std::endl;
+          printf("PIM-Warning: Unsupported reduction command for bit-serial PIM: %s\n",
+                 pimCmd::getName(cmdType, "").c_str());
           break;
         }
         }
       } else if (pimUtils::isFP(dataType)) {
-        std::cout << "PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet." << std::endl;
+        printf("PIM-Warning: Perf energy model for FP reduction sum on bit-serial PIM is not available yet.\n");
         msRuntime = 999999999.9; // todo
         mjEnergy = 999999999.9;  // todo
       } else {
@@ -371,7 +369,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     }
     case PIM_DEVICE_SIMDRAM:
       // todo
-      std::cout << "PIM-Warning: SIMDRAM performance stats not implemented yet." << std::endl;
+      printf("PIM-Warning: SIMDRAM performance stats not implemented yet.\n");
       break;
     case PIM_DEVICE_BITSIMD_H:
       // Sequentially process all elements per CPU cycle
@@ -503,6 +501,6 @@ pimPerfEnergyBitSerial::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimO
   double msWrite = 0.0;
   double msCompute = 0.0;
   uint64_t totalOp = 0;
-  std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+  printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }

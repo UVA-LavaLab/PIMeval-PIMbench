@@ -6,7 +6,7 @@
 
 #include "pimPerfEnergyAquabolt.h"
 #include "pimCmd.h"
-#include <iostream>
+#include <cstdio>
 #include <cmath>
 
 // Aquabolt adds a SIMD FPU shared between two banks, with only one bank accessing it at a time.
@@ -79,7 +79,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     default:
-      std::cout << "PIM-Warning: Perf energy model not available for PIM command " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Perf energy model not available for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
 
@@ -171,7 +171,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInf
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     default:
-      std::cout << "PIM-Warning: Unsupported for Aquabolt: " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Unsupported for Aquabolt: %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
 
@@ -222,7 +222,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimOb
     case PimCmdEnum::REDMAX:
     case PimCmdEnum::REDMAX_RANGE:
     default:
-      std::cout << "PIM-Warning: Unsupported for Aquabolt: " << pimCmd::getName(cmdType, "") << std::endl;
+      printf("PIM-Warning: Unsupported for Aquabolt: %s\n", pimCmd::getName(cmdType, "").c_str());
       break;
   }
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
@@ -267,7 +267,7 @@ pimPerfEnergyAquabolt::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjIn
   double msWrite = 0.0;
   double msCompute = 0.0;
   uint64_t totalOp = 0;
-  std::cout << "PIM-Warning: Unsupported for Aquabolt: " << pimCmd::getName(cmdType, "") << std::endl;
+  printf("PIM-Warning: Unsupported for Aquabolt: %s\n", pimCmd::getName(cmdType, "").c_str());
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
