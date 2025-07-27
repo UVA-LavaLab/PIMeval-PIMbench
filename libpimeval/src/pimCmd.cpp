@@ -1479,11 +1479,43 @@ pimCmdMAC<T>::execute()
   for (unsigned i = 0; i < numRegions; ++i) {
     if (std::is_integral_v<T> && std::is_signed_v<T>)
     {
-      static_cast<int64_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int64_t>(m_regionResult[i]);
+      switch (objSrc1.getDataType())
+      {
+      case PIM_INT8:
+        static_cast<int8_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int8_t>(m_regionResult[i]);
+        break;
+      case PIM_INT16:
+        static_cast<int16_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int16_t>(m_regionResult[i]);
+        break;
+      case PIM_INT32:
+        static_cast<int32_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int32_t>(m_regionResult[i]);
+        break;
+      case PIM_INT64:
+        static_cast<int64_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int64_t>(m_regionResult[i]);
+        break;
+      default:
+        break;
+      }
     }
     else if (std::is_integral_v<T> && std::is_unsigned_v<T>)
     {
-      static_cast<uint64_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<uint64_t>(m_regionResult[i]);
+      switch (objSrc1.getDataType())
+      {
+      case PIM_UINT8:
+        static_cast<int8_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int8_t>(m_regionResult[i]);
+        break;
+      case PIM_UINT16:
+        static_cast<int16_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int16_t>(m_regionResult[i]);
+        break;
+      case PIM_UINT32:
+        static_cast<int32_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int32_t>(m_regionResult[i]);
+        break;
+      case PIM_UINT64:
+        static_cast<int64_t *>(m_dest)[objSrc1.getRegions()[i].getCoreId()] += static_cast<int64_t>(m_regionResult[i]);
+        break;
+      default:
+        break;
+      }
     }
     else
     {
