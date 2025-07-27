@@ -132,6 +132,8 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 
 void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst, PimDeviceProperties &deviceProps)
 {
+
+  std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
   unsigned elementPerRow = deviceProps.numColPerSubarray / 32; // 32 bits per elements
   uint64_t rowItr = std::ceil(static_cast<double>(row) / deviceProps.numPIMCores); // Number of rows per core
   dst.resize(rowItr * deviceProps.numPIMCores , 0); // Initialize result vector
@@ -160,12 +162,16 @@ void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vect
       vectorChunk[i] = srcVector[chunkStart + i];
     }
     
+    auto start = std::chrono::high_resolution_clock::now();
     // Prepare matrix chunk: for each row, get the corresponding columns
     for (uint64_t rowIdx = 0; rowIdx < row; ++rowIdx) {
       for (uint64_t colIdx = chunkStart; colIdx < chunkSize; ++colIdx) {
         matrixChunkData[rowIdx * chunkSize + colIdx] = srcMatrix[rowIdx][chunkStart + colIdx];
       }
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start);
     // Copy data to PIM
     PimStatus status = pimCopyHostToDevice(vectorChunk.data(), vectorChunkObj);
     assert(status == PIM_OK);
@@ -181,6 +187,7 @@ void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vect
     pimFree(vectorChunkObj);
     pimFree(matrixChunkObj);
   }
+  std::cout << "Host elapsed time for Matrix Reshuffle: " << std::fixed << std::setprecision(2) << hostElapsedTime.count() << " ms" << std::endl;
 }
 
 int main(int argc, char *argv[])
