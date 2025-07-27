@@ -133,67 +133,54 @@ void gemv(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<s
 void gemv_aim(uint64_t row, uint64_t col, std::vector<int> &srcVector, std::vector<std::vector<int>> &srcMatrix, std::vector<int> &dst, PimDeviceProperties &deviceProps)
 {
   unsigned elementPerRow = deviceProps.numColPerSubarray / 32; // 32 bits per elements
-  dst.resize(row, 0); // Initialize result vector
-  std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+  uint64_t rowItr = std::ceil(static_cast<double>(row) / deviceProps.numPIMCores); // Number of rows per core
+  dst.resize(rowItr * deviceProps.numPIMCores , 0); // Initialize result vector
 
   uint64_t numChunks = std::ceil(static_cast<double>(col) / elementPerRow);
-  std::cout << "Processing " << numChunks << " chunks of size " << elementPerRow << std::endl;
-
-  // Allocate PIM objects
-  PimObjId vectorChunkObj = pimAllocBuffer(numChunks, PIM_INT32);
-  assert(vectorChunkObj != -1);
-  
-  PimObjId matrixChunkObj = pimAlloc(PIM_ALLOC_AUTO, col, PIM_INT32);
-  if (matrixChunkObj == -1) {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
-  std::vector<int> matrixChunkData(deviceProps.numPIMCores * elementPerRow);
-  std::vector<int> partialResult(row, 0);
-
   for (uint64_t chunkIdx = 0; chunkIdx < numChunks; ++chunkIdx) {
-    auto start = std::chrono::high_resolution_clock::now();
     uint64_t chunkStart = chunkIdx * elementPerRow;
     uint64_t chunkSize = std::min(elementPerRow, static_cast<unsigned>(col - chunkStart));
-    
+    uint64_t rowChunk = std::ceil(static_cast<double>(row) / deviceProps.numPIMCores); // Number of rows per core
+
+    std::vector<int> matrixChunkData(row * chunkSize);
+
+    // Allocate PIM objects
+    PimObjId vectorChunkObj = pimAllocBuffer(chunkSize, PIM_INT32);
+    assert(vectorChunkObj != -1);
+
+    PimObjId matrixChunkObj = pimAlloc(PIM_ALLOC_AUTO, chunkSize * deviceProps.numPIMCores, PIM_INT32);
+    if (matrixChunkObj == -1) {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+
     // Prepare vector chunk
-    std::vector<int> vectorChunk(elementPerRow, 0);
+    std::vector<int> vectorChunk(chunkSize, 0);
     for (uint64_t i = 0; i < chunkSize; ++i) {
       vectorChunk[i] = srcVector[chunkStart + i];
     }
     
     // Prepare matrix chunk: for each row, get the corresponding columns
     for (uint64_t rowIdx = 0; rowIdx < row; ++rowIdx) {
-      for (uint64_t colIdx = 0; colIdx < elementPerRow; ++colIdx) {
-        if (chunkStart + colIdx < col) {
-          matrixChunkData[rowIdx * elementPerRow + colIdx] = srcMatrix[rowIdx][chunkStart + colIdx];
-        } else {
-          matrixChunkData[rowIdx * elementPerRow + colIdx] = 0; // padding
-        }
+      for (uint64_t colIdx = chunkStart; colIdx < chunkSize; ++colIdx) {
+        matrixChunkData[rowIdx * chunkSize + colIdx] = srcMatrix[rowIdx][chunkStart + colIdx];
       }
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    hostElapsedTime += (end - start);
-
     // Copy data to PIM
     PimStatus status = pimCopyHostToDevice(vectorChunk.data(), vectorChunkObj);
     assert(status == PIM_OK);
-    status = pimCopyHostToDevice(matrixChunkData.data(), matrixChunkObj);
-    assert(status == PIM_OK);
+
+    for (uint64_t idx = 0; idx < rowChunk; ++idx) {
+      status = pimCopyHostToDevice(matrixChunkData.data() + idx*deviceProps.numPIMCores, matrixChunkObj);
+      assert(status == PIM_OK);
     
-    // Perform MAC operation: compute partial dot products
-    status = pimMAC(matrixChunkObj, vectorChunkObj, partialResult.data());
-    assert(status == PIM_OK);
-    
-    // Accumulate partial results
-    for (uint64_t i = 0; i < row; ++i) {
-      dst[i] += partialResult[i];
+      // Perform MAC operation: compute partial dot products
+      status = pimMAC(matrixChunkObj, vectorChunkObj, dst.data() + idx * deviceProps.numPIMCores);
+      assert(status == PIM_OK);
     }
+    pimFree(vectorChunkObj);
+    pimFree(matrixChunkObj);
   }
-  cout << "Host elapsed time: " << std::fixed << std::setprecision(3) << hostElapsedTime.count() << " ms." << endl;
-  pimFree(vectorChunkObj);
-  pimFree(matrixChunkObj);
 }
 
 int main(int argc, char *argv[])
@@ -239,7 +226,6 @@ int main(int argc, char *argv[])
         tempMatrix[i][j] = srcMatrix[j][i];
       }
     }
-    uint64_t elementPerRow = deviceProps.numColPerSubarray / 32; // 32 bits per elements
     gemv_aim(params.row, params.column, srcVector, tempMatrix, resultVector, deviceProps);
   } else {
     gemv(params.row, params.column, srcVector, srcMatrix, resultVector);
@@ -265,7 +251,7 @@ int main(int argc, char *argv[])
         {
           if (!shouldBreak)
           { // check the flag again in a critical section
-            std::cout << "Wrong answer: " << resultVector[i] << " (expected " << result << ")" << std::endl;
+            std::cout << "idx: " << i << " Wrong answer: " << resultVector[i] << " (expected " << result << ")" << std::endl;
             shouldBreak = true; // set the flag to true
           }
         }

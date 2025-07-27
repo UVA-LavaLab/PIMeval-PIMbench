@@ -87,6 +87,7 @@ protected:
   double m_tPRE; // Row precharge latency in ms
   double m_tL; // Logic operation for bitserial / tCCD in ms
   double m_tGDL; // Fetch data from local row buffer to global row buffer
+  double m_tCAS; // CAS time in ms
   int m_GDLWidth; // Number of bits that can be fetched from local to global row buffer.
   int m_numChipsPerRank; // Number of chips per rank
   double m_typicalRankBW; // typical rank data transfer bandwidth in GB/s
@@ -104,7 +105,6 @@ protected:
   unsigned m_tCCD_L; // Long command delay in ms
   unsigned m_tRCD; // RCD time in ms
   unsigned m_tRP; // RP time in ms
-  unsigned m_tCAS; // CAS time in ms
 };
 
 #endif

@@ -152,6 +152,7 @@ pimeval::perfEnergy pimPerfEnergyAim::getPerfEnergyForMac(PimCmdEnum cmdType, co
   // 1. tCAS = cycles required to data available at the I/O interface after a read command.
   // 2. m_tGDL = cycles required for two consecutive read commands to the same bank.
   // Hence, the time to read data from the global AiM buffer to the bank interface is `tCAS - m_tGDL`.
+  // User may wonder why buffer read time is not multiplied by number of banks per chip. This is because according the AiM paper mentions that buffer is n-way fanout to n banks in the same chip.
   // AiM paper mentions accumulation reduction tree requires 4 cycles after the multiplier. Hence, the compute time for accumulation is `4 * tCK`.
   // TODO: Energy model
   double msRuntime = 0.0;
@@ -165,7 +166,7 @@ pimeval::perfEnergy pimPerfEnergyAim::getPerfEnergyForMac(PimCmdEnum cmdType, co
   unsigned numCore = obj.getNumCoreAvailable();
   unsigned elementsPerCore = std::ceil(obj.getNumElements() * 1.0 / numCore);
   unsigned gdlItr = std::ceil(elementsPerCore * bitsPerElement * 1.0 / m_GDLWidth);
-  
+
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, (bitsPerElement * numCore) / 8);
   
   msRead = m_tACT + m_tPRE + (m_tCAS - m_tGDL) * gdlItr;
