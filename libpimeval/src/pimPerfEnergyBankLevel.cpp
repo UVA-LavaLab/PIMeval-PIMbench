@@ -35,7 +35,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned numBankPerChip = numCores / m_numChipsPerRank;
-
+  // for scalar operations an extra read is required to read the scalar value
   switch (cmdType)
   {
     case PimCmdEnum::COPY_O2O:
@@ -52,10 +52,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     }
     case PimCmdEnum::POPCOUNT:
     case PimCmdEnum::ABS:
-    case PimCmdEnum::ADD_SCALAR:
-    case PimCmdEnum::SUB_SCALAR:
-    case PimCmdEnum::MUL_SCALAR:
-    case PimCmdEnum::DIV_SCALAR:
     case PimCmdEnum::BIT_SLICE_EXTRACT:
     case PimCmdEnum::BIT_SLICE_INSERT:
     case PimCmdEnum::CONVERT_TYPE:
@@ -80,6 +76,23 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       totalOp = obj.getNumElements();
       break;
     }
+    case PimCmdEnum::ADD_SCALAR:
+    case PimCmdEnum::SUB_SCALAR:
+    case PimCmdEnum::MUL_SCALAR:
+    case PimCmdEnum::DIV_SCALAR:
+    {
+      msRead = (m_tACT + m_tPRE) * numPass + m_tR + m_tGDL;
+      msWrite = ((m_tACT + m_tPRE + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tACT + m_tPRE + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
+      mjEnergy = ((m_eACT + m_ePRE) * 2 + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numCores * (numPass - 1);
+      mjEnergy += ((m_eACT + m_ePRE) * 2 + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numCores;
+      mjEnergy += (m_eR * maxGDLItr * (numPass-1) * numBankPerChip * m_numRanks + (m_eR * minGDLItr * numBankPerChip * m_numRanks)) + (m_eAP * numCores + m_eR * numBankPerChip * m_numRanks);
+      mjEnergy += (m_eW * maxGDLItr * (numPass-1) * numBankPerChip * m_numRanks + (m_eW * minGDLItr * numBankPerChip * m_numRanks));
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
     case PimCmdEnum::AND_SCALAR:
     case PimCmdEnum::OR_SCALAR:
     case PimCmdEnum::XOR_SCALAR:
@@ -90,6 +103,19 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::NE_SCALAR:
     case PimCmdEnum::MIN_SCALAR:
     case PimCmdEnum::MAX_SCALAR:
+    {
+      msRead = (m_tACT + m_tPRE) * numPass + m_tR + m_tGDL;
+      msWrite = ((m_tACT + m_tPRE + maxGDLItr * m_tGDL) * (numPass - 1)) + (m_tACT + m_tPRE + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
+      mjEnergy = (((m_eACT + m_ePRE) * 2) +  (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numCores * (numPass - 1);
+      mjEnergy += (((m_eACT + m_ePRE) * 2) + (minElementPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numCores;
+      mjEnergy += (m_eR * maxGDLItr * (numPass-1) * numBankPerChip * m_numRanks + (m_eR * minGDLItr * numBankPerChip * m_numRanks)) + (m_eAP * numCores + m_eR * numBankPerChip * m_numRanks);
+      mjEnergy += (m_eW * maxGDLItr * (numPass-1) * numBankPerChip * m_numRanks + (m_eW * minGDLItr * numBankPerChip * m_numRanks));
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
     case PimCmdEnum::SHIFT_BITS_L:
     case PimCmdEnum::SHIFT_BITS_R:
     {
