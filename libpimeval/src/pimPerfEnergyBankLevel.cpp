@@ -35,7 +35,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned numBankPerChip = numCores / m_numChipsPerRank;
-  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? ((m_tRAS * m_tCK) - (minGDLItr * m_tGDL)) : m_tACT; // Use tRAS if GDL is less than tRAS
   // for scalar operations an extra read is required to read the scalar value
   switch (cmdType)
   {
@@ -187,7 +187,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   uint64_t totalOp = 0;
   unsigned numBankPerChip = numCoresUsed / m_numChipsPerRank;
-  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? ((m_tRAS * m_tCK) - (minGDLItr * m_tGDL)) : m_tACT; // Use tRAS if GDL is less than tRAS
 
   switch (cmdType)
   {
@@ -288,7 +288,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   uint64_t totalOp = 0;
   unsigned numBankPerChip = numCore / m_numChipsPerRank;
-  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? ((m_tRAS * m_tCK) - (minGDLItr * m_tGDL)) : m_tACT; // Use tRAS if GDL is less than tRAS
 
   switch (cmdType) {
     case PimCmdEnum::REDSUM:
@@ -341,7 +341,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned numBankPerChip = numCore / m_numChipsPerRank;
-  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? ((m_tRAS * m_tCK) - (minGDLItr * m_tGDL)) : m_tACT; // Use tRAS if GDL is less than tRAS
   uint64_t totalOp = 0;
   msWrite = ((m_tACT + m_tPRE) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((activateMS + m_tPRE) + (minGDLItr * m_tGDL));
 
@@ -404,7 +404,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForPrefixSum(PimCmdEnum cmdType, const pimO
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   uint64_t totalOp = 0;
   unsigned numBankPerChip = numCore / m_numChipsPerRank;
-  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? ((m_tRAS * m_tCK) - (minGDLItr * m_tGDL)) : m_tACT; // Use tRAS if GDL is less than tRAS
   switch (cmdType) {
     case PimCmdEnum::PREFIX_SUM:
     {
