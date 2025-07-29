@@ -50,6 +50,7 @@ public:
   virtual double gettRP() const = 0;
   virtual double gettCCD_L() const = 0;
   virtual double gettCCD_S() const = 0;
+  virtual double gettRAS() const = 0; 
   virtual double gettCK() const = 0;
 };
 

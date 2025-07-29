@@ -45,6 +45,7 @@ public:
   double gettCCD_L() const override { return m_tCCD_L; }
   double gettCCD_S() const override { return m_tCCD_S; }
   double gettCK() const override { return m_tCK; }
+  double gettRAS() const override { return m_tRAS; }
 
 private:
   // [dram_structure]

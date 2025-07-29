@@ -101,10 +101,11 @@ protected:
   double m_pBCore; // background power for each core in W
   double m_pBChip; // background power for each core in W
   double m_tCK; // Clock cycle time in ms
-  unsigned m_tCCD_S; // Short command delay in ms
-  unsigned m_tCCD_L; // Long command delay in ms
-  unsigned m_tRCD; // RCD time in ms
-  unsigned m_tRP; // RP time in ms
+  unsigned m_tCCD_S; // Short command delay in cycles
+  unsigned m_tCCD_L; // Long command delay in cycles
+  unsigned m_tRCD; // RCD in cycles
+  unsigned m_tRP; // RP in cycles
+  unsigned m_tRAS; // RAS in cycles
 };
 
 #endif
