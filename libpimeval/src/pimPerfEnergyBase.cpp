@@ -74,6 +74,7 @@ pimPerfEnergyBase::pimPerfEnergyBase(const pimPerfEnergyModelParams& params)
   m_tRCD = m_paramsDram.gettRCD();
   m_tRP = m_paramsDram.gettRP();
   m_tCAS = m_paramsDram.getNsTCAS() / m_nano_to_milli; // Convert ns to ms
+  m_tRAS = m_paramsDram.gettRAS();
 }
 
 //! @brief  Perf energy model of data transfer between CPU memory and PIM memory
