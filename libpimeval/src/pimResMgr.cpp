@@ -549,6 +549,9 @@ pimResMgr::pimAllocAssociated(PimObjId assocId, PimDataType dataType)
   uint64_t numElemPerRegionLast = 0;
   unsigned numColsPerElem = 0;
 
+  // The reason other horizontal bit-parallel (AiM, Aquabolt) PIM is not included in this condition is that
+  // they support only 16-bit floats/ints.
+  // If more bit-parallel PIMs are added, this condition should be extended.
   if ((allocType == PIM_ALLOC_H || allocType == PIM_ALLOC_H1) && (bitsPerElement > bitsPerElementAssoc) && (m_device->getSimTarget() == PIM_DEVICE_BANK_LEVEL || m_device->getSimTarget() == PIM_DEVICE_FULCRUM)) {
     // allocate one region per core, with horizontal layout
     numRegions = (numElements * bitsPerElement - 1) / numCols + 1;
