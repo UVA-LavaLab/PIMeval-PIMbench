@@ -355,7 +355,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimO
 // TODO: This needs to be revisited
 //! @brief  Perf energy model of bank-level PIM for rotate
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj, bool useCrossRegionCommunication) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -366,8 +366,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
   uint64_t totalOp = 0;
-  // boundary handling - assume two times copying between device and host for boundary elements
-  pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
   // rotate within subarray:
   // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
@@ -377,9 +375,15 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
   msRuntime *= numPass;
   mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
-  msRuntime += 2 * perfEnergyBT.m_msRuntime;
-  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-  printf("PIM-Warning: Perf energy model is not precise for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+
+  // Only handle region boundaries if cross region communication is enabled
+  if(useCrossRegionCommunication) {
+    // boundary handling - assume two times copying between device and host for boundary elements
+    pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
+    msRuntime += 2 * perfEnergyBT.m_msRuntime;
+    mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
+    printf("PIM-Warning: Perf energy model is not precise for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+  }
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
