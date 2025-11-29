@@ -1,0 +1,5 @@
+Power Sample Collected: 2935
+[GPU] Duration: 3162.43 ms
+[GPU] Model: sigmoid(-2.28162e-05 * x + -4.27026e-05)
+[CPU] Model: sigmoid(-1.55859e-05 * x + -0.000138422)
+[CHECK] CPU and GPU results match.
