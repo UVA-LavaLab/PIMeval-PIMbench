@@ -8,6 +8,7 @@
 #include <vector>
 #include <getopt.h>
 #include <cmath>
+#include <algorithm>
 #include "util.h"
 
 using namespace std;
