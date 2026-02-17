@@ -156,6 +156,9 @@ PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 PimStatus pimConvertType(PimObjId src, PimObjId dest);
 
 // Logic and Arithmetic Operation
+// Note: idxBegin and idxEnd specify the range [idxBegin, idxEnd) of indexes to be processed by the PIM.
+// If the default values (OULL) for idxBegin and idxEnd are used, the entire range of the PIM object will be considered.
+// TODO: Currently idxBegin and idxEnd for all PIM Object IDs are same; however, it is possible to perform operation on  
 // Mixed data type extensions:
 // - pimAdd/pimSub: If src1 is an integer vector, src2 can be a Boolean vector for accumulation purposes.
 PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);

@@ -403,6 +403,7 @@ pimCmdFunc1::sanityCheck() const
   }
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  uint64_t numElements = objSrc.getNumElements();
   if (!isAssociated(objSrc, objDest)) {
     return false;
   }
@@ -472,6 +473,22 @@ pimCmdFunc1::sanityCheck() const
         return false;
       }
   }
+  
+  if (!m_isFullVector) {
+    if (m_idxBegin > numElements) {
+      std::printf("PIM-Error: IDX begin range for PIM object ID %d is greater than the number of elements\n", m_src);
+      return false;
+    }
+    if (m_idxEnd > numElements) {
+      std::printf("PIM-Error: IDX end range for PIM object ID PIM object ID %d is greater than the number of elements\n", m_src);
+      return false;
+    }
+    if (m_idxEnd < m_idxBegin) {
+      std::printf("PIM-Error: IDX end for object ID %d is less than its beginning\n", m_src);
+      return false;
+    }
+  }
+  
   return true;
 }
 

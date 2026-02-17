@@ -211,9 +211,9 @@ class pimCmdFunc1 : public pimCmd
 {
 public:
   pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalarValue = 0, uint64_t idxBegin = 0, uint64_t idxEnd = 0)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalarValue(scalarValue), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalarValue(scalarValue), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_isFullVector(idxEnd == 0ULL) {}
   pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut, uint64_t idxBegin = 0, uint64_t idxEnd = 0)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_lut(lut), m_idxBegin(idxBegin), m_idxEnd(idxEnd) {}
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_lut(lut), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_isFullVector(idxEnd == 0ULL) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -224,7 +224,8 @@ protected:
   PimObjId m_dest;
   uint64_t m_scalarValue;
   uint64_t m_idxBegin = 0;
-  uint64_t m_idxEnd = 0; 
+  uint64_t m_idxEnd = 0;
+  bool m_isFullVector = false; 
   std::vector<uint8_t> m_lut; 
 private:
   template<typename T>
