@@ -53,8 +53,8 @@ bool testFused(PimDeviceEnum deviceType)
 
   // Fused PIM APIs
   PimProg prog;
-  prog.add(pimMulScalar, objSrc1, objDest1, static_cast<uint64_t>(scalarVal));
-  prog.add(pimAdd, objDest1, objSrc2, objDest1);
+  prog.add(pimMulScalar, objSrc1, objDest1, static_cast<uint64_t>(scalarVal), static_cast<uint64_t>(0UL), static_cast<uint64_t>(0UL));
+  prog.add(pimAdd, objDest1, objSrc2, objDest1, static_cast<uint64_t>(0UL), static_cast<uint64_t>(0UL));
   status = pimFuse(prog);
   assert(status == PIM_OK);
 
