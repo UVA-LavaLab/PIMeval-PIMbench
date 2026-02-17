@@ -352,7 +352,7 @@ pimSim::pimBroadcast(PimObjId dest, T value)
 
 // @brief  PIM OP: add
 bool
-pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimAdd");
   if (!isValidDevice()) { return false; }
@@ -362,7 +362,7 @@ pimSim::pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: sub
 bool
-pimSim::pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimSub(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimSub");
   if (!isValidDevice()) { return false; }
@@ -372,7 +372,7 @@ pimSim::pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief PIM OP: div
 bool
-pimSim::pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimDiv(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimDiv");
   if (!isValidDevice()) { return false; }
@@ -382,7 +382,7 @@ pimSim::pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: abs
 bool
-pimSim::pimAbs(PimObjId src, PimObjId dest)
+pimSim::pimAbs(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimAbs");
   if (!isValidDevice()) { return false; }
@@ -392,7 +392,7 @@ pimSim::pimAbs(PimObjId src, PimObjId dest)
 
 // @brief  PIM OP: mul
 bool
-pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimMul");
   if (!isValidDevice()) { return false; }
@@ -402,7 +402,7 @@ pimSim::pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: not
 bool
-pimSim::pimNot(PimObjId src, PimObjId dest)
+pimSim::pimNot(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimNot");
   if (!isValidDevice()) { return false; }
@@ -412,7 +412,7 @@ pimSim::pimNot(PimObjId src, PimObjId dest)
 
 // @brief  PIM OP: and
 bool
-pimSim::pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimAnd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimAnd");
   if (!isValidDevice()) { return false; }
@@ -422,7 +422,7 @@ pimSim::pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: or
 bool
-pimSim::pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimOr(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimOr");
   if (!isValidDevice()) { return false; }
@@ -432,7 +432,7 @@ pimSim::pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: xor
 bool
-pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimXor");
   if (!isValidDevice()) { return false; }
@@ -442,7 +442,7 @@ pimSim::pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: xnor
 bool
-pimSim::pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimXnor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimXnor");
   if (!isValidDevice()) { return false; }
@@ -452,7 +452,7 @@ pimSim::pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: gt
 bool
-pimSim::pimGT(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimGT(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimGT");
   if (!isValidDevice()) { return false; }
@@ -462,7 +462,7 @@ pimSim::pimGT(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: lt
 bool
-pimSim::pimLT(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimLT(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimLT");
   if (!isValidDevice()) { return false; }
@@ -472,7 +472,7 @@ pimSim::pimLT(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: eq
 bool
-pimSim::pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimEQ(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimEQ");
   if (!isValidDevice()) { return false; }
@@ -482,7 +482,7 @@ pimSim::pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: ne
 bool
-pimSim::pimNE(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimNE(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimNE");
   if (!isValidDevice()) { return false; }
@@ -492,7 +492,7 @@ pimSim::pimNE(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: min
 bool
-pimSim::pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimMin(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimMin");
   if (!isValidDevice()) { return false; }
@@ -502,7 +502,7 @@ pimSim::pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
 
 // @brief  PIM OP: max
 bool
-pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimMax");
   if (!isValidDevice()) { return false; }
@@ -510,7 +510,7 @@ pimSim::pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimAdd(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimAdd(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimAddScalar");
   if (!isValidDevice()) { return false; }
@@ -518,7 +518,7 @@ bool pimSim::pimAdd(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimSub(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimSub(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimSubScalar");
   if (!isValidDevice()) { return false; }
@@ -526,7 +526,7 @@ bool pimSim::pimSub(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimMul(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimMul(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimMulScalar");
   if (!isValidDevice()) { return false; }
@@ -534,7 +534,7 @@ bool pimSim::pimMul(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimDiv(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimDiv(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimDivScalar");
   if (!isValidDevice()) { return false; }
@@ -542,7 +542,7 @@ bool pimSim::pimDiv(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimAnd(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimAnd(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimAndScalar");
   if (!isValidDevice()) { return false; }
@@ -550,7 +550,7 @@ bool pimSim::pimAnd(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimOr(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimOr(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimOrScalar");
   if (!isValidDevice()) { return false; }
@@ -558,7 +558,7 @@ bool pimSim::pimOr(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimXor(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimXor(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimXorScalar");
   if (!isValidDevice()) { return false; }
@@ -566,7 +566,7 @@ bool pimSim::pimXor(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimXnor(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimXnor(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimXnorScalar");
   if (!isValidDevice()) { return false; }
@@ -574,7 +574,7 @@ bool pimSim::pimXnor(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimGT(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimGT(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimGTScalar");
   if (!isValidDevice()) { return false; }
@@ -582,7 +582,7 @@ bool pimSim::pimGT(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimLT(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimLT(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimLTScalar");
   if (!isValidDevice()) { return false; }
@@ -590,7 +590,7 @@ bool pimSim::pimLT(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimEQ(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimEQ(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimEQScalar");
   if (!isValidDevice()) { return false; }
@@ -598,7 +598,7 @@ bool pimSim::pimEQ(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimNE(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimNE(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimNEScalar");
   if (!isValidDevice()) { return false; }
@@ -606,7 +606,7 @@ bool pimSim::pimNE(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimMin(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimMin(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimMinScalar");
   if (!isValidDevice()) { return false; }
@@ -614,7 +614,7 @@ bool pimSim::pimMin(PimObjId src, PimObjId dest, uint64_t scalarValue)
   return m_device->executeCmd(std::move(cmd));
 }
 
-bool pimSim::pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue)
+bool pimSim::pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd)
 {
   pimPerfMon perfMon("pimMaxScalar");
   if (!isValidDevice()) { return false; }
