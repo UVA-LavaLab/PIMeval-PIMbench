@@ -503,6 +503,7 @@ pimCmdFunc1::computeRegion(unsigned index)
   unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::SIM);
   const pimRegion& srcRegion = objSrc.getRegions()[index];
   uint64_t currIdx = srcRegion.getElemIdxBegin();
+  PimCoreId coreId = srcRegion.getCoreId();
   if (!m_isFullVector) {
     if (currIdx + srcRegion.getNumElemInRegion() < m_idxBegin || currIdx > m_idxEnd) {
       return true; // skip this region

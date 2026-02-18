@@ -172,38 +172,38 @@ PimStatus pimConvertType(PimObjId src, PimObjId dest);
 // TODO: Currently idxBegin and idxEnd for all PIM Object IDs are same; however, it is possible to perform operation on  
 // Mixed data type extensions:
 // - pimAdd/pimSub: If src1 is an integer vector, src2 can be a Boolean vector for accumulation purposes.
-PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimDiv(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimAbs(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimNot(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimXnor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimSub(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimMul(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimDiv(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimAbs(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimNot(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimAnd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimOr(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimXor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimXnor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimMin(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimMax(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
 
 // Relational operations - Dest object is BOOL type
-PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimNE(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimGTScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimLTScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimEQScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
-PimStatus pimNEScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimLT(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimEQ(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimNE(PimObjId src1, PimObjId src2, PimObjId destBool, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimGTScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimLTScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimEQScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
+PimStatus pimNEScalar(PimObjId src, PimObjId destBool, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL);
 
 // multiply src1 with scalarValue and add the multiplication result with src2. Save the result to dest. 
 PimStatus pimScaledAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue);
