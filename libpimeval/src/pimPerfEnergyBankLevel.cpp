@@ -12,14 +12,13 @@
 
 //! @brief  Perf energy model of bank-level PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
+pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   uint64_t totalOp = 0;
   if (cmdType == PimCmdEnum::CONVERT_TYPE) {
@@ -30,12 +29,29 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+  // This is for when entire vector is not processed.
+  // We cannot just use numElements/maxElementsPerRegion for this.
+  // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+  // However, 128 elements are in region i-1 and 128 elements are in region i.
+  // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
+  uint64_t firstPass = startIIdx / maxElementsPerRegion;
+  uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
+  uint64_t passesTouched = lastPass - firstPass + 1;
+  unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore();
+  std::printf("startIIdx: %lu, endIdx: %lu, firstPass: %lu, lastPass: %lu, passesTouched: %lu\n", startIIdx, endIdx, firstPass, lastPass, passesTouched);
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCores) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCores) : minElementPerRegion;
+  maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCores) : maxElementsPerRegion;
+  
   // How many iteration require to read / write max elements per region
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned numBankPerChip = numCores / m_numChipsPerRank;
   double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  std::printf("Command: %s, numCoresUsed: %u, bitsPerElement: %u\n", pimCmd::getName(cmdType, "").c_str(), numCores, bitsPerElement);
+  std::printf("numPass: %u, maxElementsPerRegion: %u, minElementPerRegion: %u, maxGDLItr: %u, minGDLItr: %u\n", numPass, maxElementsPerRegion, minElementPerRegion, maxGDLItr, minGDLItr);
+  
   // for scalar operations an extra read is required to read the scalar value
   switch (cmdType)
   {
@@ -168,20 +184,34 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bank-level PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
+pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   double msRead = 0.0;
   double msWrite = 0.0;
   double msCompute = 0.0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCoresUsed = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
 
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+  
+  // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+  // This is for when entire vector is not processed.
+  // We cannot just use numElements/maxElementsPerRegion for this.
+  // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+  // However, 128 elements are in region i-1 and 128 elements are in region i.
+  // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
+  uint64_t firstPass = startIIdx / maxElementsPerRegion;
+  uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
+  uint64_t passesTouched = lastPass - firstPass + 1;
+  unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore();
+
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCoresUsed) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCoresUsed) : minElementPerRegion;
+  maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCoresUsed) : maxElementsPerRegion;
+  
   // How many iteration require to read / write max elements per region
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);

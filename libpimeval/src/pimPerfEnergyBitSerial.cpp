@@ -226,7 +226,7 @@ pimPerfEnergyBitSerial::getPerfEnergyTypeConversion(PimDeviceEnum deviceType, Pi
 
 //! @brief  Perf energy model of bit-serial PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const
+pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   pimeval::perfEnergy perf;
   switch (m_simTarget) {
@@ -239,7 +239,16 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
       if (cmdType == PimCmdEnum::CONVERT_TYPE) {
         perf = getPerfEnergyTypeConversion(m_simTarget, cmdType, objSrc, objDest);
       } else {
-        unsigned numPass = objSrc.getMaxNumRegionsPerCore();
+        // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+        // This is for when entire vector is not processed.
+        // We cannot just use numElements/maxElementsPerRegion for this.
+        // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+        // However, 128 elements are in region i-1 and 128 elements are in region i.
+        // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
+        uint64_t firstPass = startIIdx / objSrc.getMaxElementsPerRegion();
+        uint64_t lastPass  = (endIdx - 1) / objSrc.getMaxElementsPerRegion();   //exclusive end index, so -1
+        uint64_t passesTouched = lastPass - firstPass + 1;
+        unsigned numPass = startIIdx < endIdx ? passesTouched : objSrc.getMaxNumRegionsPerCore();
         perf = getPerfEnergyBitSerial(m_simTarget, cmdType, numPass, objSrc, objSrc, objDest);
       }
       break;
@@ -252,7 +261,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
 
 //! @brief  Perf energy model of bit-serial PIM for func2
 pimeval::perfEnergy
-pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
+pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   pimeval::perfEnergy perf;
   switch (m_simTarget) {
@@ -261,7 +270,10 @@ pimPerfEnergyBitSerial::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PIM_DEVICE_BITSIMD_H:
     case PIM_DEVICE_SIMDRAM:
     {
-      unsigned numPass = objSrc1.getMaxNumRegionsPerCore();
+      uint64_t firstPass = startIIdx / objSrc1.getMaxElementsPerRegion();
+      uint64_t lastPass  = (endIdx - 1) / objSrc1.getMaxElementsPerRegion();   //exclusive end index, so -1
+      uint64_t passesTouched = lastPass - firstPass + 1;
+      unsigned numPass = startIIdx < endIdx ? passesTouched : objSrc1.getMaxNumRegionsPerCore();
       perf = getPerfEnergyBitSerial(m_simTarget, cmdType, numPass, objSrc1, objSrc2, objDest);
       if (cmdType == PimCmdEnum::SCALED_ADD) perf.m_totalOp *= 2;
       break;

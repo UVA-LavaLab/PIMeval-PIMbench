@@ -223,10 +223,10 @@ protected:
   PimObjId m_src;
   PimObjId m_dest;
   uint64_t m_scalarValue;
+  std::vector<uint8_t> m_lut; 
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = 0;
   bool m_isFullVector = false; 
-  std::vector<uint8_t> m_lut; 
 private:
   template<typename T>
   inline bool computeResult(T operand, PimCmdEnum cmdType, T scalarValue, T& result, int bitsPerElementSrc) {

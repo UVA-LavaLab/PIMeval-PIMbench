@@ -13,7 +13,7 @@
 
 //! @brief  Perf energy model of Fulcrum for func1
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
 
   // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
@@ -21,23 +21,35 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   // Consequently, only one row read operation is required in this case.
   // Additionally, using the walker-renaming technique (refer to the Fulcrum paper for details),
   // the write operation is also pipelined. Thus, only one row write operation is needed.
-
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   double msRead = 0.0;
   double msWrite = 0.0;
   double msALU = 0.0;
   uint64_t totalOp = 0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  unsigned numCores =  obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+
+  // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+  // This is for when entire vector is not processed.
+  // We cannot just use numElements/maxElementsPerRegion for this.
+  // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+  // However, 128 elements are in region i-1 and 128 elements are in region i.
+  // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
+  uint64_t firstPass = startIIdx / maxElementsPerRegion;
+  uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
+  uint64_t passesTouched = lastPass - firstPass + 1;
+  unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore();
+
   if (cmdType == PimCmdEnum::CONVERT_TYPE) {
     // for type conversion, ALU parallelism is determined by the wider data type
     bitsPerElement = std::max(bitsPerElement, objDest.getBitsPerElement(PimBitWidth::ACTUAL));
   }
-  unsigned numCores =  obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
-  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCores) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCores) : minElementPerRegion;
+  maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCores) : maxElementsPerRegion;
   switch (cmdType)
   {
     case PimCmdEnum::COPY_O2O:
@@ -142,7 +154,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
 
 //! @brief  Perf energy model of Fulcrum for func2
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -150,12 +162,24 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
   double msWrite = 0.0;
   double msALU = 0.0;
   uint64_t totalOp = 0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCoresUsed = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+  // This is for when entire vector is not processed.
+  // We cannot just use numElements/maxElementsPerRegion for this.
+  // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+  // However, 128 elements are in region i-1 and 128 elements are in region i.
+  // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  uint64_t firstPass = startIIdx / maxElementsPerRegion;
+  uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
+  uint64_t passesTouched = lastPass - firstPass + 1;
+  unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore(); 
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
+  minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCoresUsed) : minElementPerRegion;
+  maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCoresUsed) : maxElementsPerRegion;
+  
   switch (cmdType)
   {
     case PimCmdEnum::MUL:

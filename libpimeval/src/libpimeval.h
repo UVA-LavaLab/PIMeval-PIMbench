@@ -91,6 +91,17 @@ enum PimDataType {
   PIM_FP8,
 };
 
+//! @brief PIM object indexing mode
+//!
+//! Global: apply op on [idxBegin, idxEnd) as absolute indices into the object.
+//!
+//! Local: for each core c, apply op on [base(c) + idxBegin, base(c) + idxEnd)
+//! where base(c) is the start of that core’s slice in the object.
+enum PimIndexMode {
+  PIM_GLOBAL = 0, // Default indexing mode is global across the entire PIM device
+  PIM_LOCAL,      // Local (per-core) indexing mode
+};
+
 //! @brief  PIM device properties
 struct PimDeviceProperties {
   PimDeviceEnum deviceType = PIM_DEVICE_NONE;

@@ -502,10 +502,23 @@ pimCmdFunc1::computeRegion(unsigned index)
   PimDataType dataType = objSrc.getDataType();
   unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::SIM);
   const pimRegion& srcRegion = objSrc.getRegions()[index];
+  uint64_t currIdx = srcRegion.getElemIdxBegin();
+  if (!m_isFullVector) {
+    if (currIdx + srcRegion.getNumElemInRegion() < m_idxBegin || currIdx > m_idxEnd) {
+      return true; // skip this region
+    }
+    // adjust region to fit within [m_idxBegin, m_idxEnd)
+    uint64_t regionEndIdx = currIdx + srcRegion.getNumElemInRegion();
+    uint64_t adjRegionBeginIdx = std::max(currIdx, m_idxBegin);
+    uint64_t adjRegionEndIdx = std::min(regionEndIdx, m_idxEnd);
+    if (adjRegionEndIdx <= adjRegionBeginIdx) {
+      return true; // no overlap between region and [m_idxBegin, m_idxEnd)
+    }
+  }
 
   // perform the computation
-  uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
-  unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+  uint64_t elemIdxBegin = m_isFullVector ? srcRegion.getElemIdxBegin() : std::max(srcRegion.getElemIdxBegin(), m_idxBegin);
+  unsigned numElementsInRegion = m_isFullVector ? srcRegion.getNumElemInRegion() : (unsigned)(std::min(currIdx + srcRegion.getNumElemInRegion(), m_idxEnd) - elemIdxBegin);
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
     if (m_cmdType == PimCmdEnum::CONVERT_TYPE) {
@@ -612,7 +625,11 @@ pimCmdFunc1::updateStats() const
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
 
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest);
+  std::printf("PIM-Cmd: %s on PIM obj %d (data type: %s, num elements: %" PRIu64 ", isVLayout: %d, startIdx: %" PRIu64 ", endIdx: %" PRIu64 ")\n",
+              getName(dataType, isVLayout).c_str(), objSrc.getObjId(),
+              pimUtils::pimDataTypeEnumToStr(dataType).c_str(), objSrc.getNumElements(), isVLayout, m_idxBegin, m_idxEnd);
+
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest, m_idxBegin, m_idxEnd);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -790,7 +807,7 @@ pimCmdFunc2::updateStats() const
   PimDataType dataType = objSrc1.getDataType();
   bool isVLayout = objSrc1.isVLayout();
 
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1, objSrc2, objDest);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1, objSrc2, objDest, m_idxBegin, m_idxEnd);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
