@@ -77,6 +77,11 @@ struct Params getInputParams(int argc, char **argv)
   return p;
 }
 
+void pinVerticesToCores(uint64_t numVertices, PimDeviceProperties &deviceProps)
+{
+
+}
+
 void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<int> &src2, std::vector<int> &dst)
 {
   PimDeviceProperties deviceProps;
@@ -91,10 +96,12 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
   uint64_t verticesPerCore = std::ceil(vectorLength * 1.0 / deviceProps.numPIMCores);
 
   // what should be the length of the object containing vertices belonging to each core
-  uint64_t elementsPerRow = deviceProps.numColPerSubarray / sizeof(int);
+  uint64_t elementsPerRow = deviceProps.numColPerSubarray / (sizeof(int) * 8);
+  std::cout << "Num Columns per Subarray: " << deviceProps.numColPerSubarray << ", Bits per element: " << sizeof(int) * 8 << ", Elements per row: " << elementsPerRow << "\n";
 
   // initialize vertex vector with -1; -1 indicates padded vertices
   std::vector<int> vertexVector(elementsPerRow * deviceProps.numPIMCores, -1);
+  std::cout << "vectorLength: " << vectorLength << ", verticesPerCore: " << verticesPerCore << ", elementsPerRow: " << elementsPerRow << "\n";
   for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId)
   {
     int startVertex = coreId * verticesPerCore;
