@@ -347,7 +347,7 @@ public:
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL)
-    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalarValue(scalarValue), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode) {}
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalarValue(scalarValue), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode), m_isFullVector(idxEnd == 0ULL) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -361,6 +361,7 @@ protected:
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = 0; 
   PimIndexMode m_indexMode = PIM_GLOBAL;
+  bool m_isFullVector = false;
 private:
   template<typename T>
   inline bool computeResult(T operand1, T operand2, PimCmdEnum cmdType, T scalarValue, T& result) {

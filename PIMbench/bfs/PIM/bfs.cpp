@@ -169,13 +169,13 @@ void vectorAddition(uint64_t vectorLength, std::vector<int> &src1, std::vector<i
     return;
   }
 
-  status = pimLTScalar(srcObj1, srcObj2, 41, 0, 1);
+  status = pimLTScalar(srcObj1, srcObj2, 401, 0, 1, PIM_LOCAL);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
   }
 
-  status = pimGTScalar(srcObj1, srcObj3, 40, 1, 2);
+  status = pimGTScalar(srcObj1, srcObj3, 400, 1, 2, PIM_LOCAL);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
