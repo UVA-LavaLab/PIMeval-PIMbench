@@ -235,6 +235,9 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
+    case PimCmdEnum::COND_SELECT: // read from bool, src1, src2, write to dest
+    case PimCmdEnum::COND_SELECT_SCALAR: // read from bool, src1, src2, write to dest
+    case PimCmdEnum::COND_COPY: // read from bool, src, write to dest
     {
       msRead = 2 * m_tR * numPass;
       msWrite = m_tW * numPass;

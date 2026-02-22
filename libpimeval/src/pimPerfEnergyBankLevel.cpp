@@ -39,7 +39,6 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
   uint64_t passesTouched = lastPass - firstPass + 1;
   unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore();
-  std::printf("startIIdx: %lu, endIdx: %lu, firstPass: %lu, lastPass: %lu, passesTouched: %lu\n", startIIdx, endIdx, firstPass, lastPass, passesTouched);
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCores) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCores) : minElementPerRegion;
   maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCores) : maxElementsPerRegion;
@@ -48,10 +47,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjIn
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned numBankPerChip = numCores / m_numChipsPerRank;
-  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
-  std::printf("Command: %s, numCoresUsed: %u, bitsPerElement: %u\n", pimCmd::getName(cmdType, "").c_str(), numCores, bitsPerElement);
-  std::printf("numPass: %u, maxElementsPerRegion: %u, minElementPerRegion: %u, maxGDLItr: %u, minGDLItr: %u\n", numPass, maxElementsPerRegion, minElementPerRegion, maxGDLItr, minGDLItr);
-  
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // 
   // for scalar operations an extra read is required to read the scalar value
   switch (cmdType)
   {
@@ -279,6 +275,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::COND_BROADCAST:
     case PimCmdEnum::COND_SELECT:
     case PimCmdEnum::COND_SELECT_SCALAR:
+    case PimCmdEnum::COND_COPY:
     {
       msRead = ((2 * (m_tACT + m_tPRE)) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((2 * (activateMS + m_tPRE)) + (minGDLItr * m_tGDL));
       msWrite = ((m_tACT + m_tPRE) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((activateMS + m_tPRE) + (minGDLItr * m_tGDL));

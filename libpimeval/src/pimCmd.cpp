@@ -667,11 +667,6 @@ pimCmdFunc1::updateStats() const
   const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
-
-  std::printf("PIM-Cmd: %s on PIM obj %d (data type: %s, num elements: %" PRIu64 ", isVLayout: %d, startIdx: %" PRIu64 ", endIdx: %" PRIu64 ")\n",
-              getName(dataType, isVLayout).c_str(), objSrc.getObjId(),
-              pimUtils::pimDataTypeEnumToStr(dataType).c_str(), objSrc.getNumElements(), isVLayout, m_idxBegin, m_idxEnd);
-
   pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest, m_idxBegin, m_idxEnd);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;

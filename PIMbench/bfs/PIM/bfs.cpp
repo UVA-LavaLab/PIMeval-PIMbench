@@ -311,8 +311,12 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     return;
   }
 
+  //host maintains the visited information; everytime each PIM core sends the neighbor list, host checks if visisted and updates frontier as well as visited vector
+  std::vector<uint8_t> visitedVector(vertexVector.size(), 0);
+
+  int sourceVertex = 0;
   std::queue<int> bfsQueue;
-  bfsQueue.push(391);
+  bfsQueue.push(sourceVertex);
   while(!bfsQueue.empty()) {
     int currVertex = bfsQueue.front();
     bfsQueue.pop();
@@ -402,36 +406,26 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     std::cout << "Core ID holds Vertices in the range: [" << vertexVector[offsetAddress] << ", " << vertexVector[offsetAddress + 1] << ")\n";
 
-    // std::cout << "Offset vector for the core holding current vertex: \n";
-
-    // for (int i = 0; i < offsetVector.size(); ++i) {
-    //   int val = offsetVector[i];
-    //   if (val != currVertex) {
-    //     std::cout << val << " " << "Index in vector: " << i << "\tThe offsetAddress is: " << offsetAddress << "\n";
-    //   }
-    // }
-    // std::cout << "\n";
-
     uint64_t off = offsetVector[offsetAddress];
     uint64_t row  = off / elementsPerRow;
     uint64_t lane = off % elementsPerRow;
     uint64_t idx0 = ((row * deviceProps.numPIMCores + currCore) * elementsPerRow + lane);
-    std::cout << "Offset value for current vertex: " << off << ", which corresponds to row " << row << " and lane " << lane << " in the vertex vector.\n";
-    std::cout << "Row index for current vertex's neighbors starts at: " << idx0 << "\n";
-    std::cout << "Actual Row index for current vertex's neighbors starts at: " << pimRowIDVector[idx0] << "\n";
+    // std::cout << "Offset value for current vertex: " << off << ", which corresponds to row " << row << " and lane " << lane << " in the vertex vector.\n";
+    // std::cout << "Row index for current vertex's neighbors starts at: " << idx0 << "\n";
+    // std::cout << "Actual Row index for current vertex's neighbors starts at: " << pimRowIDVector[idx0] << "\n";
     uint64_t off1  = off + 1;
     uint64_t row1  = off1 / elementsPerRow;
     uint64_t lane1 = off1 % elementsPerRow;
     uint64_t idx1  = ((row1 * deviceProps.numPIMCores + currCore) * elementsPerRow + lane1);
-    std::cout << "Offset value for next vertex: " << off1 << ", which corresponds to row " << row1 << " and lane " << lane1 << " in the vertex vector.\n";
-    std::cout << "Row index for next vertex's neighbors starts at: " << idx1 << "\n";
-    std::cout << "Actual Row index for next vertex's neighbors starts at: " << pimRowIDVector[idx1] << "\n";
+    // std::cout << "Offset value for next vertex: " << off1 << ", which corresponds to row " << row1 << " and lane " << lane1 << " in the vertex vector.\n";
+    // std::cout << "Row index for next vertex's neighbors starts at: " << idx1 << "\n";
+    // std::cout << "Actual Row index for next vertex's neighbors starts at: " << pimRowIDVector[idx1] << "\n";
 
     resultVec.assign(vertexVector.size(), 0);
     resultVec[idx0] = 1;
     status = pimCopyHostToDevice((void *)resultVec.data(), matchEnd);
     if (status != PIM_OK)    {
-      std::cout << "Abort copying rowIDxOffsetObject to device" << std::endl;
+      std::cout << "Abort copying resultVec to device" << std::endl;
       return;
     }
 
@@ -451,8 +445,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       std::cout << "Abort copying rowIdxObj to host" << std::endl;
       return;
     }
-    std::cout << "RowIdx for current vertex in PIM: " << rowI[idx0] << ", in host: " << pimRowIDVector[idx0] << ", original CSR: " << rowIDList[currVertex] << "\n";
-    std::cout << "RowIdx for next vertex in PIM: " << rowI[idx1] << ", in host: " << pimRowIDVector[idx1] << ", original CSR: " << rowIDList[currVertex + 1] << "\n";
+    // std::cout << "RowIdx for current vertex in PIM: " << rowI[idx0] << ", in host: " << pimRowIDVector[idx0] << ", original CSR: " << rowIDList[currVertex] << "\n";
+    // std::cout << "RowIdx for next vertex in PIM: " << rowI[idx1] << ", in host: " << pimRowIDVector[idx1] << ", original CSR: " << rowIDList[currVertex + 1] << "\n";
 
     status = pimBroadcastUInt(rowIDxOffsetObject, 0);
     if (status != PIM_OK)
@@ -481,7 +475,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     
     status = pimCopyHostToDevice((void *)resultVec.data(), matchEnd);
     if (status != PIM_OK)    {
-      std::cout << "Abort copying rowIDxOffsetObject to device" << std::endl;
+      std::cout << "Abort copying resultVec to device" << std::endl;
       return;
     }
 
@@ -507,8 +501,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     int end = neighborOffsetVector[idx1];
     
     std::cout << "Current vertex: " << currVertex << ", offset address: " << offsetAddress << ", offset value: " << offsetVector[offsetAddress] << "\n";
-    std::cout << "Row indices for current vertex's neighbors are in the range: [" << beg << ", " << end << ")\n";
-    std::cout << "Actual Row indices for current vertex's neighbors: " << pimRowIDVector[idx0] << " to " << pimRowIDVector[idx1] << "\n";
+    // std::cout << "Row indices for current vertex's neighbors are in the range: [" << beg << ", " << end << ")\n";
+    // std::cout << "Actual Row indices for current vertex's neighbors: " << pimRowIDVector[idx0] << " to " << pimRowIDVector[idx1] << "\n";
 
     std::vector<uint8_t> nbrMaskVec(pimColIDVector.size(), 0);
 
@@ -529,25 +523,32 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     std::vector<uint32_t> neighborIDVector(vertexVector.size(), 0);
 
     pimCopyDeviceToHost(nbrOut, (void *)neighborIDVector.data());
-    std::cout << "Neighbor IDs for current vertex: ";
+    // std::cout << "Neighbor IDs for current vertex: ";
     for (uint32_t j = beg; j < end; ++j) {
       uint64_t r = j / elementsPerRow;
       uint64_t l = j % elementsPerRow;
       uint64_t idx = ((r * deviceProps.numPIMCores + currCore) * elementsPerRow + l);
-      std::cout << neighborIDVector[idx] << " ";
+      if (visitedVector[neighborIDVector[idx]]) continue; // if neighbor has been visited, skip
+      else {
+        visitedVector[neighborIDVector[idx]] = 1; // mark neighbor as visited
+        bfsQueue.push(neighborIDVector[idx]); // add neighbor to BFS queue
+      }
+      //std::cout << neighborIDVector[idx] << " ";
       // Here we can add the logic to check if the neighbor has been visited before (using a visited mask), and if not, add it to the BFS queue and mark it as visited.
     }
-    std::cout << "\n";
+    // std::cout << "\n";
 
-    std::cout << "Actual Neighbor IDs for current vertex: ";
-    for (uint32_t j = rowIDList[currVertex]; j < rowIDList[currVertex + 1]; ++j) {
-      std::cout << colIDList[j] << " ";
-    }
-    std::cout << "\n";
+    // std::cout << "Actual Neighbor IDs for current vertex: ";
+    // for (uint32_t j = rowIDList[currVertex]; j < rowIDList[currVertex + 1]; ++j) {
+    //   std::cout << colIDList[j] << " ";
+    // }
+    // std::cout << "\n";
 
     pimFree(rowIDxOffsetObject);
     pimFree(matchStart);
     pimFree(matchEnd);
+    pimFree(nbrMask);
+    pimFree(nbrOut);
   }
 
   pimFree(vertexObj);
