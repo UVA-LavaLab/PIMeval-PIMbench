@@ -346,13 +346,15 @@ class pimCmdFunc2 : public pimCmd
 public:
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
-  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL)
-    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalarValue(scalarValue), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode), m_isFullVector(idxEnd == 0ULL) {}
+  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode), m_isFullVector(idxEnd == 0ULL) {}
+  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue)
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalarValue(scalarValue) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
   virtual bool computeRegion(unsigned index) override;
-  virtual bool updateStats() const override;
+  virtual bool updateStats() const override;    
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
