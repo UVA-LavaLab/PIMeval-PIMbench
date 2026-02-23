@@ -395,18 +395,44 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   uint64_t totalOp = 0;
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
+  // For rotate or shift, each bank is contributing #bitsPerElelemnts * #regionsPerCore bits
+  // Note that, we cannot assume the max bandwidht because each region is a different row, so we need to consider ACT/PRE for each region, although they will be parallel for all the banks
+  // For shifting within the bank, we will do it in-place:
+  // Read a row, shift the elements by one step, write back: so one ACT, READ + WRITE, one PRE
+  // For shifting across the bank, there are two cases:
+  // 1) Shift is within same bank
+  // 2) Shift is across banks/chips/channels/ranks
+  // For simplicity, lets assume this happen via I/O
+  // Case 1:
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  // How many iteration require to read / write max elements per region
+  unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
+  unsigned numBankPerChip = numCore / m_numChipsPerRank;
+  double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
 
-  // rotate within subarray:
-  // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
-  // TODO: separate bank level and GDL
-  // TODO: energy unimplemented
-  // TODO: perf per watt
-  msRuntime = (m_tR + (bitsPerElement + 2) * m_tL + m_tW); // for one pass
-  msRuntime *= numPass;
-  mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
-  msRuntime += 2 * perfEnergyBT.m_msRuntime;
-  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-  printf("PIM-Warning: Perf energy model is not precise for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
+  msRead = (m_tACT + m_tPRE + (m_tGDL * maxGDLItr)) * (numPass - 1) + (activateMS + m_tPRE) + (m_tGDL * minGDLItr);
+  msWrite =  m_tGDL * maxGDLItr * (numPass - 1) + m_tGDL * minGDLItr;
+  mjEnergy = ((m_eACT + m_ePRE) + (maxElementsPerRegion * m_blimpLogicalEnergy)) * (numPass - 1) * numCore;
+  mjEnergy += ((m_eACT + m_ePRE) + (minElementPerRegion * m_blimpLogicalEnergy)) * numCore;
+  mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
+  mjEnergy += (m_eW * maxGDLItr * (numPass-1) + m_eW * minGDLItr) * numBankPerChip;
+  totalOp = obj.getNumElements();
+
+  // case 2:
+  // For simplicity, lets assume this happen via I/O
+  // Same row across all banks are open at a time and each row for each bank will contribute #bitsPerElement 
+  // Considering only one bank can write to the I/O at a time, we can send #bitsPerElement from each bank in each t_CCDL
+  // So, for one pass, internal DRAM latency (#BankPerChip-1) * t_CCDL + Perf-Energy for byte transfer
+  msRead += ((numBankPerChip) * m_tGDL * numPass);
+  msWrite += ((numBankPerChip) * m_tGDL * numPass);
+  msRuntime = msRead + msWrite + msCompute + perfEnergyBT.m_msRuntime;
+  mjEnergy += ((m_eACT + m_ePRE) * 2) * numPass * numCore; // ACT and PRE for each pass
+  mjEnergy += (((m_eR * numPass) + (m_eW * numPass)) * numBankPerChip); // Read and write energy
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * (msRead + msWrite + msCompute);
+  mjEnergy += perfEnergyBT.m_mjEnergy;
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
