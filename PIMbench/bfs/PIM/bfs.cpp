@@ -21,6 +21,8 @@
 
 using namespace std;
 
+std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
+
 // Params ---------------------------------------------------------------------
 typedef struct Params
 {
@@ -244,7 +246,6 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
   uint64_t maxRowsNeeded = std::max(rowsNeededforRowIndices, rowsNeededforColumnIndices);
   maxRowsNeeded = deviceProps.isHLayoutDevice ? maxRowsNeeded : maxRowsNeeded * (sizeof(int) * 8);
-  std::cout << "max non zero per core: " << maxNnzPerCore << ", maxRowsNeeded for graph data structure: " << maxRowsNeeded << "\n";
 
   if (maxRowsNeeded > deviceProps.numRowPerCore) {
     std::cout << "Abort because the graph is too large to fit in the PIM device." << std::endl;
@@ -254,7 +255,6 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
   std::vector<int> vertexVector(elementsPerRow * maxRowsNeeded * deviceProps.numPIMCores, -1);
   std::vector<uint> pimRowIDVector(elementsPerRow * maxRowsNeeded * deviceProps.numPIMCores, 0);
   std::vector<uint> pimColIDVector(elementsPerRow * maxRowsNeeded * deviceProps.numPIMCores, 0);
-  std::vector<int> pimRowIdMaskVector(elementsPerRow * maxRowsNeeded * deviceProps.numPIMCores, 0);
   
   PimObjId vertexObj = pimAlloc(PIM_ALLOC_AUTO, elementsPerRow * maxRowsNeeded * deviceProps.numPIMCores, PIM_INT32);
   if (vertexObj == -1)
@@ -291,30 +291,15 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     return;
   }
 
-  PimObjId rowIdMaskObj = pimAllocAssociated(vertexObj, PIM_INT32);
-  if (rowIdMaskObj == -1)
-  {
-    std::cout << "Abort" << std::endl;
-    return;
-  }
-
+  int sourceVertex = 0;
   pinVerticesToCores(numVertices, deviceProps, vertexObj, startMaskObj, endMaskObj, vertexVector, elementsPerRow);
   std::cout << "Pinned vertices to cores. Each core gets " << verticesPerCore << " vertices (padded with -1 if needed)." << "\n";
   allocateRowIndices(deviceProps, elementsPerRow, numVertices, verticesPerCore, rowIDList, pimRowIDVector, rowIdxObj);
   allocateColumnIndices(deviceProps, elementsPerRow, numVertices, verticesPerCore, rowIDList, colIDList, pimColIDVector, colIdxObj);
-  std::cout << "Moved graph data structure to PIM device.\n Starting BFS traversal from vertex 0...\n\n";
-
-  status = pimCopyHostToDevice((void *)pimRowIdMaskVector.data(), rowIdMaskObj);
-  if (status != PIM_OK)
-  {
-    std::cout << "Abort copying rowIdMaskVector to device" << std::endl;
-    return;
-  }
+  std::cout << "Moved graph data structure to PIM device.\n Starting BFS traversal from vertex " << sourceVertex << "...\n\n";
 
   //host maintains the visited information; everytime each PIM core sends the neighbor list, host checks if visisted and updates frontier as well as visited vector
   std::vector<uint8_t> visitedVector(vertexVector.size(), 0);
-
-  int sourceVertex = 0;
   std::queue<int> bfsQueue;
   bfsQueue.push(sourceVertex);
   while(!bfsQueue.empty()) {
@@ -394,6 +379,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     uint64_t offsetAddress = 0;
     unsigned currCore = 0;
 
+    auto start_cpu = std::chrono::high_resolution_clock::now();
     for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
       uint64_t base = (uint64_t)coreId * elementsPerRow;
       if (resultVec[base]) {
@@ -423,6 +409,9 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     resultVec.assign(vertexVector.size(), 0);
     resultVec[idx0] = 1;
+    auto end_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += end_cpu - start_cpu;
+
     status = pimCopyHostToDevice((void *)resultVec.data(), matchEnd);
     if (status != PIM_OK)    {
       std::cout << "Abort copying resultVec to device" << std::endl;
@@ -506,12 +495,15 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     std::vector<uint8_t> nbrMaskVec(pimColIDVector.size(), 0);
 
+    start_cpu = std::chrono::high_resolution_clock::now();
     for (uint32_t j = beg; j < end; ++j) {
       uint64_t r = j / elementsPerRow;
       uint64_t l = j % elementsPerRow;
       uint64_t idx = ((r * deviceProps.numPIMCores + currCore) * elementsPerRow + l);
       nbrMaskVec[idx] = 1;
     }
+    end_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += end_cpu - start_cpu;
 
     PimObjId nbrMask = pimAllocAssociated(vertexObj, PIM_BOOL);
     pimCopyHostToDevice(nbrMaskVec.data(), nbrMask);
@@ -524,6 +516,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     pimCopyDeviceToHost(nbrOut, (void *)neighborIDVector.data());
     // std::cout << "Neighbor IDs for current vertex: ";
+    start_cpu = std::chrono::high_resolution_clock::now();
     for (uint32_t j = beg; j < end; ++j) {
       uint64_t r = j / elementsPerRow;
       uint64_t l = j % elementsPerRow;
@@ -536,6 +529,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       //std::cout << neighborIDVector[idx] << " ";
       // Here we can add the logic to check if the neighbor has been visited before (using a visited mask), and if not, add it to the BFS queue and mark it as visited.
     }
+    end_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += end_cpu - start_cpu;
     // std::cout << "\n";
 
     // std::cout << "Actual Neighbor IDs for current vertex: ";
@@ -556,7 +551,6 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
   pimFree(colIdxObj);
   pimFree(startMaskObj);
   pimFree(endMaskObj);
-  pimFree(rowIdMaskObj);
 }
 
 int main(int argc, char* argv[])
@@ -586,8 +580,8 @@ int main(int argc, char* argv[])
   if (params.shouldVerify) {
     // verify result
   }
-
   pimShowStats();
+  std::cout << "\nHost elapsed time: " << hostElapsedTime.count() << " ms\n";
 
   return 0;
 }
