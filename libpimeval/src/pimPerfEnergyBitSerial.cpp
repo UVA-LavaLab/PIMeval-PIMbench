@@ -463,6 +463,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
   unsigned numCore = obj.getNumCoreAvailable();
+  unsigned numCorePerChip = numCore / m_numRanks / m_numChipsPerRank;
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
@@ -475,13 +476,14 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
       msWrite = m_tW * bitsPerElement * numPass;
       msCompute = 3 * m_tL * bitsPerElement * numPass;
       totalOp += 3 * bitsPerElement * numPass * numCore;
+      msRead += (numCorePerChip * bitsPerElement * m_tGDL * numPass);
+      msWrite += (numCorePerChip * bitsPerElement * m_tGDL * numPass);
       msRuntime = msRead + msWrite + msCompute;
       mjEnergy = (m_eAP + 3 * m_eL) * bitsPerElement * numPass; // for one pass
+      mjEnergy += (((m_eR * numPass * bitsPerElement) + (m_eW * numPass * bitsPerElement)) * numCorePerChip); // Read and write energy
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       msRuntime += 2 * perfEnergyBT.m_msRuntime;
       mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-      break;
-    case PIM_DEVICE_SIMDRAM:
-      // todo
       break;
     case PIM_DEVICE_BITSIMD_H:
       // rotate within subarray:
@@ -496,6 +498,7 @@ pimPerfEnergyBitSerial::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
       msRuntime += 2 * perfEnergyBT.m_msRuntime;
       mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
       break;
+    case PIM_DEVICE_SIMDRAM:
     default:
       assert(0);
   }

@@ -352,14 +352,26 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
-  msRead = m_tR * numPass;
-  msCompute = (bitsPerElement + 2) * m_tL * numPass;
-  msWrite = m_tW * numPass;
-  msRuntime = msRead + msWrite + msCompute;
-  mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
-  msRuntime += 2 * perfEnergyBT.m_msRuntime;
-  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-
+  // Case 1: Shift is within same subarray
+  msRead = m_tACT * numPass; // tRCD instead of tRAS due to compute within the same row
+  msCompute = (maxElementsPerRegion * m_fulcrumAddLatency * (numPass - 1)) + (minElementPerRegion * m_fulcrumAddLatency);
+  msWrite =  m_tPRE * numPass;
+  mjEnergy = ((m_eACT + m_ePRE) + (maxElementsPerRegion * m_fulcrumAddEnergy)) * (numPass - 1) * numCore;
+  mjEnergy += ((m_eACT + m_ePRE) + (minElementPerRegion * m_fulcrumAddEnergy)) * numCore;
+  totalOp = obj.getNumElements();
+  // case 2:
+  // For simplicity, lets assume this happen via I/O
+  // Same row across all suarrays are open at a time and each row for each subarray will contribute #bitsPerElement 
+  // Considering only one bank can write to the I/O at a time, we can send #bitsPerElement from each bank in each t_CCDL
+  // So, for one pass, internal DRAM latency (#SubrrayPerChip) * t_CCDL + Perf-Energy for byte transfer
+  unsigned numCorePerChip = numCore / m_numRanks / m_numChipsPerRank;
+  msRead += ((numCorePerChip) * m_tGDL * numPass);
+  msWrite += ((numCorePerChip) * m_tGDL * numPass);
+  msRuntime = msRead + msWrite + msCompute + (2 * perfEnergyBT.m_msRuntime); // two times byte transfer for read and write of boundary elements
+  mjEnergy += (m_eACT + m_ePRE) * numPass * numCore; // ACT and PRE for each pass
+  mjEnergy += (((m_eR * numPass) + (m_eW * numPass)) * numCorePerChip); // Read and write energy
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * (msRead + msWrite + msCompute);
+  mjEnergy += (2 * perfEnergyBT.m_mjEnergy);
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 

@@ -400,9 +400,9 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   // For shifting within the bank, we will do it in-place:
   // Read a row, shift the elements by one step, write back: so one ACT, READ + WRITE, one PRE
   // For shifting across the bank, there are two cases:
-  // 1) Shift is within same bank
-  // 2) Shift is across banks/chips/channels/ranks
-  // For simplicity, lets assume this happen via I/O
+  // 1) Shift is within same subarray
+  // 2) Shift is across subarray/banks/chips/channels/ranks
+  // For simplicity, lets assume 2 happens via I/O
   // Case 1:
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
@@ -410,7 +410,7 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   // How many iteration require to read / write max elements per region
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
-  unsigned numBankPerChip = numCore / m_numChipsPerRank;
+  unsigned numBankPerChip = numCore/ m_numRanks / m_numChipsPerRank;
   double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
 
   msRead = (m_tACT + m_tPRE + (m_tGDL * maxGDLItr)) * (numPass - 1) + (activateMS + m_tPRE) + (m_tGDL * minGDLItr);
@@ -428,11 +428,11 @@ pimPerfEnergyBankLevel::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjI
   // So, for one pass, internal DRAM latency (#BankPerChip-1) * t_CCDL + Perf-Energy for byte transfer
   msRead += ((numBankPerChip) * m_tGDL * numPass);
   msWrite += ((numBankPerChip) * m_tGDL * numPass);
-  msRuntime = msRead + msWrite + msCompute + perfEnergyBT.m_msRuntime;
-  mjEnergy += ((m_eACT + m_ePRE) * 2) * numPass * numCore; // ACT and PRE for each pass
+  msRuntime = msRead + msWrite + msCompute + (2 * perfEnergyBT.m_msRuntime); // two times byte transfer for read and write of boundary elements
+  mjEnergy += (m_eACT + m_ePRE) * numPass * numCore; // ACT and PRE for each pass
   mjEnergy += (((m_eR * numPass) + (m_eW * numPass)) * numBankPerChip); // Read and write energy
   mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * (msRead + msWrite + msCompute);
-  mjEnergy += perfEnergyBT.m_mjEnergy;
+  mjEnergy += (2 * perfEnergyBT.m_mjEnergy); // two times byte transfer for read and write of boundary elements
 
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
