@@ -46,7 +46,7 @@ struct Params getInputParams(int argc, char **argv)
 {
   struct Params p;
   p.configFile = nullptr;
-  p.inputFile = "../dataset/email-Eu-core.txt";
+  p.inputFile = "../dataset/email-Eu-core.el";
   p.shouldVerify = false;
 
   int opt;
