@@ -273,10 +273,11 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
   // std::vector<int> offsetVector(vertexVector.size(), 0);
   visitedVector[sourceVertex] = 1;
   bfsQueue.push(sourceVertex);
+  unsigned visitedVertices = 0;
   while(!bfsQueue.empty()) {
     int currVertex = bfsQueue.front();
     bfsQueue.pop();
-    
+    ++visitedVertices;
     unsigned currCore = currVertex / verticesPerCore;
     // PimObjId matchStart = pimAllocAssociated(vertexObj, PIM_BOOL);
     // if (matchStart == -1)
@@ -364,7 +365,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     // unsigned currCore = 0;
 
     auto start_cpu = std::chrono::high_resolution_clock::now();
-    uint64_t offsetAddress = currCore * elementsPerRow; // starting address of the current core's block in the vertex vector
+    // uint64_t offsetAddress = currCore * elementsPerRow; // starting address of the current core's block in the vertex vector
     // for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
     //   uint64_t base = (uint64_t)coreId * elementsPerRow;
     //   if (resultVec[base]) {
@@ -472,7 +473,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     int end = neighborOffsetVector[idx1];
     
-    std::cout << "Current vertex: " << currVertex << ", core ID: " << currCore << ", offset address: " << offsetAddress << ", offset value: " << off << "\n";
+    // std::cout << "Current vertex: " << currVertex << ", core ID: " << currCore << ", offset address: " << offsetAddress << ", offset value: " << off << "\n";
     // std::cout << "Row indices for current vertex's neighbors are in the range: [" << beg << ", " << end << ")\n";
     // std::cout << "Actual Row indices for current vertex's neighbors: " << pimRowIDVector[idx0] << " to " << pimRowIDVector[idx1] << "\n";
 
@@ -554,6 +555,9 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     pimFree(nbrMask);
     pimFree(nbrOut);
   }
+
+  if (visitedVertices < numVertices) 
+    std::cout << "Total Vertices: " << numVertices << "\t Visited: " << visitedVertices << "\n\n";
 
   pimFree(vertexObj);
   pimFree(rowIdxObj);
