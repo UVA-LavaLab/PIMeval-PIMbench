@@ -272,11 +272,25 @@ pimPerfEnergyBankLevel::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjIn
     case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
+    {
+      msRead = ((2 * (m_tACT + m_tPRE)) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((2 * (activateMS + m_tPRE)) + (minGDLItr * m_tGDL));
+      msWrite = ((m_tACT + m_tPRE) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((activateMS + m_tPRE) + (minGDLItr * m_tGDL));
+      msCompute = (maxElementsPerRegion * m_blimpLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpLatency * numberOfOperationPerElement);
+      msRuntime = msRead + msWrite + msCompute;
+      mjEnergy = (((m_eACT + m_ePRE) * 3) + (maxElementsPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numCoresUsed * (numPass - 1);
+      mjEnergy += (((m_eACT + m_ePRE) * 3) + (minElementPerRegion * m_blimpLogicalEnergy * numberOfOperationPerElement)) * numCoresUsed;
+      mjEnergy += ((m_eR * 2 * maxGDLItr * (numPass-1)) + (m_eR * 2 * minGDLItr)) * numBankPerChip * m_numRanks;
+      mjEnergy += ((m_eW * maxGDLItr * (numPass-1)) + (m_eW * minGDLItr)) * numBankPerChip * m_numRanks;
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
     case PimCmdEnum::COND_BROADCAST:
     case PimCmdEnum::COND_SELECT:
     case PimCmdEnum::COND_SELECT_SCALAR:
     case PimCmdEnum::COND_COPY:
     {
+      numberOfOperationPerElement *= 2; // 2 masks
       msRead = ((2 * (m_tACT + m_tPRE)) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((2 * (activateMS + m_tPRE)) + (minGDLItr * m_tGDL));
       msWrite = ((m_tACT + m_tPRE) + (maxGDLItr * m_tGDL)) * (numPass - 1) + ((activateMS + m_tPRE) + (minGDLItr * m_tGDL));
       msCompute = (maxElementsPerRegion * m_blimpLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpLatency * numberOfOperationPerElement);

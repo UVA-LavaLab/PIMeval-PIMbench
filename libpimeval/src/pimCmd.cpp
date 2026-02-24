@@ -533,32 +533,43 @@ pimCmdFunc1::computeRegion(unsigned index)
   //      back to global indices by adding the region’s global base (currIdx).
 
   if (!m_isFullVector) {
-    if (m_indexMode == PimIndexMode::PIM_LOCAL) {
-      // Here we check if the index range is within local index for the core
+    if (m_device->isVLayoutDevice()) {
+      // For V-Layout, all the regions under the same pass will do the execution
+      // So we need to calculate which pass the indexes belong to and for each region we need to check in the region is within the pass
       unsigned currPass = index / objSrc.getNumCoresUsed();
-      uint64_t localIdxBeginForRegion = (uint64_t)currPass * maxElementsPerRegion;
-
-      if (m_idxEnd <= localIdxBeginForRegion || m_idxBegin >= localIdxBeginForRegion + maxElementsPerRegion) {
+      unsigned rangeBeginPass = m_idxBegin / maxElementsPerRegion;
+      unsigned rangeEndPass = (m_idxEnd - 1) / maxElementsPerRegion;
+      if (currPass < rangeBeginPass || currPass > rangeEndPass) {
         return true; // skip this region
       }
-      
-      uint64_t adjLocalIdxBegin = m_idxBegin > localIdxBeginForRegion ? m_idxBegin : localIdxBeginForRegion;
-      uint64_t adjLocalIdxEnd = m_idxEnd < localIdxBeginForRegion + maxElementsPerRegion ? m_idxEnd : localIdxBeginForRegion + maxElementsPerRegion;
-      elemIdxBegin = currIdx + (adjLocalIdxBegin - localIdxBeginForRegion);
-      numElementsInRegion = (unsigned)(adjLocalIdxEnd - adjLocalIdxBegin);
     } else {
-      uint64_t regionEndIdx = currIdx + maxElementsPerRegion;
-      if (regionEndIdx <= m_idxBegin || currIdx >= m_idxEnd) {
-        return true; // skip this region
-      }
+      if (m_indexMode == PimIndexMode::PIM_LOCAL) {
+        // Here we check if the index range is within local index for the core
+        unsigned currPass = index / objSrc.getNumCoresUsed();
+        uint64_t localIdxBeginForRegion = (uint64_t)currPass * maxElementsPerRegion;
 
-      uint64_t adjRegionBeginIdx = std::max(currIdx, m_idxBegin);
-      uint64_t adjRegionEndIdx = std::min(regionEndIdx, m_idxEnd);
-      if (adjRegionEndIdx <= adjRegionBeginIdx) {
-        return true; // no overlap between region and [m_idxBegin, m_idxEnd)
+        if (m_idxEnd <= localIdxBeginForRegion || m_idxBegin >= localIdxBeginForRegion + maxElementsPerRegion) {
+          return true; // skip this region
+        }
+        
+        uint64_t adjLocalIdxBegin = m_idxBegin > localIdxBeginForRegion ? m_idxBegin : localIdxBeginForRegion;
+        uint64_t adjLocalIdxEnd = m_idxEnd < localIdxBeginForRegion + maxElementsPerRegion ? m_idxEnd : localIdxBeginForRegion + maxElementsPerRegion;
+        elemIdxBegin = currIdx + (adjLocalIdxBegin - localIdxBeginForRegion);
+        numElementsInRegion = (unsigned)(adjLocalIdxEnd - adjLocalIdxBegin);
+      } else {
+        uint64_t regionEndIdx = currIdx + maxElementsPerRegion;
+        if (regionEndIdx <= m_idxBegin || currIdx >= m_idxEnd) {
+          return true; // skip this region
+        }
+
+        uint64_t adjRegionBeginIdx = std::max(currIdx, m_idxBegin);
+        uint64_t adjRegionEndIdx = std::min(regionEndIdx, m_idxEnd);
+        if (adjRegionEndIdx <= adjRegionBeginIdx) {
+          return true; // no overlap between region and [m_idxBegin, m_idxEnd)
+        }
+        elemIdxBegin = adjRegionBeginIdx;
+        numElementsInRegion = (unsigned)(adjRegionEndIdx - adjRegionBeginIdx);
       }
-      elemIdxBegin = adjRegionBeginIdx;
-      numElementsInRegion = (unsigned)(adjRegionEndIdx - adjRegionBeginIdx);
     }
   }
 
@@ -826,7 +837,7 @@ pimCmdFunc2::computeRegion(unsigned index)
   //    - We first compute overlap in local coordinates, then translate the overlapping subrange
   //      back to global indices by adding the region’s global base (currIdx).
 
-  if (!m_isFullVector) {
+  if (!m_isFullVector && !m_device->isVLayoutDevice()) {
     if (m_indexMode == PimIndexMode::PIM_LOCAL) {
       // Here we check if the index range is within local index for the core
       unsigned currPass = index / objSrc1.getNumCoresUsed();

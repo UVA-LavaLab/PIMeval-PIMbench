@@ -234,11 +234,23 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
+    {
+      msRead = 2 * m_tR * numPass;
+      msWrite = m_tW * numPass;
+      msALU = (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency * (numPass - 1)) +  (minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency);
+      msRuntime = msRead + msWrite + msALU;
+      mjEnergy = numCoresUsed * (numPass - 1) * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
+      mjEnergy += numCoresUsed * ((m_eAP * 3) + ((minElementPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
     case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
     case PimCmdEnum::COND_SELECT: // read from bool, src1, src2, write to dest
     case PimCmdEnum::COND_SELECT_SCALAR: // read from bool, src1, src2, write to dest
     case PimCmdEnum::COND_COPY: // read from bool, src, write to dest
     {
+      numberOfALUOperationPerElement*= 2; // Two masks
       msRead = 2 * m_tR * numPass;
       msWrite = m_tW * numPass;
       msALU = (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency * (numPass - 1)) +  (minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency);

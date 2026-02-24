@@ -129,6 +129,28 @@ pimPerfEnergyBitSerial::getPerfEnergyBitSerial(PimDeviceEnum deviceType, PimCmdE
             ok = true;
             break;
           }
+          case PimCmdEnum::COND_COPY:
+          {
+            // From Deyuan:
+            // READ cond into SA, then copy to register R1
+            // For each bit i of src and dest
+            //   READ src[i] into SA then copy to register R2
+            //   READ dest[i] into SA
+            //   Perform conditional operation with a single SEL operation: SA = R1 ? R2 : SA
+            //   WRITE SA into dest[i]
+            unsigned numR = 1 + 2 *bitsPerElement;
+            unsigned numW = bitsPerElement;
+            unsigned numL = 1 + 2 * bitsPerElement; // mov, (set, sel)
+            msRead += numR * m_tR;
+            msWrite += numW * m_tW;
+            msLogic += numL * m_tL;
+            totalOp += objSrc1.getNumElements();
+            msRuntime += msRead + msWrite + msLogic;
+            mjEnergy += ((m_eL * numL * objSrc1.getMaxElementsPerRegion()) + (m_eAP * numR + m_eAP * numW)) * numCores;
+            mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+            ok = true;
+            break;
+          }
           case PimCmdEnum::SHIFT_BITS_L:
           case PimCmdEnum::SHIFT_BITS_R:
             // handle bit-shift specially
