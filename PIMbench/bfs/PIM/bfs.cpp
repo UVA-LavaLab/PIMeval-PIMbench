@@ -334,9 +334,29 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     }
 
     status = pimAnd(matchStart, startMaskObj, matchStart);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim And Failed for match start" << std::endl;
+      return;
+    }
     status = pimAnd(matchEnd, endMaskObj, matchEnd);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim And Failed for match end" << std::endl;
+      return;
+    }
     status = pimShiftElementsLeft(matchEnd);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim Shift Failed" << std::endl;
+      return;
+    }
     status = pimAnd(matchStart, matchEnd, matchStart);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim And Failed for match start and match end" << std::endl;
+      return;
+    }
 
     PimObjId rowIDxOffsetObject = pimAllocAssociated(vertexObj, PIM_INT32);
     if (rowIDxOffsetObject == -1)
@@ -376,6 +396,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       return;
     }
 
+    pimFree(matchStart);
+
     uint64_t offsetAddress = 0;
     unsigned currCore = 0;
 
@@ -383,14 +405,14 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
       uint64_t base = (uint64_t)coreId * elementsPerRow;
       if (resultVec[base]) {
-        std::cout << "Vertex " << currVertex << " is assigned to core " << coreId << "\n";
+        // std::cout << "Vertex " << currVertex << " is assigned to core " << coreId << "\n";
         offsetAddress = base;
         currCore = coreId;
         break;
       }
     }
 
-    std::cout << "Core ID holds Vertices in the range: [" << vertexVector[offsetAddress] << ", " << vertexVector[offsetAddress + 1] << ")\n";
+    // std::cout << "Core ID holds Vertices in the range: [" << vertexVector[offsetAddress] << ", " << vertexVector[offsetAddress + 1] << ")\n";
 
     uint64_t off = offsetVector[offsetAddress];
     uint64_t row  = off / elementsPerRow;
@@ -487,9 +509,11 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       return;
     }
 
+    pimFree(rowIDxOffsetObject);
+
     int end = neighborOffsetVector[idx1];
     
-    std::cout << "Current vertex: " << currVertex << ", offset address: " << offsetAddress << ", offset value: " << offsetVector[offsetAddress] << "\n";
+    // std::cout << "Current vertex: " << currVertex << ", offset address: " << offsetAddress << ", offset value: " << offsetVector[offsetAddress] << "\n";
     // std::cout << "Row indices for current vertex's neighbors are in the range: [" << beg << ", " << end << ")\n";
     // std::cout << "Actual Row indices for current vertex's neighbors: " << pimRowIDVector[idx0] << " to " << pimRowIDVector[idx1] << "\n";
 
@@ -506,15 +530,43 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     hostElapsedTime += end_cpu - start_cpu;
 
     PimObjId nbrMask = pimAllocAssociated(vertexObj, PIM_BOOL);
-    pimCopyHostToDevice(nbrMaskVec.data(), nbrMask);
+    if (nbrMask == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
+
+    status = pimCopyHostToDevice(nbrMaskVec.data(), nbrMask);
+    if (status != PIM_OK)    {
+      std::cout << "Abort copying maskvector to device" << std::endl;
+      return;
+    }
 
     PimObjId nbrOut = pimAllocAssociated(vertexObj, PIM_UINT32);
-    pimBroadcastUInt(nbrOut, 0);
-    pimCondCopy(nbrMask, colIdxObj, nbrOut);
+    if (nbrOut == -1)
+    {
+      std::cout << "Failed nbrOut allocation" << std::endl;
+      return;
+    }
+    status = pimBroadcastUInt(nbrOut, 0);
+    if (status != PIM_OK)    {
+      std::cout << "Abort broadcasting nbrout" << std::endl;
+      return;
+    }
+    
+    status = pimCondCopy(nbrMask, colIdxObj, nbrOut);
+    if (status != PIM_OK)    {
+      std::cout << "Abort condition copy" << std::endl;
+      return;
+    }
 
     std::vector<uint32_t> neighborIDVector(vertexVector.size(), 0);
 
-    pimCopyDeviceToHost(nbrOut, (void *)neighborIDVector.data());
+    status = pimCopyDeviceToHost(nbrOut, (void *)neighborIDVector.data());
+    if (status != PIM_OK)    {
+      std::cout << "Abort copying neighbor vector to host" << std::endl;
+      return;
+    }
     // std::cout << "Neighbor IDs for current vertex: ";
     start_cpu = std::chrono::high_resolution_clock::now();
     for (uint32_t j = beg; j < end; ++j) {
@@ -539,8 +591,6 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     // }
     // std::cout << "\n";
 
-    pimFree(rowIDxOffsetObject);
-    pimFree(matchStart);
     pimFree(matchEnd);
     pimFree(nbrMask);
     pimFree(nbrOut);
