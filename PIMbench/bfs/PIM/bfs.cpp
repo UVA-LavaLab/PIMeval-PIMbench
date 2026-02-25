@@ -302,8 +302,11 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
   std::vector<uint8_t> visitedVector(vertexVector.size(), 0);
   std::queue<int> bfsQueue;
   bfsQueue.push(sourceVertex);
+  visitedVector[sourceVertex] = 1;
+  uint64_t totalVisited = 0;
   while(!bfsQueue.empty()) {
     int currVertex = bfsQueue.front();
+    totalVisited++;
     bfsQueue.pop();
     PimObjId matchStart = pimAllocAssociated(vertexObj, PIM_BOOL);
     if (matchStart == -1)
@@ -379,14 +382,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       return;
     }
 
-    std::vector<int> offsetVector(vertexVector.size(), 0);
-    status = pimCopyDeviceToHost(rowIDxOffsetObject, (void *)offsetVector.data());
-    if (status != PIM_OK)
-    {
-      std::cout << "Abort copying rowIDxOffsetObject to host" << std::endl;
-      return;
-    }
-
+    uint64_t offsetAddress = 0;
+    unsigned currCore = 0;
     std::vector<uint8_t> resultVec(vertexVector.size());
 
     status = pimCopyDeviceToHost(matchStart, (void *)resultVec.data());
@@ -398,9 +395,6 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     pimFree(matchStart);
 
-    uint64_t offsetAddress = 0;
-    unsigned currCore = 0;
-
     auto start_cpu = std::chrono::high_resolution_clock::now();
     for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
       uint64_t base = (uint64_t)coreId * elementsPerRow;
@@ -411,9 +405,19 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
         break;
       }
     }
+    auto end_cpu = std::chrono::high_resolution_clock::now();
+    hostElapsedTime += end_cpu - start_cpu;
+
+    std::vector<int> offsetVector(vertexVector.size(), 0);
+    status = pimCopyDeviceToHost(rowIDxOffsetObject, (void *)offsetVector.data());
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort copying rowIDxOffsetObject to host" << std::endl;
+      return;
+    }
 
     // std::cout << "Core ID holds Vertices in the range: [" << vertexVector[offsetAddress] << ", " << vertexVector[offsetAddress + 1] << ")\n";
-
+    start_cpu = std::chrono::high_resolution_clock::now();
     uint64_t off = offsetVector[offsetAddress];
     uint64_t row  = off / elementsPerRow;
     uint64_t lane = off % elementsPerRow;
@@ -431,7 +435,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     resultVec.assign(vertexVector.size(), 0);
     resultVec[idx0] = 1;
-    auto end_cpu = std::chrono::high_resolution_clock::now();
+    end_cpu = std::chrono::high_resolution_clock::now();
     hostElapsedTime += end_cpu - start_cpu;
 
     status = pimCopyHostToDevice((void *)resultVec.data(), matchEnd);
@@ -595,6 +599,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     pimFree(nbrMask);
     pimFree(nbrOut);
   }
+
+  std::cout << "Total vertices visited: " << totalVisited << ", Total Vertex in Graph: " << numVertices << "\n";
 
   pimFree(vertexObj);
   pimFree(rowIdxObj);
