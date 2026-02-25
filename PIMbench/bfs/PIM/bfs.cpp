@@ -22,8 +22,6 @@
 using namespace std;
 
 std::chrono::duration<double, std::milli> hostElapsedTime = std::chrono::duration<double, std::milli>::zero();
-std::unordered_map<int, int> startVertexToCoreMap; // maps vertex ID to core ID
-std::unordered_map<int, int> endVertexToCoreMap; // maps vertex ID to core ID
 
 // Params ---------------------------------------------------------------------
 typedef struct Params
@@ -107,7 +105,7 @@ void createCSR(ifstream &fin, vector<uint> &rowIDList, vector<uint> &colIDList, 
   }
 }
 
-void pinVerticesToCores(uint64_t numVertices, PimDeviceProperties &deviceProps, PimObjId &vertexObj, std::vector<int> &vertexVector, uint64_t elementsPerRow)
+void pinVerticesToCores(uint64_t numVertices, PimDeviceProperties &deviceProps, PimObjId &vertexObj, PimObjId &startMaskObj, PimObjId &endMaskObj, std::vector<int> &vertexVector, uint64_t elementsPerRow)
 {
     // Let's assume vector Length = #vertices
   uint64_t verticesPerCore = std::ceil(numVertices * 1.0 / deviceProps.numPIMCores);
@@ -129,11 +127,31 @@ void pinVerticesToCores(uint64_t numVertices, PimDeviceProperties &deviceProps, 
     int endVertex = std::min(startVertex + verticesPerCore, numVertices);
     vertexVector[coreId * elementsPerRow] = startVertex;
     vertexVector[coreId * elementsPerRow + 1] = endVertex;
-    startVertexToCoreMap[coreId] = startVertex;
-    endVertexToCoreMap[coreId] = endVertex;
   }
 
   PimStatus status = pimCopyHostToDevice((void *)vertexVector.data(), vertexObj);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  std::vector<uint8_t> startMask(vertexVector.size(), 0);
+  std::vector<uint8_t> endMask(vertexVector.size(), 0);
+  for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
+    uint64_t base = (uint64_t)coreId * elementsPerRow;
+    startMask[base + 0] = 1;
+    endMask[base + 1] = 1;
+  }
+
+  status = pimCopyHostToDevice((void *)startMask.data(), startMaskObj);
+  if (status != PIM_OK)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  status = pimCopyHostToDevice((void *)endMask.data(), endMaskObj);
   if (status != PIM_OK)
   {
     std::cout << "Abort" << std::endl;
@@ -259,8 +277,22 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     return;
   }
 
+  PimObjId startMaskObj = pimAllocAssociated(vertexObj, PIM_BOOL);
+  if (startMaskObj == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
+  PimObjId endMaskObj = pimAllocAssociated(vertexObj, PIM_BOOL);
+  if (endMaskObj == -1)
+  {
+    std::cout << "Abort" << std::endl;
+    return;
+  }
+
   int sourceVertex = 0;
-  pinVerticesToCores(numVertices, deviceProps, vertexObj, vertexVector, elementsPerRow);
+  pinVerticesToCores(numVertices, deviceProps, vertexObj, startMaskObj, endMaskObj, vertexVector, elementsPerRow);
   std::cout << "Pinned vertices to cores. Each core gets " << verticesPerCore << " vertices (padded with -1 if needed)." << "\n";
   allocateRowIndices(deviceProps, elementsPerRow, numVertices, verticesPerCore, rowIDList, pimRowIDVector, rowIdxObj);
   allocateColumnIndices(deviceProps, elementsPerRow, numVertices, verticesPerCore, rowIDList, colIDList, pimColIDVector, colIdxObj);
@@ -269,21 +301,16 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
   //host maintains the visited information; everytime each PIM core sends the neighbor list, host checks if visisted and updates frontier as well as visited vector
   std::vector<uint8_t> visitedVector(vertexVector.size(), 0);
   std::queue<int> bfsQueue;
-  std::vector<uint8_t> resultVec(vertexVector.size());
-  // std::vector<int> offsetVector(vertexVector.size(), 0);
-  visitedVector[sourceVertex] = 1;
   bfsQueue.push(sourceVertex);
   while(!bfsQueue.empty()) {
     int currVertex = bfsQueue.front();
     bfsQueue.pop();
-    
-    unsigned currCore = currVertex / verticesPerCore;
-    // PimObjId matchStart = pimAllocAssociated(vertexObj, PIM_BOOL);
-    // if (matchStart == -1)
-    // {
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
+    PimObjId matchStart = pimAllocAssociated(vertexObj, PIM_BOOL);
+    if (matchStart == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
 
     PimObjId matchEnd = pimAllocAssociated(vertexObj, PIM_BOOL);
     if (matchEnd == -1)
@@ -292,92 +319,102 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       return;
     }
 
-    // status = pimLTScalar(vertexObj, matchStart, currVertex+1, 0, 1, PIM_LOCAL);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
+    status = pimLTScalar(vertexObj, matchStart, currVertex+1, 0, 1, PIM_LOCAL);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
 
-    // status = pimGTScalar(vertexObj, matchEnd, currVertex, 1, 2, PIM_LOCAL);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
+    status = pimGTScalar(vertexObj, matchEnd, currVertex, 1, 2, PIM_LOCAL);
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
 
-    // status = pimAnd(matchStart, startMaskObj, matchStart);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Pim And Failed for match start" << std::endl;
-    //   return;
-    // }
-    // status = pimAnd(matchEnd, endMaskObj, matchEnd);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Pim And Failed for match end" << std::endl;
-    //   return;
-    // }
-    // status = pimShiftElementsLeft(matchEnd);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Pim Shift Failed" << std::endl;
-    //   return;
-    // }
-    // status = pimAnd(matchStart, matchEnd, matchStart);
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Pim And Failed for match start and match end" << std::endl;
-    //   return;
-    // }
+    status = pimAnd(matchStart, startMaskObj, matchStart);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim And Failed for match start" << std::endl;
+      return;
+    }
+    status = pimAnd(matchEnd, endMaskObj, matchEnd);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim And Failed for match end" << std::endl;
+      return;
+    }
+    status = pimShiftElementsLeft(matchEnd);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim Shift Failed" << std::endl;
+      return;
+    }
+    status = pimAnd(matchStart, matchEnd, matchStart);
+    if (status != PIM_OK)
+    {
+      std::cout << "Pim And Failed for match start and match end" << std::endl;
+      return;
+    }
 
-    // status = pimBroadcastInt(rowIDxOffsetObject, currVertex);
-    // if (status != PIM_OK)
-    // {     
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
+    PimObjId rowIDxOffsetObject = pimAllocAssociated(vertexObj, PIM_INT32);
+    if (rowIDxOffsetObject == -1)
+    {
+      std::cout << "Abort" << std::endl;
+      return;
+    }
 
-    // status = pimSub(rowIDxOffsetObject, vertexObj, rowIDxOffsetObject, 0, 1, PIM_LOCAL);
-    // if (status != PIM_OK)
-    // {     
-    //   std::cout << "Abort" << std::endl;
-    //   return;
-    // }
+    status = pimBroadcastInt(rowIDxOffsetObject, currVertex);
+    if (status != PIM_OK)
+    {     
+      std::cout << "Abort" << std::endl;
+      return;
+    }
 
-    // status = pimCopyDeviceToHost(rowIDxOffsetObject, (void *)offsetVector.data());
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Abort copying rowIDxOffsetObject to host" << std::endl;
-    //   return;
-    // }
+    status = pimSub(rowIDxOffsetObject, vertexObj, rowIDxOffsetObject, 0, 1, PIM_LOCAL);
+    if (status != PIM_OK)
+    {     
+      std::cout << "Abort" << std::endl;
+      return;
+    }
 
-    // status = pimCopyDeviceToHost(matchStart, (void *)resultVec.data());
-    // if (status != PIM_OK)
-    // {
-    //   std::cout << "Abort copying matchStart to host" << std::endl;
-    //   return;
-    // }
+    std::vector<int> offsetVector(vertexVector.size(), 0);
+    status = pimCopyDeviceToHost(rowIDxOffsetObject, (void *)offsetVector.data());
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort copying rowIDxOffsetObject to host" << std::endl;
+      return;
+    }
 
-    // pimFree(matchStart);
+    std::vector<uint8_t> resultVec(vertexVector.size());
 
-    // unsigned currCore = 0;
+    status = pimCopyDeviceToHost(matchStart, (void *)resultVec.data());
+    if (status != PIM_OK)
+    {
+      std::cout << "Abort copying matchStart to host" << std::endl;
+      return;
+    }
+
+    pimFree(matchStart);
+
+    uint64_t offsetAddress = 0;
+    unsigned currCore = 0;
 
     auto start_cpu = std::chrono::high_resolution_clock::now();
-    uint64_t offsetAddress = currCore * elementsPerRow; // starting address of the current core's block in the vertex vector
-    // for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
-    //   uint64_t base = (uint64_t)coreId * elementsPerRow;
-    //   if (resultVec[base]) {
-    //     // std::cout << "Vertex " << currVertex << " is assigned to core " << coreId << "\n";
-    //     offsetAddress = base;
-    //     currCore = coreId;
-    //     break;
-    //   }
-    // }
+    for (unsigned coreId = 0; coreId < deviceProps.numPIMCores; ++coreId) {
+      uint64_t base = (uint64_t)coreId * elementsPerRow;
+      if (resultVec[base]) {
+        // std::cout << "Vertex " << currVertex << " is assigned to core " << coreId << "\n";
+        offsetAddress = base;
+        currCore = coreId;
+        break;
+      }
+    }
 
     // std::cout << "Core ID holds Vertices in the range: [" << vertexVector[offsetAddress] << ", " << vertexVector[offsetAddress + 1] << ")\n";
 
-    uint64_t off = currVertex - startVertexToCoreMap[currCore]; // offset value for the current vertex in the vertex vector; this is the value that PIM gets for the current vertex and uses to calculate the row index for the neighbor list
+    uint64_t off = offsetVector[offsetAddress];
     uint64_t row  = off / elementsPerRow;
     uint64_t lane = off % elementsPerRow;
     uint64_t idx0 = ((row * deviceProps.numPIMCores + currCore) * elementsPerRow + lane);
@@ -402,7 +439,10 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
       std::cout << "Abort copying resultVec to device" << std::endl;
       return;
     }
-    PimObjId rowIDxOffsetObject = pimAllocAssociated(vertexObj, PIM_UINT32);
+
+    pimFree(rowIDxOffsetObject);
+
+    rowIDxOffsetObject = pimAllocAssociated(vertexObj, PIM_UINT32);
     if (rowIDxOffsetObject == -1)
     {
       std::cout << "Abort" << std::endl;
@@ -410,6 +450,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
     }
 
     std::vector<uint32_t> rowI(vertexVector.size(), 0);
+
     status = pimCopyDeviceToHost(rowIdxObj, (void *)rowI.data());
     if (status != PIM_OK)    {
       std::cout << "Abort copying rowIdxObj to host" << std::endl;
@@ -472,7 +513,7 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
 
     int end = neighborOffsetVector[idx1];
     
-    std::cout << "Current vertex: " << currVertex << ", core ID: " << currCore << ", offset address: " << offsetAddress << ", offset value: " << off << "\n";
+    // std::cout << "Current vertex: " << currVertex << ", offset address: " << offsetAddress << ", offset value: " << offsetVector[offsetAddress] << "\n";
     // std::cout << "Row indices for current vertex's neighbors are in the range: [" << beg << ", " << end << ")\n";
     // std::cout << "Actual Row indices for current vertex's neighbors: " << pimRowIDVector[idx0] << " to " << pimRowIDVector[idx1] << "\n";
 
@@ -558,6 +599,8 @@ void runBFS(uint64_t numVertices, std::vector<uint> &rowIDList, std::vector<uint
   pimFree(vertexObj);
   pimFree(rowIdxObj);
   pimFree(colIdxObj);
+  pimFree(startMaskObj);
+  pimFree(endMaskObj);
 }
 
 int main(int argc, char* argv[])
