@@ -1,73 +1,38 @@
-# Vector Addition (VA)
+# Breadth First Search (BFS)
 
-Vector addition is a fundamental kernel in Linear Algebra that can be expressed as following equation:
-
-$C[i] \leftarrow A[i] + B[i]$
-
-where:
-- $A$ and $B$ are input vectors.
-- $C$ is the output vector.
+Breadth First Search (BFS) is a graph traversal algorithm, and the version that is implemented in PIMbench is the one wihich explores a graph **level-by-level** starting from a **source vertex** $s$. BFS visits all vertices reachable from $s$ using a FIFO queue.
 
 ## Directory Structure
 ```
-cpp-vec-add/
+bfs/
 ├── PIM/
 │   ├── Makefile
-│   ├── vec-add.cpp
-├── baselines/
-│   ├── CPU/
-│   │   ├── Makefile
-│   │   ├── vec-add.cpp
-│   ├── GPU/
-│   │   ├── Makefile
-│   │   ├── vec-add.cu
+│   ├── bfs.cpp
 ├── README.md
 ├── Makefile
 ```
 
 ## Implementation Description
 
-This repository contains three different implementations of the vector addition benchmark:
-1. CPU
-2. GPU
-3. PIM
+This repository contains PIM implementations.
 
 ### Baseline Implementation
 
-CPU and GPU have been used as baselines.
+We use CPU and GPU implementations as baselines.
 
 #### CPU
 
-The CPU variant of vector addition has been implemented using standard C++ and OpenMP for parallel execution. The reason OpenBLAS was not used is OpenBLAS does not support $int$ datatype and PIMeval currently does not support $float$ or $double$
+For the CPU baseline, we use the BFS implementation from the GAP Benchmark Suite \[[GitHub](https://github.com/sbeamer/gapbs)\].
 
 #### GPU
 
-The GPU variant has been implemented using CUDA to perform element-wise addition of two vectors on NVIDIA GPU.
+For the GPU baseline, we use the BFS implementation from Gunrock \[[GitHub](https://github.com/gunrock/gunrock)\].
 
 ### PIM Implementation
 
-The PIM variant is implemented using C++ and three different PIM architectures can be tested with this.
+The PIM variant is implemented using C++ and different PIM architectures can be tested with this.
   
 ## Compilation Instructions for Specific Variants
-
-### CPU Variant
-
-To compile for the CPU variant, use:
-
-```bash
-cd baselines/CPU
-make
-```
-
-### GPU Variant
-
-To compile for the GPU variant, use:
-
-```bash
-cd baselines/GPU
-make
-```
-Note that the GPU Makefile currently uses `SM_80`, which is compatible with the A100. To run it on a different GPU, please manually change this in the makefile.
 
 ### PIM Variant
 
@@ -85,18 +50,18 @@ make
 After compiling, run the each executable with the following command that will run it for default parameters:
 
 ```bash
-./vec-add.out
+./bfs.out
 ```
 
 To see help text on all usages, use following command
 ```bash
-./vec-add.out -h
+./bfs.out -h
 ```
 
-### Specifying Input Size
+### Specifying Input
 
-You can specify the input size using the `-l` option:
+You can specify the input file containing edge list using the `-i` option:
 
 ```bash
-./vec-add.out -l <input_size>
+./vec-add.out -i <your_input.el>
 ```
