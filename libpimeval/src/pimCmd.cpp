@@ -403,6 +403,7 @@ pimCmdFunc1::sanityCheck() const
   }
   const pimObjInfo& objSrc = resMgr->getObjInfo(m_src);
   const pimObjInfo& objDest = resMgr->getObjInfo(m_dest);
+  uint64_t numElements = objSrc.getNumElements();
   if (!isAssociated(objSrc, objDest)) {
     return false;
   }
@@ -472,6 +473,22 @@ pimCmdFunc1::sanityCheck() const
         return false;
       }
   }
+  
+  if (!m_isFullVector) {
+    if (m_idxBegin > numElements) {
+      std::printf("PIM-Error: IDX begin range for PIM object ID %d is greater than the number of elements\n", m_src);
+      return false;
+    }
+    if (m_idxEnd > numElements) {
+      std::printf("PIM-Error: IDX end range for PIM object ID PIM object ID %d is greater than the number of elements\n", m_src);
+      return false;
+    }
+    if (m_idxEnd < m_idxBegin) {
+      std::printf("PIM-Error: IDX end for object ID %d is less than its beginning\n", m_src);
+      return false;
+    }
+  }
+  
   return true;
 }
 
@@ -485,10 +502,77 @@ pimCmdFunc1::computeRegion(unsigned index)
   PimDataType dataType = objSrc.getDataType();
   unsigned bitsPerElementSrc = objSrc.getBitsPerElement(PimBitWidth::SIM);
   const pimRegion& srcRegion = objSrc.getRegions()[index];
-
+  uint64_t currIdx = srcRegion.getElemIdxBegin();
+  uint64_t maxElementsPerRegion = objSrc.getMaxElementsPerRegion();
   // perform the computation
   uint64_t elemIdxBegin = srcRegion.getElemIdxBegin();
   unsigned numElementsInRegion = srcRegion.getNumElemInRegion();
+
+  // If the command is not operating on the full object, restrict computation to the user-specified
+  // index interval [m_idxBegin, m_idxEnd) (end is exclusive). The simulator executes commands
+  // region-by-region, so we compute the overlap of this region with the requested interval and
+  // derive (1) the global starting element index (elemIdxBegin) and (2) the number of elements
+  // to process in this region (numElementsInRegion). Regions with no overlap are skipped.
+  //
+  // Two indexing modes are supported:
+  //
+  // 1) PIM_GLOBAL:
+  //    - m_idxBegin/m_idxEnd are absolute (global) element indices into the flattened PIM object.
+  //    - This region corresponds to the global interval [currIdx, currIdx + maxElementsPerRegion).
+  //    - We compute the intersection with [m_idxBegin, m_idxEnd) and run only on the overlap.
+  //
+  // 2) PIM_LOCAL:
+  //    - m_idxBegin/m_idxEnd are per-core local indices. Each core’s local index space is the
+  //      concatenation of its regions across passes (pass 0, pass 1, ...), each of length
+  //      maxElementsPerRegion.
+  //    - With round-robin region assignment, the region index encodes its pass:
+  //          currPass = index / numCores
+  //      Therefore this region corresponds to the core-local interval:
+  //          [currPass * maxElementsPerRegion, (currPass + 1) * maxElementsPerRegion)
+  //    - We first compute overlap in local coordinates, then translate the overlapping subrange
+  //      back to global indices by adding the region’s global base (currIdx).
+
+  if (!m_isFullVector) {
+    if (m_device->isVLayoutDevice()) {
+      // For V-Layout, all the regions under the same pass will do the execution
+      // So we need to calculate which pass the indexes belong to and for each region we need to check in the region is within the pass
+      unsigned currPass = index / objSrc.getNumCoresUsed();
+      unsigned rangeBeginPass = m_idxBegin / maxElementsPerRegion;
+      unsigned rangeEndPass = (m_idxEnd - 1) / maxElementsPerRegion;
+      if (currPass < rangeBeginPass || currPass > rangeEndPass) {
+        return true; // skip this region
+      }
+    } else {
+      if (m_indexMode == PimIndexMode::PIM_LOCAL) {
+        // Here we check if the index range is within local index for the core
+        unsigned currPass = index / objSrc.getNumCoresUsed();
+        uint64_t localIdxBeginForRegion = (uint64_t)currPass * maxElementsPerRegion;
+
+        if (m_idxEnd <= localIdxBeginForRegion || m_idxBegin >= localIdxBeginForRegion + maxElementsPerRegion) {
+          return true; // skip this region
+        }
+        
+        uint64_t adjLocalIdxBegin = m_idxBegin > localIdxBeginForRegion ? m_idxBegin : localIdxBeginForRegion;
+        uint64_t adjLocalIdxEnd = m_idxEnd < localIdxBeginForRegion + maxElementsPerRegion ? m_idxEnd : localIdxBeginForRegion + maxElementsPerRegion;
+        elemIdxBegin = currIdx + (adjLocalIdxBegin - localIdxBeginForRegion);
+        numElementsInRegion = (unsigned)(adjLocalIdxEnd - adjLocalIdxBegin);
+      } else {
+        uint64_t regionEndIdx = currIdx + maxElementsPerRegion;
+        if (regionEndIdx <= m_idxBegin || currIdx >= m_idxEnd) {
+          return true; // skip this region
+        }
+
+        uint64_t adjRegionBeginIdx = std::max(currIdx, m_idxBegin);
+        uint64_t adjRegionEndIdx = std::min(regionEndIdx, m_idxEnd);
+        if (adjRegionEndIdx <= adjRegionBeginIdx) {
+          return true; // no overlap between region and [m_idxBegin, m_idxEnd)
+        }
+        elemIdxBegin = adjRegionBeginIdx;
+        numElementsInRegion = (unsigned)(adjRegionEndIdx - adjRegionBeginIdx);
+      }
+    }
+  }
+
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
     if (m_cmdType == PimCmdEnum::CONVERT_TYPE) {
@@ -594,8 +678,7 @@ pimCmdFunc1::updateStats() const
   const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
   PimDataType dataType = objSrc.getDataType();
   bool isVLayout = objSrc.isVLayout();
-
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc1(m_cmdType, objSrc, objDest, m_idxBegin, m_idxEnd);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }
@@ -724,9 +807,66 @@ pimCmdFunc2::computeRegion(unsigned index)
 
   const pimRegion& src1Region = objSrc1.getRegions()[index];
 
+  uint64_t currIdx = src1Region.getElemIdxBegin();
+  uint64_t maxElementsPerRegion = objSrc1.getMaxElementsPerRegion();
   // perform the computation
   uint64_t elemIdxBegin = src1Region.getElemIdxBegin();
   unsigned numElementsInRegion = src1Region.getNumElemInRegion();
+
+  // If the command is not operating on the full object, restrict computation to the user-specified
+  // index interval [m_idxBegin, m_idxEnd) (end is exclusive). The simulator executes commands
+  // region-by-region, so we compute the overlap of this region with the requested interval and
+  // derive (1) the global starting element index (elemIdxBegin) and (2) the number of elements
+  // to process in this region (numElementsInRegion). Regions with no overlap are skipped.
+  //
+  // Two indexing modes are supported:
+  //
+  // 1) PIM_GLOBAL:
+  //    - m_idxBegin/m_idxEnd are absolute (global) element indices into the flattened PIM object.
+  //    - This region corresponds to the global interval [currIdx, currIdx + maxElementsPerRegion).
+  //    - We compute the intersection with [m_idxBegin, m_idxEnd) and run only on the overlap.
+  //
+  // 2) PIM_LOCAL:
+  //    - m_idxBegin/m_idxEnd are per-core local indices. Each core’s local index space is the
+  //      concatenation of its regions across passes (pass 0, pass 1, ...), each of length
+  //      maxElementsPerRegion.
+  //    - With round-robin region assignment, the region index encodes its pass:
+  //          currPass = index / numCores
+  //      Therefore this region corresponds to the core-local interval:
+  //          [currPass * maxElementsPerRegion, (currPass + 1) * maxElementsPerRegion)
+  //    - We first compute overlap in local coordinates, then translate the overlapping subrange
+  //      back to global indices by adding the region’s global base (currIdx).
+
+  if (!m_isFullVector && !m_device->isVLayoutDevice()) {
+    if (m_indexMode == PimIndexMode::PIM_LOCAL) {
+      // Here we check if the index range is within local index for the core
+      unsigned currPass = index / objSrc1.getNumCoresUsed();
+      uint64_t localIdxBeginForRegion = (uint64_t)currPass * maxElementsPerRegion;
+
+      if (m_idxEnd <= localIdxBeginForRegion || m_idxBegin >= localIdxBeginForRegion + maxElementsPerRegion) {
+        return true; // skip this region
+      }
+      
+      uint64_t adjLocalIdxBegin = m_idxBegin > localIdxBeginForRegion ? m_idxBegin : localIdxBeginForRegion;
+      uint64_t adjLocalIdxEnd = m_idxEnd < localIdxBeginForRegion + maxElementsPerRegion ? m_idxEnd : localIdxBeginForRegion + maxElementsPerRegion;
+      elemIdxBegin = currIdx + (adjLocalIdxBegin - localIdxBeginForRegion);
+      numElementsInRegion = (unsigned)(adjLocalIdxEnd - adjLocalIdxBegin);
+    } else {
+      uint64_t regionEndIdx = currIdx + maxElementsPerRegion;
+      if (regionEndIdx <= m_idxBegin || currIdx >= m_idxEnd) {
+        return true; // skip this region
+      }
+
+      uint64_t adjRegionBeginIdx = std::max(currIdx, m_idxBegin);
+      uint64_t adjRegionEndIdx = std::min(regionEndIdx, m_idxEnd);
+      if (adjRegionEndIdx <= adjRegionBeginIdx) {
+        return true; // no overlap between region and [m_idxBegin, m_idxEnd)
+      }
+      elemIdxBegin = adjRegionBeginIdx;
+      numElementsInRegion = (unsigned)(adjRegionEndIdx - adjRegionBeginIdx);
+    }
+  }
+
   for (unsigned j = 0; j < numElementsInRegion; ++j) {
     uint64_t elemIdx = elemIdxBegin + j;
     if (pimUtils::isSigned(dataType)) {
@@ -773,7 +913,7 @@ pimCmdFunc2::updateStats() const
   PimDataType dataType = objSrc1.getDataType();
   bool isVLayout = objSrc1.isVLayout();
 
-  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1, objSrc2, objDest);
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForFunc2(m_cmdType, objSrc1, objSrc2, objDest, m_idxBegin, m_idxEnd);
   pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
   return true;
 }

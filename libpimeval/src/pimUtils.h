@@ -107,6 +107,7 @@ namespace pimUtils
   std::string getDirectoryPath(const std::string& filePath);
   bool getEnvVar(const std::string &varName, std::string &varValue);
   bool convertStringToUnsigned(const std::string& str, unsigned& retVal);
+  bool convertStringToDouble(const std::string& str, double& retVal);
   std::unordered_map<std::string, std::string> readParamsFromConfigFile(const std::string& configFilePath);
   std::unordered_map<std::string, std::string> readParamsFromEnvVars(const std::vector<std::string>& envVarNames);
 

@@ -6,6 +6,7 @@
 
 #include "pimPerfEnergyFulcrum.h"
 #include "pimCmd.h"
+#include "pimDevice.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -13,7 +14,7 @@
 
 //! @brief  Perf energy model of Fulcrum for func1
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
 
   // Fulcrum utilizes three walkers: two for input operands and one for the output operand.
@@ -21,23 +22,35 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
   // Consequently, only one row read operation is required in this case.
   // Additionally, using the walker-renaming technique (refer to the Fulcrum paper for details),
   // the write operation is also pipelined. Thus, only one row write operation is needed.
-
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
   double msRead = 0.0;
   double msWrite = 0.0;
   double msALU = 0.0;
   uint64_t totalOp = 0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
+  unsigned numCores =  obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+
+  // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+  // This is for when entire vector is not processed.
+  // We cannot just use numElements/maxElementsPerRegion for this.
+  // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+  // However, 128 elements are in region i-1 and 128 elements are in region i.
+  // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
+  uint64_t firstPass = startIIdx / maxElementsPerRegion;
+  uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
+  uint64_t passesTouched = lastPass - firstPass + 1;
+  unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore();
+
   if (cmdType == PimCmdEnum::CONVERT_TYPE) {
     // for type conversion, ALU parallelism is determined by the wider data type
     bitsPerElement = std::max(bitsPerElement, objDest.getBitsPerElement(PimBitWidth::ACTUAL));
   }
-  unsigned numCores =  obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
-  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCores) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCores) : minElementPerRegion;
+  maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCores) : maxElementsPerRegion;
   switch (cmdType)
   {
     case PimCmdEnum::COPY_O2O:
@@ -142,7 +155,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
 
 //! @brief  Perf energy model of Fulcrum for func2
 pimeval::perfEnergy
-pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
+pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -150,12 +163,24 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
   double msWrite = 0.0;
   double msALU = 0.0;
   uint64_t totalOp = 0;
-  unsigned numPass = obj.getMaxNumRegionsPerCore();
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numCoresUsed = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  // We calculate how many ACTIVATE and PRECHARGE commands are needed based on the number of elements.
+  // This is for when entire vector is not processed.
+  // We cannot just use numElements/maxElementsPerRegion for this.
+  // The reason being, it may happen that maxElementsPerRegion is 256 and numElements to be processed is also 256;
+  // However, 128 elements are in region i-1 and 128 elements are in region i.
+  // In this case, if we use numElements/maxElementsPerRegion, we will calculate 1 ACT and 1 PRE, but in reality, we need 2 ACT and 2 PRE.
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  uint64_t firstPass = startIIdx / maxElementsPerRegion;
+  uint64_t lastPass  = (endIdx - 1) / maxElementsPerRegion;   //exclusive end index, so -1
+  uint64_t passesTouched = lastPass - firstPass + 1;
+  unsigned numPass = startIIdx < endIdx ? passesTouched : obj.getMaxNumRegionsPerCore(); 
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / obj.getNumCoreAvailable()) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   double numberOfALUOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
+  minElementPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, firstPass, maxElementsPerRegion, numCoresUsed) : minElementPerRegion;
+  maxElementsPerRegion = startIIdx < endIdx ? maxRegionElemsInPass(startIIdx, endIdx, lastPass, maxElementsPerRegion, numCoresUsed) : maxElementsPerRegion;
+  
   switch (cmdType)
   {
     case PimCmdEnum::MUL:
@@ -210,8 +235,23 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::NE:
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
-    case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
     {
+      msRead = 2 * m_tR * numPass;
+      msWrite = m_tW * numPass;
+      msALU = (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency * (numPass - 1)) +  (minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency);
+      msRuntime = msRead + msWrite + msALU;
+      mjEnergy = numCoresUsed * (numPass - 1) * ((m_eAP * 3) + ((maxElementsPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
+      mjEnergy += numCoresUsed * ((m_eAP * 3) + ((minElementPerRegion - 1) * 3 *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
+      mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
+      totalOp = obj.getNumElements();
+      break;
+    }
+    case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
+    case PimCmdEnum::COND_SELECT: // read from bool, src1, src2, write to dest
+    case PimCmdEnum::COND_SELECT_SCALAR: // read from bool, src1, src2, write to dest
+    case PimCmdEnum::COND_COPY: // read from bool, src, write to dest
+    {
+      numberOfALUOperationPerElement*= 2; // Two masks
       msRead = 2 * m_tR * numPass;
       msWrite = m_tW * numPass;
       msALU = (maxElementsPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency * (numPass - 1)) +  (minElementPerRegion * numberOfALUOperationPerElement * m_fulcrumAddLatency);
@@ -242,8 +282,17 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
-  double cpuTDP = 225; // W; AMD EPYC 7742 64 core
   uint64_t totalOp = 0;
+  double lisaCopyCoeff = obj.getDevice()->getConfig().getLisaCopyCoeff();
+  double interBankLatencyMs = obj.getDevice()->getConfig().getInterBankLatencyNs() / m_nano_to_milli;
+  double interRankLatencyMs = obj.getDevice()->getConfig().getInterRankLatencyNs() / m_nano_to_milli;
+  double lisaCopy = lisaCopyCoeff * m_tRAS * m_tCK; // in ms
+  unsigned subPerbank = obj.getDevice()->getNumSubarrayPerBank() / 2;
+  unsigned bankPerRank = obj.getDevice()->getNumBankPerRank();
+  unsigned totalRank = m_numRanks;
+  unsigned reductionTreeHeightSub = std::ceil(std::log2(subPerbank));
+  unsigned reductionTreeHeightBank = std::ceil(std::log2(bankPerRank));
+  unsigned reductionTreeHeightRank = std::ceil(std::log2(totalRank));
 
   switch (cmdType)
   {
@@ -257,15 +306,17 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
     // read a row to walker, then reduce in serial
     double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
     // TODO: This needs to be flexible
-    double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
-    
+    unsigned reductionTreeHeight = reductionTreeHeightSub + reductionTreeHeightBank + reductionTreeHeightRank;
+    double updateMs = reductionTreeHeight * m_fulcrumAddLatency * numberOfOperationPerElement + reductionTreeHeightSub * lisaCopy + reductionTreeHeightBank * interBankLatencyMs + reductionTreeHeightRank * interRankLatencyMs;
+
     msRead = m_tR;
     msWrite = 0;
-    msCompute = aggregateMs + (maxElementsPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement * (numPass  - 1)) + (minElementPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement);
+    msCompute = updateMs + (maxElementsPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement * (numPass  - 1)) + (minElementPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement);
     msRuntime = msRead + msWrite + msCompute;
     mjEnergy = (numPass - 1) * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
     mjEnergy += numCore * (m_eAP + ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
-    mjEnergy += aggregateMs * cpuTDP;
+    mjEnergy += reductionTreeHeight * numCore * m_fulcrumAddEnergy * numberOfOperationPerElement;
+    mjEnergy += reductionTreeHeightSub * numCore * m_eACT * lisaCopyCoeff;
     mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
     totalOp = obj.getNumElements();
     break;
@@ -318,22 +369,33 @@ pimPerfEnergyFulcrum::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInf
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned numRegions = obj.getRegions().size();
   uint64_t totalOp = 0;
+  unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
+  unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
+  unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
+  
   // boundary handling - assume two times copying between device and host for boundary elements
   pimeval::perfEnergy perfEnergyBT = getPerfEnergyForBytesTransfer(PimCmdEnum::COPY_D2H, numRegions * bitsPerElement / 8);
 
-  // rotate within subarray:
-  // For every bit: Read row to SA; move SA to R1; Shift R1 by N steps; Move R1 to SA; Write SA to row
-  // TODO: separate bank level and GDL
-  // TODO: energy unimplemented
-  msRead = m_tR * numPass;
-  msCompute = (bitsPerElement + 2) * m_tL * numPass;
-  msWrite = m_tW * numPass;
-  msRuntime = msRead + msWrite + msCompute;
-  mjEnergy = (m_eAP + (bitsPerElement + 2) * m_eL) * numPass;
-  msRuntime += 2 * perfEnergyBT.m_msRuntime;
-  mjEnergy += 2 * perfEnergyBT.m_mjEnergy;
-  printf("PIM-Warning: Perf energy model is not precise for PIM command %s\n", pimCmd::getName(cmdType, "").c_str());
-
+  // Case 1: Shift is within same subarray
+  msRead = m_tACT * numPass; // tRCD instead of tRAS due to compute within the same row
+  msCompute = (maxElementsPerRegion * m_fulcrumAddLatency * (numPass - 1)) + (minElementPerRegion * m_fulcrumAddLatency);
+  msWrite =  m_tPRE * numPass;
+  mjEnergy = ((m_eACT + m_ePRE) + (maxElementsPerRegion * m_fulcrumAddEnergy)) * (numPass - 1) * numCore;
+  mjEnergy += ((m_eACT + m_ePRE) + (minElementPerRegion * m_fulcrumAddEnergy)) * numCore;
+  totalOp = obj.getNumElements();
+  // case 2:
+  // For simplicity, lets assume this happen via I/O
+  // Same row across all suarrays are open at a time and each row for each subarray will contribute #bitsPerElement 
+  // Considering only one bank can write to the I/O at a time, we can send #bitsPerElement from each bank in each t_CCDL
+  // So, for one pass, internal DRAM latency (#SubrrayPerChip) * t_CCDL + Perf-Energy for byte transfer
+  unsigned numCorePerChip = numCore / m_numRanks / m_numChipsPerRank;
+  msRead += ((numCorePerChip) * m_tGDL * numPass);
+  msWrite += ((numCorePerChip) * m_tGDL * numPass);
+  msRuntime = msRead + msWrite + msCompute + (2 * perfEnergyBT.m_msRuntime); // two times byte transfer for read and write of boundary elements
+  mjEnergy += (m_eACT + m_ePRE) * numPass * numCore; // ACT and PRE for each pass
+  mjEnergy += (((m_eR * numPass) + (m_eW * numPass)) * numCorePerChip); // Read and write energy
+  mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * (msRead + msWrite + msCompute);
+  mjEnergy += (2 * perfEnergyBT.m_mjEnergy);
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, totalOp);
 }
 

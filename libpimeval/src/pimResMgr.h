@@ -207,6 +207,7 @@ public:
   uint64_t getNumElements() const { return m_numElements; }
   unsigned getBitsPerElement(PimBitWidth bitWidthType) const;
   pimDevice* getDevice() { return m_device; }
+  const pimDevice* getDevice() const { return m_device; }
   bool isValid() const { return m_numElements > 0 && m_bitsPerElementPadded > 0 && !m_regions.empty(); }
   bool isVLayout() const { return m_allocType == PIM_ALLOC_V || m_allocType == PIM_ALLOC_V1; }
   bool isHLayout() const { return m_allocType == PIM_ALLOC_H || m_allocType == PIM_ALLOC_H1; }
