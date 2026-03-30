@@ -6,6 +6,7 @@
 
 #include "pimPerfEnergyBankLevel.h"
 #include "pimCmd.h"
+#include "pimDevice.h"
 #include <cstdio>
 #include <cmath>
 
@@ -322,14 +323,19 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
   unsigned bitsPerElement = obj.getBitsPerElement(PimBitWidth::ACTUAL);
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
-  double cpuTDP = 225; // W; AMD EPYC 9124 16 core
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
   // How many iteration require to read / write max elements per region
   unsigned maxGDLItr = std::ceil(maxElementsPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   unsigned minGDLItr = std::ceil(minElementPerRegion * bitsPerElement * 1.0 / m_GDLWidth);
   uint64_t totalOp = 0;
+  unsigned bankPerRank = obj.getDevice()->getNumBankPerRank();
+  unsigned totalRank = m_numRanks;
+  unsigned reductionTreeHeightBank = std::ceil(std::log2(bankPerRank));
+  unsigned reductionTreeHeightRank = std::ceil(std::log2(totalRank));
   unsigned numBankPerChip = numCore / m_numChipsPerRank;
   double activateMS = minGDLItr * m_tGDL < m_tRAS * m_tCK ? m_tRAS * m_tCK : m_tACT; // Use tRAS if GDL is less than tRAS
+  double interBankLatencyMs = obj.getDevice()->getConfig().getInterBankLatencyNs() / m_nano_to_milli;
+  double interRankLatencyMs = obj.getDevice()->getConfig().getInterRankLatencyNs() / m_nano_to_milli;
 
   switch (cmdType) {
     case PimCmdEnum::REDSUM:
@@ -341,16 +347,18 @@ pimPerfEnergyBankLevel::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimO
     {
       // How many iteration require to read / write max elements per region
       double numberOfOperationPerElement = ((double)bitsPerElement / m_blimpCoreBitWidth);
+      unsigned reductionTreeHeight = reductionTreeHeightBank + reductionTreeHeightRank;
+      double updateMs = reductionTreeHeight * m_blimpLatency * numberOfOperationPerElement + reductionTreeHeightBank * interBankLatencyMs + reductionTreeHeightRank * interRankLatencyMs;
+
       msRead = (m_tACT + m_tPRE) * (numPass - 1) + (activateMS + m_tPRE);
       // reduction for all regions assuming 16 core AMD EPYC 9124
-      double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
-      msCompute = (maxElementsPerRegion * m_blimpLatency * numberOfOperationPerElement * (numPass - 1)) + (minElementPerRegion * m_blimpLatency * numberOfOperationPerElement) + aggregateMs;
+      msCompute = (maxGDLItr * m_blimpLatency * numberOfOperationPerElement * (numPass - 1)) + (minGDLItr * m_blimpLatency * numberOfOperationPerElement) + updateMs;
       msRuntime = msRead + msWrite + msCompute;
 
       // Refer to fulcrum documentation
       mjEnergy = ((m_eACT + m_ePRE) + (maxElementsPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * (numPass - 1) * numCore;
       mjEnergy += ((m_eACT + m_ePRE) + (minElementPerRegion * m_blimpArithmeticEnergy * numberOfOperationPerElement)) * numCore;
-      mjEnergy += aggregateMs * cpuTDP;
+      mjEnergy += reductionTreeHeight * numCore * m_blimpArithmeticEnergy * numberOfOperationPerElement;
       mjEnergy += ((m_eR * maxGDLItr * (numPass-1)) + (m_eR * minGDLItr)) * numBankPerChip;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       totalOp = obj.getNumElements();

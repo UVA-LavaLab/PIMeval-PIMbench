@@ -6,6 +6,7 @@
 
 #include "pimPerfEnergyFulcrum.h"
 #include "pimCmd.h"
+#include "pimDevice.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -281,8 +282,17 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
   unsigned maxElementsPerRegion = obj.getMaxElementsPerRegion();
   unsigned numCore = obj.isLoadBalanced() ? obj.getNumCoreAvailable() : obj.getNumCoresUsed();
   unsigned minElementPerRegion = obj.isLoadBalanced() ? (std::ceil(obj.getNumElements() * 1.0 / numCore) - (maxElementsPerRegion * (numPass - 1))) : maxElementsPerRegion;
-  double cpuTDP = 225; // W; AMD EPYC 7742 64 core
   uint64_t totalOp = 0;
+  double lisaCopyCoeff = obj.getDevice()->getConfig().getLisaCopyCoeff();
+  double interBankLatencyMs = obj.getDevice()->getConfig().getInterBankLatencyNs() / m_nano_to_milli;
+  double interRankLatencyMs = obj.getDevice()->getConfig().getInterRankLatencyNs() / m_nano_to_milli;
+  double lisaCopy = lisaCopyCoeff * m_tRAS * m_tCK; // in ms
+  unsigned subPerbank = obj.getDevice()->getNumSubarrayPerBank() / 2;
+  unsigned bankPerRank = obj.getDevice()->getNumBankPerRank();
+  unsigned totalRank = m_numRanks;
+  unsigned reductionTreeHeightSub = std::ceil(std::log2(subPerbank));
+  unsigned reductionTreeHeightBank = std::ceil(std::log2(bankPerRank));
+  unsigned reductionTreeHeightRank = std::ceil(std::log2(totalRank));
 
   switch (cmdType)
   {
@@ -296,15 +306,17 @@ pimPerfEnergyFulcrum::getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObj
     // read a row to walker, then reduce in serial
     double numberOfOperationPerElement = ((double)bitsPerElement / m_fulcrumAluBitWidth);
     // TODO: This needs to be flexible
-    double aggregateMs = static_cast<double>(obj.getNumCoresUsed()) / 2300000;
-    
+    unsigned reductionTreeHeight = reductionTreeHeightSub + reductionTreeHeightBank + reductionTreeHeightRank;
+    double updateMs = reductionTreeHeight * m_fulcrumAddLatency * numberOfOperationPerElement + reductionTreeHeightSub * lisaCopy + reductionTreeHeightBank * interBankLatencyMs + reductionTreeHeightRank * interRankLatencyMs;
+
     msRead = m_tR;
     msWrite = 0;
-    msCompute = aggregateMs + (maxElementsPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement * (numPass  - 1)) + (minElementPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement);
+    msCompute = updateMs + (maxElementsPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement * (numPass  - 1)) + (minElementPerRegion * m_fulcrumAddLatency * numberOfOperationPerElement);
     msRuntime = msRead + msWrite + msCompute;
     mjEnergy = (numPass - 1) * numCore * (m_eAP + ((maxElementsPerRegion - 1) *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
     mjEnergy += numCore * (m_eAP + ((minElementPerRegion - 1) *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfOperationPerElement));
-    mjEnergy += aggregateMs * cpuTDP;
+    mjEnergy += reductionTreeHeight * numCore * m_fulcrumAddEnergy * numberOfOperationPerElement;
+    mjEnergy += reductionTreeHeightSub * numCore * m_eACT * lisaCopyCoeff;
     mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
     totalOp = obj.getNumElements();
     break;

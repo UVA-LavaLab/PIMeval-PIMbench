@@ -28,6 +28,9 @@
 //!   num_col_per_subarray = <int>               // number of columns per subarray
 //!   max_num_threads = <int>                    // maximum number of threads used by simulation
 //!   should_load_balance = <0|1>                // distribute data evenly among all cores
+//!   inter_bank_latency_ns = <double>           // inter-bank aggregation latency in ns (default: 53.3)
+//!   inter_rank_latency_ns = <double>           // inter-rank aggregation latency in ns (default: 59.97)
+//!   lisa_copy_coeff = <double>                 // LISA copy coefficient (default: 0.143)
 //!
 //! Supported environment variables:
 //!   PIMEVAL_SIM_CONFIG <abs-path/cfg-file>     // PIMeval config file, e.g., abs-path/PIMeval_BitSimdV.cfg
@@ -42,6 +45,9 @@
 //!   PIMEVAL_ANALYSIS_MODE <0|1>                // PIMeval analysis mode
 //!   PIMEVAL_DEBUG <int>                        // PIMeval debug flags (see enum pimDebugFlags)
 //!   PIMEVAL_LOAD_BALANCE <0|1>                 // distribute data evenly among all cores
+//!   PIMEVAL_INTER_BANK_LATENCY_NS <double>     // inter-bank aggregation latency in ns
+//!   PIMEVAL_INTER_RANK_LATENCY_NS <double>     // inter-rank aggregation latency in ns
+//!   PIMEVAL_LISA_COPY_COEFF <double>           // LISA copy coefficient
 //!
 //! Precedence rules (highest to lowest priority):
 //! * Config file: Either from -c command-line argument or from PIMEVAL_SIM_CONFIG
@@ -93,6 +99,9 @@ public:
   bool isAnalysisMode() const { return m_analysisMode; }
   unsigned getDebug() const { return m_debug; }
   bool isLoadBalanced() const { return m_loadBalanced; }
+  double getInterBankLatencyNs() const { return m_interBankLatencyNs; }
+  double getInterRankLatencyNs() const { return m_interRankLatencyNs; }
+  double getLisaCopyCoeff() const { return m_lisaCopyCoeff; }
 
   enum pimDebugFlags
   {
@@ -125,6 +134,10 @@ private:
   bool deriveNumThreads();
   bool deriveMiscEnvVars();
   bool deriveLoadBalance();
+  bool deriveDoubleParam(const std::string& cfgVar, const std::string& envVar, double defVal, double& retVal);
+  bool deriveInterBankLatencyNs();
+  bool deriveInterRankLatencyNs();
+  bool deriveLisaCopyCoeff();
 
   bool parseConfigFromFile(const std::string& config, unsigned& numRanks, unsigned& numBankPerRank, unsigned& numSubarrayPerBank, unsigned& numRows, unsigned& numCols);
 
@@ -139,6 +152,9 @@ private:
   inline static const std::string m_cfgVarMaxNumThreads = "max_num_threads";
   inline static const std::string m_cfgVarLoadBalance = "should_load_balance";
   inline static const std::string m_cfgVarBufferSize = "buffer_size";
+  inline static const std::string m_cfgVarInterBankLatencyNs = "inter_bank_latency_ns";
+  inline static const std::string m_cfgVarInterRankLatencyNs = "inter_rank_latency_ns";
+  inline static const std::string m_cfgVarLisaCopyCoeff = "lisa_copy_coeff";
 
   // Environment variables
   inline static const std::string m_envVarSimConfig = "PIMEVAL_SIM_CONFIG";
@@ -154,6 +170,9 @@ private:
   inline static const std::string m_envVarAnalysisMode = "PIMEVAL_ANALYSIS_MODE";
   inline static const std::string m_envVarDebug = "PIMEVAL_DEBUG";
   inline static const std::string m_envVarLoadBalance = "PIMEVAL_LOAD_BALANCE";
+  inline static const std::string m_envVarInterBankLatencyNs = "PIMEVAL_INTER_BANK_LATENCY_NS";
+  inline static const std::string m_envVarInterRankLatencyNs = "PIMEVAL_INTER_RANK_LATENCY_NS";
+  inline static const std::string m_envVarLisaCopyCoeff = "PIMEVAL_LISA_COPY_COEFF";
 
   // Add env vars to this list for readEnvVars
   inline static const std::vector<std::string> m_envVarList = {
@@ -170,6 +189,9 @@ private:
     m_envVarDebug,
     m_envVarLoadBalance,
     m_envVarBufferSize,
+    m_envVarInterBankLatencyNs,
+    m_envVarInterRankLatencyNs,
+    m_envVarLisaCopyCoeff,
   };
 
   // Default values if not specified during init
@@ -180,6 +202,9 @@ private:
   static constexpr int DEFAULT_NUM_COL_PER_SUBARRAY = 8192;
   static constexpr int DEFAULT_BUFFER_SIZE = 0;
   static constexpr PimDeviceEnum DEFAULT_SIM_TARGET = PIM_DEVICE_BANK_LEVEL;
+  static constexpr double DEFAULT_INTER_BANK_LATENCY_NS = 53.3;
+  static constexpr double DEFAULT_INTER_RANK_LATENCY_NS = 59.97;
+  static constexpr double DEFAULT_LISA_COPY_COEFF = 0.143;
 
   //! @brief  Reset all member variables to default status
   inline void reset() {
@@ -198,6 +223,9 @@ private:
     m_analysisMode = false;
     m_debug = 0;
     m_loadBalanced = false;
+    m_interBankLatencyNs = DEFAULT_INTER_BANK_LATENCY_NS;
+    m_interRankLatencyNs = DEFAULT_INTER_RANK_LATENCY_NS;
+    m_lisaCopyCoeff = DEFAULT_LISA_COPY_COEFF;
     m_envParams.clear();
     m_cfgParams.clear();
     m_isInit = false;
@@ -219,6 +247,9 @@ private:
   bool m_analysisMode;
   unsigned m_debug;
   bool m_loadBalanced;
+  double m_interBankLatencyNs;
+  double m_interRankLatencyNs;
+  double m_lisaCopyCoeff;
 
   // Store original parameters for extension purpose
   std::unordered_map<std::string, std::string> m_envParams;
