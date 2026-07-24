@@ -152,6 +152,14 @@ public:
     std::printf("\n");
   }
 
+  uint8_t* data() {
+    return m_data.data();
+  }
+
+  const uint8_t* data() const {
+    return m_data.data();
+  }
+
 private:
   std::vector<uint8_t> m_data;
   PimDataType m_dataType;
@@ -225,14 +233,16 @@ public:
 
   // Note: Below functions are wraper APIs to access PIM object data holder
   // For regular PIM objects:
-  // - Support host-to-device, device-to-host, and device-to-device copying
+  // - Support host-to-device, device-to-host, and device-to-device copying (with or without transpose)
   // - Use bit representation to set or get an element at specific element index
   // - Support ranges in [idxBegin, idxEnd). Use full range if idxEnd is 0
   // For reference PIM objects:
   // - A ref object directly access the data holder of the ref-to object
   // - Dual-contact ref negates all bits during operations
   void copyFromHost(void* src, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  void copyFromHostTranspose(void* src, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   void copyToHost(void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const;
+  void copyToHostTranspose(void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd) const;
   void copyToObj(pimObjInfo& destObj, uint64_t idxBegin = 0, uint64_t idxEnd = 0) const;
   void setElementBits(uint64_t index, uint64_t bits);
   uint64_t getElementBits(uint64_t index) const;

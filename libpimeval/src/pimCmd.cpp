@@ -18,6 +18,18 @@
 #include <climits>
 #include <cinttypes>         // for PRIu64, PRIx64
 
+enum ChaserState {
+  READY,
+  BLOCKED,
+  FINISHED
+};
+
+struct Chaser {
+  uint64_t index;
+  uint64_t cycle_mem_returns;
+  ChaserState state;
+};
+
 //! @brief  Get PIM command name from command type enum
 std::string
 pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
@@ -25,7 +37,9 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
   static const std::unordered_map<PimCmdEnum, std::string> cmdNames = {
     { PimCmdEnum::NOOP, "noop" },
     { PimCmdEnum::COPY_H2D, "copy_h2d" },
+    { PimCmdEnum::COPY_H2D_TRANSPOSE, "copy_h2d_transpose" },
     { PimCmdEnum::COPY_D2H, "copy_d2h" },
+    { PimCmdEnum::COPY_D2H_TRANSPOSE, "copy_d2h_transpose" },
     { PimCmdEnum::COPY_D2D, "copy_d2d" },
     { PimCmdEnum::COPY_O2O, "copy_o2o" },
     { PimCmdEnum::ABS, "abs" },
@@ -49,6 +63,7 @@ pimCmd::getName(PimCmdEnum cmdType, const std::string& suffix)
     { PimCmdEnum::NE, "ne" },
     { PimCmdEnum::MIN, "min" },
     { PimCmdEnum::MAX, "max" },
+    { PimCmdEnum::GATHER, "gather"},
     { PimCmdEnum::ADD_SCALAR, "add_scalar" },
     { PimCmdEnum::SUB_SCALAR, "sub_scalar" },
     { PimCmdEnum::MUL_SCALAR, "mul_scalar" },
@@ -207,9 +222,15 @@ pimCmdCopy::execute()
     if (m_cmdType == PimCmdEnum::COPY_H2D) {
       pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
       objDest.copyFromHost(m_ptr, m_idxBegin, m_idxEnd);
+    } else if (m_cmdType == PimCmdEnum::COPY_H2D_TRANSPOSE) {
+      pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+      objDest.copyFromHostTranspose(m_ptr, m_structSize, m_fieldOffset, m_fieldSize, m_idxBegin, m_idxEnd);
     } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
       const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
       objSrc.copyToHost(m_ptr, m_idxBegin, m_idxEnd);
+    } else if (m_cmdType == PimCmdEnum::COPY_D2H_TRANSPOSE) {
+      const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
+      objSrc.copyToHostTranspose(m_ptr, m_structSize, m_fieldOffset, m_fieldSize, m_idxBegin, m_idxEnd);
     } else if (m_cmdType == PimCmdEnum::COPY_D2D) {
       const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
       pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
@@ -239,6 +260,7 @@ pimCmdCopy::sanityCheck() const
   uint64_t numElements = 0;
   switch (m_cmdType) {
   case PimCmdEnum::COPY_H2D:
+  case PimCmdEnum::COPY_H2D_TRANSPOSE:
   {
     if (!m_ptr) {
       std::printf("PIM-Error: Invalid null pointer as copy source\n");
@@ -250,9 +272,16 @@ pimCmdCopy::sanityCheck() const
     }
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
     numElements = objDest.getNumElements();
+    if (m_cmdType == PimCmdEnum::COPY_H2D_TRANSPOSE) {
+      if (m_fieldSize != objDest.getBitsPerElement(PimBitWidth::ACTUAL) / 8) {
+        std::printf("PIM-Error: fieldSize does not match object's element width\n");
+        return false;
+      }
+    }
     break;
   }
   case PimCmdEnum::COPY_D2H:
+  case PimCmdEnum::COPY_D2H_TRANSPOSE:
   {
     if (!resMgr->isValidObjId(m_src)) {
       std::printf("PIM-Error: Invalid PIM object ID %d as copy source\n", m_src);
@@ -264,6 +293,12 @@ pimCmdCopy::sanityCheck() const
     }
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     numElements = objSrc.getNumElements();
+    if (m_cmdType == PimCmdEnum::COPY_D2H_TRANSPOSE) {
+      if (m_fieldSize != objSrc.getBitsPerElement(PimBitWidth::ACTUAL) / 8) {
+        std::printf("PIM-Error: fieldSize does not match object's element width\n");
+        return false;
+      }
+    }
     break;
   }
   case PimCmdEnum::COPY_D2D:
@@ -310,29 +345,49 @@ pimCmdCopy::sanityCheck() const
 bool
 pimCmdCopy::updateStats() const
 {
-   if (m_cmdType == PimCmdEnum::COPY_H2D) {
+   if (m_cmdType == PimCmdEnum::COPY_H2D || m_cmdType == PimCmdEnum::COPY_H2D_TRANSPOSE) {
     const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
     uint64_t numElements = objDest.getNumElements();
     if (!m_copyFullRange) {
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objDest.getBitsPerElement(PimBitWidth::ACTUAL);
-    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
-    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(numElements * bitsPerElement, mPerfEnergy);
+
+    uint64_t bytesTransferred = numElements * bitsPerElement / 8;
+    uint64_t bitsTransferred = numElements * bitsPerElement;
+
+    if (m_cmdType == PimCmdEnum::COPY_H2D_TRANSPOSE && m_fieldSize > 0) {
+      uint64_t penaltyFactor = m_structSize / m_fieldSize;
+      bytesTransferred *= penaltyFactor;
+      bitsTransferred *= penaltyFactor;
+    }
+
+    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, bytesTransferred);
+    pimSim::get()->getStatsMgr()->recordCopyMainToDevice(bitsTransferred, mPerfEnergy);
 
     if (m_debugCmds) {
       std::printf("PIM-Cmd: Copied %" PRIu64 " elements of %u bits from host to PIM obj %d\n",
                   numElements, bitsPerElement, m_dest);
     }
-  } else if (m_cmdType == PimCmdEnum::COPY_D2H) {
+  } else if (m_cmdType == PimCmdEnum::COPY_D2H || m_cmdType == PimCmdEnum::COPY_D2H_TRANSPOSE) {
     const pimObjInfo &objSrc = m_device->getResMgr()->getObjInfo(m_src);
     uint64_t numElements = objSrc.getNumElements();
     if (!m_copyFullRange) {
       numElements = m_idxEnd - m_idxBegin;
     }
     unsigned bitsPerElement = objSrc.getBitsPerElement(PimBitWidth::ACTUAL);
-    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, numElements * bitsPerElement / 8);
-    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(numElements * bitsPerElement, mPerfEnergy);
+
+    uint64_t bytesTransferred = numElements * bitsPerElement / 8;
+    uint64_t bitsTransferred = numElements * bitsPerElement;
+
+    if (m_cmdType == PimCmdEnum::COPY_D2H_TRANSPOSE && m_fieldSize > 0) {
+      uint64_t penaltyFactor = m_structSize / m_fieldSize;
+      bytesTransferred *= penaltyFactor;
+      bitsTransferred *= penaltyFactor;
+    }
+
+    pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForBytesTransfer(m_cmdType, bytesTransferred);
+    pimSim::get()->getStatsMgr()->recordCopyDeviceToMain(bitsTransferred, mPerfEnergy);
 
     if (m_debugCmds) {
       std::printf("PIM-Cmd: Copied %" PRIu64 " elements of %u bits from PIM obj %d to host\n",
@@ -721,7 +776,6 @@ pimCmdFunc2::computeRegion(unsigned index)
   pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
 
   PimDataType dataType = objSrc1.getDataType();
-
   const pimRegion& src1Region = objSrc1.getRegions()[index];
 
   // perform the computation
@@ -1197,6 +1251,199 @@ pimCmdBroadcast::updateStats() const
   return true;
 }
 
+//! @brief  PIM CMD: gather primitive pointer chase
+bool
+pimCmdGather::execute()
+{
+  if (m_debugCmds) {
+    std::printf("PIM-Cmd: %s (table obj id %d idx obj id %d dest obj id %d)\n", getName().c_str(), m_table, m_idx, m_dest);
+  }
+
+  if (!sanityCheck()) {
+    return false;
+  }
+
+  const pimObjInfo& objTable = m_device->getResMgr()->getObjInfo(m_table);
+  const pimObjInfo& objIdx = m_device->getResMgr()->getObjInfo(m_idx);
+  pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+
+  const pimParamsDram& paramsDram = pimSim::get()->getParamsDram();
+
+  uint64_t TOTAL_CORES = m_device->getNumCores();
+
+  const std::vector<pimRegion>& tableRegions = objTable.getRegions();
+  const std::vector<pimRegion>& idxRegions = objIdx.getRegions();
+
+  uint64_t elementsPerTableRegion = objTable.getMaxElementsPerRegion();
+  uint64_t elementsPerIdxRegion = objIdx.getMaxElementsPerRegion();
+
+
+  // Bank level default
+  uint64_t NUM_CORES = TOTAL_CORES;
+  uint64_t SLOTS_PER_CORE = m_device->getConfig().getNumThreads();
+  uint64_t LATENCY_LOCAL = (uint64_t)std::ceil(paramsDram.getNsRowRead() / paramsDram.gettCK()); // depends on architecture, bit-serial: 1 core = 1 subarray, fulcrum: 1 core = 2 subarrays, bank-level: 1 core = 1 bank 
+
+  PimDeviceEnum simTarget = m_device->getSimTarget();
+
+  if (simTarget == PIM_DEVICE_BITSIMD_V) {
+    SLOTS_PER_CORE = 16;
+    LATENCY_LOCAL = objTable.getBitsPerElement(PimBitWidth::ACTUAL); // only simd seems to be in units of clock cycles
+  }
+  else if (simTarget == PIM_DEVICE_FULCRUM) {
+    NUM_CORES = TOTAL_CORES / 2;
+    if (NUM_CORES == 0) NUM_CORES = 1; // in case dividing results in 0
+    SLOTS_PER_CORE = 4;
+    LATENCY_LOCAL = (uint64_t)std::ceil((paramsDram.getNsTCCD_S() + 10) / paramsDram.gettCK()); // add 10 for mux delay
+  }
+  else if (simTarget != PIM_DEVICE_BANK_LEVEL) {
+    std::printf("PIM Warning: unimplemented architecture for gather primitive. Defaulting to bank-level parameters.\n");
+  }
+
+  uint64_t LATENCY_SAME_BANK = LATENCY_LOCAL + std::ceil(15.0 / paramsDram.gettCK());
+  uint64_t LATENCY_INTER_BANK = LATENCY_LOCAL + std::ceil(80.0 / paramsDram.gettCK()); // diff bank
+
+  uint64_t NUM_CHASERS = objIdx.getNumElements();
+  uint64_t SUBARRAYS_PER_BANK = m_device->getNumSubarrayPerBank();
+
+  std::vector<Chaser> chasers(NUM_CHASERS);
+
+  for (uint64_t i = 0; i < NUM_CHASERS; i++) {
+
+    chasers[i].index = objIdx.getElementBits(i);
+    chasers[i].state = READY;
+    chasers[i].cycle_mem_returns = 0;
+
+  }
+
+  uint64_t cycleCount = 0;
+  uint64_t chasersFinished = 0;
+  uint64_t stalls = 0;
+  std::vector<uint64_t> coreSlots(NUM_CORES, SLOTS_PER_CORE);
+
+  while (chasersFinished < NUM_CHASERS) {
+    cycleCount++;
+
+    for (uint64_t i = 0; i < NUM_CHASERS; i++) {
+      Chaser& chaser = chasers[i];
+      if (chaser.state == BLOCKED && cycleCount >= chaser.cycle_mem_returns) {
+        chaser.state = FINISHED;
+        chasersFinished++;
+
+        uint64_t tableRegionIdx = chaser.index / elementsPerTableRegion;
+        uint64_t target_core = tableRegions[tableRegionIdx].getCoreId();
+
+        if (simTarget == PIM_DEVICE_FULCRUM) {
+          target_core /= 2; // in case fulcrum halved the number of cores
+        }
+
+        coreSlots[target_core]++;
+
+        uint64_t value = objTable.getElementBits(chaser.index);
+        objDest.setElementBits(i, value);
+      }
+    }
+
+    for (uint64_t i = 0; i < NUM_CHASERS; i++) {
+      Chaser& chaser = chasers[i];
+      if (chaser.state == READY) {
+
+        uint64_t idxRegionIdx = i / elementsPerIdxRegion;
+        uint64_t homeCore = idxRegions[idxRegionIdx].getCoreId();
+
+        uint64_t tableRegionIdx = chaser.index / elementsPerTableRegion;
+        uint64_t targetCore = tableRegions[tableRegionIdx].getCoreId();
+
+        if (simTarget == PIM_DEVICE_FULCRUM) { // in case fulcrum halved the number of cores
+          homeCore /= 2;
+          targetCore /= 2;
+        }
+
+        uint64_t homeBank = (simTarget == PIM_DEVICE_FULCRUM)
+                            ? (homeCore * 2) / SUBARRAYS_PER_BANK // 2 subarrays per core
+                            : homeCore / SUBARRAYS_PER_BANK;
+        uint64_t targetBank = (simTarget == PIM_DEVICE_FULCRUM)
+                            ? (targetCore * 2) / SUBARRAYS_PER_BANK // 2 subarrays per core
+                            : targetCore / SUBARRAYS_PER_BANK;
+        bool sameBank = false;
+
+        if (coreSlots[targetCore] > 0) {
+          coreSlots[targetCore]--;
+          chaser.state = BLOCKED;
+
+          uint64_t latency;
+          if (homeCore == targetCore) {
+            latency = LATENCY_LOCAL;
+          }
+          else {
+            sameBank = (homeBank == targetBank);
+            latency = sameBank ? LATENCY_SAME_BANK : LATENCY_INTER_BANK;
+          }
+
+          uint64_t step = std::max((uint64_t) 1, NUM_CHASERS / 5);
+          if (i % step == 0) {
+              if (m_debugCmds) {
+                std::printf("  [Trace] Chaser %lu: Home Core %lu (Bank %lu) ---> Target Core %lu (Bank %lu) | Route: %s | Penalty: %lu cycles\n", 
+                          i, homeCore, homeBank, targetCore, targetBank, 
+                          (homeCore == targetCore) ? "LOCAL" : (sameBank ? "SAME BANK" : "INTER BANK"), latency);
+              }
+          }
+
+          chaser.cycle_mem_returns = cycleCount + latency;
+        }
+        else {
+          stalls++;
+          uint64_t step = std::max((uint64_t) 1, NUM_CHASERS / 5);
+          if (i % step == 0 && cycleCount < 5) {
+            if (m_debugCmds) {
+              std::printf("  [Trace] Chaser %lu: STALLED at cycle %lu due to traffic at Target Core %lu\n", i, cycleCount, targetCore);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (m_debugCmds) {
+    std::printf("--- PIM Gather Simulation Complete ---\n");
+    std::printf("Active Chasers: %lu | Hardware Slots: %lu\n", NUM_CHASERS, SLOTS_PER_CORE * NUM_CORES);
+    std::printf("Total Simulated Cycles: %lu | Total Stalls: %lu\n", cycleCount, stalls);
+    std::printf("---------------------------------------\n");
+  }
+
+  if (pimSim::get()->getDeviceType() != PIM_FUNCTIONAL) {
+    const pimObjInfo &objDest = m_device->getResMgr()->getObjInfo(m_dest);
+    objDest.syncToSimulatedMem();
+  }
+
+  m_cycleCount = cycleCount;
+
+  updateStats();
+  return true;
+}
+
+//! @brief  PIM CMD: gather primitive pointer chase - sanity check
+bool
+pimCmdGather::sanityCheck() const
+{
+  pimResMgr* resMgr = m_device->getResMgr();
+  if (!isValidObjId(resMgr, m_dest)) {
+    return false;
+  }
+  return true;
+}
+
+//! @brief  PIM CMD: gather primitive pointer chase - update stats
+bool
+pimCmdGather::updateStats() const
+{
+  const pimObjInfo& objDest = m_device->getResMgr()->getObjInfo(m_dest);
+  PimDataType dataType = objDest.getDataType();
+  bool isVLayout = objDest.isVLayout();
+
+  pimeval::perfEnergy mPerfEnergy = pimSim::get()->getPerfEnergyModel()->getPerfEnergyForGather(m_cmdType, objDest, m_cycleCount);
+  pimSim::get()->getStatsMgr()->recordCmd(getName(dataType, isVLayout), mPerfEnergy);
+  return true;
+}
 
 //! @brief  PIM CMD: rotate right/left
 bool
