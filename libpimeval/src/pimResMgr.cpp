@@ -108,6 +108,29 @@ pimObjInfo::copyFromHost(void* src, uint64_t idxBegin, uint64_t idxEnd)
   m_data.copyFromHost(src, idxBegin, idxEnd);
 }
 
+//! @brief  Copy and transpose data from host memory to PIM object data holder
+void
+pimObjInfo::copyFromHostTranspose(void* src, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    assert(0 && "Transpose on ref not yet supported"); // to be extended, dual contact ref not implemented yet
+    return;
+  }
+
+  uint64_t start = idxBegin;
+  uint64_t end = (idxEnd == 0) ? m_numElements : idxEnd;
+
+  char* host_src = static_cast<char*>(src);
+  char* sim_memory = reinterpret_cast<char*>(m_data.data());
+
+  for (uint64_t i = start; i < end; i++) {
+    void* field_ptr = host_src + (i * structSize) + fieldOffset;
+
+    std::memcpy(sim_memory + (i * fieldSize), field_ptr, fieldSize);
+  }
+}
+
 //! @brief  Copy data from PIM object data holder to host memory, with ref support
 void
 pimObjInfo::copyToHost(void* dest, uint64_t idxBegin, uint64_t idxEnd) const
@@ -127,6 +150,29 @@ pimObjInfo::copyToHost(void* dest, uint64_t idxBegin, uint64_t idxEnd) const
     return;
   }
   m_data.copyToHost(dest, idxBegin, idxEnd);
+}
+
+//! @brief  Copy and transpose data from PIM object data holder to host memory
+void
+pimObjInfo::copyToHostTranspose(void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd) const
+{
+  // handle reference
+  if (m_refObjId != -1) {
+    assert(0 && "Transpose on ref not yet supported"); // to be extended, dual contact ref not implemented yet
+    return;
+  }
+
+  uint64_t start = idxBegin;
+  uint64_t end = (idxEnd == 0) ? m_numElements : idxEnd;
+
+  char* host_dest = static_cast<char*>(dest);
+  const char* sim_memory = reinterpret_cast<const char*>(m_data.data());
+
+  for (uint64_t i = start; i < end; i++) {
+    void* field_ptr = host_dest + (i * structSize) + fieldOffset;
+
+    std::memcpy(field_ptr, sim_memory + (i * fieldSize), fieldSize);
+  }
 }
 
 //! @brief  Copy data from a PIM object data holder to another, with ref support

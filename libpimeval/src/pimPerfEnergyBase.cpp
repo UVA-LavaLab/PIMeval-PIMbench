@@ -90,12 +90,14 @@ pimPerfEnergyBase::getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t nu
   double msRuntime = static_cast<double>(numBytes) / (m_typicalRankBW * m_numRanks * 1024 * 1024 * 1024 / 1000);
   switch (cmdType) {
     case PimCmdEnum::COPY_H2D:
+    case PimCmdEnum::COPY_H2D_TRANSPOSE:
     {
       mjEnergy = m_eW * msRuntime * m_numChipsPerRank * m_numRanks;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
       break;
     }
     case PimCmdEnum::COPY_D2H:
+    case PimCmdEnum::COPY_D2H_TRANSPOSE:
     {
       mjEnergy = m_eR * msRuntime * m_numChipsPerRank * m_numRanks;
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime;
@@ -166,6 +168,19 @@ pimPerfEnergyBase::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInf
   double msWrite = 0.0;
   double msCompute = 0.0;
   uint64_t mTotalOP = 0;
+  return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
+}
+
+//! @brief Perf energy model of base class for gather
+pimeval::perfEnergy
+pimPerfEnergyBase::getPerfEnergyForGather(PimCmdEnum cmdType, const pimObjInfo& obj, uint64_t cycleCount) const
+{
+  double msRuntime = static_cast<double>(cycleCount) * m_tCK;
+  double mjEnergy = m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime; // background power
+  double msRead = 0.0;
+  double msWrite = 0.0;
+  double msCompute = msRuntime;
+  uint64_t mTotalOP = cycleCount;
   return pimeval::perfEnergy(msRuntime, mjEnergy, msRead, msWrite, msCompute, mTotalOP);
 }
 

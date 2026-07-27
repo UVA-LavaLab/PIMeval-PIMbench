@@ -150,7 +150,54 @@ PimStatus pimFree(PimObjId obj);
 // If the default values for idxBegin and idxEnd are used, the entire range of the PIM object will be considered.
 // For PIM_BOOL type, please use std::vector<uint8_t> instead of std::vector<bool> as host data.
 PimStatus pimCopyHostToDevice(void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
+template <typename T, typename FieldType>
+PimStatus pimCopyHostToDeviceTranspose(void* src, PimObjId dest, FieldType T::* member, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
+template <typename T, typename FieldType>
+PimStatus pimCopyDeviceToHostTranspose(PimObjId src, void* dest, FieldType T::* member, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
+class PimTransposeInternal {
+  private:
+    static PimStatus copyH2D(void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd);
+    static PimStatus copyD2H(PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd);
+
+    template <typename T, typename FieldType>
+    friend PimStatus pimCopyHostToDeviceTranspose(void* src, PimObjId dest, FieldType T::* member, uint64_t idxBegin, uint64_t idxEnd);
+
+    template <typename T, typename FieldType>
+    friend PimStatus pimCopyDeviceToHostTranspose(PimObjId src, void* dest, FieldType T::* member, uint64_t idxBegin, uint64_t idxEnd);
+
+};
+
+//! @brief  Copy and transpose data from main memory to PIM device for a range of elements within the PIM object
+template <typename T, typename FieldType>
+inline PimStatus pimCopyHostToDeviceTranspose(void* src, PimObjId dest, FieldType T::* member, uint64_t idxBegin, uint64_t idxEnd)
+{
+  size_t structSize = sizeof(T);
+  size_t fieldSize = sizeof(FieldType);
+
+  T* ptr = nullptr;
+
+  size_t fieldOffset = (size_t)&(ptr->*member);
+
+  return PimTransposeInternal::copyH2D(src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+}
 PimStatus pimCopyDeviceToHost(PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+
+//! @brief  Copy and transpose data from PIM device to main memory for a range of elements within the PIM object
+template <typename T, typename FieldType>
+inline PimStatus pimCopyDeviceToHostTranspose(PimObjId src, void* dest, FieldType T::* member, uint64_t idxBegin, uint64_t idxEnd)
+{
+  size_t structSize = sizeof(T);
+  size_t fieldSize = sizeof(FieldType);
+
+  T* ptr = nullptr;
+
+  size_t fieldOffset = (size_t)&(ptr->*member);
+
+  return PimTransposeInternal::copyD2H(src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+}
 PimStatus pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
 PimStatus pimCopyObjectToObject(PimObjId src, PimObjId dest);
 PimStatus pimConvertType(PimObjId src, PimObjId dest);
@@ -180,6 +227,9 @@ PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
 PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue);
+
+// Gather primitive operation
+PimStatus pimGather(PimObjId table, PimObjId idx, PimObjId dest);
 
 // Relational operations - Dest object is BOOL type
 PimStatus pimGT(PimObjId src1, PimObjId src2, PimObjId destBool);
