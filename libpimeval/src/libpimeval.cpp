@@ -157,6 +157,18 @@ pimCopyDeviceToHostWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint
   return ok ? PIM_OK : PIM_ERROR;
 }
 
+PimStatus PimTransposeInternal::copyH2D(void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  bool ok = pimSim::get()->pimCopyMainToDeviceTranspose(src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus PimTransposeInternal::copyD2H(PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  bool ok = pimSim::get()->pimCopyDeviceToMainTranspose(src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
 //! @brief  Copy data from PIM device to device for a range of elements within the PIM object
 PimStatus
 pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd)
@@ -411,6 +423,11 @@ PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
 PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
 {
   bool ok = pimSim::get()->pimMax(src, dest, scalarValue);
+  return ok ? PIM_OK : PIM_ERROR;
+}
+
+PimStatus pimGather(PimObjId table, PimObjId idx, PimObjId dest) {
+  bool ok = pimSim::get()->pimGather(table, idx, dest);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

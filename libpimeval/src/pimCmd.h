@@ -24,7 +24,9 @@ class pimDevice;
 enum class PimCmdEnum {
   NOOP = 0,
   COPY_H2D,
+  COPY_H2D_TRANSPOSE,
   COPY_D2H,
+  COPY_D2H_TRANSPOSE,
   COPY_D2D,
   COPY_O2O, // This copies data between two associated memory objects. Hence, will be treated as PIM command not data copy
   // Functional 1-operand
@@ -66,6 +68,8 @@ enum class PimCmdEnum {
   NE,
   MIN,
   MAX,
+  // Gather primitive
+  GATHER,
   // Conditional operations
   COND_COPY,
   COND_BROADCAST,
@@ -186,8 +190,12 @@ class pimCmdCopy : public pimCmd
 public:
   pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0)
     : pimCmd(PimCmdEnum::COPY_H2D), m_copyType(copyType), m_ptr(src), m_dest(dest), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_copyFullRange(idxEnd == 0ULL) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+    : pimCmd(PimCmdEnum::COPY_H2D_TRANSPOSE), m_copyType(copyType), m_ptr(src), m_dest(dest), m_structSize(structSize), m_fieldOffset(fieldOffset), m_fieldSize(fieldSize), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_copyFullRange(idxEnd == 0ULL) {}
   pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0)
     : pimCmd(PimCmdEnum::COPY_D2H), m_copyType(copyType), m_ptr(dest), m_src(src), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_copyFullRange(idxEnd == 0ULL) {}
+  pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+    : pimCmd(PimCmdEnum::COPY_D2H_TRANSPOSE), m_copyType(copyType), m_ptr(dest), m_src(src), m_structSize(structSize), m_fieldOffset(fieldOffset), m_fieldSize(fieldSize), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_copyFullRange(idxEnd == 0ULL) {}
   pimCmdCopy(PimCmdEnum cmdType, PimCopyEnum copyType, PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0)
     : pimCmd(PimCmdEnum::COPY_D2D), m_copyType(copyType), m_src(src), m_dest(dest), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_copyFullRange(idxEnd == 0ULL) {}
 
@@ -200,6 +208,9 @@ protected:
   void* m_ptr = nullptr;
   PimObjId m_src = -1;
   PimObjId m_dest = -1;
+  size_t m_structSize = 0;
+  size_t m_fieldOffset = 0;
+  size_t m_fieldSize = 0;
   uint64_t m_idxBegin = 0;
   uint64_t m_idxEnd = 0; 
   bool m_copyFullRange = false;
@@ -552,6 +563,28 @@ public:
 protected:
   PimObjId m_dest;
   uint64_t m_signExtBits;
+};
+
+//! @class  pimCmdGather
+//! @brief  Pim CMD: Gather primitive pointer chasing
+class pimCmdGather : public pimCmd
+{
+public:
+  pimCmdGather(PimCmdEnum cmdType, PimObjId table, PimObjId idx, PimObjId dest)
+    : pimCmd(cmdType), m_table(table), m_idx(idx), m_dest(dest)
+  {
+    assert(cmdType == PimCmdEnum::GATHER);
+  }
+  virtual ~pimCmdGather() {}
+  virtual bool execute() override;
+  virtual bool sanityCheck() const override;
+  virtual bool updateStats() const override;
+protected:
+  PimObjId m_table;
+  PimObjId m_idx;
+  PimObjId m_dest;
+
+  uint64_t m_cycleCount = 0;
 };
 
 //! @class  pimCmdRotate

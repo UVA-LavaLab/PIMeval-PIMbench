@@ -121,7 +121,7 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo
       msALU = ((maxElementsPerRegion * m_fulcrumAddLatency * numberOfALUOperationPerElement) * (numPass - 1)) + (minElementPerRegion * m_fulcrumAddLatency * numberOfALUOperationPerElement);
       msRuntime = msRead + msWrite + msALU;
       mjEnergy = (numPass - 1) * numCores * ((m_eAP * 2) + ((maxElementsPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + (maxElementsPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
-      mjEnergy = numCores * ((m_eAP * 2) + ((minElementPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
+      mjEnergy += numCores * ((m_eAP * 2) + ((minElementPerRegion - 1) * 2 *  m_fulcrumShiftEnergy) + (minElementPerRegion * m_fulcrumAddEnergy * numberOfALUOperationPerElement));
       mjEnergy += m_pBChip * m_numChipsPerRank * m_numRanks * msRuntime; 
       totalOp = obj.getNumElements();
       break;
@@ -211,6 +211,8 @@ pimPerfEnergyFulcrum::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo
     case PimCmdEnum::MIN:
     case PimCmdEnum::MAX:
     case PimCmdEnum::COND_BROADCAST: // read from bool and dest, write to dest
+    case PimCmdEnum::COND_SELECT:
+    case PimCmdEnum::COND_SELECT_SCALAR:
     {
       msRead = 2 * m_tR * numPass;
       msWrite = m_tW * numPass;

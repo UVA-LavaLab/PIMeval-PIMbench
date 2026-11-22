@@ -69,7 +69,9 @@ public:
 
   // Data transfer
   bool pimCopyMainToDevice(void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyMainToDeviceTranspose(void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
+  bool pimCopyDeviceToMainTranspose(PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
   bool pimCopyDeviceToDevice(PimObjId src, PimObjId dest, uint64_t idxBegin = 0, uint64_t idxEnd = 0);
@@ -129,6 +131,9 @@ public:
   bool pimAesInverseSbox(PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut); 
   bool pimPrefixSum(PimObjId src, PimObjId dest);
   bool pimMAC(PimObjId src1, PimObjId src2, void* dest);
+
+  // Gather primitive
+  bool pimGather(PimObjId table, PimObjId idx, PimObjId dest);
 
   // PIM API Fusion
   bool pimFuse(PimProg prog);

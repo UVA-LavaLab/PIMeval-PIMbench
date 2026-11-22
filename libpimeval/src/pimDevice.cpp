@@ -223,12 +223,28 @@ pimDevice::pimCopyMainToDevice(void* src, PimObjId dest, uint64_t idxBegin, uint
   return pimCopyMainToDeviceWithType(copyType, src, dest, idxBegin, idxEnd);
 }
 
+//! @brief  Copy and transpose data from host to PIM within a range
+bool
+pimDevice::pimCopyMainToDeviceTranspose(void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  PimCopyEnum copyType = m_resMgr->isHLayoutObj(dest) ? PIM_COPY_H : PIM_COPY_V;
+  return pimCopyMainToDeviceWithTypeTranspose(copyType, src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+}
+
 //! @brief  Copy data from PIM to host within a range
 bool
 pimDevice::pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
   return pimCopyDeviceToMainWithType(copyType, src, dest, idxBegin, idxEnd);
+}
+
+//! @brief  Copy and transpose data from PIM to host within a range
+bool
+pimDevice::pimCopyDeviceToMainTranspose(PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  PimCopyEnum copyType = m_resMgr->isHLayoutObj(src) ? PIM_COPY_H : PIM_COPY_V;
+  return pimCopyDeviceToMainWithTypeTranspose(copyType, src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
 }
 
 //! @brief  Copy data from host to PIM within a range
@@ -240,12 +256,30 @@ pimDevice::pimCopyMainToDeviceWithType(PimCopyEnum copyType, void* src, PimObjId
   return executeCmd(std::move(cmd));
 }
 
+//! @brief  Copy data from host to PIM within a range
+bool
+pimDevice::pimCopyMainToDeviceWithTypeTranspose(PimCopyEnum copyType, void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  std::unique_ptr<pimCmd> cmd =
+    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_H2D_TRANSPOSE, copyType, src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+  return executeCmd(std::move(cmd));
+}
+
 //! @brief  Copy data from PIM to host within a range
 bool
 pimDevice::pimCopyDeviceToMainWithType(PimCopyEnum copyType, PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
 {
   std::unique_ptr<pimCmd> cmd =
     std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2H, copyType, src, dest, idxBegin, idxEnd);
+  return executeCmd(std::move(cmd));
+}
+
+//! @brief  Copy data from PIM to host within a range
+bool
+pimDevice::pimCopyDeviceToMainWithTypeTranspose(PimCopyEnum copyType, PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  std::unique_ptr<pimCmd> cmd =
+    std::make_unique<pimCmdCopy>(PimCmdEnum::COPY_D2H_TRANSPOSE, copyType, src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
   return executeCmd(std::move(cmd));
 }
 

@@ -286,6 +286,15 @@ pimSim::pimCopyMainToDevice(void* src, PimObjId dest, uint64_t idxBegin, uint64_
   return m_device->pimCopyMainToDevice(src, dest, idxBegin, idxEnd);
 }
 
+// @brief  Copy and transpose data from main memory to PIM device within a range
+bool
+pimSim::pimCopyMainToDeviceTranspose(void* src, PimObjId dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  pimPerfMon perfMon("pimCopyMainToDeviceTranspose");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyMainToDeviceTranspose(src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
+}
+
 // @brief  Copy data from PIM device to main memory within a range
 bool
 pimSim::pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin, uint64_t idxEnd)
@@ -293,6 +302,15 @@ pimSim::pimCopyDeviceToMain(PimObjId src, void* dest, uint64_t idxBegin, uint64_
   pimPerfMon perfMon("pimCopyDeviceToMain");
   if (!isValidDevice()) { return false; }
   return m_device->pimCopyDeviceToMain(src, dest, idxBegin, idxEnd);
+}
+
+// @brief  Copy and transpose data from PIM device to main memory within a range
+bool
+pimSim::pimCopyDeviceToMainTranspose(PimObjId src, void* dest, size_t structSize, size_t fieldOffset, size_t fieldSize, uint64_t idxBegin, uint64_t idxEnd)
+{
+  pimPerfMon perfMon("pimCopyDeviceToMainTranspose");
+  if (!isValidDevice()) { return false; }
+  return m_device->pimCopyDeviceToMainTranspose(src, dest, structSize, fieldOffset, fieldSize, idxBegin, idxEnd);
 }
 
 // @brief  Copy data from main memory to PIM device with type within a range
@@ -619,6 +637,13 @@ bool pimSim::pimMax(PimObjId src, PimObjId dest, uint64_t scalarValue)
   pimPerfMon perfMon("pimMaxScalar");
   if (!isValidDevice()) { return false; }
   std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdFunc1>(PimCmdEnum::MAX_SCALAR, src, dest, scalarValue);
+  return m_device->executeCmd(std::move(cmd));
+}
+
+bool pimSim::pimGather(PimObjId table, PimObjId idx, PimObjId dest) {
+  pimPerfMon perfMon("pimGather");
+  if (!isValidDevice()) { return false; }
+  std::unique_ptr<pimCmd> cmd = std::make_unique<pimCmdGather>(PimCmdEnum::GATHER, table, idx, dest);
   return m_device->executeCmd(std::move(cmd));
 }
 
