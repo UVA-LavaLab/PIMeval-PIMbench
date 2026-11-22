@@ -58,6 +58,9 @@ pimSimConfig::show() const
 
   std::printf("PIM-Config: Number of Threads = %u\n", m_numThreads);
   std::printf("PIM-Config: Load Balanced = %s\n", m_loadBalanced ? "1" : "0");
+  std::printf("PIM-Config: Inter-Bank Latency = %.2f ns\n", m_interBankLatencyNs);
+  std::printf("PIM-Config: Inter-Rank Latency = %.2f ns\n", m_interRankLatencyNs);
+  std::printf("PIM-Config: LISA Copy Coeff = %.3f\n", m_lisaCopyCoeff);
   std::printf("----------------------------------------\n");
 }
 
@@ -91,6 +94,9 @@ pimSimConfig::deriveConfig(PimDeviceEnum deviceType,
   ok = ok & deriveNumThreads();
   ok = ok & deriveMiscEnvVars();
   ok = ok & deriveLoadBalance();
+  ok = ok & deriveInterBankLatencyNs();
+  ok = ok & deriveInterRankLatencyNs();
+  ok = ok & deriveLisaCopyCoeff();
 
   // Show summary
   show();
@@ -452,3 +458,54 @@ pimSimConfig::deriveLoadBalance()
   return true;
 }
 
+//! @brief  Helper to derive a double parameter from config file then env var, with a default
+bool
+pimSimConfig::deriveDoubleParam(const std::string& cfgVar, const std::string& envVar, double defVal, double& retVal)
+{
+  retVal = defVal;
+  bool hasVal = false;
+  std::string valStr;
+
+  // Check config file
+  valStr = pimUtils::getOptionalParam(m_cfgParams, cfgVar, hasVal);
+  if (hasVal) {
+    bool ok = pimUtils::convertStringToDouble(valStr, retVal);
+    if (!ok) {
+      std::printf("PIM-Error: Incorrect config file parameter: %s=%s\n", cfgVar.c_str(), valStr.c_str());
+      return false;
+    }
+    return true;
+  }
+
+  // Check env var
+  valStr = pimUtils::getOptionalParam(m_envParams, envVar, hasVal);
+  if (hasVal) {
+    bool ok = pimUtils::convertStringToDouble(valStr, retVal);
+    if (!ok) {
+      std::printf("PIM-Error: Incorrect environment variable: %s=%s\n", envVar.c_str(), valStr.c_str());
+      return false;
+    }
+  }
+  return true;
+}
+
+//! @brief  Derive Params: Inter-bank aggregation latency in ns
+bool
+pimSimConfig::deriveInterBankLatencyNs()
+{
+  return deriveDoubleParam(m_cfgVarInterBankLatencyNs, m_envVarInterBankLatencyNs, DEFAULT_INTER_BANK_LATENCY_NS, m_interBankLatencyNs);
+}
+
+//! @brief  Derive Params: Inter-rank aggregation latency in ns
+bool
+pimSimConfig::deriveInterRankLatencyNs()
+{
+  return deriveDoubleParam(m_cfgVarInterRankLatencyNs, m_envVarInterRankLatencyNs, DEFAULT_INTER_RANK_LATENCY_NS, m_interRankLatencyNs);
+}
+
+//! @brief  Derive Params: LISA copy coefficient
+bool
+pimSimConfig::deriveLisaCopyCoeff()
+{
+  return deriveDoubleParam(m_cfgVarLisaCopyCoeff, m_envVarLisaCopyCoeff, DEFAULT_LISA_COPY_COEFF, m_lisaCopyCoeff);
+}

@@ -204,213 +204,213 @@ pimBroadcastFP(PimObjId dest, float value)
 
 //! @brief  PIM add
 PimStatus
-pimAdd(PimObjId src1, PimObjId src2, PimObjId dest)
+pimAdd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimAdd(src1, src2, dest);
+  bool ok = pimSim::get()->pimAdd(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM sub
 PimStatus
-pimSub(PimObjId src1, PimObjId src2, PimObjId dest)
+pimSub(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimSub(src1, src2, dest);
+  bool ok = pimSim::get()->pimSub(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM div
 PimStatus
-pimDiv(PimObjId src1, PimObjId src2, PimObjId dest)
+pimDiv(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimDiv(src1, src2, dest);
+  bool ok = pimSim::get()->pimDiv(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM not
 PimStatus
-pimNot(PimObjId src, PimObjId dest)
+pimNot(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimNot(src, dest);;
+  bool ok = pimSim::get()->pimNot(src, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM or
 PimStatus
-pimOr(PimObjId src1, PimObjId src2, PimObjId dest)
+pimOr(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimOr(src1, src2, dest);
+  bool ok = pimSim::get()->pimOr(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM and
 PimStatus
-pimAnd(PimObjId src1, PimObjId src2, PimObjId dest)
+pimAnd(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimAnd(src1, src2, dest);
+  bool ok = pimSim::get()->pimAnd(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM xor
 PimStatus
-pimXor(PimObjId src1, PimObjId src2, PimObjId dest)
+pimXor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimXor(src1, src2, dest);
+  bool ok = pimSim::get()->pimXor(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM xnor
 PimStatus
-pimXnor(PimObjId src1, PimObjId src2, PimObjId dest)
+pimXnor(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimXnor(src1, src2, dest);
+  bool ok = pimSim::get()->pimXnor(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM abs
 PimStatus
-pimAbs(PimObjId src, PimObjId dest)
+pimAbs(PimObjId src, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimAbs(src, dest);;
+  bool ok = pimSim::get()->pimAbs(src, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM multiplication
 PimStatus
-pimMul(PimObjId src1, PimObjId src2, PimObjId dest)
+pimMul(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimMul(src1, src2, dest);
+  bool ok = pimSim::get()->pimMul(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM GT
 PimStatus
-pimGT(PimObjId src1, PimObjId src2, PimObjId dest)
+pimGT(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimGT(src1, src2, dest);
+  bool ok = pimSim::get()->pimGT(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM LT
 PimStatus
-pimLT(PimObjId src1, PimObjId src2, PimObjId dest)
+pimLT(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimLT(src1, src2, dest);
+  bool ok = pimSim::get()->pimLT(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM EQ
 PimStatus
-pimEQ(PimObjId src1, PimObjId src2, PimObjId dest)
+pimEQ(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimEQ(src1, src2, dest);
+  bool ok = pimSim::get()->pimEQ(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM NE
 PimStatus
-pimNE(PimObjId src1, PimObjId src2, PimObjId dest)
+pimNE(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimNE(src1, src2, dest);
+  bool ok = pimSim::get()->pimNE(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM Min
 PimStatus
-pimMin(PimObjId src1, PimObjId src2, PimObjId dest)
+pimMin(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimMin(src1, src2, dest);
+  bool ok = pimSim::get()->pimMin(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
 //! @brief  PIM Max
 PimStatus
-pimMax(PimObjId src1, PimObjId src2, PimObjId dest)
+pimMax(PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimMax(src1, src2, dest);
+  bool ok = pimSim::get()->pimMax(src1, src2, dest, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimAddScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimAdd(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimAdd(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimSubScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimSub(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimSub(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimMulScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimMul(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimMul(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimDivScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimDiv(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimDiv(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimAndScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimAnd(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimAnd(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimOrScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimOr(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimOr(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimXorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimXor(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimXor(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimXnorScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimXnor(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimXnor(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimGTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimGT(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimGT(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimLTScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimLT(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimLT(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimEQScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimEQ(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimEQ(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimNEScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimNEScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimNE(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimNE(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimMinScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimMin(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimMin(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 
-PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue)
+PimStatus pimMaxScalar(PimObjId src, PimObjId dest, uint64_t scalarValue, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
 {
-  bool ok = pimSim::get()->pimMax(src, dest, scalarValue);
+  bool ok = pimSim::get()->pimMax(src, dest, scalarValue, idxBegin, idxEnd, indexMode);
   return ok ? PIM_OK : PIM_ERROR;
 }
 

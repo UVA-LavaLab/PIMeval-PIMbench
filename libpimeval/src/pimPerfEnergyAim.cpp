@@ -16,7 +16,7 @@
 
 //! @brief  Perf energy model of aim PIM for func1
 pimeval::perfEnergy
-pimPerfEnergyAim::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest) const
+pimPerfEnergyAim::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
@@ -57,7 +57,7 @@ pimPerfEnergyAim::getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& ob
 
 //! @brief  Perf energy model of aim for func2
 pimeval::perfEnergy
-pimPerfEnergyAim::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const
+pimPerfEnergyAim::getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& obj, const pimObjInfo& objSrc2, const pimObjInfo& objDest, uint64_t startIIdx, uint64_t endIdx) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;

@@ -210,10 +210,10 @@ protected:
 class pimCmdFunc1 : public pimCmd
 {
 public:
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalarValue = 0)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalarValue(scalarValue) {}
-  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut)
-    : pimCmd(cmdType), m_src(src), m_dest(dest), m_lut(lut) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, uint64_t scalarValue = 0, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_scalarValue(scalarValue), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode), m_isFullVector(idxEnd == 0ULL) {}
+  pimCmdFunc1(PimCmdEnum cmdType, PimObjId src, PimObjId dest, const std::vector<uint8_t>& lut, uint64_t idxBegin = 0, uint64_t idxEnd = 0, PimIndexMode indexMode = PIM_GLOBAL)
+    : pimCmd(cmdType), m_src(src), m_dest(dest), m_lut(lut), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode), m_isFullVector(idxEnd == 0ULL) {}
   virtual ~pimCmdFunc1() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
@@ -224,6 +224,10 @@ protected:
   PimObjId m_dest;
   uint64_t m_scalarValue;
   std::vector<uint8_t> m_lut; 
+  uint64_t m_idxBegin = 0;
+  uint64_t m_idxEnd = 0;
+  PimIndexMode m_indexMode = PIM_GLOBAL;
+  bool m_isFullVector = false;
 private:
   template<typename T>
   inline bool computeResult(T operand, PimCmdEnum cmdType, T scalarValue, T& result, int bitsPerElementSrc) {
@@ -342,18 +346,24 @@ class pimCmdFunc2 : public pimCmd
 public:
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest) {}
+  pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t idxBegin, uint64_t idxEnd, PimIndexMode indexMode)
+    : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_idxBegin(idxBegin), m_idxEnd(idxEnd), m_indexMode(indexMode), m_isFullVector(idxEnd == 0ULL) {}
   pimCmdFunc2(PimCmdEnum cmdType, PimObjId src1, PimObjId src2, PimObjId dest, uint64_t scalarValue)
     : pimCmd(cmdType), m_src1(src1), m_src2(src2), m_dest(dest), m_scalarValue(scalarValue) {}
   virtual ~pimCmdFunc2() {}
   virtual bool execute() override;
   virtual bool sanityCheck() const override;
   virtual bool computeRegion(unsigned index) override;
-  virtual bool updateStats() const override;
+  virtual bool updateStats() const override;    
 protected:
   PimObjId m_src1;
   PimObjId m_src2;
   PimObjId m_dest;
   uint64_t m_scalarValue;
+  uint64_t m_idxBegin = 0;
+  uint64_t m_idxEnd = 0; 
+  PimIndexMode m_indexMode = PIM_GLOBAL;
+  bool m_isFullVector = false;
 private:
   template<typename T>
   inline bool computeResult(T operand1, T operand2, PimCmdEnum cmdType, T scalarValue, T& result) {

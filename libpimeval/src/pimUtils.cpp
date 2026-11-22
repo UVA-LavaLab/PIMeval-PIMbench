@@ -346,6 +346,19 @@ pimUtils::getDirectoryPath(const std::string& filePath) {
     return path.parent_path().string() + "/";
 }
 
+//! @brief Convert a string to double. Return false and 0.0 if invalid
+bool
+pimUtils::convertStringToDouble(const std::string& str, double& retVal)
+{
+  try {
+    retVal = std::stod(str);
+  } catch (const std::exception &e) {
+    retVal = 0.0;
+    return false;
+  }
+  return true;
+}
+
 //! @brief Convert a string to unsigned int. Return false and 0 if invalid
 bool
 pimUtils::convertStringToUnsigned(const std::string& str, unsigned& retVal)

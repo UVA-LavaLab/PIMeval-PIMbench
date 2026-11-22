@@ -66,8 +66,8 @@ public:
   virtual ~pimPerfEnergyBase() {}
 
   virtual pimeval::perfEnergy getPerfEnergyForBytesTransfer(PimCmdEnum cmdType, uint64_t numBytes) const;
-  virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest) const;
-  virtual pimeval::perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest) const;
+  virtual pimeval::perfEnergy getPerfEnergyForFunc1(PimCmdEnum cmdType, const pimObjInfo& objSrc, const pimObjInfo& objDest, uint64_t startIIdx = 0, uint64_t endIdx = 0) const;
+  virtual pimeval::perfEnergy getPerfEnergyForFunc2(PimCmdEnum cmdType, const pimObjInfo& objSrc1, const pimObjInfo& objSrc2, const pimObjInfo& objDest, uint64_t startIIdx = 0, uint64_t endIdx = 0) const;
   virtual pimeval::perfEnergy getPerfEnergyForReduction(PimCmdEnum cmdType, const pimObjInfo& obj, unsigned numPass) const;
   virtual pimeval::perfEnergy getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo& obj) const;
   virtual pimeval::perfEnergy getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const;
@@ -106,6 +106,41 @@ protected:
   unsigned m_tRCD; // RCD in cycles
   unsigned m_tRP; // RP in cycles
   unsigned m_tRAS; // RAS in cycles
+
+  // Returns: max #elements processed by any single core in this pass.
+  static uint64_t maxRegionElemsInPass(
+      uint64_t start, uint64_t end,      // work interval [start,end)
+      uint64_t passId,
+      uint64_t R,                        // maxElementsPerRegion
+      uint64_t C)                        // numCores
+  {
+    uint64_t passCap = R * C;
+    uint64_t passStart = passId * passCap;
+    uint64_t passEnd   = passStart + passCap; // exclusive
+
+    // overlap of [start,end) with this pass
+    uint64_t ws = std::max(start, passStart);
+    uint64_t we = std::min(end, passEnd);
+    if (we <= ws) return 0;
+
+    // pass-local offsets
+    uint64_t os = ws - passStart;
+    uint64_t oe = we - passStart;
+
+    uint64_t best = 0;
+    for (uint64_t core = 0; core < C; core++) {
+      uint64_t regionStart = core * R;
+      uint64_t regionEnd   = regionStart + R; // exclusive
+
+      uint64_t s = std::max(os, regionStart);
+      uint64_t e = std::min(oe, regionEnd);
+
+      uint64_t cnt = (e > s) ? (e - s) : 0;
+      best = std::max(best, cnt);
+    }
+    return best;
+  }
+
 };
 
 #endif
