@@ -235,7 +235,7 @@ int runRF(uint64_t numOfPaths, int numTrees, int dimension, vector<vector<int>> 
   // allocate and copy input parameters into PIM device 
   vector<PimObjId> inputObjectList(dimension);
   allocatePimObject(numOfPaths, dimension, inputObjectList, modelParamObjectList[0]);
-  copyDataPoints(modelParameter, inputObjectList);
+  copyDataPoints(inputFeatures, inputObjectList);
 
   // allocate and copy equal operator mapping parameters into PIM device 
   vector<PimObjId> eqMappingObjectList(dimension);
