@@ -161,7 +161,7 @@ int testDemo(int argc, char **argv);
 void rjXtime(PIMAuxilary* xObj, PIMAuxilary* returnValueObj);
 void aesSubBytes(std::vector<PIMAuxilary*>* inputObjBuf);
 void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf);
-void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* outObjBuf) ;
+void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* outObjBuf, unsigned keyOffset = 0);
 void aesAddRoundKeyCpy(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* cpkObjBuf, std::vector<PIMAuxilary*>* outObjBuf);
 
 void aesShiftRows(std::vector<PIMAuxilary*>* inputObjBuf);
@@ -381,7 +381,7 @@ void aes256EncryptEcb(uint8_t *buf, unsigned long offset){
         aesShiftRows(bufT);   
         aesMixColumns(bufT);
         if( l & 1 ){
-            aesAddRoundKey(bufT, ctx_key_local);
+            aesAddRoundKey(bufT, ctx_key_local + AES_BLOCK_SIZE);
         }
         else{
             aesExpandEncKey(ctx_key_local, &rcon, sbox);
@@ -417,7 +417,7 @@ void aes256DecryptEcb(uint8_t *buf, unsigned long offset){
         if((l & 1)){
             
             aesExpandDecKey(ctx_key_local, &rcon);
-            aesAddRoundKey(bufT, ctx_key_local);
+            aesAddRoundKey(bufT, ctx_key_local + AES_BLOCK_SIZE);
         }
         else{
             aesAddRoundKey(bufT, ctx_key_local);
@@ -1662,9 +1662,9 @@ void aesSubBytesInv(std::vector<PIMAuxilary*>* inputObjBuf) {
   }
 }
 
-void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* outObjBuf) {
+void aesAddRoundKey(std::vector<PIMAuxilary*>* inputObjBuf,std::vector<PIMAuxilary*>* keyObjBuf, std::vector<PIMAuxilary*>* outObjBuf, unsigned keyOffset) {
     for (int j = 0; j < AES_BLOCK_SIZE; j++){ 
-        pimXor((*inputObjBuf)[j]->pimObjId, (*keyObjBuf)[j]->pimObjId, (*outObjBuf)[j]->pimObjId); 
+        pimXor((*inputObjBuf)[j]->pimObjId, (*keyObjBuf)[keyOffset + j]->pimObjId, (*outObjBuf)[j]->pimObjId);
     }   
 }
 
@@ -2106,7 +2106,7 @@ void aes256EncryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
         aesMixColumns(bufT0ObjBuf);
 
         if( l & 1 ){
-            aesAddRoundKey(bufT0ObjBuf, cpkObjBuf, bufTObjBuf);
+            aesAddRoundKey(bufT0ObjBuf, cpkObjBuf, bufTObjBuf, AES_BLOCK_SIZE);
         }
         else{
             aesExpandEncKey(ctx_key_local, &rcon, sbox);
@@ -2197,9 +2197,7 @@ void aes256DecryptEcb(std::vector<PIMAuxilary*>* inputObjBuf, unsigned long offs
             for (unsigned j = 0; j < 32; ++j) {
                 pimBroadcastUInt((*cpkObjBuf)[j]->pimObjId, ctx_key_local[j]);
             }
-            // aesAddRoundKey(bufT, ctx_key_local);
-            aesAddRoundKey(bufT0ObjBuf, cpkObjBuf, bufT0ObjBuf);
-
+            aesAddRoundKey(bufT0ObjBuf, cpkObjBuf, bufT0ObjBuf, AES_BLOCK_SIZE);
         }
         else{
             // aesAddRoundKey(bufT, ctx_key_local);

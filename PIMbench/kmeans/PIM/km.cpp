@@ -171,7 +171,7 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
     return;
   }
   PimObjId tempBool = pimAllocAssociated(resultObjectList[0], PIM_BOOL);
-  if (tempObj == -1)
+  if (tempBool == -1)
   {
     std::cout << "Abort" << std::endl;
     return;
@@ -259,27 +259,36 @@ void runKmeans(uint64_t numOfPoints, int dimension, int k, int iteration, const 
         return;
       }
 
-      for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
-      {
-        if (totalNeighbors) {
-          status = pimAnd(resultObjectList[0], dataPointObjectList[b], resultObjectList[1]);
+      if (totalNeighbors) {
+        // The distance and broadcast buffers can be reused after membership is known.
+        status = pimConvertType(tempBool, resultObjectList[0]);
+        if (status != PIM_OK)
+        {
+          std::cout << "Abort" << std::endl;
+          return;
+        }
+        for (uint32_t b = 0; b < dataPointObjectList.size(); ++b)
+        {
+          status = pimMul(resultObjectList[0], dataPointObjectList[b], centroidObjectList[0]);
           if (status != PIM_OK)
           {
             std::cout << "Abort" << std::endl;
             return;
           }
-          status = pimRedSum(resultObjectList[1], static_cast<void*>(&centroids[i][b]));
+          int64_t coordinateSum = 0;
+          status = pimRedSum(centroidObjectList[0], &coordinateSum);
           if (status != PIM_OK)
           {
             std::cout << "Abort" << std::endl;
             return;
           }
-          centroids[i][b] /= totalNeighbors;
+          centroids[i][b] = coordinateSum / totalNeighbors;
         }
       }
     }
   }
 
+  pimFree(tempBool);
   pimFree(tempObj);
   for (uint32_t i = 0; i < resultObjectList.size(); ++i)
   {
