@@ -793,6 +793,7 @@ pimResMgr::coreUsage::findAvailRange(unsigned numRowsToAlloc)
 void
 pimResMgr::coreUsage::addRange(std::pair<unsigned, unsigned> range, PimObjId objId)
 {
+  m_totRowsInUse += range.second;
   // aggregate with the prev range
   if (!m_rangesInUse.empty()) {
     auto it = std::prev(m_rangesInUse.end());
@@ -807,7 +808,6 @@ pimResMgr::coreUsage::addRange(std::pair<unsigned, unsigned> range, PimObjId obj
   }
   m_rangesInUse.insert(std::make_pair(range, objId));
   m_newAlloc.insert(range);
-  m_totRowsInUse += range.second;
 }
 
 //! @brief  Delete an object from core usage
