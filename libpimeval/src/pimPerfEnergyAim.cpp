@@ -132,7 +132,7 @@ pimPerfEnergyAim::getPerfEnergyForBroadcast(PimCmdEnum cmdType, const pimObjInfo
 
 //! @brief  Perf energy model of aim for rotate
 pimeval::perfEnergy
-pimPerfEnergyAim::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj) const
+pimPerfEnergyAim::getPerfEnergyForRotate(PimCmdEnum cmdType, const pimObjInfo& obj, bool useCrossRegionCommunication) const
 {
   double msRuntime = 0.0;
   double mjEnergy = 0.0;
